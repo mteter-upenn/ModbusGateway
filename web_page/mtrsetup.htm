@@ -1,0 +1,481 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: close
+
+<!DOCTYPE html>
+<html>
+	<head>
+	  <title>Meter Setup</title>
+	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
+	  <link rel="stylesheet" type="text/css" href="/ep_style.css">
+	  <style>
+		form  { display: table;      }
+		p     { display: table-row;  }
+
+		label, input, select { 
+			display: table-cell; 
+			margin: 3px 7px 2px 7px;
+			width: 10em;
+		}
+		input {
+			text-align: right;
+			width: 17em;
+		}
+		select {
+			width: 17em;
+		}
+		h2 {
+			display: table-cell;
+			margin: 3px 7px 2px 7px;
+			width: 9em;
+			text-decoration: underline;
+		}
+
+	  </style>
+	  
+	  <script>
+		var mtr_ip = [];
+		var mtr_id = [];
+		var mtr_vid = [];
+		var mtr_typ = [];
+		
+		var txtArray = ["", "Eaton IQ DP 4000", "Eaton PXM 2260", "Eaton IQ 200", "Eaton IQ 300", "Eaton Power Xpert 4000",
+						"Emon Dmon 3400", "GE EPM 3720", "GE EPM 5100", "GE PQM", "Siemens 9200", "Siemens 9330",
+						"Siemens 9350", "Siemens 9360", "Siemens 9510", "Siemens 9610", "Siemens 9700", "Siemens Sentron PAC 4200",
+						"Siemens Sentron PAC 3200", "SquareD CM 2350", "SquareD PM 210", "SquareD PM 710", "SquareD Micrologic A Trip Unit", 
+						"SquareD Micrologic P Trip Unit", "SquareD Micrologic H Trip Unit", "SquareD CM 3350", "SquareD CM 4000", 
+						"SquareD CM 4250", "SquareD PM 800", "SquareD PM 820", "SquareD PM 850", "SquareD PM 870", "Chilled Water KEP", 
+						"Steam KEP"];
+		var valArray = ["0.0.0", "0.1.1", "15.1.0", "0.1.3", "0.1.4", "1.1.0", "2.1.0", "3.1.0", "0.2.1", "4.1.0", "0.3.1",
+						"5.1.0", "5.2.0", "5.3.0", "6.1.0", "6.2.0", "5.4.0", "14.1.0", "14.2.0", "7.1.0", "13.1.0", "8.1.0", "9.1.0", "9.2.0", "9.3.0",
+						"10.1.0", "10.2.0", "10.3.0", "10.4.0", "10.5.0", "10.6.0", "10.7.0", "11.1.0", "12.1.0"];
+		
+		function addFields(number){
+			<!-- var number = 4; -->
+			if (number > 20){
+				number = 20;
+			}
+			
+			var container = document.getElementById("container");
+			var br = document.createElement("br");
+
+            <!-- // Clear previous contents of the container -->
+            while (container.hasChildNodes()) {
+                container.removeChild(container.lastChild);
+            }
+			<!-- // hidden input to handle number of meters -->
+			var input = document.createElement("input");
+			input.type = "hidden";
+			input.id = "numMtrs";
+			input.name = "numMtrs";
+			input.value = number;
+			container.appendChild(input);
+			
+			<!-- // header -->
+			var para = document.createElement("P");
+			container.appendChild(para);
+			
+			var hdr2 = document.createElement("H2");
+			hdr2.innerHTML = "Meter Setup";
+			
+			para.appendChild(hdr2);
+			
+			var input = document.createElement("input");
+			input.type = "submit";
+			input.value = "Apply Changes";
+			input.style.cssText = "text-align: center;";
+			para.appendChild(input);
+			
+			container.appendChild(br);
+			
+            for (var i = 0; i < (number + 1); i++){
+				insertMeterSetup(container, i, number);
+            }
+		};
+		
+		
+		function insertMeterSetup(container, tagName, number){	
+			var br = document.createElement("br");
+			var para = document.createElement("P");
+			container.appendChild(para);
+
+			<!-- // ip ----------------------------------------------------------------------------------------------------- -->
+			var lbl = document.createElement("LABEL");
+			lbl.innerHTML = "IP (if connected via ethernet): ";
+
+			para.appendChild(lbl);
+			
+			<!-- // Create an <input> element, set its type and name attributes -->
+			var input = document.createElement("input");
+			input.type = "text";
+			input.name = "mip" + tagName;
+			input.id = "mip" + tagName;
+			input.className = "mip";
+			input.oninput = function(){checkIP(this);};
+			
+			para.appendChild(input);
+			
+			lbl = document.createElement("LABEL");
+			lbl.className = "mip_err";
+			lbl.id = "mip" + tagName + "_err";
+			lbl.style.cssText = "color: red;";
+
+			para.appendChild(lbl);
+			
+			<!-- // modbus id ----------------------------------------------------------------------------------------------- -->
+			para = document.createElement("P");
+			container.appendChild(para);
+			
+			lbl = document.createElement("LABEL");
+			lbl.innerHTML = "Modbus Device ID: ";
+
+			para.appendChild(lbl);
+			
+			<!-- // Create an <input> element, set its type and name attributes -->
+			input = document.createElement("input");
+			input.type = "text";
+			input.name = "id" + tagName;
+			input.id = "id" + tagName;
+			input.className= "id";
+			input.oninput = function(){checkID(this);};
+			
+			para.appendChild(input);
+			
+			lbl = document.createElement("LABEL");
+			lbl.className = "id_err";
+			lbl.id = "id" + tagName + "_err";
+			lbl.style.cssText = "color: red;";
+
+			para.appendChild(lbl);
+			
+			<!-- // VIRTUAL modbus id ----------------------------------------------------------------------------------------------- -->
+			para = document.createElement("P");
+			container.appendChild(para);
+			
+			lbl = document.createElement("LABEL");
+			lbl.innerHTML = "Virtual Modbus Device ID: ";
+
+			para.appendChild(lbl);
+			
+			<!-- // Create an <input> element, set its type and name attributes -->
+			input = document.createElement("input");
+			input.type = "text";
+			input.name = "vid" + tagName;
+			input.id = "vid" + tagName;
+			input.className= "vid";
+			input.oninput = function(){checkID(this);};
+			
+			para.appendChild(input);
+			
+			lbl = document.createElement("LABEL");
+			lbl.className = "vid_err";
+			lbl.id = "vid" + tagName + "_err";
+			lbl.style.cssText = "color: red;";
+
+			para.appendChild(lbl);
+			
+			<!-- // meter type ----------------------------------------------------------------------------------------------- -->
+			para = document.createElement("P");
+			container.appendChild(para);
+			
+			lbl = document.createElement("LABEL");
+			lbl.innerHTML = "Meter Type: ";
+
+			para.appendChild(lbl);
+			
+			<!-- // Create an <input> element, set its type and name attributes -->
+			input = document.createElement("select");
+			<!-- input.type = "text"; -->
+			input.name = "mtr" + tagName;
+			input.id = "mtr" + tagName;
+			input.className = "meter";
+			if (tagName == number){
+				input.onchange = function(){addMeter(this);};
+			}
+			else{
+				input.onchange = function(){removeMeter(this);};
+			}
+			
+			para.appendChild(input);
+
+			for (var j = 0; j < txtArray.length; j++){
+				var option = document.createElement("option");
+				option.value = valArray[j];
+				option.text = txtArray[j];
+				input.appendChild(option);
+			}
+
+			container.appendChild(br);
+		};
+		
+		
+		function addMeter(sel_box){
+			sel_box.onchange = function(){removeMeter(this);};
+			var meters = parseInt(document.getElementById("numMtrs").value) + 1;
+			document.getElementById("numMtrs").value = meters;
+			
+			var container = document.getElementById("container");
+			<!-- //alert(container.length); -->
+			insertMeterSetup(container, meters, meters);  <!-- // container, block number, total number of blocks - 1 -->
+			
+			mtr_ip.push(document.getElementsByClassName("mip")[meters - 1].value);
+			mtr_id.push(document.getElementsByClassName("id")[meters - 1].value);
+			mtr_vid.push(document.getElementsByClassName("vid")[meters - 1].value);
+			mtr_typ.push(document.getElementsByClassName("meter")[meters - 1].value);
+		};
+		
+		
+		function removeMeter(sel_box){
+			if (sel_box.value == "0.0.0"){
+				var meters = parseInt(document.getElementById("numMtrs").value);
+				sel_box_id = parseInt((sel_box.id).slice(3));
+				
+				var mtrIPs = document.getElementsByClassName("mip");
+				var mtrIDs = document.getElementsByClassName("id");
+				var mtrVIDs = document.getElementsByClassName("vid");
+				var mtrTyps = document.getElementsByClassName("meter");
+			
+				for (var i = 0; i < meters; i++){
+					mtr_ip[i] = mtrIPs[i].value;
+					mtr_id[i] = mtrIDs[i].value;
+					mtr_vid[i] = mtrVIDs[i].value;
+					mtr_typ[i] = mtrTyps[i].value;
+				}
+				
+				mtr_ip.splice(sel_box_id, 1);
+				mtr_id.splice(sel_box_id, 1);
+				mtr_vid.splice(sel_box_id, 1);
+				mtr_typ.splice(sel_box_id, 1);
+				
+				meters -= 1;
+				
+				addFields(meters);
+				fillFields();
+			}
+		};
+		
+		
+		function fillFields(){
+			var meters = parseInt(document.getElementById("numMtrs").value);
+			var mtrIPs = document.getElementsByClassName("mip");
+			var mtrIDs = document.getElementsByClassName("id");
+			var mtrVIDs = document.getElementsByClassName("vid");
+			var mtrTyps = document.getElementsByClassName("meter");
+			
+			for (var i = 0; i < meters; i++){
+				mtrIPs[i].value = mtr_ip[i];
+				mtrIDs[i].value = mtr_id[i];
+				mtrVIDs[i].value = mtr_vid[i];
+				mtrTyps[i].value = mtr_typ[i];
+			}
+		};
+		
+		
+		function getMeterList(){
+			mtr_ip.splice(0, mtr_ip.length);
+			mtr_id.splice(0, mtr_id.length);
+			mtr_vid.splice(0, mtr_vid.length);
+			mtr_typ.splice(0, mtr_typ.length);
+			addFields(0);
+			
+			nocache = "&nocache=" + Math.random() * 1000000;
+			var request = new XMLHttpRequest();
+			request.onreadystatechange = function(){
+				if (this.readyState == 4) {
+					if (this.status == 200) {
+						if (this.responseXML != null) {
+							var xmlDoc = this.responseXML;
+							var mtrs = xmlDoc.getElementsByTagName("meter");
+							
+							for (var i = 0; i < mtrs.length; i++){
+								if (mtrs[i].getElementsByTagName("mip")[0].childNodes.length > 0){
+									mtr_ip[i] = mtrs[i].getElementsByTagName("mip")[0].childNodes[0].nodeValue;
+								}
+								else{
+									mtr_ip[i] = "";
+								}
+								
+								if (mtrs[i].getElementsByTagName("dev")[0].childNodes.length > 0){
+									mtr_id[i] = mtrs[i].getElementsByTagName("dev")[0].childNodes[0].nodeValue;
+								}
+								else{
+									mtr_id[i] = "";
+								}
+								
+								if (mtrs[i].getElementsByTagName("vid")[0].childNodes.length > 0){
+									mtr_vid[i] = mtrs[i].getElementsByTagName("vid")[0].childNodes[0].nodeValue;
+								}
+								else{
+									mtr_vid[i] = "";
+								}
+								
+								if (mtrs[i].getElementsByTagName("type")[0].childNodes.length > 0){
+									mtr_typ[i] = mtrs[i].getElementsByTagName("type")[0].childNodes[0].nodeValue;
+								}
+								else{
+									mtr_typ[i] = "";
+								}
+							}
+							<!-- // extract XML data from XML file (containing switch states and analog value)
+							//document.getElementById("id0").value = this.responseXML.getElementsByTagName('id')[0].childNodes[0].nodeValue;
+							
+							//document.getElementById("mtr").value = this.responseXML.getElementsByTagName('mtr')[0].childNodes[0].nodeValue; -->
+							
+							addFields(mtrs.length);
+							fillFields();
+						}
+					}
+				}
+			}
+			request.open("GET", "mtrsetup.xml" + nocache, true);
+			request.send(null);
+		};
+		
+		
+		function checkIP(in_box){
+			var ip_id = in_box.id;	
+			var ip_err_id = ip_id + "_err";
+			var ip_val = in_box.value;
+			var ip_arr = ip_val.split(".");
+			
+			var i;
+			
+			if (ip_val == ""){
+				document.getElementById(ip_err_id).innerHTML = "";
+				return true;
+			}
+			else if (ip_arr.length != 4){
+				document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+				return false;
+			}
+			else{
+				for (i = 0; i < 4; i++){	
+					var oct = parseInt(ip_arr[i]);
+					
+					if (!isNaN(oct)){
+						if (oct.toString() == ip_arr[i]){
+							if ((parseInt(ip_arr[i]) > 255) || (parseInt(ip_arr[i]) < 0)){
+								document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+								return false;
+							}
+						}
+						else{
+							document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+							return false;
+						}
+					}
+					else{
+						document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+						return false;
+					}
+				}
+				document.getElementById(ip_err_id).innerHTML = "";
+				return true;
+			}
+		};
+		
+		
+		function checkID(inp_box){
+			var id_id = inp_box.id;	
+			var id_err_id = id_id + "_err";
+			if (inp_box.value == null || inp_box.value == '') {
+				document.getElementById(id_err_id).innerHTML = "Invalid entry";
+				return false;
+			}
+			else {
+				var id_val = parseInt(inp_box.value);
+			}
+
+			if (!isNaN(id_val)){
+				if (id_val.toString() == inp_box.value){
+					if ((id_val < 0) || (id_val > 255)){
+						document.getElementById(id_err_id).innerHTML = "Invalid entry";
+						return false;
+					}
+					else{
+						document.getElementById(id_err_id).innerHTML = "";
+						return true;
+					}
+				}
+				else{
+					document.getElementById(id_err_id).innerHTML = "Invalid entry";
+					return false;
+				}
+			}
+			else{
+				document.getElementById(id_err_id).innerHTML = "Invalid entry";
+				return false;
+			}
+			document.getElementById(id_err_id).innerHTML = "";
+			return true;
+		};
+		
+		function checkAndSubmit(){	
+			var meters = parseInt(document.getElementById("numMtrs").value);
+			var mtrIPs = document.getElementsByClassName("mip");
+			var mtrIDs = document.getElementsByClassName("id");
+			var mtrVIDs = document.getElementsByClassName("vid");
+			
+			for (var i = 0; i < meters; i++){
+				if (!(checkIP(mtrIPs[i]) && (checkID(mtrIDs[i]) && checkID(mtrVIDs[i])))){
+					alert("Invalid entry!");
+					return false;
+				}
+			}
+				
+			var conf = confirm("Are you sure you want to apply these changes?  The gateway will automatically reset.");
+			
+			if (conf){
+				return true;
+			}
+			else{
+				return false;
+			}
+		};
+	  </script>
+	</head>
+
+	<body onload="getMeterList()">
+	<!-- <body onload="addFields(0)"> -->
+		<!-- Site navigation menu -->
+		<div id="main-wrapper">
+		    <nav>
+				<ul class="navbar">
+					<li><a href="/index.htm">Home</a></li>
+					<li><a href="/gensetup.htm">General Setup</a></li>
+					<li><a id="live" href="/mtrsetup.htm">Meter Setup</a></li>
+					<li><a href="/live.htm">Live Data</a></li>
+					<li><a href="/pastdown.htm">Download Data</a></li>
+					<li><a href="/pastview.htm">Graph Data</a></li>
+					<li><a href="/reset.htm">Reset</a></li>
+					
+					<a id="imglink" href="http://www.upenn.edu/">
+						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
+					</a>
+				</ul>
+		    </nav>
+		    <article>
+			<!-- Main content -->
+				<br/>
+				<form id="container" method="post" onsubmit="return checkAndSubmit()">
+
+				</form>
+			</article>
+		
+			<!-- Footer -->
+			<footer>
+				<address>
+					Updated 3 February 2016 by <a href="mailto:mteter@upenn.edu?Subject=Modbus%20Gateway%20Webpage" target="_top">Matthew J. Teter</a>
+					</br>
+					<a href="http://www.facilities.upenn.edu/">University of Pennsylvania Facilities & Real Estate</a>
+					<br/>
+					3101 Walnut Street
+					<br/>
+					Philadelphia, PA 19104
+					<br/>
+					<a href="http://www.upenn.edu/computing/security/reporting_copyright.php">Copyright</a>
+				</address>
+		    </footer>
+		</div>
+	</body>
+</html>

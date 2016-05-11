@@ -1,0 +1,76 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: close
+
+<!DOCTYPE html>
+<html>
+	<head>
+	  <title>UPenn Modbus Gateway</title>
+	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
+	  <link rel="stylesheet" type="text/css" href="/ep_style.css">  <!-- MUST HAVE "/" AT BEGINNING AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -->
+	</head>
+
+	<body>
+		<div id="main-wrapper">
+		    <nav>
+				<ul class="navbar">
+					<li><a id="live" href="/index.htm">Home</a></li>
+					<li><a href="/gensetup.htm">General Setup</a></li>
+					<li><a href="/mtrsetup.htm">Meter Setup</a></li>
+					<li><a href="/live.htm">Live Data</a></li>
+					<li><a href="/pastdown.htm">Download Data</a></li>
+					<li><a href="/pastview.htm">Graph Data</a></li>
+					<li><a href="/reset.htm">Reset</a></li>
+					
+					<a id="imglink" href="http://www.upenn.edu/">
+						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
+					</a>
+				</ul>
+		    </nav>
+		    <article>
+				<p>
+					Welcome to a University of Pennsylvania custom modbus gateway!  This was designed as a 
+					translator from different dialects of Modbus to a more traditional form that could be easily understood 
+					by current metering software.
+				</p>
+				<br/>
+				<ul>
+					<li>
+						General Setup contains settings pertaining to the gateway itself.
+					</li>
+					<br/>
+					<li>
+						Meter Setup contains setting pertaining to meters assigned to this gateway.  Please note that there may be 
+						more meters connected to this meter.  If the gateway receives a modbus request for an id that is not listed, 
+						then it will default to sending a request over rs485 wire.
+					</li>
+					<br/>
+					<li>
+						Live Data is where snapshots of meters listed under Meter Setup can be found.
+					</li>
+					<br/>
+					<li>
+						Download Data contains csv files of data collected at 5 minute intervals of the meters in Meter Setup.
+					</li>
+					<br/>
+					<li>
+						Graph Data displays a graph of same data located in Download Data.
+					</li>
+				</ul>
+		    </article>
+		    <footer>
+				<address>
+					Updated 3 February 2016 by <a href="mailto:mteter@upenn.edu?Subject=Modbus%20Gateway%20Webpage" target="_top">Matthew J. Teter</a>
+					</br>
+					<a href="http://www.facilities.upenn.edu/">University of Pennsylvania Facilities & Real Estate</a>
+					<br/>
+					3101 Walnut Street
+					<br/>
+					Philadelphia, PA 19104
+					<br/>
+					<a href="http://www.upenn.edu/computing/security/reporting_copyright.php">Copyright</a>
+				</address>
+		    </footer>
+		</div>
+	</body>
+</html>

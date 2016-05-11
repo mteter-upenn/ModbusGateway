@@ -1,0 +1,289 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: close
+
+<!DOCTYPE html>
+<html>
+	<head>
+	  <title>Live Steam Data</title>
+	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
+	  <link rel="stylesheet" type="text/css" href="/ep_style.css">
+	  <style>
+		table.mtr_data {
+			font-family: Arial, Helvetica, sans-serif;
+			max-width: 100%;
+			min-width: 30em;
+			border-collapse: collapse;
+			table-layout: fixed;
+		}
+
+		table.mtr_data td, table.mtr_data th {
+			font-size: 1em;
+			border: 1px solid black;
+			padding: 3px 7px 2px 7px;
+			text-align: center;
+		}
+		
+		table.mtr_data td:first-child {
+			text-align: left;
+		}
+
+		table.mtr_data th {
+			font-size: 1.1em;
+			text-align: center;
+			padding-top: 5px;
+			padding-bottom: 4px;
+			background-color: #a90523;
+			color: #ffffff;
+		}
+
+		table.mtr_data tr.alt td {
+			color: #000000;
+			background-color: #FDC8D1;
+		}
+		
+		table.mtr_data tr.typ td {
+			color: #000000;
+			background-color: #FFFFFF;
+		}
+	  </style>
+	  <script>
+		var selSlv = 0;
+		
+		function getDisplayInfo(){
+			var txtArray = ["", "Eaton IQ DP 4000", "Eaton PXM 2260", "Eaton IQ 200", "Eaton IQ 300", "Eaton Power Xpert 4000",
+							"Emon Dmon 3400", "GE EPM 3720", "GE EPM 5100", "GE PQM", "Siemens 9200", "Siemens 9330",
+							"Siemens 9350", "Siemens 9360", "Siemens 9510", "Siemens 9610", "Siemens 9700", "Siemens Sentron PAC 4200",
+							"Siemens Sentron PAC 3200", "SquareD CM 2350", "SquareD PM 210", "SquareD PM 710", "SquareD Micrologic A Trip Unit", 
+							"SquareD Micrologic P Trip Unit", "SquareD Micrologic H Trip Unit", "SquareD CM 3350", "SquareD CM 4000", 
+							"SquareD CM 4250", "SquareD PM 800", "SquareD PM 820", "SquareD PM 850", "SquareD PM 870", "Chilled Water KEP", 
+							"Steam KEP"];
+			var valArray = ["0.0.0", "0.1.1", "15.1.0", "0.1.3", "0.1.4", "1.1.0", "2.1.0", "3.1.0", "0.2.1", "4.1.0", "0.3.1",
+							"5.1.0", "5.2.0", "5.3.0", "6.1.0", "6.2.0", "5.4.0", "14.1.0", "14.2.0", "7.1.0", "13.1.0", "8.1.0", "9.1.0", "9.2.0", "9.3.0",
+							"10.1.0", "10.2.0", "10.3.0", "10.4.0", "10.5.0", "10.6.0", "10.7.0", "11.1.0", "12.1.0"];
+						
+			nocache = "&nocache=" + Math.random() * 1000000;
+
+			var request = new XMLHttpRequest();
+			request.onreadystatechange = function(){
+				
+				if (this.readyState == 4) {
+					if (this.status == 200) {
+						if (this.responseXML != null) {
+							var xmlDoc = this.responseXML;
+							
+							selSlv = parseInt(xmlDoc.getElementsByTagName('selMtr')[0].childNodes[0].nodeValue) - 1;
+							var totSlvs = xmlDoc.getElementsByTagName('meter').length;
+							
+							var input = document.getElementById('slave');
+							
+							for (var i = 1; i < (totSlvs + 1); i++){
+								var option = document.createElement("option");
+								option.value = i;
+								option.text = i;
+								input.appendChild(option);
+							}
+							
+							input.selectedIndex = selSlv;
+							
+							if (xmlDoc.getElementsByTagName("mip")[selSlv].childNodes.length > 0){
+								document.getElementById("slvIP").innerHTML = xmlDoc.getElementsByTagName("mip")[selSlv].childNodes[0].nodeValue;
+							}
+							else{
+								document.getElementById("slvIP").innerHTML = "485 Network";
+							}
+							
+							if (xmlDoc.getElementsByTagName("dev")[selSlv].childNodes.length > 0){
+								document.getElementById("slvID").innerHTML = xmlDoc.getElementsByTagName("dev")[selSlv].childNodes[0].nodeValue;
+							}
+							else{
+								document.getElementById("slvID").innerHTML = "Modbus ID: ";
+							}
+							
+							if (xmlDoc.getElementsByTagName("type")[selSlv].childNodes.length > 0){
+								var mtrTyp = xmlDoc.getElementsByTagName("type")[selSlv].childNodes[0].nodeValue;
+								
+								for (var j = 0; j < txtArray.length; j++){
+									if (valArray[j] == mtrTyp){
+										document.getElementById("slvTyp").innerHTML = txtArray[j];
+										break;
+									}
+								}
+							}
+							else{
+								document.getElementById("slvTyp").innerHTML = "Meter Type: ";
+							}
+						}
+					}
+				}
+			}
+			request.open("GET", "info.xml" + nocache, true);
+			request.send(null); 
+			/*setTimeout('GetMeterData()', 1000);*/
+		};
+		
+		function getMeterData(){	
+			nocache = "?METER=" + (selSlv + 1) + "&nocache=" + Math.random() * 1000000;
+			
+			var request = new XMLHttpRequest();
+			request.onreadystatechange = function(){
+				
+				if (this.readyState == 4) {
+					if (this.status == 200) {
+						if (this.responseXML != null) {
+							if (this.responseXML.getElementsByTagName('has_data')[0].childNodes[0].nodeValue == "true"){
+								var d = new Date();
+								document.getElementById("last_update").innerHTML = d.toLocaleString();
+								document.getElementById("update_txt").innerHTML = "Successful retrieval!";
+								
+								var count;
+								var cl_cnt;
+								var num_cls;
+								
+								var classes = ["flow", "tmp1", "pres", "engy"];
+								
+								for (cl_cnt = 0; cl_cnt < 8; cl_cnt++){
+									num_cls = this.responseXML.getElementsByTagName(classes[cl_cnt]).length;
+									
+									for (count = 0; count < num_cls; count++){
+										document.getElementsByClassName(classes[cl_cnt])[count].innerHTML = 
+											this.responseXML.getElementsByTagName(classes[cl_cnt])[count].childNodes[0].nodeValue;
+									}
+								}	
+							}
+							else{
+								document.getElementById("update_txt").innerHTML = "Data could not be retrieved."
+							}
+						}
+						else{
+							document.getElementById("update_txt").innerHTML = "Data could not be retrieved."
+						}
+					}
+					else{
+						document.getElementById("update_txt").innerHTML = "Data could not be retrieved."
+					}
+				}
+				else if (this.readyState == 0){
+					document.getElementById("update_txt").innerHTML = "Data could not be retrieved."
+				}
+				else {
+					document.getElementById("update_txt").innerHTML = "Please wait..."
+				}
+			}
+			request.open("GET", "data.xml" + nocache, true);
+			request.send(null); 
+			/*setTimeout('GetMeterData()', 1000);*/
+		};
+		
+		</script>
+	</head>
+
+
+	<!-- Main content -->
+	<body onload="getDisplayInfo()">  <!-- onload="GetMeterData()"> -->
+		<!-- Site navigation menu -->
+		<div id="main-wrapper">
+		    <nav>
+				<ul class="navbar">
+					<li><a href="/index.htm">Home</a></li>
+					<li><a href="/gensetup.htm">General Setup</a></li>
+					<li><a href="/mtrsetup.htm">Meter Setup</a></li>
+					<li><a id="live" href="/live.htm">Live Data</a></li>
+					<li><a href="/pastdown.htm">Download Data</a></li>
+					<li><a href="/pastview.htm">Graph Data</a></li>
+					<li><a href="/reset.htm">Reset</a></li>
+					
+					<a id="imglink" href="http://www.upenn.edu/">
+						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
+					</a>
+				</ul>
+		    </nav>
+		    <article>
+				<!-- Main content -->
+				<br/>
+				<form method="get">
+					<!-- <input type="submit" value="Go to Meter:"> -->
+					<label for="slave">Go to Meter: </label>
+					<select id="slave" onchange="this.form.submit()" name="METER"></select>
+				</form>
+				
+				<br>
+				<p>Current Meter:<br/>
+					<span id="slvIP">IP: </span><br/>
+					<span id="slvID">Modbus ID: </span><br/>
+					<span id="slvTyp">Meter Type: </span>
+				</p>
+				
+				<br>
+				<p style="margin-top: 0em">
+					<button onclick="getMeterData()">Get Data</button>
+					<span id="update_txt" style="padding-left:2em">Data not yet retrieved.</span>
+					<span style="padding-left:2em">Last update: </span>
+					<span id="last_update"></span>
+				</p>
+				
+				<table class="mtr_data">
+					<tr>
+						<th style="width:11em">Steam</th> 
+						
+						<th>Values</th>
+					</tr>
+					<tr class="typ">
+						<td>Heat Flow (kBtu/hr)</td>
+						
+						<td class="flow"></td>
+					</tr>
+					<tr class="alt">
+						<td>Mass Flow (lb/hr)</td>
+						
+						<td class="flow"></td>
+					</tr>
+					<tr class="typ">
+						<td>Volumetric Flow (cf/hr)</td>
+						
+						<td class="flow"></td>
+					</tr>
+					<tr class="alt">
+						<td>Temperature (F)</td>
+						
+						<td class="tmp1"></td>
+					</tr>
+					<tr class="typ">
+						<td>Pressure (psig)</td>
+						
+						<td class="pres"></td>
+					</tr>
+					<tr class="alt">
+						<td>Heat Total (kBtu)</td>
+						
+						<td class="engy"></td>
+					</tr>
+					<tr class="typ">
+						<td>Mass Total (lbs)</td>
+
+						<td class="engy"></td>
+					</tr>
+					<tr class="alt">
+						<td>Volume Total (cf)</td>
+						
+						<td class="engy"></td>
+					</tr>
+				</table>
+			</article>
+
+			<footer>
+				<address>
+					Updated 3 February 2016 by <a href="mailto:mteter@upenn.edu?Subject=Modbus%20Gateway%20Webpage" target="_top">Matthew J. Teter</a>
+					</br>
+					<a href="http://www.facilities.upenn.edu/">University of Pennsylvania Facilities & Real Estate</a>
+					<br/>
+					3101 Walnut Street
+					<br/>
+					Philadelphia, PA 19104
+					<br/>
+					<a href="http://www.upenn.edu/computing/security/reporting_copyright.php">Copyright</a>
+				</address>
+		    </footer>
+		</div>
+	</body>
+</html>

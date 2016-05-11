@@ -1,0 +1,384 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: close
+
+<!DOCTYPE html>
+<html>
+	<head>
+	  <title>Gateway Setup</title>
+	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
+	  <link rel="stylesheet" type="text/css" href="/ep_style.css">  <!-- ADD '/' before address!!!!!!! -->
+	  <style>
+		/* td {
+			border: 1px solid black;
+		} */
+
+		td {margin: 3px 7px 2px 7px;}
+		
+		td.col1 {width: 10em;}
+		td.col2 {width: 13em;}
+		td.colsp {width: 23em;}
+
+		h2 {
+			text-decoration: underline;
+		}	
+	  </style>
+	  <script>
+		function GetArduinoInputs(){
+			
+			nocache = "&nocache=" + Math.random() * 1000000;
+			var request = new XMLHttpRequest();
+			request.onreadystatechange = function(){
+				if (this.readyState == 4) {
+					if (this.status == 200) {
+						if (this.responseXML != null) {
+							// extract XML data from XML file (containing switch states and analog value)
+							document.getElementById("nm").value = this.responseXML.getElementsByTagName('name')[0].childNodes[0].nodeValue;
+							
+							if (this.responseXML.getElementsByTagName('rd')[0].childNodes[0].nodeValue == "true") {
+								document.getElementById("rdh").value = 1;
+								document.getElementById("rd").checked = true;
+							}
+							else {
+								document.getElementById("rdh").value = 0;
+								document.getElementById("rd").checked = false;
+							}
+							
+							document.getElementById("ms").value = this.responseXML.getElementsByTagName('mxslvs')[0].childNodes[0].nodeValue;
+							
+							document.getElementById("mac").innerHTML = this.responseXML.getElementsByTagName('mac')[0].childNodes[0].nodeValue;
+							
+							document.getElementById("ip").value = this.responseXML.getElementsByTagName('ip')[0].childNodes[0].nodeValue;
+							
+							document.getElementById("sm").value = this.responseXML.getElementsByTagName('sm')[0].childNodes[0].nodeValue;
+							
+							document.getElementById("gw").value = this.responseXML.getElementsByTagName('gw')[0].childNodes[0].nodeValue;
+							
+							
+							document.getElementById("br").value = this.responseXML.getElementsByTagName('br')[0].childNodes[0].nodeValue;
+							
+							document.getElementById("to").value = this.responseXML.getElementsByTagName('to')[0].childNodes[0].nodeValue;
+							
+							var a = new Date(parseInt(this.responseXML.getElementsByTagName('rtc')[0].childNodes[0].nodeValue) * 1000);
+							var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+							var year = a.getFullYear();
+							var month = months[a.getMonth()];
+							var date = a.getDate();
+							var hour = a.getHours();
+							var min = a.getMinutes() < 10 ? '0' + a.getMinutes() : a.getMinutes();
+							var sec = a.getSeconds() < 10 ? '0' + a.getSeconds() : a.getSeconds();
+							var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+							
+							
+							document.getElementById("rtc").innerHTML = time;
+							
+						}
+					}
+				}
+			}
+			request.open("GET", "gensetup.xml" + nocache, true);
+			request.send(null);
+		};
+		
+
+		function CheckIP(in_box){	
+			var ip_id = in_box.id;	
+			var ip_err_id = ip_id + "_err";
+			var ip_val = in_box.value;
+			var ip_arr = ip_val.split(".");
+			
+			var i;
+			
+			if (ip_arr.length != 4){
+				document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+				return false;
+			}
+			else{
+				for (i = 0; i < 4; i++){	
+					var oct = parseInt(ip_arr[i]);
+					
+					if (!isNaN(oct)){
+						if (oct.toString() == ip_arr[i]){
+							if ((parseInt(ip_arr[i]) > 255) || (parseInt(ip_arr[i]) < 0)){
+								document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+								return false;
+							}
+						}
+						else{
+							document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+							return false;
+						}
+					}
+					else{
+						document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+						return false;
+					}
+				}
+				document.getElementById(ip_err_id).innerHTML = "";
+				return true;
+			}
+		};
+			
+		function CheckTO(){
+			var to_val = parseInt(document.getElementById("to").value);
+
+			if (!isNaN(to_val)){
+				if (to_val.toString() == document.getElementById("to").value){
+					if ((to_val > 10000) || (to_val < 0)){
+						document.getElementById("to_err").innerHTML = "Invalid entry";
+						return false;
+					}
+					else if (to_val > 1000){
+						document.getElementById("to_err").innerHTML = "Larger than recommended";
+						return true;
+					}
+				}
+				else{
+					document.getElementById("to_err").innerHTML = "Invalid entry";
+					return false;
+				}
+			}
+			else{
+				document.getElementById("to_err").innerHTML = "Invalid entry";
+				return false;
+			}
+			document.getElementById("to_err").innerHTML = "";
+			return true;
+		};
+
+		function CheckMaxSlvs(){
+			var ms_val = parseInt(document.getElementById("ms").value);
+			
+			if (!isNaN(ms_val)){
+				if (ms_val.toString() == document.getElementById("ms").value){
+					if ((ms_val > 20) || (ms_val < 0)){
+						document.getElementById("ms_err").innerHTML = "Invalid entry";
+						return false;
+					}
+					else if (ms_val > 5){
+						document.getElementById("ms_err").innerHTML = "Larger than recommended";
+						return true;
+					}
+					else {
+						document.getElementById("ms_err").innerHTML = "";
+						return true;
+					}
+				}
+				else{
+					document.getElementById("ms_err").innerHTML = "Invalid entry";
+					return false;
+				}
+			}
+			else{
+				document.getElementById("ms_err").innerHTML = "Invalid entry";
+				return false;
+			}
+			document.getElementById("ms_err").innerHTML = "";
+			return true;
+		};
+		
+		function CheckName(){
+			var nm_len = document.getElementById("nm").value.length;
+			
+			if (nm_len > 30){
+				document.getElementById("nm_err").innerHTML = "Name too long";
+				return false;
+			}
+			else{
+				document.getElementById("nm_err").innerHTML = "";
+				return true;
+			}
+		}
+		
+		function CheckAndSubmit(){	
+			var tf = CheckName(document.getElementById("nm"));
+			if (!tf){
+				alert("Name too long!");
+				return false;
+			}
+
+			tf = CheckMaxSlvs();
+			if (!tf){
+				alert("Invalid number of max slaves to record!");
+				return false;
+			}
+
+			tf = CheckIP(document.getElementById("ip"));
+			if (!tf){
+				alert("Invalid IP!");
+				return false;
+			}
+			
+			tf = CheckIP(document.getElementById("sm"));
+			if (!tf){
+				alert("Invalid subnet mask!");
+				return false;
+			}
+			
+			tf = CheckIP(document.getElementById("gw"));
+			if (!tf){
+				alert("Invalid default gateway!");
+				return false;
+			}
+			
+			tf = CheckTO();
+			if (!tf){
+				alert("Invalid timeout!");
+				return false;
+			}
+		
+			
+			var conf = confirm("Are you sure you want to apply these changes?  The gateway will automatically reset.");
+			
+			if (conf){
+				if (document.getElementById("tm_cb").checked) {
+					var curTime = Date.now() / 1000 | 0;  // gets unix time in milliseconds then converts to seconds
+					document.getElementById("tm").value = curTime;
+				}
+
+				return true;
+			}
+			else{
+				return false;
+			}
+		};
+	  </script>
+	</head>
+
+	<body onload="GetArduinoInputs()">
+		<div id="main-wrapper">
+		    <nav>
+			<!-- Site navigation menu -->
+				<ul class="navbar">
+					<li><a href="/index.htm">Home</a></li>
+					<li><a id="live" href="/gensetup.htm">General Setup</a></li>
+					<li><a href="/mtrsetup.htm">Meter Setup</a></li>
+					<li><a href="/live.htm">Live Data</a></li>
+					<li><a href="/pastdown.htm">Download Data</a></li>
+					<li><a href="/pastview.htm">Graph Data</a></li>
+					<li><a href="/reset.htm">Reset</a></li>
+					
+					<a id="imglink" href="http://www.upenn.edu/">
+						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
+					</a>
+				</ul>
+		    </nav>
+		    <article>		
+			<!-- Main content -->
+				<form method="post" onsubmit="return CheckAndSubmit()">
+					<table>
+						<tr>
+							<td colspan="2"><h2>Gateway Setup</h2></td>
+						</tr>
+						<tr>
+							<td><label for="nm">Gateway Name: </label></td>
+							<td><input id="nm" name="nm" type="text" style="width:17em;" oninput="CheckName()"/></td>
+							<td><label id="nm_err" style="color: red"></label></td>
+						</tr>
+						<tr>
+							<td><label for="rd">Record data? </label></td>
+							<td><input type="hidden" id="rdh" name="rd" value="0"/><input id="rd" type="checkbox" onclick="this.previousSibling.value=1-this.previousSibling.value"/></td>
+						</tr>
+						<tr>
+							<td><label for="ms">Max Number of Slaves to Record: </label></td>
+							<td><input id="ms" name="ms" type="text" style="width:17em;" oninput="CheckMaxSlvs()"/></td>
+							<td><label id="ms_err" style="color: red"></label></td>
+						</tr>
+						
+						<tr><td><br/></td></tr>
+						
+						<tr>
+							<td colspan="2"><h2>Network Setup</h2></td>
+						</tr>
+						<tr>
+							<td><label>MAC: </label></td>
+							<td><label id="mac" style="padding-left: .5em;"></label></td>
+						</tr>
+						<tr>
+							<td><label for="ip">IP: </label></td>
+							<td><input id="ip" name="ip" type="text" oninput="CheckIP(this)"/></td>
+							<td><label id="ip_err" style="color: red"></label></td>
+						</tr>
+						<tr>
+							<td><label for="sm">Subnet Mask: </label></td>
+							<td><input id="sm" name="sm" type="text" oninput="CheckIP(this)"/></td>
+							<td><label id="sm_err" style="color: red"></label></td>
+						</tr>
+						<tr>
+							<td><label for="gw">Default Gateway: </label></td>
+							<td><input id="gw" name="gw" type="text" oninput="CheckIP(this)"/></td>
+							<td><label id="gw_err" style="color: red"></label></td>
+						</tr>
+					
+						<tr><td><br/></td></tr>
+						
+						<tr>
+							<td colspan="2"><h2>Modbus Setup</h2></td>
+						</tr>
+						<tr>
+							<td><label for="br">Baudrate: </label></td>
+							<td><select id="br" name="br">
+								<option value="300">300</option>
+								<option value="600">600</option>
+								<option value="1200">1200</option>
+								<option value="2400">2400</option>
+								<option value="4800">4800</option>
+								<option value="9600" selected="selected">9600</option>
+								<option value="14400">14400</option>
+								<option value="19200">19200</option>
+								<option value="28800">28800</option>
+								<option value="31250">31250</option>
+								<option value="38400">38400</option>
+								<option value="57600">57600</option>
+								<option value="115200">115200</option>
+							</select></td>
+						</tr>
+						<tr>
+							<td><label for="to">Modbus timeout (ms): </label></td>
+							<td><input id="to" name="to" type="text" oninput="CheckTO()"/></td>
+							<td><label id="to_err" style="color: red; width: 15em"></label></td>
+						</tr>
+						
+						<tr><td><br/></td></tr>
+						
+						
+						<tr>
+							<td colspan="2"><h2>Real Time Clock Setup</h2></td>
+						</tr>
+						<tr>
+							<td><label>Current Time as of Request: </label></td>
+							<td><label id="rtc" style="padding-left: .5em;"></label></td>
+						</tr>
+						<tr>
+							<td><label for="tm_cb">Set to this computer's clock? </label></td>
+							<td><input id="tm_cb" type="checkbox"/></td>
+							<td><input id="tm" name="tm" type="hidden"/></td>
+						</tr>					
+						
+						<tr><td><br/></td></tr>
+						
+						<tr>
+							<td><input type="submit" value="Apply Changes"/></td>
+						</tr>
+					</table>
+				</form>
+			</article>
+		
+
+			<!-- Footer -->
+			<footer>
+				<address>
+					Updated 3 February 2016 by <a href="mailto:mteter@upenn.edu?Subject=Modbus%20Gateway%20Webpage" target="_top">Matthew J. Teter</a>
+					</br>
+					<a href="http://www.facilities.upenn.edu/">University of Pennsylvania Facilities & Real Estate</a>
+					<br/>
+					3101 Walnut Street
+					<br/>
+					Philadelphia, PA 19104
+					<br/>
+					<a href="http://www.upenn.edu/computing/security/reporting_copyright.php">Copyright</a>
+				</address>
+			</footer>
+		</div>
+	</body>
+</html>

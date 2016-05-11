@@ -1,0 +1,28 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+Connection: close
+
+<!DOCTYPE html>
+<html>
+	<head>
+	  <title>Redirect</title>
+	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
+	  <link rel="stylesheet" type="text/css" href="/ep_style.css">  <!-- MUST HAVE "/" AT BEGINNING AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -->
+	  
+	  <script>
+		var tickDown;
+
+		function goHome(){
+			tickDown = setInterval(function(){tickP()}, 1000);
+			setTimeout(function(){redirect()}, 5000);
+			
+		};
+		
+		function tickP() {
+			var t = parseInt(document.getElementById("rdct").innerHTML);
+			document.getElementById("rdct").innerHTML = t - 1;
+		};
+		
+		function redirect() {
+			clearInterval(tickDown);
+			window.location="http://
