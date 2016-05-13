@@ -1,3 +1,2 @@
-#ignore __vm, Debug directories
+#ignore __vm directories
 __vm/
-Debug/
