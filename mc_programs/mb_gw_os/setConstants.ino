@@ -32,12 +32,16 @@ void setConstants(){
     ip[i] = EEPROM.read(i + ip_strt + 6);
     subnet[i] = EEPROM.read(i + ip_strt + 10);
     gateway[i] = EEPROM.read(i + ip_strt + 14);
+
+    ntpIp[i] = EEPROM.read(i + ip_strt + 19);
   }
 
-  baudrate = EEPROM.read(ip_strt + 18);
-  baudrate = (uint32_t)((baudrate << 16) | (EEPROM.read(ip_strt + 19) << 8) | (EEPROM.read(ip_strt + 20)));
+  bNTPserv = EEPROM.read(ip_strt + 18);
 
-  timeout = word(EEPROM.read(ip_strt + 21), EEPROM.read(ip_strt + 22));
+  baudrate = EEPROM.read(ip_strt + 23);
+  baudrate = (uint32_t)((baudrate << 16) | (EEPROM.read(ip_strt + 24) << 8) | (EEPROM.read(ip_strt + 25)));
+
+  timeout = word(EEPROM.read(ip_strt + 26), EEPROM.read(ip_strt + 27));
 
 
   slaves = EEPROM.read(mtr_strt);

@@ -728,6 +728,31 @@ void getPostSetupData(EthernetClient cl, uint16_t pst_len){
           EEPROM.write((j + ip_strt + 14), u8dum);
         }
       }
+      else if (strncmp(post_str + id_strt, "ntp", 3) == 0) {  // ***************************************** USE NTP? ************************************
+        u16dum = 0;
+        for (j = val_strt; j < val_end; j++) {
+          u16dum = u16dum * 10 + (post_str[j] - '0');
+        }
+
+        if (u16dum) {
+          EEPROM.write(ip_strt + 18, true);
+        }
+        else {
+          EEPROM.write(ip_strt + 18, false);
+        }
+      }
+      else if (strncmp(post_str + id_strt, "nip", 3) == 0) {  //  ************************************ NTP SERVER IP *****************************************
+        k = val_strt;
+        for (j = 0; j < 4; j++) {
+          u8dum = 0;
+          while ((post_str[k] != '.') && (k < val_end)) {
+            u8dum = u8dum * 10 + (post_str[k] - '0');
+            k++;
+          }
+          k++;
+          EEPROM.write((j + ip_strt + 19), u8dum);
+        }
+      }
       else if (strncmp(post_str + id_strt, "br", 2) == 0){  //  ****************************************** BAUDRATE *************************************************
 //        Serial.println(F("br"));
         u32dum = 0;
@@ -736,9 +761,9 @@ void getPostSetupData(EthernetClient cl, uint16_t pst_len){
           u32dum = u32dum * 10 + (post_str[j] - '0');
         }
 
-        EEPROM.write(ip_strt + 18, (u32dum >> 16));
-        EEPROM.write(ip_strt + 19, (u32dum >> 8));
-        EEPROM.write(ip_strt + 20, u32dum);
+        EEPROM.write(ip_strt + 23, (u32dum >> 16));
+        EEPROM.write(ip_strt + 24, (u32dum >> 8));
+        EEPROM.write(ip_strt + 25, u32dum);
       }
       else if (strncmp(post_str + id_strt, "to", 2) == 0){  //  ****************************************** MB TIMEOUT *************************************************
 //        Serial.println(F("to"));
@@ -747,8 +772,8 @@ void getPostSetupData(EthernetClient cl, uint16_t pst_len){
           u16dum = u16dum * 10 + (post_str[j] - '0');
         }
 
-        EEPROM.write(ip_strt + 21,highByte(u16dum));
-        EEPROM.write(ip_strt + 22, lowByte(u16dum));
+        EEPROM.write(ip_strt + 26,highByte(u16dum));
+        EEPROM.write(ip_strt + 27, lowByte(u16dum));
       }
       else if (strncmp(post_str + id_strt, "tm", 2) == 0){  //  ****************************************** TIME *************************************************
          u32dum = 0;

@@ -65,6 +65,9 @@ IPAddress gateway(130, 91, 136, 1);                    // this value will be ove
 uint8_t clientIP[] = {192, 168, 1, 1};                 // ip of slave on pseudo modbus network
 bool bReset = false;
 
+bool bNTPserv = false;                                 // turns ntp on/off (overwritten by eeprom)
+IPAddress ntpIp(128, 91, 3, 136);                      // this value will be overwritten by ip stored in eeprom
+
 // gateway info
 char meter_nm[31] = {0};                               // name of gateway
 uint16_t nm_strt, ip_strt, mtr_strt, reg_strt;         // addresses for components stored in eeprom (see flash_eeprom.ino for more details)
@@ -189,7 +192,7 @@ void resetArd(){
 
 
 void setup() {
-  time_t t;
+  time_t t = 0;
 
   Serial.begin(9600);
   //Serial.println(F("delay here"));
@@ -316,16 +319,19 @@ void setup() {
   //setTime(4, 40, 0, 30, 10, 2015);
   setSyncProvider(getRtcTime);
 
-  t = getNtpTime();
-  if (t == 0) {
-    if (getRtcTime() > 1451606400UL) {
+  if (bNTPserv) {
+    t = getNtpTime();
+  }
+
+  if (t == 0) {  //  could not get ntp time, or ntp was disabled
+    if (getRtcTime() > 1451606400UL) {  // check if rtc is already working well, if not show as led error
       bGoodRTC = true;  // time in RTC is greater than Jan 1 2016
     }
-    else {
+    //else {
       //digitalWrite(rtcFailLed, HIGH);  // no connection to ntp servers and rtc has not been set
-    }
+    //}
   }
-  else {
+  else {  // set clock to time gotten from ntp
 #if defined(CORE_TEENSY)
     Teensy3Clock.set(t);
 #endif

@@ -384,8 +384,8 @@ void setup() {
 
   nm_strt = 10;
   ip_strt = nm_strt + 33; // 43
-  mtr_strt = ip_strt + 23; // 66
-  reg_strt = mtr_strt + 181;  // 347
+  mtr_strt = ip_strt + 28; // 71
+  reg_strt = mtr_strt + 181;  // 252
 
   
 
@@ -949,6 +949,15 @@ void setup() {
   EEPROM.write(ip_strt + 17, 1);
 #endif
 
+//ntp server ip
+
+  EEPROM.write(ip_strt + 18, false);  // use ntp or not
+
+  EEPROM.write(ip_strt + 19, 130);  // ntp server ip
+  EEPROM.write(ip_strt + 20, 91);
+  EEPROM.write(ip_strt + 21, 136);
+  EEPROM.write(ip_strt + 22, 1);
+
 
 #if SERIAL_INPUT == 1
   Serial.println(F("Please enter a baudrate for 485 communications."));
@@ -1001,9 +1010,9 @@ void setup() {
             if (ch == 'Y' || ch == 'y'){
               bReady = true;
 
-              EEPROM.write(ip_strt + 18, (bdrt >> 16) & 0xFF);
-              EEPROM.write(ip_strt + 19, (bdrt >> 8) & 0xFF);
-              EEPROM.write(ip_strt + 20, bdrt & 0xFF);
+              EEPROM.write(ip_strt + 23, (bdrt >> 16) & 0xFF);
+              EEPROM.write(ip_strt + 24, (bdrt >> 8) & 0xFF);
+              EEPROM.write(ip_strt + 25, bdrt & 0xFF);
               clearSerialRx();
               break;
             }
@@ -1028,9 +1037,9 @@ void setup() {
   bReady = false;  
 #else
   // Bytes 18-20 are BR
-  EEPROM.write(ip_strt + 18, 0);
-  EEPROM.write(ip_strt + 19, highByte(9600));
-  EEPROM.write(ip_strt + 20, lowByte(9600));
+  EEPROM.write(ip_strt + 23, 0);
+  EEPROM.write(ip_strt + 24, highByte(9600));
+  EEPROM.write(ip_strt + 25, lowByte(9600));
 #endif
 
 
@@ -1065,8 +1074,8 @@ void setup() {
   
             if (ch == 'Y' || ch == 'y'){
               bReady = true;
-              EEPROM.write(ip_strt + 21, (tmout >> 8) & 0xFF);
-              EEPROM.write(ip_strt + 22, tmout & 0xFF);
+              EEPROM.write(ip_strt + 26, (tmout >> 8) & 0xFF);
+              EEPROM.write(ip_strt + 27, tmout & 0xFF);
               clearSerialRx();
               break;
             }
@@ -1090,8 +1099,8 @@ void setup() {
   bReady = false;  
 #else
   // Bytes 21-22 are T/O
-  EEPROM.write(ip_strt + 21, highByte(2000));
-  EEPROM.write(ip_strt + 22, lowByte(2000));
+  EEPROM.write(ip_strt + 26, highByte(2000));
+  EEPROM.write(ip_strt + 27, lowByte(2000));
 #endif
 
 
