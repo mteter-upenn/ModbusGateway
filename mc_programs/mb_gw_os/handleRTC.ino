@@ -1,5 +1,5 @@
 time_t getNtpTime(){
-  IPAddress timeServer(128, 91, 2, 13);
+  //IPAddress timeServer(128, 91, 2, 13);
 //  char timeServer[] = "time.nist.gov"; // time.nist.gov NTP server
   const int NTP_PACKET_SIZE = 48;
   byte packetBuffer[NTP_PACKET_SIZE];
@@ -24,7 +24,7 @@ time_t getNtpTime(){
   packetBuffer[14]  = 49;
   packetBuffer[15]  = 52;
 
-  ntpClient.beginPacket(timeServer, 123); //NTP requests are to port 123
+  ntpClient.beginPacket(ntpIp, 123); //NTP requests are to port 123
   ntpClient.write(packetBuffer, NTP_PACKET_SIZE);
   ntpClient.endPacket();
   
