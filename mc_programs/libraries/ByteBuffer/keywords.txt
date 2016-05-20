@@ -1,0 +1,51 @@
+#######################################
+# Syntax Coloring Map For ModbusSlave
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ByteBuffer	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+init	            KEYWORD2
+clear	            KEYWORD2
+deAllocate	        KEYWORD2
+getSize	            KEYWORD2
+getCapacity         KEYWORD2
+getPosition 	    KEYWORD2
+searchString     	KEYWORD2
+peek 	            KEYWORD2
+arrayPeek 	        KEYWORD2
+
+putInFront 	        KEYWORD2
+put 	            KEYWORD2
+putIntInFront 	    KEYWORD2
+putInt 	            KEYWORD2
+putLongInFront	    KEYWORD2
+putLong 	        KEYWORD2
+putFloatInFront 	KEYWORD2
+putFloat 	        KEYWORD2
+
+
+get 	            KEYWORD2
+getFromBack 	    KEYWORD2
+getInt 	            KEYWORD2
+getIntFromBack 	    KEYWORD2
+getLong 	        KEYWORD2
+getLongFromBack 	KEYWORD2
+getFloat 	        KEYWORD2
+getFloatFromBack 	KEYWORD2
+
+
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+
