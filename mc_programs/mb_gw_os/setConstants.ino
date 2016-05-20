@@ -151,7 +151,24 @@ void writeGenSetupFile(){
     webFile.print(gateway[i], DEC);
   }
   
-  webFile.print(F("</gw><br>"));
+  webFile.print(F("</gw><ntp>"));
+
+  if (bNTPserv) {
+    webFile.print(F("true"));
+  }
+  else {
+    webFile.print(F("false"));
+  }
+
+  webFile.print(F("</ntp><nip>"));
+
+  webFile.print(ntpIp[0], DEC);
+  for (i = 1; i < 4; i++) {
+    webFile.print(F("."));
+    webFile.print(ntpIp[i], DEC);
+  }
+
+  webFile.print(F("</nip><br>"));
 
   webFile.print(baudrate, DEC);
   

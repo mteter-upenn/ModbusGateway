@@ -1,14 +1,14 @@
-/*HTTP/1.1 200 OK
+HTTP/1.1 200 OK
 Content-Type: text/html
 Connection: close
-*/
+
 <!DOCTYPE html>
 <html>
 	<head>
 	
 	  <title>Gateway Setup</title>
 	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
-	  <link rel="stylesheet" type="text/css" href="ep_style.css">  <!-- ADD '/' before address!!!!!!! -->
+	  <link rel="stylesheet" type="text/css" href="/ep_style.css">  <!-- ADD '/' before address!!!!!!! -->
 	  <style>
 		/* td {
 			border: 1px solid black;
@@ -234,6 +234,7 @@ Connection: close
 				return false;
 			}
 			
+			// this will be stored regardless of whether or not the checkbox is checked
 			tf = CheckIP(document.getElementById("nip"));
 			if (!tf){
 				alert("Invalid NTP Server IP!");
@@ -345,7 +346,7 @@ Connection: close
 						</tr>
 						<tr>
 							<td><label for="nip">NTP Server IP: </label></td>
-							<td><input id="nip" name="ntp" type="text" oninput="CheckIP(this)"/></td>
+							<td><input id="nip" name="nip" type="text" oninput="CheckIP(this)"/></td>
 							<td><label id="nip_err" style="color: red"></label></td>
 						</tr>
 					

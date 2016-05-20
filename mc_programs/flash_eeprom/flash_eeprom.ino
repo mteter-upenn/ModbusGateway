@@ -953,10 +953,10 @@ void setup() {
 
   EEPROM.write(ip_strt + 18, false);  // use ntp or not
 
-  EEPROM.write(ip_strt + 19, 130);  // ntp server ip
+  EEPROM.write(ip_strt + 19, 128);  // ntp server ip
   EEPROM.write(ip_strt + 20, 91);
-  EEPROM.write(ip_strt + 21, 136);
-  EEPROM.write(ip_strt + 22, 1);
+  EEPROM.write(ip_strt + 21, 3);
+  EEPROM.write(ip_strt + 22, 136);
 
 
 #if SERIAL_INPUT == 1
