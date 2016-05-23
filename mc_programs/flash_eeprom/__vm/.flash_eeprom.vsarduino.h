@@ -101,4 +101,6 @@ extern "C" void __cxa_pure_virtual() {;}
 #include <..\flash_eeprom\meter14.ino>
 #include <..\flash_eeprom\meter15.ino>
 #include <..\flash_eeprom\read_eeprom.ino>
+#include <..\flash_eeprom\term_func.ino>
+#include <..\flash_eeprom\writeLibrary.ino>
 #endif
