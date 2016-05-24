@@ -1,13 +1,12 @@
 uint16_t writeBlocks(uint16_t reg_strt) {
-  uint16_t mtr_strt;
   uint16_t indMtrStrt;
 
   //  EEPROM.write(bt_strt, 2);  // current meter type  default is 2.1.0
   //  EEPROM.write(bt_strt + 1, 1);
   //  EEPROM.write(bt_strt + 2, 0);
-  mtr_strt = reg_strt;
-  EEPROM.write(reg_strt + 0, highByte(mtr_strt));
-  EEPROM.write(reg_strt + 1, lowByte(mtr_strt));  // address of meter addresses
+
+  EEPROM.write(reg_strt + 0, highByte(reg_strt));
+  EEPROM.write(reg_strt + 1, lowByte(reg_strt));  // address of meter addresses
   EEPROM.write(reg_strt + 2, 15);  // number of meters adjust when adding new meters AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 
@@ -30,122 +29,122 @@ uint16_t writeBlocks(uint16_t reg_strt) {
 // emon dmon    #2
   indMtrStrt -= 95;
   meter2(indMtrStrt);
-  EEPROM.write(mtr_strt + 7, highByte(indMtrStrt));  // 95 -> 150
-  EEPROM.write(mtr_strt + 8, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 9, 2);  // meter number
-  EEPROM.write(mtr_strt + 10, 3);  // function
+  EEPROM.write(reg_strt + 7, highByte(indMtrStrt));  // 95 -> 150
+  EEPROM.write(reg_strt + 8, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 9, 2);  // meter number
+  EEPROM.write(reg_strt + 10, 3);  // function
 
 // ge epm 3720    #3
   indMtrStrt -= 101;
   meter3(indMtrStrt);
-  EEPROM.write(mtr_strt + 11, highByte(indMtrStrt));  // 101 -> 150
-  EEPROM.write(mtr_strt + 12, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 13, 3);  // meter number
-  EEPROM.write(mtr_strt + 14, 3);  // function
+  EEPROM.write(reg_strt + 11, highByte(indMtrStrt));  // 101 -> 150
+  EEPROM.write(reg_strt + 12, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 13, 3);  // meter number
+  EEPROM.write(reg_strt + 14, 3);  // function
 
-  //  // ge pqm    #4
-  //  indMtrStrt -= ;
+  // ge pqm    #4
+  indMtrStrt -= 0;
 
-  //  meter4(3250);
-  //  EEPROM.write(mtr_strt + 15, highByte(3250));  // assume 400
-  //  EEPROM.write(mtr_strt + 16, lowByte(3250));
+  meter4(0);
+  EEPROM.write(reg_strt + 15, highByte(0));  // assume 400
+  EEPROM.write(reg_strt + 16, lowByte(0));
 
-  //  EEPROM.write(mtr_strt + 17, 4);  // meter number
-  //  EEPROM.write(mtr_strt + 18, 3);  // function
+  EEPROM.write(reg_strt + 17, 4);  // meter number
+  EEPROM.write(reg_strt + 18, 3);  // function
 
 
   // siemens 9330, 9350, 9360    #5
   indMtrStrt -= 103;
   meter5(indMtrStrt);
-  EEPROM.write(mtr_strt + 19, highByte(indMtrStrt));  // 103 -> 150
-  EEPROM.write(mtr_strt + 20, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 21, 5);  // meter number
-  EEPROM.write(mtr_strt + 22, 3);  // function
+  EEPROM.write(reg_strt + 19, highByte(indMtrStrt));  // 103 -> 150
+  EEPROM.write(reg_strt + 20, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 21, 5);  // meter number
+  EEPROM.write(reg_strt + 22, 3);  // function
 
 // siemens 9510, 9610    #6
   indMtrStrt -= 126;
   meter6(indMtrStrt);
-  EEPROM.write(mtr_strt + 23, highByte(indMtrStrt));  // 126 -> 175
-  EEPROM.write(mtr_strt + 24, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 25, 6);  // meter number
-  EEPROM.write(mtr_strt + 26, 3);  // function
+  EEPROM.write(reg_strt + 23, highByte(indMtrStrt));  // 126 -> 175
+  EEPROM.write(reg_strt + 24, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 25, 6);  // meter number
+  EEPROM.write(reg_strt + 26, 3);  // function
 
 // squareD cm2350   #7
   indMtrStrt -= 126;
   meter7(indMtrStrt);
-  EEPROM.write(mtr_strt + 27, highByte(indMtrStrt));  // 126 -> 175
-  EEPROM.write(mtr_strt + 28, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 29, 7);  // meter number
-  EEPROM.write(mtr_strt + 30, 3);  // function
+  EEPROM.write(reg_strt + 27, highByte(indMtrStrt));  // 126 -> 175
+  EEPROM.write(reg_strt + 28, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 29, 7);  // meter number
+  EEPROM.write(reg_strt + 30, 3);  // function
 
 // squareD pm710   #8
   indMtrStrt -= 97;
   meter8(indMtrStrt);
-  EEPROM.write(mtr_strt + 31, highByte(indMtrStrt));  // 97 -> 150
-  EEPROM.write(mtr_strt + 32, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 33, 8);  // meter number
-  EEPROM.write(mtr_strt + 34, 3);  // function
+  EEPROM.write(reg_strt + 31, highByte(indMtrStrt));  // 97 -> 150
+  EEPROM.write(reg_strt + 32, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 33, 8);  // meter number
+  EEPROM.write(reg_strt + 34, 3);  // function
 
 // squareD micrologic a, p, h trip units    #9
   indMtrStrt -= 116;
   meter9(indMtrStrt);
-  EEPROM.write(mtr_strt + 35, highByte(indMtrStrt));  // 116 -> 150
-  EEPROM.write(mtr_strt + 36, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 37, 9);  // meter number
-  EEPROM.write(mtr_strt + 38, 3);  // function
+  EEPROM.write(reg_strt + 35, highByte(indMtrStrt));  // 116 -> 150
+  EEPROM.write(reg_strt + 36, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 37, 9);  // meter number
+  EEPROM.write(reg_strt + 38, 3);  // function
 
 // squareD cm3350, cm4000 series, pm800 series    #10
   indMtrStrt -= 114;
   meter10(indMtrStrt);
-  EEPROM.write(mtr_strt + 39, highByte(indMtrStrt));  // 111 -> 150
-  EEPROM.write(mtr_strt + 40, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 41, 10);  // meter number
-  EEPROM.write(mtr_strt + 42, 3);  // function
+  EEPROM.write(reg_strt + 39, highByte(indMtrStrt));  // 111 -> 150
+  EEPROM.write(reg_strt + 40, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 41, 10);  // meter number
+  EEPROM.write(reg_strt + 42, 3);  // function
 
 // Chilled water KEP    #11
   indMtrStrt -= 66;
   meter11(indMtrStrt);
-  EEPROM.write(mtr_strt + 43, highByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 44, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 45, 11);  // meter number
-  EEPROM.write(mtr_strt + 46, 3);  // function
+  EEPROM.write(reg_strt + 43, highByte(indMtrStrt));
+  EEPROM.write(reg_strt + 44, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 45, 11);  // meter number
+  EEPROM.write(reg_strt + 46, 3);  // function
 
 // Steam KEP    #12
   indMtrStrt -= 69;
   meter12(indMtrStrt);
-  EEPROM.write(mtr_strt + 47, highByte(indMtrStrt));  // 69 -> 100
-  EEPROM.write(mtr_strt + 48, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 49, 12);  // meter number
-  EEPROM.write(mtr_strt + 50, 3);  // function
+  EEPROM.write(reg_strt + 47, highByte(indMtrStrt));  // 69 -> 100
+  EEPROM.write(reg_strt + 48, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 49, 12);  // meter number
+  EEPROM.write(reg_strt + 50, 3);  // function
 
 // SquareD PM210  13
   indMtrStrt -= 97;
   meter13(indMtrStrt);
-  EEPROM.write(mtr_strt + 51, highByte(indMtrStrt));  // 97 -> 150
-  EEPROM.write(mtr_strt + 52, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 53, 13);  // meter number
-  EEPROM.write(mtr_strt + 54, 3);  // function
+  EEPROM.write(reg_strt + 51, highByte(indMtrStrt));  // 97 -> 150
+  EEPROM.write(reg_strt + 52, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 53, 13);  // meter number
+  EEPROM.write(reg_strt + 54, 3);  // function
 
 // Siemens Pac4200/3200 14
   indMtrStrt -= 123;
   meter14(indMtrStrt);
-  EEPROM.write(mtr_strt + 55, highByte(indMtrStrt));  //  -> 150
-  EEPROM.write(mtr_strt + 56, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 57, 14);  // meter number
-  EEPROM.write(mtr_strt + 58, 3);  // function
+  EEPROM.write(reg_strt + 55, highByte(indMtrStrt));  //  -> 150
+  EEPROM.write(reg_strt + 56, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 57, 14);  // meter number
+  EEPROM.write(reg_strt + 58, 3);  // function
 
 // Eaton Series PXM 2000 15
   indMtrStrt -= 108;
   meter15(indMtrStrt);
-  EEPROM.write(mtr_strt + 59, highByte(indMtrStrt));  //  -> 150
-  EEPROM.write(mtr_strt + 60, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 61, 15);  // meter number
-  EEPROM.write(mtr_strt + 62, 3);  // function
+  EEPROM.write(reg_strt + 59, highByte(indMtrStrt));  //  -> 150
+  EEPROM.write(reg_strt + 60, lowByte(indMtrStrt));
+  EEPROM.write(reg_strt + 61, 15);  // meter number
+  EEPROM.write(reg_strt + 62, 3);  // function
 
   Serial.print("Meter register library starts at: ");
   Serial.println(indMtrStrt);
 
-  return (mtr_strt + 63);
+  return (reg_strt + 63);
 
   //  //
   //  indMtrStrt -= ;
