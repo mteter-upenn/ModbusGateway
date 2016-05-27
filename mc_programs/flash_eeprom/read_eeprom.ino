@@ -54,9 +54,15 @@ void read_eeprom() {
 
   // IP info
   Serial.print(F("MAC: "));
+  if (EEPROM.read(ip_strt) < 16) {
+    Serial.print('0');
+  }
   Serial.print(EEPROM.read(ip_strt), HEX);
   for (i = 1; i < 6; i++) {
     Serial.print(":");
+    if (EEPROM.read(ip_strt + i) < 16) {
+      Serial.print('0');
+    }
     Serial.print(EEPROM.read(ip_strt + i), HEX);
   }
   Serial.println();

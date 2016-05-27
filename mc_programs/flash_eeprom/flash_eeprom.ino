@@ -69,8 +69,70 @@ void setup() {
       // write name
       term_func(F("Please input a name.  Default was \"UPenn_Modbus_Gateway.\"  There is a 30 character limit."), nmFunc, F("Great name!"),
         F("Please input a name.  Default was \"UPenn_Modbus_Gateway.\"  There is a 30 character limit."), inpt, "UPenn_Modbus_Gateway", true, 0, false);
-    }
 
+      // mac
+#if defined(CORE_TEENSY)  // if teensy3.0 or greater
+      read_mac();
+      for (j = 0; j < 6; j++) {
+        EEPROM.write(ip_strt + j, mac[j]);
+      }
+
+      Serial.print(F("This microcontroller (Teensy) already has a MAC!  It is "));
+
+      if (mac[0] < 16) {
+        Serial.print('0');
+      }
+      Serial.print(mac[0], HEX);
+      for (j = 1; j < 6; j++) {
+        Serial.print(':');
+        if (mac[j] < 16) {
+          Serial.print('0');
+        }
+        Serial.print(mac[j], HEX);
+      }
+      Serial.println();
+#else
+      term_func(F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."), macFunc, F("Ok, let's move on to the IP."),
+        F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."), inpt, "0", true, 0, false);
+#endif
+
+      // Gateway IP
+      term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now the subnet mask"), 
+        F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "130.91.138.141", true, 0, false);
+
+      // Subnet mask
+      term_func(F("Please insert the device's subnet mask."), ipFunc, F("Ok, now the default gateway"), 
+        F("Please insert subnet mask using X.X.X.X format where X is in [0, 255]."), inpt, "255.255.252.0", true, 0, false);
+
+      // default gateway
+      term_func(F("Please insert the device's default gateway address."), ipFunc, F("Ok, now the NTP server."), 
+        F("Please insert default gateway using X.X.X.X format where X is in [0, 255]."), inpt, "130.91.136.1", true, 0, false);
+
+      // yes/no on ntp
+      term_func(F("Do you want to use an NTP server? (y/n)"), verFunc, F("Ok, let's fill out its IP."), F("Ok, now for 485 parameters."), inpt, "n", true, 0, true);
+
+      if (true) {
+        // ntp server ip
+        term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now for 485 parameters."), F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "128.91.3.136", true, 0, false);
+      }
+      else {
+        // write default to this?
+      }
+
+      // baudrate
+      term_func(F("Please insert a baudrate for 485 communications."), brFunc, F("Ok."),
+        F("The number you entered is outside of the bounds!  Please select one of the following:\n300\n1200\n2400\n4800\n9600\n19200\n31250\n38400\n57600\n115200"),
+        inpt, "9600", true, 0, false);
+
+      // timeout
+      term_func(F("Please insert a Modbus timeout. (ms)"), toFunc, F("Ok."), 
+        F("Please insert number from 1 to 30000 in decimal for Modbus timeout."), inpt, "1500", true, 0, false);
+
+      // record data locally?
+      term_func(F("Should this meter record data locally?"), verFunc, F("Ok, it will record data."), 
+        F("Ok, it won't record data."), inpt, "", true, 0, true);
+    }
+    
     // write library
     //reg_end = writeBlocks(reg_strt);
 
@@ -78,19 +140,16 @@ void setup() {
     //Serial.print("indexing stops at byte ");
     //Serial.println(reg_end, DEC);
     //digitalWrite(20, HIGH);
-
-    Serial.println(F("setup has exited"));
-    return;
   }
   else {
     // read eeprom
     read_eeprom();
-    Serial.println(F("setup has exited"));
-    return;
   }
-  
-  
-  return; // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  // term_func(F(""), verFunc, F(""), F(""), inpt, "", true,    0,           false)
+  // term_func(msg,   argFunc, pos,     neg, inpt, "", verify?, repeat time, exit on neg)
+  Serial.println(F("setup has exited"));
+  return;  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+   
 
   oldTime = millis();
   Serial.println(F("Please set line ending to newline.  Ready to start? (Y)"));
@@ -174,7 +233,7 @@ void setup() {
 
 #endif
 
-
+/*
 #if SERIAL_INPUT == 1
   Serial.println(F("Do you wish to re/write all parameters? (Y/N)"));
   bool yReady = false;
@@ -346,7 +405,8 @@ void setup() {
   //EEPROM.write(ip_strt + 1, 0x45);  // E
   //EEPROM.write(ip_strt + 2, 0x4E);  // N
   //EEPROM.write(ip_strt + 3, 0x4E);  // N
-
+  */
+/*
 #if SERIAL_INPUT == 1
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
   read_mac();
@@ -434,8 +494,8 @@ void setup() {
   EEPROM.write(ip_strt + 5, 0x01);  // id
 #endif
   
-
-
+*/
+/*
 #if SERIAL_INPUT == 1
   Serial.println(F("Please insert IP."));
   i = 0;
@@ -735,7 +795,7 @@ void setup() {
   EEPROM.write(ip_strt + 20, 91);
   EEPROM.write(ip_strt + 21, 3);
   EEPROM.write(ip_strt + 22, 136);
-
+  */
 
 #if SERIAL_INPUT == 1
   Serial.println(F("Please enter a baudrate for 485 communications."));

@@ -128,3 +128,31 @@ bool nmFunc(char *input) {
   input[30] = 0;  // this would put a 0 in the 31st slot, giving a name length of 30
   return true;
 }
+
+bool macFunc(char *input) {
+  return false;
+}
+
+bool ipFunc(char *input) {
+  return false;
+}
+
+bool brFunc(char *input) {
+  return false;
+}
+
+bool toFunc(char *input) {
+  return false;
+}
+
+bool mtrnumFunc(char *input) {
+  return false;
+}
+
+bool mtrtypFunc(char *input) {
+
+}
+
+bool mbidFunc(char *input) {
+
+}
