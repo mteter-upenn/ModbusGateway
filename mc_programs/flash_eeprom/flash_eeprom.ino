@@ -32,10 +32,11 @@ void setup() {
   uint32_t curTime, oldTime;
   char ipStr[17];
   uint8_t ipArr[4];
-  uint16_t j, k, u8dum, val_end;
+  uint16_t j, k, u8dum, val_end, numMtrs;
   bool bReady = false;
   bool nmReady = false;
   bool intReady = false;
+  bool bResponse;
   char inpt[50];
 #endif
 
@@ -62,13 +63,24 @@ void setup() {
     F("Please set line ending to newline.  Ready to start? (Y)"), inpt, "n", false, 5, false);
 
   // ask where to go
-  if (term_func(F("Do you want to write to EEPROM? (y/n)"), verFunc, F("OK, let's write..."), F("OK, let's read..."), inpt, "n", true, 0, true)) {
+  if (term_func(F("Do you want to write to EEPROM? (y/n)"), verFunc, F("OK, let's write..."), 
+    F("OK, let's read..."), inpt, "n", true, 0, true)) {
+
     // write eeprom
 
-    if (term_func(F("Do you want to write all properties? (y/n)"), verFunc, F("OK, let's write everything..."), F("OK, let's just write the library..."), inpt, "n", true, 0, true)) {
+    if (term_func(F("Do you want to write all properties? (y/n)"), verFunc, F("OK, let's write everything..."), 
+      F("OK, let's just write the library..."), inpt, "n", true, 0, true)) {
+
       // write name
       term_func(F("Please input a name.  Default was \"UPenn_Modbus_Gateway.\"  There is a 30 character limit."), nmFunc, F("Great name!"),
         F("Please input a name.  Default was \"UPenn_Modbus_Gateway.\"  There is a 30 character limit."), inpt, "UPenn_Modbus_Gateway", true, 0, false);
+
+      for (i = 0; i < 30; i++) {
+        if (inpt[i] == 0) {
+          break;
+        }
+        EEPROM.write(nm_strt + i, inpt[i]);
+      }
 
       // mac
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
@@ -94,26 +106,37 @@ void setup() {
 #else
       term_func(F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."), macFunc, F("Ok, let's move on to the IP."),
         F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."), inpt, "0", true, 0, false);
+
+
 #endif
 
       // Gateway IP
       term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now the subnet mask"), 
         F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "130.91.138.141", true, 0, false);
 
+      storeIP(inpt, ip_strt + 6);
+
       // Subnet mask
       term_func(F("Please insert the device's subnet mask."), ipFunc, F("Ok, now the default gateway"), 
         F("Please insert subnet mask using X.X.X.X format where X is in [0, 255]."), inpt, "255.255.252.0", true, 0, false);
+
+      storeIP(inpt, ip_strt + 10);
 
       // default gateway
       term_func(F("Please insert the device's default gateway address."), ipFunc, F("Ok, now the NTP server."), 
         F("Please insert default gateway using X.X.X.X format where X is in [0, 255]."), inpt, "130.91.136.1", true, 0, false);
 
-      // yes/no on ntp
-      term_func(F("Do you want to use an NTP server? (y/n)"), verFunc, F("Ok, let's fill out its IP."), F("Ok, now for 485 parameters."), inpt, "n", true, 0, true);
+      storeIP(inpt, ip_strt + 14);
 
-      if (true) {
+      // yes/no on ntp
+      bResponse = term_func(F("Do you want to use an NTP server? (y/n)"), verFunc, F("Ok, let's fill out its IP."), 
+        F("Ok, now for 485 parameters."), inpt, "n", true, 0, true);
+      if (bResponse) {
         // ntp server ip
-        term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now for 485 parameters."), F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "128.91.3.136", true, 0, false);
+        term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now for 485 parameters."), 
+          F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "128.91.3.136", true, 0, false);
+
+        storeIP(inpt, ip_strt + 19);
       }
       else {
         // write default to this?
@@ -129,8 +152,60 @@ void setup() {
         F("Please insert number from 1 to 30000 in decimal for Modbus timeout."), inpt, "1500", true, 0, false);
 
       // record data locally?
-      term_func(F("Should this meter record data locally?"), verFunc, F("Ok, it will record data."), 
-        F("Ok, it won't record data."), inpt, "", true, 0, true);
+      bResponse = term_func(F("Should this meter record data locally?"), verFunc, F("Ok, it will record data."),
+        F("Ok, it won't record data."), inpt, "n", true, 0, true);
+      if (bResponse) {
+        // number of meters to record
+        term_func(F("Please insert number of meters to record (max 20)."), mtrnumFunc, F("Ok."),
+          F("Please insert number of meters to record (max 20)."), inpt, "5", true, 0, false);
+      }
+      else {
+        // default number of meters? (change if outside of bounds)
+      }
+
+      numMtrs = 0;
+      // number of meters listed
+      term_func(F("Please insert the number of meters actively controlled by the gateway (max 20)."), mtrnumFunc, F("Ok."),
+        F("Please insert the number of meters actively controlled by the gateway (max 20)."), inpt, "0", true, 0, false);
+
+      
+
+      // all meter information
+      for (i = 0; i < numMtrs; i++) {
+        Serial.print(F("Meta data for meter "));
+        Serial.print(i + 1, DEC);
+        Serial.print(F(" of "));
+        Serial.println(numMtrs, DEC);
+
+        // meter type
+        term_func(F("Please insert meter type (X.X.X)."), mtrtypFunc, F("Ok."),
+          F("Please insert meter type (X.X.X)."), inpt, "12.1.0", true, 0, false);
+
+        // 485 or mb/tcp
+        bResponse = term_func(F("Is this meter connected via IP? (y/n)"), verFunc, F("This meter is connected via IP."), 
+          F("This meter is connected via serial comms."), inpt, "n", true, 0, true);
+
+        if (bResponse) {
+          // modbus ip
+          term_func(F("Please insert the meter's IP."), ipFunc, F("Ok."), 
+            F("Please insert the meter's IP."), inpt, "0.0.0.0", true, 0, false);
+        }
+        else {
+          // default ip of 0.0.0.0
+          strcpy_P(inpt, PSTR("0.0.0.0\n"));
+        }
+
+        storeIP(inpt, mtr_strt + 9 * (i + 1) - 8);
+
+        // actual modbus id
+        term_func(F("Please insert actual Modbus id. (0-247)"), mbidFunc, F("Ok."), 
+          F("Please insert actual Modbus id. (0-247)"), inpt, "1", true, 0, false);
+        
+        // virtual modbus id
+        term_func(F("Please insert virtual Modbus id. (0-247)"), mbidFunc, F("Ok."),
+          F("Please insert virtual Modbus id. (0-247)"), inpt, "1", true, 0, false);
+      }
+      
     }
     
     // write library
@@ -145,7 +220,7 @@ void setup() {
     // read eeprom
     read_eeprom();
   }
-  // term_func(F(""), verFunc, F(""), F(""), inpt, "", true,    0,           false)
+  // term_func(F(""), Func, F(""), F(""), inpt, "", true,    0,           false);
   // term_func(msg,   argFunc, pos,     neg, inpt, "", verify?, repeat time, exit on neg)
   Serial.println(F("setup has exited"));
   return;  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

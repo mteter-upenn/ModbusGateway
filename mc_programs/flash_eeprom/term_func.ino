@@ -107,7 +107,7 @@ void checkDefault(char *input, const char *defaultInput) {
   }
 }
 
-bool verFunc(char *input) {
+bool verFunc(char *input) {  // checks yes/no
   char c = input[0];
 
   if ((c == 'y') || (c == 'Y')) {
@@ -118,7 +118,7 @@ bool verFunc(char *input) {
   }
 }
 
-bool nmFunc(char *input) {
+bool nmFunc(char *input) {  // checks name
   uint8_t i;
 
   /*for (i = 0; i < 50; i++) {
@@ -129,30 +129,96 @@ bool nmFunc(char *input) {
   return true;
 }
 
-bool macFunc(char *input) {
+bool macFunc(char *input) {  // checks mac
   return false;
 }
 
-bool ipFunc(char *input) {
+bool ipFunc(char *input) {  // check an ip
   return false;
 }
 
-bool brFunc(char *input) {
+bool brFunc(char *input) {  // checks baud rate
   return false;
 }
 
-bool toFunc(char *input) {
+bool toFunc(char *input) {  // checks modbus timeout
   return false;
 }
 
-bool mtrnumFunc(char *input) {
+bool mtrnumFunc(char *input) {  // checks number of meters to record/store in gateway
   return false;
 }
 
-bool mtrtypFunc(char *input) {
+bool mtrtypFunc(char *input) {  // checks meter type vs table
 
 }
 
-bool mbidFunc(char *input) {
+bool mbidFunc(char *input) {  // checks valid modbus device id
 
+}
+
+void storeIP(char *input, uint16_t regStrt) {
+  uint16_t j, k;
+  uint8_t u8dum;
+
+  k = 0;
+  for (j = 0; j < 4; j++) {
+    u8dum = 0;
+
+    while ((input[k] != '.') && (input[k] != 0)) {
+      u8dum = u8dum * 10 + (input[k] - '0');
+      k++;
+    }
+
+    k++;
+    EEPROM.write(regStrt + j, u8dum);
+  }
+}
+
+void storeBool(char *input, uint16_t regStrt) {
+  if (input[0] == 'y' || input[0] == 'Y') {
+    EEPROM.write(regStrt, true);
+  }
+  else {
+    EEPROM.write(regStrt, false);
+  }
+}
+
+void storeByte(char *input, uint16_t regStrt) {
+  uint16_t k = 0;
+  uint8_t u8dum;
+
+  while (input[k] != 0) {
+    u8dum = u8dum * 10 + (input[k] - '0');
+    k++;
+  }
+
+  EEPROM.write(regStrt, u8dum);
+}
+
+void storeInt(char *input, uint16_t regStrt) {
+  uint16_t k = 0;
+  uint16_t u16dum;
+
+  while (input[k] != 0) {
+    u16dum = u16dum * 10 + (input[k] - '0');
+    k++;
+  }
+
+  EEPROM.write(regStrt, highByte(u16dum));
+  EEPROM.write(regStrt + 1, lowByte(u16dum));
+}
+
+void storeMedInt(char *input, uint16_t regStrt) {
+  uint16_t k = 0;
+  uint32_t u32dum;
+
+  while (input[k] != 0) {
+    u32dum = u32dum * 10 + (input[k] - '0');
+    k++;
+  }
+
+  EEPROM.write(regStrt, ((u32dum >> 16) & 0xFF));
+  EEPROM.write(regStrt + 1, ((u32dum >> 8) & 0xFF));
+  EEPROM.write(regStrt + 2, (u32dum & 0xFF));
 }
