@@ -40,18 +40,8 @@ bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const 
       if (funcReady) {
         checkDefault(input, defaultInput);
 
-        if ((*argFunc)(input)) {
+        if ((*argFunc)(input)) {  // add print to argFuncs?
           // input is an acceptable value
-          uint8_t j;
-
-          Serial.print(F("Input: "));
-          for (j = 0; j < 50; j++) {
-            if (input[j] == 0) {
-              break;
-            }
-            Serial.print(input[j]);
-          }
-          Serial.println();
 
           if (verify) {
             // run term_func with expectation of y/n input,
@@ -109,11 +99,13 @@ void checkDefault(char *input, const char *defaultInput) {
 
 bool verFunc(char *input) {  // checks yes/no
   char c = input[0];
-
+  Serial.print(F("Input: "));
   if ((c == 'y') || (c == 'Y')) {
+    Serial.println(input[0]);
     return true;
   }
   else {
+    Serial.println(input[0]);
     return false;
   }
 }
@@ -121,48 +113,281 @@ bool verFunc(char *input) {  // checks yes/no
 bool nmFunc(char *input) {  // checks name
   uint8_t i;
 
-  /*for (i = 0; i < 50; i++) {
-    if ()
-  }*/
-  // should probably check for non alphanumeric chars
   input[30] = 0;  // this would put a 0 in the 31st slot, giving a name length of 30
+
+  Serial.print(F("Input: "));
+  for (i = 0; i < 30; i++) {
+    if (input[i] == 0) {
+      break;
+    }
+    Serial.print(input[i]);
+  }
+  Serial.println();
+
   return true;
 }
 
 bool macFunc(char *input) {  // checks mac
-  return false;
+  uint16_t k = 0;
+  uint32_t u32dum = 0;
+
+  while (input[k] != 0) {
+    u32dum = u32dum * 10 + (input[k] - '0');
+    k++;
+  }
+
+  if (u32dum > 65535) {
+    return false;
+  }
+
+  Serial.print(F("Input: 50:45:4E:4E:"));
+  if (highByte(u32dum) < 16) {
+    Serial.print('0');
+  }
+  Serial.print(highByte(u32dum), HEX);
+  Serial.print(":");
+  if (lowByte(u32dum) < 16) {
+    Serial.print('0');
+  }
+  Serial.println(lowByte(u32dum), HEX);
+
+  return true;
 }
 
 bool ipFunc(char *input) {  // check an ip
-  return false;
+  uint16_t u16dum = 0;
+  uint16_t j, k;
+
+  k = 0;
+  for (j = 0; j < 4; j++) {
+    u16dum = 0;
+
+    while ((input[k] != '.') && (input[k] != 0)) {
+      u16dum = u16dum * 10 + (input[k] - '0');
+      k++;
+    }
+
+    if (u16dum > 255) {
+      return false;
+    }
+    k++;
+  }
+
+  Serial.print(F("Input: "));
+  for (j = 0; j < 30; j++) {
+    if (input[j] == 0) {
+      break;
+    }
+    Serial.print(input[j]);
+  }
+  Serial.println();
+
+  return true;
 }
 
 bool brFunc(char *input) {  // checks baud rate
-  return false;
+  uint16_t k = 0;
+  uint32_t u32dum = 0;
+
+  while (input[k] != 0) {
+    u32dum = u32dum * 10 + (input[k] - '0');
+    k++;
+  }
+  
+  switch (u32dum) {
+    case 300:
+    case 1200:
+    case 2400:
+    case 4800:
+    case 9600:
+    case 19200:
+    case 31250:
+    case 38400:
+    case 57600:
+    case 115200:
+      Serial.print(F("Input: "));
+      Serial.println(u32dum, DEC);
+      return true;
+      break;
+    default:
+      return false;
+      break;
+  }
 }
 
 bool toFunc(char *input) {  // checks modbus timeout
-  return false;
+  uint16_t k = 0;
+  uint32_t u32dum = 0;
+
+  while (input[k] != 0) {
+    u32dum = u32dum * 10 + (input[k] - '0');
+    k++;
+  }
+
+  if (u32dum > 30000) {
+    return false;
+  }
+  
+  Serial.print(F("Input: "));
+  Serial.println(u32dum, DEC);
+  return true;
 }
 
 bool mtrnumFunc(char *input) {  // checks number of meters to record/store in gateway
-  return false;
+  uint16_t k = 0;
+  uint32_t u32dum = 0;
+
+  while (input[k] != 0) {
+    u32dum = u32dum * 10 + (input[k] - '0');
+    k++;
+  }
+
+  if (u32dum > 20) {
+    return false;
+  }
+
+  Serial.print(F("Input: "));
+  Serial.println(u32dum, DEC);
+  return true;
 }
 
 bool mtrtypFunc(char *input) {  // checks meter type vs table
+  uint16_t u16dum = 0;
+  uint16_t i, j, k;
+  uint8_t mtrTyp[3];
+  uint8_t mtrLib[34][3] = { {0, 1, 1},  // 1
+                            {15, 1, 0},
+                            {0, 1, 3},
+                            {0, 1, 4},
+                            {1, 1, 0},
+                            {2, 1, 0},
+                            {3, 1, 0},
+                            {0, 2, 1},
+                            {4, 1, 0},
+                            {0, 3, 1},  // 10
+                            {5, 1, 0},
+                            {10, 8, 0},
+                            {5, 2, 0},
+                            {5, 3, 0},
+                            {6, 1, 0},
+                            {6, 2, 0},
+                            {5, 4, 0},
+                            {14, 1, 0},
+                            {14, 2, 0},
+                            {7, 1, 0},  // 20
+                            {13, 1, 0},
+                            {8, 1, 0},
+                            {9, 1, 0},
+                            {9, 2, 0},
+                            {9, 3, 0},
+                            {10, 1, 0},
+                            {10, 2, 0},
+                            {10, 3, 0},
+                            {10, 4, 0},
+                            {10, 5, 0},  // 30
+                            {10, 6, 0},
+                            {10, 7, 0},
+                            {11, 1, 0},
+                            {12, 1, 0} };
+  char *mtrNames[] = {"Eaton IQ DP 4000",
+    "Eaton PXM 2260",
+    "Eaton IQ 200",
+    "Eaton IQ 300",
+    "Eaton Power Xpert 4000",
+    "Emon Dmon 3400",
+    "GE EPM 3720",
+    "GE EPM 5100",
+    "GE PQM",
+    "Siemens 9200",  // 10
+    "Siemens 9330",
+    "Siemens 9340",
+    "Siemens 9350",
+    "Siemens 9360",
+    "Siemens 9510",
+    "Siemens 9610",
+    "Siemens 9700",
+    "Siemens Sentron PAC 4200",
+    "Siemens Sentron PAC 3200",
+    "SquareD CM 2350",  // 20
+    "SquareD PM 210",
+    "SquareD PM 710",
+    "SquareD Micrologic A Trip Unit",
+    "SquareD Micrologic P Trip Unit",
+    "SquareD Micrologic H Trip Unit",
+    "SquareD CM 3350",
+    "SquareD CM 4000",
+    "SquareD CM 4250",
+    "SquareD PM 800",
+    "SquareD PM 820",  // 30
+    "SquareD PM 850",
+    "SquareD PM 870",
+    "Chilled Water KEP",
+    "Steam KEP"};
 
+  k = 0;
+  for (j = 0; j < 3; j++) {
+    u16dum = 0;
+
+    while ((input[k] != '.') && (input[k] != 0)) {
+      u16dum = u16dum * 10 + (input[k] - '0');
+      k++;
+    }
+    k++;
+    mtrTyp[j] = u16dum;
+  }
+
+  for (j = 0; j < 34; j++) {
+    for (k = 0; k < 3; k++) {
+      if (mtrTyp[k] == mtrLib[j][k]) {
+        if (k == 2) {
+          Serial.print(F("Input: "));
+
+          for (i = 0; i < 30; i++) {
+            if (input[i] == 0) {
+              break;
+            }
+            Serial.print(input[i]);
+          }
+
+          Serial.print(", ");
+          Serial.println(mtrNames[j]);
+          return true;
+        }
+      }
+      else {
+        break;
+      }
+    }
+  }
+  return false;
 }
 
 bool mbidFunc(char *input) {  // checks valid modbus device id
+  uint16_t k = 0;
+  uint32_t u32dum = 0;
 
+  while (input[k] != 0) {
+    u32dum = u32dum * 10 + (input[k] - '0');
+    k++;
+  }
+
+  if (u32dum > 247) {
+    return false;
+  }
+
+  Serial.print(F("Input: "));
+  Serial.println(u32dum, DEC);
+  return true;
 }
 
-void storeIP(char *input, uint16_t regStrt) {
+
+// storage functions *******************************************************************************************************
+void storeIP(char *input, uint16_t regStrt, uint8_t elmts) {
   uint16_t j, k;
   uint8_t u8dum;
 
   k = 0;
-  for (j = 0; j < 4; j++) {
+  for (j = 0; j < elmts; j++) {
     u8dum = 0;
 
     while ((input[k] != '.') && (input[k] != 0)) {
@@ -175,18 +400,22 @@ void storeIP(char *input, uint16_t regStrt) {
   }
 }
 
-void storeBool(char *input, uint16_t regStrt) {
+bool storeBool(char *input, uint16_t regStrt) {
   if (input[0] == 'y' || input[0] == 'Y') {
     EEPROM.write(regStrt, true);
+
+    return true;
   }
   else {
     EEPROM.write(regStrt, false);
+
+    return false;
   }
 }
 
-void storeByte(char *input, uint16_t regStrt) {
+uint8_t storeByte(char *input, uint16_t regStrt) {
   uint16_t k = 0;
-  uint8_t u8dum;
+  uint8_t u8dum = 0;
 
   while (input[k] != 0) {
     u8dum = u8dum * 10 + (input[k] - '0');
@@ -194,11 +423,13 @@ void storeByte(char *input, uint16_t regStrt) {
   }
 
   EEPROM.write(regStrt, u8dum);
+
+  return u8dum;
 }
 
-void storeInt(char *input, uint16_t regStrt) {
+uint16_t storeInt(char *input, uint16_t regStrt) {
   uint16_t k = 0;
-  uint16_t u16dum;
+  uint16_t u16dum = 0;
 
   while (input[k] != 0) {
     u16dum = u16dum * 10 + (input[k] - '0');
@@ -207,11 +438,13 @@ void storeInt(char *input, uint16_t regStrt) {
 
   EEPROM.write(regStrt, highByte(u16dum));
   EEPROM.write(regStrt + 1, lowByte(u16dum));
+
+  return u16dum;
 }
 
-void storeMedInt(char *input, uint16_t regStrt) {
+uint32_t storeMedInt(char *input, uint16_t regStrt) {
   uint16_t k = 0;
-  uint32_t u32dum;
+  uint32_t u32dum = 0;
 
   while (input[k] != 0) {
     u32dum = u32dum * 10 + (input[k] - '0');
@@ -221,4 +454,6 @@ void storeMedInt(char *input, uint16_t regStrt) {
   EEPROM.write(regStrt, ((u32dum >> 16) & 0xFF));
   EEPROM.write(regStrt + 1, ((u32dum >> 8) & 0xFF));
   EEPROM.write(regStrt + 2, (u32dum & 0xFF));
+
+  return u32dum;
 }
