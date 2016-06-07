@@ -55,7 +55,7 @@ bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const 
               //  user decided to redo input
               i = 0;
               funcReady = false;
-              Serial.println(negStr);
+              Serial.println(F("Retry"));
               break;
             }
           }
@@ -68,11 +68,30 @@ bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const 
           // input was invalid
           i = 0;
           funcReady = false;
-          Serial.println(negStr);
+          
 
           if (negExit) {
+            if (verify) {
+              // run term_func with expectation of y/n input,
+              char verInput[50];
+
+              if (term_func(F("Verify (y/n)"), verFunc, F("Input Verified"), F("Input Declined"), verInput, "n", false, 0, true)) {
+                // user accepted input
+              }
+              else {
+                //  user decided to redo input
+                i = 0;
+                funcReady = false;
+                Serial.println(F("Retry"));
+                break;
+              }
+            }
+
+            Serial.println(negStr);
             return false;
           }
+
+          Serial.println(negStr);
         }
       }
     }
@@ -108,6 +127,33 @@ bool verFunc(char *input) {  // checks yes/no
     Serial.println(input[0]);
     return false;
   }
+}
+
+bool menuFunc(char *input) {
+  switch (input[0]) {
+  case 't':
+  case 'T':
+  case 'a':
+  case 'A':
+  case 'i':
+  case 'I':
+  case 'n':
+  case 'N':
+  case 'r':
+  case 'R':
+  case 's':
+  case 'S':
+  case 'm':
+  case 'M':
+  case 'l':
+  case 'L':
+    return true;
+    break;
+  default:
+    return false;
+    break;
+  }
+  return false;
 }
 
 bool nmFunc(char *input) {  // checks name
@@ -358,6 +404,17 @@ bool mtrtypFunc(char *input) {  // checks meter type vs table
         break;
       }
     }
+  }
+
+  Serial.println(F("Meter options:"));
+  for (i = 0; i < 34; i++) {
+    Serial.print(mtrNames[i]);
+    Serial.print(", ");
+    Serial.print(mtrLib[i][0], DEC);
+    Serial.print(".");
+    Serial.print(mtrLib[i][1], DEC);
+    Serial.print(".");
+    Serial.println(mtrLib[i][2], DEC);
   }
   return false;
 }
