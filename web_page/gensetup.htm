@@ -5,6 +5,7 @@ Connection: close
 <!DOCTYPE html>
 <html>
 	<head>
+	
 	  <title>Gateway Setup</title>
 	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
 	  <link rel="stylesheet" type="text/css" href="/ep_style.css">  <!-- ADD '/' before address!!!!!!! -->
@@ -53,6 +54,18 @@ Connection: close
 							document.getElementById("sm").value = this.responseXML.getElementsByTagName('sm')[0].childNodes[0].nodeValue;
 							
 							document.getElementById("gw").value = this.responseXML.getElementsByTagName('gw')[0].childNodes[0].nodeValue;
+							
+							
+							if (this.responseXML.getElementsByTagName('ntp')[0].childNodes[0].nodeValue == "true") {
+								document.getElementById("ntph").value = 1;
+								document.getElementById("ntp").checked = true;
+							}
+							else {
+								document.getElementById("ntph").value = 0;
+								document.getElementById("ntp").checked = false;
+							}
+							
+							document.getElementById("nip").value = this.responseXML.getElementsByTagName('nip')[0].childNodes[0].nodeValue;
 							
 							
 							document.getElementById("br").value = this.responseXML.getElementsByTagName('br')[0].childNodes[0].nodeValue;
@@ -221,6 +234,13 @@ Connection: close
 				return false;
 			}
 			
+			// this will be stored regardless of whether or not the checkbox is checked
+			tf = CheckIP(document.getElementById("nip"));
+			if (!tf){
+				alert("Invalid NTP Server IP!");
+				return false;
+			}
+			
 			tf = CheckTO();
 			if (!tf){
 				alert("Invalid timeout!");
@@ -258,7 +278,7 @@ Connection: close
 					<li><a href="/pastview.htm">Graph Data</a></li>
 					<li><a href="/reset.htm">Reset</a></li>
 					
-					<a id="imglink" href="http://www.upenn.edu/">
+					<a target="_blank" id="imglink" href="http://www.upenn.edu/">
 						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
 					</a>
 				</ul>
@@ -284,6 +304,11 @@ Connection: close
 							<td><input id="ms" name="ms" type="text" style="width:17em;" oninput="CheckMaxSlvs()"/></td>
 							<td><label id="ms_err" style="color: red"></label></td>
 						</tr>
+						<tr>
+							<td><label>Revision: </label></td>
+							<!-- MUST UPDATE THIS WITH COMMITS -->
+							<td><label id="rev" style="padding-left: .5em;">0.6.2</label></td>
+						</tr>
 						
 						<tr><td><br/></td></tr>
 						
@@ -308,6 +333,21 @@ Connection: close
 							<td><label for="gw">Default Gateway: </label></td>
 							<td><input id="gw" name="gw" type="text" oninput="CheckIP(this)"/></td>
 							<td><label id="gw_err" style="color: red"></label></td>
+						</tr>
+					
+						<tr><td><br/></td></tr>
+						
+						<tr>
+							<td colspan="2"><h2>NTP Server Setup</h2></td>
+						</tr>
+						<tr>
+							<td><label for="ntp">Use NTP? </label></td>
+							<td><input type="hidden" id="ntph" name="ntp" value="0"/><input id="ntp" type="checkbox" onclick="this.previousSibling.value=1-this.previousSibling.value"/></td>
+						</tr>
+						<tr>
+							<td><label for="nip">NTP Server IP: </label></td>
+							<td><input id="nip" name="nip" type="text" oninput="CheckIP(this)"/></td>
+							<td><label id="nip_err" style="color: red"></label></td>
 						</tr>
 					
 						<tr><td><br/></td></tr>

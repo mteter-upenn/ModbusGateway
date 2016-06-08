@@ -32,12 +32,16 @@ void setConstants(){
     ip[i] = EEPROM.read(i + ip_strt + 6);
     subnet[i] = EEPROM.read(i + ip_strt + 10);
     gateway[i] = EEPROM.read(i + ip_strt + 14);
+
+    ntpIp[i] = EEPROM.read(i + ip_strt + 19);
   }
 
-  baudrate = EEPROM.read(ip_strt + 18);
-  baudrate = (uint32_t)((baudrate << 16) | (EEPROM.read(ip_strt + 19) << 8) | (EEPROM.read(ip_strt + 20)));
+  bNTPserv = EEPROM.read(ip_strt + 18);
 
-  timeout = word(EEPROM.read(ip_strt + 21), EEPROM.read(ip_strt + 22));
+  baudrate = EEPROM.read(ip_strt + 23);
+  baudrate = (uint32_t)((baudrate << 16) | (EEPROM.read(ip_strt + 24) << 8) | (EEPROM.read(ip_strt + 25)));
+
+  timeout = word(EEPROM.read(ip_strt + 26), EEPROM.read(ip_strt + 27));
 
 
   slaves = EEPROM.read(mtr_strt);
@@ -147,7 +151,24 @@ void writeGenSetupFile(){
     webFile.print(gateway[i], DEC);
   }
   
-  webFile.print(F("</gw><br>"));
+  webFile.print(F("</gw><ntp>"));
+
+  if (bNTPserv) {
+    webFile.print(F("true"));
+  }
+  else {
+    webFile.print(F("false"));
+  }
+
+  webFile.print(F("</ntp><nip>"));
+
+  webFile.print(ntpIp[0], DEC);
+  for (i = 1; i < 4; i++) {
+    webFile.print(F("."));
+    webFile.print(ntpIp[i], DEC);
+  }
+
+  webFile.print(F("</nip><br>"));
 
   webFile.print(baudrate, DEC);
   

@@ -4,12 +4,6 @@
 
 #define SERIAL_INPUT 1  // 0 for no serial input, 1 for serial input (mac, ip, name, etc)
 
-
-/*
- * Select Meter Type
- * Emon Dmon : 0
- *
- */
  
 byte const FLOAT = 0x00;
 byte const U16_to_FLOAT = 0x01;
@@ -25,282 +19,16 @@ byte const EGY_to_FLOAT = 0x0A;
 byte const DBL_to_FLOAT = 0x0B;
 byte const WORDSWAP = 0x80;
 
+bool bFirstLoop = true;
+bool bQuit = false;
 
-uint16_t writeBlocks(uint16_t reg_strt) {
-  uint16_t mtr_strt;
-  uint16_t indMtrStrt;
-
-//  EEPROM.write(bt_strt, 2);  // current meter type  default is 2.1.0
-//  EEPROM.write(bt_strt + 1, 1);
-//  EEPROM.write(bt_strt + 2, 0);
-  mtr_strt = reg_strt;
-  EEPROM.write(reg_strt + 0, highByte(mtr_strt));
-  EEPROM.write(reg_strt + 1, lowByte(mtr_strt));  // address of meter addresses
-  EEPROM.write(reg_strt + 2, 15);  // number of meters adjust when adding new meters AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-
-
-  
-// 6 + blknum * 5 + grpnum * 3 + 32 * 2  
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-  indMtrStrt = 2048;
-#else
-  indMtrStrt = 4096;
-#endif
-
-  // eaton power xpert 4000    #1
-  indMtrStrt -= 117;
-  meter1(indMtrStrt);
-  EEPROM.write(reg_strt + 3, highByte(indMtrStrt));  // 117 -> 146
-  EEPROM.write(reg_strt + 4, lowByte(indMtrStrt));
-  EEPROM.write(reg_strt + 5, 1);  // meter number
-  EEPROM.write(reg_strt + 6, 3);  // function
-
-  // emon dmon    #2
-  indMtrStrt -= 95;
-  meter2(indMtrStrt);
-  EEPROM.write(mtr_strt + 7, highByte(indMtrStrt));  // 95 -> 150
-  EEPROM.write(mtr_strt + 8, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 9, 2);  // meter number
-  EEPROM.write(mtr_strt + 10, 3);  // function
-
-  // ge epm 3720    #3
-  indMtrStrt -= 101;
-  meter3(indMtrStrt);
-  EEPROM.write(mtr_strt + 11, highByte(indMtrStrt));  // 101 -> 150
-  EEPROM.write(mtr_strt + 12, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 13, 3);  // meter number
-  EEPROM.write(mtr_strt + 14, 3);  // function
-
-  //  // ge pqm    #4
-//  indMtrStrt -= ;
-
-  //  meter4(3250);
-  //  EEPROM.write(mtr_strt + 15, highByte(3250));  // assume 400
-  //  EEPROM.write(mtr_strt + 16, lowByte(3250));
-
-  //  EEPROM.write(mtr_strt + 17, 4);  // meter number
-  //  EEPROM.write(mtr_strt + 18, 3);  // function
-
-
-  // siemens 9330, 9350, 9360    #5
-  indMtrStrt -= 103;
-  meter5(indMtrStrt);
-  EEPROM.write(mtr_strt + 19, highByte(indMtrStrt));  // 103 -> 150
-  EEPROM.write(mtr_strt + 20, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 21, 5);  // meter number
-  EEPROM.write(mtr_strt + 22, 3);  // function
-
-  // siemens 9510, 9610    #6
-  indMtrStrt -= 126;
-  meter6(indMtrStrt);
-  EEPROM.write(mtr_strt + 23, highByte(indMtrStrt));  // 126 -> 175
-  EEPROM.write(mtr_strt + 24, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 25, 6);  // meter number
-  EEPROM.write(mtr_strt + 26, 3);  // function
-
-  // squareD cm2350   #7
-  indMtrStrt -= 126;
-  meter7(indMtrStrt);
-  EEPROM.write(mtr_strt + 27, highByte(indMtrStrt));  // 126 -> 175
-  EEPROM.write(mtr_strt + 28, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 29, 7);  // meter number
-  EEPROM.write(mtr_strt + 30, 3);  // function
-
-  // squareD pm710   #8
-  indMtrStrt -= 97;
-  meter8(indMtrStrt);
-  EEPROM.write(mtr_strt + 31, highByte(indMtrStrt));  // 97 -> 150
-  EEPROM.write(mtr_strt + 32, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 33, 8);  // meter number
-  EEPROM.write(mtr_strt + 34, 3);  // function
-
-  // squareD micrologic a, p, h trip units    #9
-  indMtrStrt -= 116;
-  meter9(indMtrStrt);
-  EEPROM.write(mtr_strt + 35, highByte(indMtrStrt));  // 116 -> 150
-  EEPROM.write(mtr_strt + 36, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 37, 9);  // meter number
-  EEPROM.write(mtr_strt + 38, 3);  // function
-
-  // squareD cm3350, cm4000 series, pm800 series    #10
-  indMtrStrt -= 114;
-  meter10(indMtrStrt);
-  EEPROM.write(mtr_strt + 39, highByte(indMtrStrt));  // 111 -> 150
-  EEPROM.write(mtr_strt + 40, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 41, 10);  // meter number
-  EEPROM.write(mtr_strt + 42, 3);  // function
-
-  // Chilled water KEP    #11
-  indMtrStrt -= 66;
-  meter11(indMtrStrt);
-  EEPROM.write(mtr_strt + 43, highByte(indMtrStrt)); 
-  EEPROM.write(mtr_strt + 44, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 45, 11);  // meter number
-  EEPROM.write(mtr_strt + 46, 3);  // function
-
-  // Steam KEP    #12
-  indMtrStrt -= 69;
-  meter12(indMtrStrt);
-  EEPROM.write(mtr_strt + 47, highByte(indMtrStrt));  // 69 -> 100
-  EEPROM.write(mtr_strt + 48, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 49, 12);  // meter number
-  EEPROM.write(mtr_strt + 50, 3);  // function
-
-  // SquareD PM210  13
-  indMtrStrt -= 97;
-  meter13(indMtrStrt);
-  EEPROM.write(mtr_strt + 51, highByte(indMtrStrt));  // 97 -> 150
-  EEPROM.write(mtr_strt + 52, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 53, 13);  // meter number
-  EEPROM.write(mtr_strt + 54, 3);  // function
-
-  // Siemens Pac4200/3200
-  indMtrStrt -= 123;
-  meter14(indMtrStrt);
-  EEPROM.write(mtr_strt + 55, highByte(indMtrStrt));  //  -> 150
-  EEPROM.write(mtr_strt + 56, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 57, 14);  // meter number
-  EEPROM.write(mtr_strt + 58, 3);  // function
-
-// Eaton Series PXM 2000
-  indMtrStrt -= 108;
-  meter15(indMtrStrt);
-  EEPROM.write(mtr_strt + 59, highByte(indMtrStrt));  //  -> 150
-  EEPROM.write(mtr_strt + 60, lowByte(indMtrStrt));
-  EEPROM.write(mtr_strt + 61, 15);  // meter number
-  EEPROM.write(mtr_strt + 62, 3);  // function
-
-  Serial.print("Meter register library starts at: ");
-  Serial.println(indMtrStrt);
-
-  return (mtr_strt + 63);
-
-//  //
-//  indMtrStrt -= ;
-//  meterXX(indMtrStrt);
-//  EEPROM.write(mtr_strt + , highByte(indMtrStrt));  //  -> 150
-//  EEPROM.write(mtr_strt + , lowByte(indMtrStrt));
-//  EEPROM.write(mtr_strt + , );  // meter number
-//  EEPROM.write(mtr_strt + , );  // function
-  
-  /*
-   * |------|-----------------------------|--------------------------------|
-   * | ID:  | Collection types (elec):    | Collection types (stm/chw):    |
-   * |------|-----------------------------|--------------------------------|
-   * |  1   |   Current, A                |   Heat flow                    |
-   * |  2   |   Current, B                |   Mass flow                    |
-   * |  3   |   Current, C                |   Volumetric flow              |
-   * |  4   |   Current, Average          |   Temperature 1                |
-   * |  5   |   Current, Total            |   Temperature 2                |
-   * |------|-----------------------------|--------------------------------|
-   * |  6   |   Voltage, L-N, A           |   Temperature delta            |
-   * |  7   |   Voltage, L-N, B           |   Pressure                     |
-   * |  8   |   Voltage, L-N, C           |   Heat total                   |
-   * |  9   |   Voltage, L-N, Average     |   Mass total                   |
-   * |  10  |   Voltage, L-L, A-B         |   Volume total                 |
-   * |------|-----------------------------|--------------------------------|
-   * |  11  |   Voltage, L-L, B-C         |                                |
-   * |  12  |   Voltage, L-L, C-A         |                                |
-   * |  13  |   Voltage, L-L, Average     |                                |
-   * |  14  |   Real Power, A             |                                |
-   * |  15  |   Real Power, B             |                                |
-   * |------|-----------------------------|--------------------------------|
-   * |  16  |   Real Power, C             |                                |
-   * |  17  |   Real Power, Total         |                                |
-   * |  18  |   Reactive Power, A         |                                |
-   * |  19  |   Reactive Power, B         |                                |
-   * |  20  |   Reactive Power, C         |                                |
-   * |------|-----------------------------|--------------------------------|
-   * |  21  |   Reactive Power, Total     |                                |
-   * |  22  |   Apparent Power, A         |                                |
-   * |  23  |   Apparent Power, B         |                                |
-   * |  24  |   Apparent Power, C         |                                |
-   * |  25  |   Apparent Power, Total     |                                |
-   * |------|-----------------------------|--------------------------------|
-   * |  26  |   Power Factor, A           |                                |
-   * |  27  |   Power Factor, B           |                                |
-   * |  28  |   Power Factor, C           |                                |
-   * |  29  |   Power Factor, Total       |                                |
-   * |  30  |   Real Energy, Total        |                                |
-   * |------|-----------------------------|--------------------------------|
-   * |  31  |   Reactive Energy, Total    |                                |
-   * |  32  |   Apparent Energy, Total    |                                |
-   * |------|-----------------------------|--------------------------------|
-   *
-   *
-  // Block #1 - [, , ]
-  EEPROM.write(blk_strt, highByte());
-  EEPROM.write(blk_strt + 1, lowByte());
-  EEPROM.write(blk_strt + 2, highByte());
-  EEPROM.write(blk_strt + 3, lowByte());
-  EEPROM.write(blk_strt + 4, );
-
-  // Block #2 - [, , ]
-  EEPROM.write(blk_strt + 5, highByte());
-  EEPROM.write(blk_strt + 6, lowByte());
-  EEPROM.write(blk_strt + 7, highByte());
-  EEPROM.write(blk_strt + 8, lowByte());
-  EEPROM.write(blk_strt + 9, );
-
-  // Block #3 - [, , ]
-  EEPROM.write(blk_strt + 10, highByte());
-  EEPROM.write(blk_strt + 11, lowByte());
-  EEPROM.write(blk_strt + 12, highByte());
-  EEPROM.write(blk_strt + 13, lowByte());
-  EEPROM.write(blk_strt + 14, );
-
-  // Block #4 - [, , ]
-  EEPROM.write(blk_strt + 15, highByte());
-  EEPROM.write(blk_strt + 16, lowByte());
-  EEPROM.write(blk_strt + 17, highByte());
-  EEPROM.write(blk_strt + 18, lowByte());
-  EEPROM.write(blk_strt + 19, );
-
-  // Block #5 - [, , ]
-  EEPROM.write(blk_strt + 20, highByte());
-  EEPROM.write(blk_strt + 21, lowByte());
-  EEPROM.write(blk_strt + 22, highByte());
-  EEPROM.write(blk_strt + 23, lowByte());
-  EEPROM.write(blk_strt + 24, );
-
-  // Block #6 - [, , ]
-  EEPROM.write(blk_strt + 25, highByte());
-  EEPROM.write(blk_strt + 26, lowByte());
-  EEPROM.write(blk_strt + 27, highByte());
-  EEPROM.write(blk_strt + 28, lowByte());
-  EEPROM.write(blk_strt + 29, );
-
-  // Block #7 - [, , ]
-  EEPROM.write(blk_strt + 30, highByte());
-  EEPROM.write(blk_strt + 31, lowByte());
-  EEPROM.write(blk_strt + 32, highByte());
-  EEPROM.write(blk_strt + 33, lowByte());
-  EEPROM.write(blk_strt + 34, );
-
-  // Group #
-  EEPROM.write(grp_strt + , );
-  EEPROM.write(grp_strt + , highByte());
-  EEPROM.write(grp_strt + , lowByte());
-  EEPROM.write(grp_strt + , );
-  EEPROM.write(grp_strt + , );
-   */
-}
+// PROTOTYPES
+bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __FlashStringHelper *,
+  const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
 
 
 void setup() {
-  uint16_t ip_strt, nm_strt, reg_strt, reg_end, mtr_strt;
-  uint16_t i, nm_lgth;
-  char nm[31] = "UPenn Modbus Gateway";
-#if SERIAL_INPUT == 1
-  uint32_t curTime, oldTime;
-  char ipStr[17];
-  uint8_t ipArr[4];
-  uint16_t j, k, u8dum, val_end;
-  bool bReady = false;
-  bool nmReady = false;
-  bool intReady = false;
-#endif
-
+  
   pinMode(19, OUTPUT);
   pinMode(20, OUTPUT);
   digitalWrite(19, HIGH);
@@ -310,32 +38,229 @@ void setup() {
   delay(2000);
   Serial.println(F("delay over"));
 
-#if SERIAL_INPUT == 1
-  oldTime = millis();
-  Serial.println(F("Please set line ending to newline.  Ready to start? (Y)"));
-  while (!bReady) {
-    curTime = millis();
-    if ((curTime - oldTime) > 5000) {
-      oldTime = curTime;
-      Serial.println(F("Please set line ending to newline.  Ready to start? (Y)"));
+}
+
+void loop() {
+  uint16_t ip_strt, nm_strt, reg_strt, reg_end, mtr_strt;
+  uint16_t i, j, numMtrs;
+  bool bResponse;
+  char inpt[50];
+  char cMenu;
+
+  nm_strt = 10;
+  ip_strt = nm_strt + 33; // 43
+  mtr_strt = ip_strt + 28; // 71
+  reg_strt = mtr_strt + 181;  // 252
+
+  bQuit = false;
+
+  //term_func(F(""), argFunc, F(""), F(""), inpt, "", true, 0, false);
+
+  if (bFirstLoop) {
+    // start, keep flashing until ready
+    term_func(F("Please set line ending to newline.  Ready to start? (Y)"), verFunc, F("OK, let's start! To choose defaults, type \"default.\""),
+      F("Please set line ending to newline.  Ready to start? (Y)"), inpt, "n", false, 5, false);
+  }
+
+  // ask where to go
+  term_func(F("\nUPenn Modbus Gateway Setup Menu:\n"
+    "lowercase/UPPERCASE: read/WRITE options\n"
+    "q/-: Quit and return to menu\n"
+    "a/A: Everything\n"
+    "n/N: Name\n"
+    "i/I: Gateway IP and MAC\n"
+    "t/T: NTP server\n"
+    "r/R: Record data\n"
+    "s/S: Serial options\n"
+    "m/M: Gateway meter list\n"
+    "l/L: Register library"), menuFunc, F("OK."), F("Sorry, please pick a valid option."), inpt, "n", false, 0, false);
+
+  cMenu = inpt[0];
+
+  // pull from inpt and follow through
+  if (cMenu == 'N' || cMenu == 'A') {  // name
+
+      // write name
+    term_func(F("Please input a name.  Default was \"UPenn_Modbus_Gateway.\"  There is a 30 character limit."), nmFunc, F("Great name!"),
+      F("Please input a name.  Default was \"UPenn_Modbus_Gateway.\"  There is a 30 character limit."), inpt, "UPenn_Modbus_Gateway", true, 0, false);
+
+    storeName(inpt, nm_strt);
+  }
+
+  if (cMenu == 'I' || cMenu == 'A') {
+    // mac
+#if defined(CORE_TEENSY)  // if teensy3.0 or greater
+    if (!bQuit) {
+      read_mac();
+      for (j = 0; j < 6; j++) {
+        EEPROM.write(ip_strt + j, mac[j]);
+      }
+
+      Serial.print(F("This microcontroller (Teensy) already has a MAC!  It is "));
+
+      if (mac[0] < 16) {
+        Serial.print('0');
+      }
+      Serial.print(mac[0], HEX);
+      for (j = 1; j < 6; j++) {
+        Serial.print(':');
+        if (mac[j] < 16) {
+          Serial.print('0');
+        }
+        Serial.print(mac[j], HEX);
+      }
+      Serial.println();
     }
+#else
+    term_func(F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."), macFunc, F("Ok, let's move on to the IP."),
+      F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."), inpt, "0", true, 0, false);
 
-    if (Serial.available()) {
-      char ch = Serial.read();
+    //storeMac(inpt, ip_strt);
+#endif
 
-      if (ch == 'Y' || ch == 'y') {
-        bReady = true;
+    // Gateway IP
+    term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now the subnet mask"),
+      F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "130.91.138.141", true, 0, false);
+    storeIP(inpt, ip_strt + 6, 4);
 
-        clearSerialRx();
+    // Subnet mask
+    term_func(F("Please insert the device's subnet mask."), ipFunc, F("Ok, now the default gateway"),
+      F("Please insert subnet mask using X.X.X.X format where X is in [0, 255]."), inpt, "255.255.252.0", true, 0, false);
+    storeIP(inpt, ip_strt + 10, 4);
+
+    // default gateway
+    term_func(F("Please insert the device's default gateway address."), ipFunc, F("Ok."),
+      F("Please insert default gateway using X.X.X.X format where X is in [0, 255]."), inpt, "130.91.136.1", true, 0, false);
+    storeIP(inpt, ip_strt + 14, 4);
+  }
+
+  if (cMenu == 'T' || cMenu == 'A') {
+    // yes/no on ntp
+    bResponse = term_func(F("Do you want to use an NTP server? (y/n)"), verFunc, F("Ok, let's fill out its IP."),
+      F("Ok, now for 485 parameters."), inpt, "n", true, 0, true);
+    storeBool(inpt, ip_strt + 18);
+
+    // ntp server ip
+    if (bResponse) {
+      term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now for 485 parameters."),
+        F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "128.91.3.136", true, 0, false);
+    }
+    else {
+      // write default to this?
+      strcpy_P(inpt, PSTR("128.91.3.136"));
+    }
+    storeIP(inpt, ip_strt + 19, 4);
+  }
+
+  if (cMenu == 'S' || cMenu == 'A') {
+    // baudrate
+    term_func(F("Please insert a baudrate for 485 communications."), brFunc, F("Ok."),
+      F("The number you entered is outside of the bounds!  Please select one of the following:\n300\n1200\n2400\n4800\n9600\n19200\n31250\n38400\n57600\n115200"),
+      inpt, "9600", true, 0, false);
+    storeMedInt(inpt, ip_strt + 23);
+
+    // timeout
+    term_func(F("Please insert a Modbus timeout. (ms)"), toFunc, F("Ok."),
+      F("Please insert number from 1 to 30000 in decimal for Modbus timeout."), inpt, "1500", true, 0, false);
+    storeInt(inpt, ip_strt + 26);
+  }
+
+  if (cMenu == 'R' || cMenu == 'A') {
+    // record data locally?
+    bResponse = term_func(F("Should this meter record data locally?"), verFunc, F("Ok, it will record data."),
+      F("Ok, it won't record data."), inpt, "n", true, 0, true);
+    storeBool(inpt, nm_strt + 31);
+
+    // number of meters to record
+    if (bResponse) {
+      term_func(F("Please insert number of meters to record (max 20)."), mtrnumFunc, F("Ok."),
+        F("Please insert number of meters to record (max 20)."), inpt, "5", true, 0, false);
+    }
+    else {
+      // default number of meters? (change if outside of bounds)
+      if (EEPROM.read(nm_strt + 32) > 20) {
+        strcpy_P(inpt, PSTR("5"));
+      }
+    }
+    storeByte(inpt, nm_strt + 32);
+  }
+
+  if (cMenu == 'M' || cMenu == 'A') {
+    // number of meters listed
+    numMtrs = 0;
+    term_func(F("Please insert the number of meters actively controlled by the gateway (max 20)."), mtrnumFunc, F("Ok."),
+      F("Please insert the number of meters actively controlled by the gateway (max 20)."), inpt, "0", true, 0, false);
+
+    numMtrs = storeByte(inpt, mtr_strt);
+
+    if (!bQuit) {
+      // all meter information
+      for (i = 0; i < numMtrs; i++) {
+        Serial.print(F("Meta data for meter "));
+        Serial.print(i + 1, DEC);
+        Serial.print(F(" of "));
+        Serial.println(numMtrs, DEC);
+
+        // meter type
+        term_func(F("Please insert meter type (X.X.X)."), mtrtypFunc, F("Ok."),
+          F("Please insert meter type (X.X.X)."), inpt, "12.1.0", true, 0, false);
+        storeIP(inpt, mtr_strt + 9 * (i + 1) - 8, 3);
+
+        // 485 or mb/tcp
+        bResponse = term_func(F("Is this meter connected via IP? (y/n)"), verFunc, F("This meter is connected via IP."),
+          F("This meter is connected via serial comms."), inpt, "n", true, 0, true);  // nothing to store here
+
+        if (bResponse) {
+          // modbus ip
+          term_func(F("Please insert the meter's IP."), ipFunc, F("Ok."),
+            F("Please insert the meter's IP."), inpt, "0.0.0.0", true, 0, false);
+        }
+        else {
+          // default ip of 0.0.0.0
+          strcpy_P(inpt, PSTR("0.0.0.0"));
+        }
+        storeIP(inpt, mtr_strt + 9 * (i + 1) - 5, 4);
+
+        // actual modbus id
+        term_func(F("Please insert actual Modbus id. (0-247)"), mbidFunc, F("Ok."),
+          F("Please insert actual Modbus id. (0-247)"), inpt, "1", true, 0, false);
+        storeByte(inpt, mtr_strt + 9 * (i + 1) - 1);
+
+        // virtual modbus id
+        term_func(F("Please insert virtual Modbus id. (0-247)"), mbidFunc, F("Ok."),
+          F("Please insert virtual Modbus id. (0-247)"), inpt, "1", true, 0, false);
+        storeByte(inpt, mtr_strt + 9 * (i + 1));
       }
     }
   }
-  bReady = false;
-  Serial.println(F("OK, let's start!"));
-#else
-  Serial.println("Start writing to EEPROM.");
-#endif
+
+  if (cMenu == 'L' || cMenu == 'A') {
+    // write library
+    reg_end = writeBlocks(reg_strt);
+
+    Serial.println("Finished writing to EEPROM.");
+    Serial.print("indexing stops at byte ");
+    Serial.println(reg_end, DEC);
+    digitalWrite(20, HIGH);
+  }
   
+  if (islower(cMenu)) {
+    read_eeprom(cMenu);
+  }
+    
+
+  // term_func(F(""), Func,    F(""), F(""), inpt, "", true,    0,           false);
+  // term_func(msg,   argFunc, pos,   neg,   inpt, "", verify?, repeat time, exit on neg)
+  Serial.println(F("Setup is complete.\n"));
+  bFirstLoop = false;
+  //return;  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+}
+
+void clearSerialRx() {
+  while(Serial.available()){
+    Serial.read();
+  }
+}
 
   /* Meter Versions
    *
@@ -353,8 +278,9 @@ void setup() {
    * |  GE EPM 5100                        |  0.2.1    |
    * |  GE PQM                             |  4.1.0    |
    * |-------------------------------------|-----------|
-   * |  Siemens 9200                       |  0.3.1    |
+   * |  Siemens 9200                       |  0.3.1    |  10
    * |  Siemens 9330                       |  5.1.0    |
+   * |  Siemens 9340                       |  10.8.0   |
    * |  Siemens 9350                       |  5.2.0    |
    * |  Siemens 9360                       |  5.3.0    |
    * |  Siemens 9510                       |  6.1.0    |
@@ -363,7 +289,7 @@ void setup() {
    * |  Siemens Sentron PAC 4200           |  14.1.0   |
    * |  Siemens Sentron PAC 3200           |  14.2.0   |
    * |-------------------------------------|-----------|
-   * |  SquareD CM 2350                    |  7.1.0    |
+   * |  SquareD CM 2350                    |  7.1.0    |  20
    * |  SquareD PM 210                     |  13.1.0   |
    * |  SquareD PM 710                     |  8.1.0    |
    * |  SquareD Micrologic A Trip Unit     |  9.1.0    |
@@ -373,7 +299,7 @@ void setup() {
    * |  SquareD CM 4000                    |  10.2.0   |
    * |  SquareD CM 4250                    |  10.3.0   |
    * |  SquareD PM 800                     |  10.4.0   |
-   * |  SquareD PM 820                     |  10.5.0   |
+   * |  SquareD PM 820                     |  10.5.0   |  30
    * |  SquareD PM 850                     |  10.6.0   |
    * |  SquareD PM 870                     |  10.7.0   |
    * |-------------------------------------|-----------|
@@ -381,805 +307,3 @@ void setup() {
    * |  Steam KEP                          |  12.1.0   |
    * |-------------------------------------|-----------|
    */
-
-  nm_strt = 10;
-  ip_strt = nm_strt + 33; // 43
-  mtr_strt = ip_strt + 23; // 66
-  reg_strt = mtr_strt + 181;  // 347
-
-  
-
-
-#if SERIAL_INPUT == 1
-
-#else
-
-#endif
-
-
-#if SERIAL_INPUT == 1
-  Serial.println(F("Do you wish to re/write all parameters? (Y/N)"));
-  bool yReady = false;
-  bool nReady = false;
-  
-  while (!bReady){
-    while (true) {
-      if (Serial.available()) {
-        char ch = Serial.read();
-  
-        if (ch == 'Y' || ch == 'y'){
-          yReady = true;
-          clearSerialRx();
-          Serial.println(F("This will write over anything currently in EEPROM.  Is that OK? (Y/N)"));
-          break;
-        }
-        else {
-          read_eeprom();
-          while (1) {};
-          nReady = true;
-          Serial.println(F("This will only write the meter library to EEPROM.  Is that OK?  (Y/N)"));
-          clearSerialRx();
-          break;
-        }
-      }
-    }
-
-    if (yReady) {
-      while (true){
-        if (Serial.available()) {
-          char ch = Serial.read();
-  
-          if (ch == 'Y' || ch == 'y'){
-            bReady = true;
-            
-            Serial.println(F("OK!, let's continue..."));
-            
-            EEPROM.write(0, highByte(nm_strt));
-            EEPROM.write(1, lowByte(nm_strt));
-            EEPROM.write(2, highByte(ip_strt));
-            EEPROM.write(3, lowByte(ip_strt));
-            EEPROM.write(4, highByte(mtr_strt));
-            EEPROM.write(5, lowByte(mtr_strt));
-            EEPROM.write(6, highByte(reg_strt));
-            EEPROM.write(7, lowByte(reg_strt));
-            clearSerialRx();
-            break;
-          }
-          else {
-            yReady = false;
-            Serial.println(F("Do you wish to re/write all parameters? (Y/N)"));
-            clearSerialRx();
-            break;
-          }
-        }
-      }
-    }
-
-    if (nReady) {
-      while (true){
-        if (Serial.available()) {
-          char ch = Serial.read();
-  
-          if (ch == 'Y' || ch == 'y'){
-            nReady = false;
-            
-            Serial.println(F("OK!, let's continue..."));
-            
-            reg_end = writeBlocks(reg_strt);
-          
-            Serial.println("Finished writing to EEPROM.");
-            Serial.print("indexing stops at byte ");
-            Serial.println(reg_end, DEC);
-            digitalWrite(20, HIGH);
-            clearSerialRx();
-            return;
-          }
-          else {
-            nReady = false;
-            Serial.println(F("Do you wish to re/write all parameters? (Y/N)"));
-            clearSerialRx();
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  Serial.println(F("Please input a name.  Default was \"UPenn Modbus Gateway.\"  There is a 30 character limit."));
-  i = 0;
-  bReady = false;
-  
-  while (!bReady){
-    while (Serial.available()) {
-      nm[i] = Serial.read();
-      if (nm[i] == '\n') {
-        clearSerialRx();
-        nmReady = true;
-        nm[i] = 0;
-      }
-      i++;
-      
-      if (i > 29) {
-        clearSerialRx();
-        nmReady = true;
-      }
-    }
-
-    if (nmReady) {
-      Serial.print(F("Please confirm name: \""));
-      Serial.print(nm);
-      Serial.println(F("\" (Y/N)"));
-
-      while (true) {
-        if (Serial.available()) {
-          char ch = Serial.read();
-
-          if (ch == 'Y' || ch == 'y'){
-            bReady = true;
-            clearSerialRx();
-            break;
-          }
-          else {
-            nmReady = false;
-            i = 0;
-            Serial.println(F("Please input a name.  Default was \"UPenn Modbus Gateway.\"  There is a 30 character limit."));
-            clearSerialRx();
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  bReady = false;
-#else
-  EEPROM.write(0, highByte(nm_strt));
-  EEPROM.write(1, lowByte(nm_strt));
-  EEPROM.write(2, highByte(ip_strt));
-  EEPROM.write(3, lowByte(ip_strt));
-  EEPROM.write(4, highByte(mtr_strt));
-  EEPROM.write(5, lowByte(mtr_strt));
-  EEPROM.write(6, highByte(reg_strt));
-  EEPROM.write(7, lowByte(reg_strt));
-#endif
-
-
-
-  
-//  Serial.println(strlen(nm), DEC);
-  nm_lgth = strlen(nm);
-  if (nm_lgth > 30){
-    nm_lgth = 30;
-  }
-  for (i = 0; i < (nm_lgth); i++){
-    EEPROM.write((i + nm_strt), nm[i]);
-//    Serial.print((i + ver_strt + 3), DEC);
-//    Serial.print(": ");
-//    Serial.println((char)EEPROM.read((i + nm_str)));
-  }
-  
-  EEPROM.write((nm_strt + nm_lgth), 0);
-
-  EEPROM.write(nm_strt + 31, false);  // this is bRecordData, should be set to false initially
-  EEPROM.write(nm_strt + 32, 5);  // max number of meters to record
-  
-  // Bytes 0-5 are MAC
-  //EEPROM.write(ip_strt, 0x50);  // P
-  //EEPROM.write(ip_strt + 1, 0x45);  // E
-  //EEPROM.write(ip_strt + 2, 0x4E);  // N
-  //EEPROM.write(ip_strt + 3, 0x4E);  // N
-
-#if SERIAL_INPUT == 1
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-  read_mac();
-  for (j = 0; j < 6; j++) {
-    EEPROM.write(ip_strt + j, mac[j]);
-  }
-
-  Serial.print(F("This microcontroller (Teensy) already has a MAC!  It is "));
-
-  if (mac[0] < 16) {
-    Serial.print('0');
-  }
-  Serial.print(mac[0], HEX);
-  for (j = 1; j < 6; j++) {
-    Serial.print(':');
-    if (mac[j] < 16) {
-      Serial.print('0');
-    }
-    Serial.print(mac[j], HEX);
-  }
-  Serial.println();
-#else
-  Serial.println(F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."));
-  uint32_t macEnd = 0;
-  
-  while (!bReady) {
-    while (Serial.available()) {
-      char ch = Serial.read();
-
-      if (ch == '\n'){
-        intReady = true;
-        clearSerialRx();
-      }
-      else {
-        macEnd = macEnd * 10 + (ch - '0');
-      }
-    }
-
-    if (intReady) {
-      if (macEnd < 65536) {
-        Serial.print(F("Please confirm MAC: 50:45:4E:4E:"));
-        if (highByte(macEnd) < 16) {
-          Serial.print('0');
-        }
-        Serial.print(highByte(macEnd), HEX);
-        Serial.print(':');
-        if (lowByte(macEnd) < 16) {
-          Serial.print('0');
-        }
-        Serial.print(lowByte(macEnd), HEX);
-        Serial.println(F(", (Y/N)"));
-
-        while (true) {
-          if (Serial.available()) {
-            char ch = Serial.read();
-  
-            if (ch == 'Y' || ch == 'y'){
-              bReady = true;
-              EEPROM.write(ip_strt + 4, highByte(macEnd));  // id
-              EEPROM.write(ip_strt + 5, lowByte(macEnd));  // id
-              clearSerialRx();
-              break;
-            }
-            else {
-              intReady = false;
-              macEnd = 0;
-              Serial.println(F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."));
-              clearSerialRx();
-              break;
-            }
-          }
-        }
-      }
-      else {
-        macEnd = 0;
-        intReady = false;
-        Serial.println(F("The number you entered is outside of the bounds!  Please enter a new one."));
-      }
-    }
-  }
-  bReady = false;
-#endif
-#else
-  EEPROM.write(ip_strt + 4, 0x00);  // id
-  EEPROM.write(ip_strt + 5, 0x01);  // id
-#endif
-  
-
-
-#if SERIAL_INPUT == 1
-  Serial.println(F("Please insert IP."));
-  i = 0;
-  intReady = false;
-  val_end = 0;
-  while (!bReady) {
-    while (Serial.available()) {
-      ipStr[i] = Serial.read();
-      
-      if (ipStr[i] == '\n') {
-        ipStr[i] = 0;
-        intReady = true;
-        clearSerialRx();
-        val_end = i;
-        break;
-      }
-      i++;
-      if (i > 14) {
-        intReady = true;
-        clearSerialRx();
-        val_end = i + 1;
-      }
-      
-    }
-
-    if (intReady) {
-      bool ipGood = true;
-      
-      k = 0;
-      for (j = 0; j < 4; j++) {
-        u8dum = 0;
-
-        while ((ipStr[k] != '.') && (k < val_end)) {
-          u8dum = u8dum * 10 + (ipStr[k] - '0');
-          k++;
-        } 
-        
-        if (u8dum > 255) {
-          ipGood = false;
-          intReady = false;
-          break;
-        }
-        k++;
-        ipArr[j] = u8dum;
-      }
-
-      if (ipGood) {
-        Serial.print(F("Please confirm IP: "));
-        Serial.print(ipArr[0], DEC);
-        for (j = 1; j < 4; j++) {
-          Serial.print('.');
-          Serial.print(ipArr[j], DEC);
-        }
-        Serial.println(F(", (Y/N)"));
-  
-        while (true) {
-          if (Serial.available()) {
-            char ch = Serial.read();
-  
-            if (ch == 'Y' || ch == 'y'){
-              bReady = true;
-
-              for (j = 0; j < 4; j++) {
-                EEPROM.write(ip_strt + 6 + j, ipArr[j]);
-              }
-              clearSerialRx();
-              break;
-            }
-            else {
-              intReady = false;
-              i = 0;
-              Serial.println(F("Please insert IP using X.X.X.X format where X is in [0, 255]."));
-              clearSerialRx();
-              break;
-            }
-          }  // end serial.available
-        }  // end while
-
-      }
-      else {
-        i = 0;
-        Serial.println(F("Invalid IP! Please insert IP using X.X.X.X format where X is in [0, 255]."));
-      }
-    }
-  }
-  bReady = false;
-#else
-  // Bytes 6-9 are IP
-  EEPROM.write(ip_strt + 6, 130);
-  EEPROM.write(ip_strt + 7, 91);
-  EEPROM.write(ip_strt + 8, 138);
-  EEPROM.write(ip_strt + 9, 141);
-#endif
-
-  
-#if SERIAL_INPUT == 1
-  Serial.println(F("Please insert subnet mask."));
-  i = 0;
-  intReady = false;
-  val_end = 0;
-  while (!bReady) {
-    while (Serial.available()) {
-      ipStr[i] = Serial.read();
-      //Serial.println(ipStr[i]);
-      if (ipStr[i] == '\n') {
-        ipStr[i] = 0;
-        intReady = true;
-        clearSerialRx();
-        val_end = i;
-        break;
-      }
-      i++;
-      if (i > 14) {
-        //Serial.print(i);
-        //Serial.print(": ");
-        
-        intReady = true;
-        ipStr[i] = 0;
-        ipStr[16] = 0;
-        //Serial.println(ipStr[i]);
-        clearSerialRx();
-        val_end = i;
-      }
-      
-    }
-
-    if (intReady) {
-      bool ipGood = true;
-      
-      k = 0;
-      for (j = 0; j < 4; j++) {
-        u8dum = 0;
-
-        while ((ipStr[k] != '.') && (k < val_end)) {
-          u8dum = u8dum * 10 + (ipStr[k] - '0');
-          k++;
-        } 
-        
-        if (u8dum > 255) {
-          ipGood = false;
-          intReady = false;
-          break;
-        }
-        k++;
-        ipArr[j] = u8dum;
-      }
-
-      if (ipGood) {
-        Serial.print(F("Please confirm subnet mask: "));
-        Serial.print(ipArr[0], DEC);
-        for (j = 1; j < 4; j++) {
-          Serial.print('.');
-          Serial.print(ipArr[j], DEC);
-        }
-        Serial.println(F(", (Y/N)"));
-  
-        while (true) {
-          if (Serial.available()) {
-            char ch = Serial.read();
-  
-            if (ch == 'Y' || ch == 'y'){
-              bReady = true;
-
-              for (j = 0; j < 4; j++) {
-                EEPROM.write(ip_strt + 10 + j, ipArr[j]);
-              }
-              clearSerialRx();
-              break;
-            }
-            else {
-              intReady = false;
-              i = 0;
-              Serial.println(F("Please insert subnet mask using X.X.X.X format where X is in [0, 255]."));
-              clearSerialRx();
-              break;
-            }
-          }  // end serial.available
-        }  // end while
-
-      }
-      else {
-        i = 0;
-        Serial.println(F("Invalid subnet mask! Please insert subnet mask using X.X.X.X format where X is in [0, 255]."));
-      }
-    }
-  }
-  bReady = false;
-#else
-  // Bytes 10-13 are SM
-  EEPROM.write(ip_strt + 10, 255);
-  EEPROM.write(ip_strt + 11, 255);
-  EEPROM.write(ip_strt + 12, 252);
-  EEPROM.write(ip_strt + 13, 0);
-#endif
-
-
-#if SERIAL_INPUT == 1
-  Serial.println(F("Please insert default gateway."));
-  i = 0;
-  intReady = false;
-  val_end = 0;
-  while (!bReady) {
-    while (Serial.available()) {
-      ipStr[i] = Serial.read();
-      
-      if (ipStr[i] == '\n') {
-        ipStr[i] = 0;
-        intReady = true;
-        clearSerialRx();
-        val_end = i;
-        break;
-      }
-      i++;
-      if (i > 14) {
-        intReady = true;
-        clearSerialRx();
-        val_end = i + 1;
-      }
-      
-    }
-
-    if (intReady) {
-      bool ipGood = true;
-      
-      k = 0;
-      for (j = 0; j < 4; j++) {
-        u8dum = 0;
-
-        while ((ipStr[k] != '.') && (k < val_end)) {
-          u8dum = u8dum * 10 + (ipStr[k] - '0');
-          k++;
-        } 
-        
-        if (u8dum > 255) {
-          ipGood = false;
-          intReady = false;
-          break;
-        }
-        k++;
-        ipArr[j] = u8dum;
-      }
-
-      if (ipGood) {
-        Serial.print(F("Please confirm default gateway: "));
-        Serial.print(ipArr[0], DEC);
-        for (j = 1; j < 4; j++) {
-          Serial.print('.');
-          Serial.print(ipArr[j], DEC);
-        }
-        Serial.println(F(", (Y/N)"));
-  
-        while (true) {
-          if (Serial.available()) {
-            char ch = Serial.read();
-  
-            if (ch == 'Y' || ch == 'y'){
-              bReady = true;
-
-              for (j = 0; j < 4; j++) {
-                EEPROM.write(ip_strt + 14 + j, ipArr[j]);
-              }
-              clearSerialRx();
-              break;
-            }
-            else {
-              intReady = false;
-              i = 0;
-              Serial.println(F("Please insert default gateway using X.X.X.X format where X is in [0, 255]."));
-              clearSerialRx();
-              break;
-            }
-          }  // end serial.available
-        }  // end while
-
-      }
-      else {
-        i = 0;
-        Serial.println(F("Invalid default gateway! Please insert default gateway using X.X.X.X format where X is in [0, 255]."));
-      }
-    }
-  }
-  bReady = false;
-  
-#else
-  // Bytes 14-17 are DG
-  EEPROM.write(ip_strt + 14, 130);
-  EEPROM.write(ip_strt + 15, 91);
-  EEPROM.write(ip_strt + 16, 136);
-  EEPROM.write(ip_strt + 17, 1);
-#endif
-
-
-#if SERIAL_INPUT == 1
-  Serial.println(F("Please enter a baudrate for 485 communications."));
-
-  uint32_t bdrt = 0;
-  intReady = false;
-  
-  while (!bReady) {
-    while (Serial.available()) {
-      char ch = Serial.read();
-
-      if (ch == '\n'){
-        intReady = true;
-        clearSerialRx();
-      }
-      else {
-        bdrt = bdrt * 10 + (ch - '0');
-      }
-    }
-
-    if (intReady) {
-      bool bdReady = false;
-
-      switch (bdrt) {
-        case 300:
-        case 1200:
-        case 2400:
-        case 4800:
-        case 9600:
-        case 19200:
-        case 31250:
-        case 38400:
-        case 57600:
-        case 115200:
-          bdReady = true;
-          break;
-        default:
-          break;
-      }
-      
-      if (bdReady) {
-        Serial.print(F("Please confirm baudrate: "));
-        Serial.print(bdrt, DEC);
-        Serial.println(F(", (Y/N)"));
-
-        while (true) {
-          if (Serial.available()) {
-            char ch = Serial.read();
-  
-            if (ch == 'Y' || ch == 'y'){
-              bReady = true;
-
-              EEPROM.write(ip_strt + 18, (bdrt >> 16) & 0xFF);
-              EEPROM.write(ip_strt + 19, (bdrt >> 8) & 0xFF);
-              EEPROM.write(ip_strt + 20, bdrt & 0xFF);
-              clearSerialRx();
-              break;
-            }
-            else {
-              intReady = false;
-              bdReady = false;
-              bdrt = 0;
-              Serial.println(F("Please enter a baudrate for 485 communications."));
-              clearSerialRx();
-              break;
-            }
-          }
-        }
-      }
-      else {
-        bdrt = 0;
-        intReady = false;
-        Serial.println(F("The number you entered is outside of the bounds!  Please select one of the following:\n300\n1200\n2400\n4800\n9600\n19200\n31250\n38400\n57600\n115200"));
-      }
-    }
-  }
-  bReady = false;  
-#else
-  // Bytes 18-20 are BR
-  EEPROM.write(ip_strt + 18, 0);
-  EEPROM.write(ip_strt + 19, highByte(9600));
-  EEPROM.write(ip_strt + 20, lowByte(9600));
-#endif
-
-
-#if SERIAL_INPUT == 1
-  Serial.println(F("Please enter a Modbus timeout (2000ms is typical)."));
-
-  uint32_t tmout = 0;
-  intReady = false;
-  
-  while (!bReady) {
-    while (Serial.available()) {
-      char ch = Serial.read();
-
-      if (ch == '\n'){
-        intReady = true;
-        clearSerialRx();
-      }
-      else {
-        tmout = tmout * 10 + (ch - '0');
-      }
-    }
-
-    if (intReady) {
-      if (tmout < 30000) {
-        Serial.print(F("Please confirm Modbus timeout: "));
-        Serial.print(tmout, DEC);
-        Serial.println(F(", (Y/N)"));
-
-        while (true) {
-          if (Serial.available()) {
-            char ch = Serial.read();
-  
-            if (ch == 'Y' || ch == 'y'){
-              bReady = true;
-              EEPROM.write(ip_strt + 21, (tmout >> 8) & 0xFF);
-              EEPROM.write(ip_strt + 22, tmout & 0xFF);
-              clearSerialRx();
-              break;
-            }
-            else {
-              intReady = false;
-              tmout = 0;
-              Serial.println(F("Please insert number from 1 to 30000 in decimal for Modbus timeout."));
-              clearSerialRx();
-              break;
-            }
-          }
-        }
-      }
-      else {
-        tmout = 0;
-        intReady = false;
-        Serial.println(F("The number you entered is outside of the bounds!  Please enter a new one."));
-      }
-    }
-  }
-  bReady = false;  
-#else
-  // Bytes 21-22 are T/O
-  EEPROM.write(ip_strt + 21, highByte(2000));
-  EEPROM.write(ip_strt + 22, lowByte(2000));
-#endif
-
-
-#if SERIAL_INPUT == 0
-//  Serial.println(F("Do you want to 
-  if (EEPROM.read(mtr_strt) > 20) { 
-    EEPROM.write(mtr_strt, 0); 
-  }
-#else
-  // meter version/type
-  // ALL DEVICE IDS MUST BE UNIQUE REGARDLESS OF COMM PROTOCOL USED
-  // this creates a psuedo modbus network over 485 and ethernet
-  EEPROM.write(mtr_strt, 1);  // number of meters
-  
-  EEPROM.write(mtr_strt + 1, 12);  // meter type
-  EEPROM.write(mtr_strt + 2, 1);
-  EEPROM.write(mtr_strt + 3, 0);
-  EEPROM.write(mtr_strt + 4, 10);  // ip  (all zero if connected via 485)
-  EEPROM.write(mtr_strt + 5, 166);
-  EEPROM.write(mtr_strt + 6, 4);
-  EEPROM.write(mtr_strt + 7, 34);
-  EEPROM.write(mtr_strt + 8, 10);  // actual id
-  EEPROM.write(mtr_strt + 9, 1);  // virtual id
-
-  //EEPROM.write(mtr_strt + 9, 12);  // meter type
-  //EEPROM.write(mtr_strt + 10, 1);
-  //EEPROM.write(mtr_strt + 11, 0);
-  //EEPROM.write(mtr_strt + 12, 0);  // either ip or last byte is mb id  (all others 0)
-  //EEPROM.write(mtr_strt + 13, 0);
-  //EEPROM.write(mtr_strt + 14, 0);
-  //EEPROM.write(mtr_strt + 15, 0);
-  //EEPROM.write(mtr_strt + 16, 15);
-  
-  //EEPROM.write(mtr_strt + 17, 10);  // meter type
-  //EEPROM.write(mtr_strt + 18, 4);
-  //EEPROM.write(mtr_strt + 19, 0);
-  //EEPROM.write(mtr_strt + 20, 165);  // either ip or last byte is mb id  (all others 0)
-  //EEPROM.write(mtr_strt + 21, 123);
-  //EEPROM.write(mtr_strt + 22, 7);
-  //EEPROM.write(mtr_strt + 23, 217);
-  //EEPROM.write(mtr_strt + 24, 5);
-
-  //EEPROM.write(mtr_strt + 25, 12);  // meter type
-  //EEPROM.write(mtr_strt + 26, 1);
-  //EEPROM.write(mtr_strt + 27, 0);
-  //EEPROM.write(mtr_strt + 28, 10);  // either ip or last byte is mb id  (all others 0)
-  //EEPROM.write(mtr_strt + 29, 166);
-  //EEPROM.write(mtr_strt + 30, 4);
-  //EEPROM.write(mtr_strt + 31, 34);
-  //EEPROM.write(mtr_strt + 32, 10);
-
-  //EEPROM.write(mtr_strt + 33, 14);  // meter type
-  //EEPROM.write(mtr_strt + 34, 1);
-  //EEPROM.write(mtr_strt + 35, 0);
-  //EEPROM.write(mtr_strt + 36, 130);  // either ip or last byte is mb id  (all others 0)
-  //EEPROM.write(mtr_strt + 37, 91);
-  //EEPROM.write(mtr_strt + 38, 105);
-  //EEPROM.write(mtr_strt + 39, 12);
-  //EEPROM.write(mtr_strt + 40, 1);
-  
-/*
-  EEPROM.write(mtr_strt + , );  // meter type
-  EEPROM.write(mtr_strt + , );
-  EEPROM.write(mtr_strt + , );
-  EEPROM.write(mtr_strt + , );  // either ip or last byte is mb id  (all others 0)
-  EEPROM.write(mtr_strt + , );
-  EEPROM.write(mtr_strt + , );
-  EEPROM.write(mtr_strt + , );
-  EEPROM.write(mtr_strt + , );
-*/
-#endif
-  
-  reg_end = writeBlocks(reg_strt);
-
-  Serial.println("Finished writing to EEPROM.");
-  Serial.print("indexing stops at byte ");
-  Serial.println(reg_end, DEC);
-  digitalWrite(20, HIGH);
-}
-
-void loop() {
-//  Serial.println(F("eeprom has been written"));
-//  delay(1000);
-}
-
-void clearSerialRx() {
-  while(Serial.available()){
-    Serial.read();
-  }
-}
-
