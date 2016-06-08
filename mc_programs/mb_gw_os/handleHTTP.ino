@@ -78,7 +78,7 @@ void handle_http() {
                       sendWebFile(client, "/ep_style.css");
                       //webFile = SD.open("ep_style.css");        // open style file
                     }
-                    else if (strstr(HTTP_req, ".gif")) {  // will need to expand if more pictures are desired
+                    else if (strstr(HTTP_req, ".gif") != NULL) {  // will need to expand if more pictures are desired
                       sendGifHdr(client);
                       sendWebFile(client, "/images/logo_let.gif");
 

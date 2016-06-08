@@ -61,20 +61,23 @@ void handle_data() {
         in_mb[10] = 0;  // assume no length higher than 255
         in_mb[11] = 2;  // ask for float conversion = 2*num for registers
 
+        delay(5); // ensure long enough delay between polls
+
         switch (meter) {
           case 11:  // chw
+            in_mb[8] = 0; // highByte(chwRegs[j]);  // should always be 0
+            in_mb[9] = 0; // lowByte(chwRegs[j]);
+            in_mb[11] = 34;  // ask for float conversion = 2*num for registers
+
+            //delay(1); // ensure long enough delay between polls
+            mbStat = getModbus(in_mb, 12, out_mb, out_len);
+            // {0, 6, 8, 10, 30};
             for (j = 0; j < 5; j++) {
-              in_mb[8] = highByte(chwRegs[j]);
-              in_mb[9] = lowByte(chwRegs[j]);
-
-              delay(1); // ensure long enough delay between polls
-              mbStat = getModbus(in_mb, 12, out_mb, out_len);
-
               if (mbStat) {  // good message
-                int2flt.u8[3] = out_mb[11];
-                int2flt.u8[2] = out_mb[12];
-                int2flt.u8[1] = out_mb[9]; // high word
-                int2flt.u8[0] = out_mb[10];  // low word
+                int2flt.u8[3] = out_mb[2 * chwRegs[j] + 11];
+                int2flt.u8[2] = out_mb[2 * chwRegs[j] + 12];
+                int2flt.u8[1] = out_mb[2 * chwRegs[j] + 9]; // high word
+                int2flt.u8[0] = out_mb[2 * chwRegs[j] + 10];  // low word
 
                 strcat_P(streamBuf, PSTR(","));
                 if (j < 4) {
@@ -94,18 +97,19 @@ void handle_data() {
             }
             break;
           case 12:  // stm
+            in_mb[8] = 0; // highByte(stmRegs[j]);
+            in_mb[9] = 0; // lowByte(stmRegs[j]);
+            in_mb[11] = 34;  // ask for float conversion = 2*num for registers
+
+            //delay(1); // ensure long enough delay between polls
+            mbStat = getModbus(in_mb, 12, out_mb, out_len);
+
             for (j = 0; j < 4; j++) {
-              in_mb[8] = highByte(stmRegs[j]);
-              in_mb[9] = lowByte(stmRegs[j]);
-
-              delay(1); // ensure long enough delay between polls
-              mbStat = getModbus(in_mb, 12, out_mb, out_len);
-
               if (mbStat) {  // good message
-                int2flt.u8[3] = out_mb[11];
-                int2flt.u8[2] = out_mb[12];
-                int2flt.u8[1] = out_mb[9]; // high word
-                int2flt.u8[0] = out_mb[10];  // low word
+                int2flt.u8[3] = out_mb[2 * stmRegs[j] + 11];
+                int2flt.u8[2] = out_mb[2 * stmRegs[j] + 12];
+                int2flt.u8[1] = out_mb[2 * stmRegs[j] + 9]; // high word
+                int2flt.u8[0] = out_mb[2 * stmRegs[j] + 10];  // low word
 
                 strcat_P(streamBuf, PSTR(","));
                 if (j < 3) {
@@ -135,7 +139,7 @@ void handle_data() {
             in_mb[9] = lowByte(pwrReg);
             
 
-            delay(5); // ensure long enough delay between polls
+            //delay(5); // ensure long enough delay between polls
             mbStat = getModbus(in_mb, 12, out_mb, out_len);
 
             
@@ -152,11 +156,11 @@ void handle_data() {
               strcat_P(streamBuf, PSTR(","));
               dtostrf(int2flt.f, 1, 3, (streamBuf + 1));
 
-              // get energy now
+    // get energy now
               in_mb[8] = highByte(egyReg);
               in_mb[9] = lowByte(egyReg);
 
-              delay(1); // ensure long enough delay between polls
+              //delay(1); // ensure long enough delay between polls
               mbStat = getModbus(in_mb, 12, out_mb, out_len);
 
               if (mbStat) {

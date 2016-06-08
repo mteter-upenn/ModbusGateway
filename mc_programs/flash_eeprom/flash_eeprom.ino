@@ -175,14 +175,18 @@ void loop() {
     if (bResponse) {
       term_func(F("Please insert number of meters to record (max 20)."), mtrnumFunc, F("Ok."),
         F("Please insert number of meters to record (max 20)."), inpt, "5", true, 0, false);
+      storeByte(inpt, nm_strt + 32);
     }
     else {
       // default number of meters? (change if outside of bounds)
       if (EEPROM.read(nm_strt + 32) > 20) {
         strcpy_P(inpt, PSTR("5"));
+
+        storeByte(inpt, nm_strt + 32);
       }
+      // else do nothing
     }
-    storeByte(inpt, nm_strt + 32);
+    
   }
 
   if (cMenu == 'M' || cMenu == 'A') {
@@ -236,12 +240,14 @@ void loop() {
 
   if (cMenu == 'L' || cMenu == 'A') {
     // write library
-    reg_end = writeBlocks(reg_strt);
+    if (!bQuit) {
+      reg_end = writeBlocks(reg_strt);
 
-    Serial.println("Finished writing to EEPROM.");
-    Serial.print("indexing stops at byte ");
-    Serial.println(reg_end, DEC);
-    digitalWrite(20, HIGH);
+      Serial.println("Finished writing to EEPROM.");
+      Serial.print("indexing stops at byte ");
+      Serial.println(reg_end, DEC);
+      digitalWrite(20, HIGH);
+    }
   }
   
   if (islower(cMenu)) {
