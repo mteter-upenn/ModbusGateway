@@ -661,7 +661,7 @@ void getPostSetupData(EthernetClient cl, uint16_t pst_len){
         }
         for (j = val_strt; j < val_end; j++){  // limited to 30 characters
           if (post_str[j] == 43){  // filter out '+' as html concatenator
-            post_str[j] = 32;
+            post_str[j] = 32;  // replace with blank space
           }
           EEPROM.write((j - val_strt + nm_strt), post_str[j]);
         }
