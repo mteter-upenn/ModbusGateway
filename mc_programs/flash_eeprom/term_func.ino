@@ -2,78 +2,60 @@
 bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const __FlashStringHelper *posStr, 
   const __FlashStringHelper *negStr, char *input, const char *defaultInput, bool verify, uint8_t repeatMsg, bool negExit) {
 
-  uint32_t oldTime, curTime;
-  bool bReady = false;
-  bool funcReady = false;
-  uint8_t i = 0;
-
-
-  if (repeatMsg) {
-    oldTime = millis();
+  if (bQuit) {
+    return false;
   }
+  else {
+    uint32_t oldTime, curTime;
+    bool bReady = false;
+    bool funcReady = false;
+    uint8_t i = 0;
 
-  Serial.println(msgStr);
 
-  while (!bReady) {
-    // repeat message if desired
     if (repeatMsg) {
-      curTime = millis();
-      if ((curTime - oldTime) > repeatMsg * 1000) {
-        oldTime = curTime;
-        Serial.println(msgStr);
-      }
+      oldTime = millis();
     }
 
-    while (Serial.available()) {
-      input[i] = Serial.read();
-      
-      if ((input[i] == '\n') || (i == 49)) {
-        clearSerialRx();
-        input[i] = 0;
-        funcReady = true;
+    Serial.println(msgStr);
+
+    while (!bReady) {
+      // repeat message if desired
+      if (repeatMsg) {
+        curTime = millis();
+        if ((curTime - oldTime) > repeatMsg * 1000) {
+          oldTime = curTime;
+          Serial.println(msgStr);
+        }
       }
-      //else {
-      //  input[i] = ch;
-      //}
-      i++;
 
-      if (funcReady) {
-        checkDefault(input, defaultInput);
+      while (Serial.available()) {
+        input[i] = Serial.read();
 
-        if ((*argFunc)(input)) {  // add print to argFuncs?
-          // input is an acceptable value
+        if ((input[i] == '\n') || (i == 49)) {
+          clearSerialRx();
+          input[i] = 0;
+          funcReady = true;
+        }
+        //else {
+        //  input[i] = ch;
+        //}
+        i++;
 
-          if (verify) {
-            // run term_func with expectation of y/n input,
-            char verInput[50];
-            
-
-            if (term_func(F("Verify (y/n)"), verFunc, F("Input Verified"), F("Input Declined"), verInput, "n", false, 0, true)) {
-              // user accepted input
-            }
-            else {
-              //  user decided to redo input
-              i = 0;
-              funcReady = false;
-              Serial.println(F("Retry"));
-              break;
-            }
+        if (funcReady) {
+          checkDefault(input, defaultInput);
+          bQuit = checkQuit(input);
+          if (bQuit) {
+            Serial.println(F("\nQuitting setup.  Returning to menu."));
+            return false;
           }
 
+          if ((*argFunc)(input)) {  // add print to argFuncs?
+            // input is an acceptable value
 
-          Serial.println(posStr);
-          return true;
-        }
-        else {
-          // input was invalid
-          i = 0;
-          funcReady = false;
-          
-
-          if (negExit) {
             if (verify) {
               // run term_func with expectation of y/n input,
               char verInput[50];
+
 
               if (term_func(F("Verify (y/n)"), verFunc, F("Input Verified"), F("Input Declined"), verInput, "n", false, 0, true)) {
                 // user accepted input
@@ -87,18 +69,46 @@ bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const 
               }
             }
 
-            Serial.println(negStr);
-            return false;
-          }
 
-          Serial.println(negStr);
+            Serial.println(posStr);
+            return true;
+          }
+          else {
+            // input was invalid
+            i = 0;
+            funcReady = false;
+
+
+            if (negExit) {
+              if (verify) {
+                // run term_func with expectation of y/n input,
+                char verInput[50];
+
+                if (term_func(F("Verify (y/n)"), verFunc, F("Input Verified"), F("Input Declined"), verInput, "n", false, 0, true)) {
+                  // user accepted input
+                }
+                else {
+                  //  user decided to redo input
+                  i = 0;
+                  funcReady = false;
+                  Serial.println(F("Retry"));
+                  break;
+                }
+              }
+
+              Serial.println(negStr);
+              return false;
+            }
+
+            Serial.println(negStr);
+          }
         }
       }
+
     }
 
+    return false;
   }
-
-  return false;
 }
 
 
@@ -116,6 +126,16 @@ void checkDefault(char *input, const char *defaultInput) {
   }
 }
 
+bool checkQuit(char *input) {
+  if (input[0] == 'q' && input[1] == 0) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+// verify funcs *****************************************************************************************************
 bool verFunc(char *input) {  // checks yes/no
   char c = input[0];
   Serial.print(F("Input: "));
@@ -160,6 +180,23 @@ bool nmFunc(char *input) {  // checks name
   uint8_t i;
 
   input[30] = 0;  // this would put a 0 in the 31st slot, giving a name length of 30
+
+  for (i = 0; i < 30; i++) {
+    if (input[i] == 0) {  // end of string, don't need to check anything else
+      break;
+    }
+    if (!isalnum(input[i])) {
+      switch (input[i]) {
+      case ' ':
+      case '_':
+      case '-':
+      case '.':
+        break;
+      default:
+        return false;  // the character is not alphanumeric, whitespace, underscore, hypen or period
+      }
+    }
+  }
 
   Serial.print(F("Input: "));
   for (i = 0; i < 30; i++) {
@@ -439,78 +476,120 @@ bool mbidFunc(char *input) {  // checks valid modbus device id
 
 
 // storage functions *******************************************************************************************************
-void storeIP(char *input, uint16_t regStrt, uint8_t elmts) {
-  uint16_t j, k;
-  uint8_t u8dum;
+void storeName(char *input, uint16_t regStrt) {
+  if (bQuit) {
+    return;
+  }
+  else {
+    uint8_t i;
 
-  k = 0;
-  for (j = 0; j < elmts; j++) {
-    u8dum = 0;
+    for (i = 0; i < 30; i++) {
+      EEPROM.write(regStrt + i, input[i]);
 
-    while ((input[k] != '.') && (input[k] != 0)) {
-      u8dum = u8dum * 10 + (input[k] - '0');
-      k++;
+      if (input[i] == 0) {
+        break;
+      }
     }
+  }
+}
 
-    k++;
-    EEPROM.write(regStrt + j, u8dum);
+void storeIP(char *input, uint16_t regStrt, uint8_t elmts) {
+  if (bQuit) {
+    return;
+  }
+  else {
+    uint16_t j, k;
+    uint8_t u8dum;
+
+    k = 0;
+    for (j = 0; j < elmts; j++) {
+      u8dum = 0;
+
+      while ((input[k] != '.') && (input[k] != 0)) {
+        u8dum = u8dum * 10 + (input[k] - '0');
+        k++;
+      }
+
+      k++;
+      EEPROM.write(regStrt + j, u8dum);
+    }
   }
 }
 
 bool storeBool(char *input, uint16_t regStrt) {
-  if (input[0] == 'y' || input[0] == 'Y') {
-    EEPROM.write(regStrt, true);
-
-    return true;
+  if (bQuit) {
+    return false;
   }
   else {
-    EEPROM.write(regStrt, false);
+    if (input[0] == 'y' || input[0] == 'Y') {
+      EEPROM.write(regStrt, true);
 
-    return false;
+      return true;
+    }
+    else {
+      EEPROM.write(regStrt, false);
+
+      return false;
+    }
   }
 }
 
 uint8_t storeByte(char *input, uint16_t regStrt) {
-  uint16_t k = 0;
-  uint8_t u8dum = 0;
-
-  while (input[k] != 0) {
-    u8dum = u8dum * 10 + (input[k] - '0');
-    k++;
+  if (bQuit) {
+    return 0;
   }
+  else {
+    uint16_t k = 0;
+    uint8_t u8dum = 0;
 
-  EEPROM.write(regStrt, u8dum);
+    while (input[k] != 0) {
+      u8dum = u8dum * 10 + (input[k] - '0');
+      k++;
+    }
 
-  return u8dum;
+    EEPROM.write(regStrt, u8dum);
+
+    return u8dum;
+  }
 }
 
 uint16_t storeInt(char *input, uint16_t regStrt) {
-  uint16_t k = 0;
-  uint16_t u16dum = 0;
-
-  while (input[k] != 0) {
-    u16dum = u16dum * 10 + (input[k] - '0');
-    k++;
+  if (bQuit) {
+    return 0;
   }
+  else {
+    uint16_t k = 0;
+    uint16_t u16dum = 0;
 
-  EEPROM.write(regStrt, highByte(u16dum));
-  EEPROM.write(regStrt + 1, lowByte(u16dum));
+    while (input[k] != 0) {
+      u16dum = u16dum * 10 + (input[k] - '0');
+      k++;
+    }
 
-  return u16dum;
+    EEPROM.write(regStrt, highByte(u16dum));
+    EEPROM.write(regStrt + 1, lowByte(u16dum));
+
+    return u16dum;
+  }
 }
 
 uint32_t storeMedInt(char *input, uint16_t regStrt) {
-  uint16_t k = 0;
-  uint32_t u32dum = 0;
-
-  while (input[k] != 0) {
-    u32dum = u32dum * 10 + (input[k] - '0');
-    k++;
+  if (bQuit) {
+    return 0;
   }
+  else {
+    uint16_t k = 0;
+    uint32_t u32dum = 0;
 
-  EEPROM.write(regStrt, ((u32dum >> 16) & 0xFF));
-  EEPROM.write(regStrt + 1, ((u32dum >> 8) & 0xFF));
-  EEPROM.write(regStrt + 2, (u32dum & 0xFF));
+    while (input[k] != 0) {
+      u32dum = u32dum * 10 + (input[k] - '0');
+      k++;
+    }
 
-  return u32dum;
+    EEPROM.write(regStrt, ((u32dum >> 16) & 0xFF));
+    EEPROM.write(regStrt + 1, ((u32dum >> 8) & 0xFF));
+    EEPROM.write(regStrt + 2, (u32dum & 0xFF));
+
+    return u32dum;
+  }
 }

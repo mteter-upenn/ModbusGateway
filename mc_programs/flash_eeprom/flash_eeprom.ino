@@ -18,7 +18,9 @@ byte const U64_to_FLOAT = 0x09;
 byte const EGY_to_FLOAT = 0x0A;
 byte const DBL_to_FLOAT = 0x0B;
 byte const WORDSWAP = 0x80;
+
 bool bFirstLoop = true;
+bool bQuit = false;
 
 // PROTOTYPES
 bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __FlashStringHelper *,
@@ -50,7 +52,7 @@ void loop() {
   mtr_strt = ip_strt + 28; // 71
   reg_strt = mtr_strt + 181;  // 252
 
-
+  bQuit = false;
 
   //term_func(F(""), argFunc, F(""), F(""), inpt, "", true, 0, false);
 
@@ -63,6 +65,7 @@ void loop() {
   // ask where to go
   term_func(F("\nUPenn Modbus Gateway Setup Menu:\n"
     "lowercase/UPPERCASE: read/WRITE options\n"
+    "q/-: Quit and return to menu\n"
     "a/A: Everything\n"
     "n/N: Name\n"
     "i/I: Gateway IP and MAC\n"
@@ -81,42 +84,38 @@ void loop() {
     term_func(F("Please input a name.  Default was \"UPenn_Modbus_Gateway.\"  There is a 30 character limit."), nmFunc, F("Great name!"),
       F("Please input a name.  Default was \"UPenn_Modbus_Gateway.\"  There is a 30 character limit."), inpt, "UPenn_Modbus_Gateway", true, 0, false);
 
-    for (i = 0; i < 30; i++) {
-      EEPROM.write(nm_strt + i, inpt[i]);
-
-      if (inpt[i] == 0) {
-        break;
-      }
-    }
+    storeName(inpt, nm_strt);
   }
 
   if (cMenu == 'I' || cMenu == 'A') {
     // mac
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
-    read_mac();
-    for (j = 0; j < 6; j++) {
-      EEPROM.write(ip_strt + j, mac[j]);
-    }
+    if (!bQuit) {
+      read_mac();
+      for (j = 0; j < 6; j++) {
+        EEPROM.write(ip_strt + j, mac[j]);
+      }
 
-    Serial.print(F("This microcontroller (Teensy) already has a MAC!  It is "));
+      Serial.print(F("This microcontroller (Teensy) already has a MAC!  It is "));
 
-    if (mac[0] < 16) {
-      Serial.print('0');
-    }
-    Serial.print(mac[0], HEX);
-    for (j = 1; j < 6; j++) {
-      Serial.print(':');
-      if (mac[j] < 16) {
+      if (mac[0] < 16) {
         Serial.print('0');
       }
-      Serial.print(mac[j], HEX);
+      Serial.print(mac[0], HEX);
+      for (j = 1; j < 6; j++) {
+        Serial.print(':');
+        if (mac[j] < 16) {
+          Serial.print('0');
+        }
+        Serial.print(mac[j], HEX);
+      }
+      Serial.println();
     }
-    Serial.println();
 #else
     term_func(F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."), macFunc, F("Ok, let's move on to the IP."),
       F("Please insert number from 1 to 65535 in decimal to be used as last two bytes in MAC."), inpt, "0", true, 0, false);
 
-
+    //storeMac(inpt, ip_strt);
 #endif
 
     // Gateway IP
@@ -194,42 +193,44 @@ void loop() {
 
     numMtrs = storeByte(inpt, mtr_strt);
 
-    // all meter information
-    for (i = 0; i < numMtrs; i++) {
-      Serial.print(F("Meta data for meter "));
-      Serial.print(i + 1, DEC);
-      Serial.print(F(" of "));
-      Serial.println(numMtrs, DEC);
+    if (!bQuit) {
+      // all meter information
+      for (i = 0; i < numMtrs; i++) {
+        Serial.print(F("Meta data for meter "));
+        Serial.print(i + 1, DEC);
+        Serial.print(F(" of "));
+        Serial.println(numMtrs, DEC);
 
-      // meter type
-      term_func(F("Please insert meter type (X.X.X)."), mtrtypFunc, F("Ok."),
-        F("Please insert meter type (X.X.X)."), inpt, "12.1.0", true, 0, false);
-      storeIP(inpt, mtr_strt + 9 * (i + 1) - 8, 3);
+        // meter type
+        term_func(F("Please insert meter type (X.X.X)."), mtrtypFunc, F("Ok."),
+          F("Please insert meter type (X.X.X)."), inpt, "12.1.0", true, 0, false);
+        storeIP(inpt, mtr_strt + 9 * (i + 1) - 8, 3);
 
-      // 485 or mb/tcp
-      bResponse = term_func(F("Is this meter connected via IP? (y/n)"), verFunc, F("This meter is connected via IP."),
-        F("This meter is connected via serial comms."), inpt, "n", true, 0, true);  // nothing to store here
+        // 485 or mb/tcp
+        bResponse = term_func(F("Is this meter connected via IP? (y/n)"), verFunc, F("This meter is connected via IP."),
+          F("This meter is connected via serial comms."), inpt, "n", true, 0, true);  // nothing to store here
 
-      if (bResponse) {
-        // modbus ip
-        term_func(F("Please insert the meter's IP."), ipFunc, F("Ok."),
-          F("Please insert the meter's IP."), inpt, "0.0.0.0", true, 0, false);
+        if (bResponse) {
+          // modbus ip
+          term_func(F("Please insert the meter's IP."), ipFunc, F("Ok."),
+            F("Please insert the meter's IP."), inpt, "0.0.0.0", true, 0, false);
+        }
+        else {
+          // default ip of 0.0.0.0
+          strcpy_P(inpt, PSTR("0.0.0.0"));
+        }
+        storeIP(inpt, mtr_strt + 9 * (i + 1) - 5, 4);
+
+        // actual modbus id
+        term_func(F("Please insert actual Modbus id. (0-247)"), mbidFunc, F("Ok."),
+          F("Please insert actual Modbus id. (0-247)"), inpt, "1", true, 0, false);
+        storeByte(inpt, mtr_strt + 9 * (i + 1) - 1);
+
+        // virtual modbus id
+        term_func(F("Please insert virtual Modbus id. (0-247)"), mbidFunc, F("Ok."),
+          F("Please insert virtual Modbus id. (0-247)"), inpt, "1", true, 0, false);
+        storeByte(inpt, mtr_strt + 9 * (i + 1));
       }
-      else {
-        // default ip of 0.0.0.0
-        strcpy_P(inpt, PSTR("0.0.0.0"));
-      }
-      storeIP(inpt, mtr_strt + 9 * (i + 1) - 5, 4);
-
-      // actual modbus id
-      term_func(F("Please insert actual Modbus id. (0-247)"), mbidFunc, F("Ok."),
-        F("Please insert actual Modbus id. (0-247)"), inpt, "1", true, 0, false);
-      storeByte(inpt, mtr_strt + 9 * (i + 1) - 1);
-
-      // virtual modbus id
-      term_func(F("Please insert virtual Modbus id. (0-247)"), mbidFunc, F("Ok."),
-        F("Please insert virtual Modbus id. (0-247)"), inpt, "1", true, 0, false);
-      storeByte(inpt, mtr_strt + 9 * (i + 1));
     }
   }
 
