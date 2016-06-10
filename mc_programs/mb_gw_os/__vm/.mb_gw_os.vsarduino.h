@@ -12,11 +12,11 @@
 #define _VSARDUINO_H_
 #define __MK20DX256__
 #define TEENSYDUINO 125
-#define ARDUINO 165
-#define F_CPU 72000000
-#define ARDUINO_ARCH_AVR
+#define F_CPU 96000000
 #define USB_SERIAL
 #define LAYOUT_US_ENGLISH
+#define ARDUINO 165
+#define ARDUINO_ARCH_AVR
 #define __cplusplus
 #define __AVR__
 #define __inline__

@@ -66,13 +66,14 @@ void sendWebFile(EthernetClient client, const char* filename) {
     max_i = (wfSize / STRM_BUF_SZ) + 1;
 
     for (i = 0; i < max_i; i++) {
-      remBytes = wfSize - (i * STRM_BUF_SZ);
+      remBytes = wfSize - (i * STRM_BUF_SZ);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
       lclBufSz = min(remBytes, STRM_BUF_SZ);
 
-      for (j = 0; j < lclBufSz; j++) {
-        streamBuf[j] = streamFile.read();
-      }
-
+      //for (j = 0; j < lclBufSz; j++) {
+      //  streamBuf[j] = streamFile.read();
+      //}
+      streamFile.read(streamBuf, lclBufSz);  // expect speed increase
+      
       client.write(streamBuf, lclBufSz);
 
     }
@@ -248,9 +249,9 @@ void sendIP(EthernetClient client) {
 
 
 void sendPostResp(EthernetClient client){
-  int16_t i;
-  uint16_t j, k;
-  uint8_t ipOct;
+  //int16_t i;
+  //uint16_t j, k;
+  //uint8_t ipOct;
   char postResp[76]; // = "HTTP/1.1 303 See Other\nLocation: http://";
 //  char postClose[] = "\nConnection: close\n\n";
 

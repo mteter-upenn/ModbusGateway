@@ -11,7 +11,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
   uint8_t mberror = 0;
   bool wc_req = false;
   bool mb_stat = false;
-  uint8_t adj_reg_flags;
+  uint8_t adj_reg_flags = 0;
   uint8_t mtr_typ = 0;
   uint8_t act_dev;
   
@@ -628,7 +628,7 @@ void handle_modbus()
           getModbus(in_mb, i, out_mb, out_len);
 
           if (out_len > 0) {
-            uint16_t j;
+            //uint16_t j;
             //Serial.println(F("out: "));
             //Serial.println(out_len, DEC);
             //for (j = 0; j < out_len; j++) {

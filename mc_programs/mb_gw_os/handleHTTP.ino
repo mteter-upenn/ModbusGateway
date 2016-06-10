@@ -4,14 +4,15 @@ void handle_http() {
   uint16_t post_len = 0;                             // length of POST message
   uint16_t i;                                        // tickers
   uint8_t meter;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
-  char *mtr_ind;                                   // index of 'METER' in GET request
+  char *mtr_ind;                                     // index of 'METER' in GET request
   //uint8_t reqFlag = 0;                               // flag for different http requests [live.xml, mtrsetup.xml]
-  char HTTP_req[REQ_BUF_SZ] = {0};                   // buffered HTTP request stored as null terminated string
+  char HTTP_req[REQ_BUF_SZ] = { 0 };                 // buffered HTTP request stored as null terminated string
   uint8_t req_index = 0;                             // index into HTTP_req buffer
   char ch;                                           // used for reading GET request with extra information
   char c;
 #if DISP_TIMING_DEBUG == 1
-  uint32_t gotClient, doneHttp, doneFind, doneSend;  // times for debugging
+  uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
+  uint32_t totBytes = 0;
 #endif
 //  bool testBool = true;                              // flag used for debug
   
@@ -32,21 +33,29 @@ void handle_http() {
 //            }
 
             c = client.read(); // read 1 byte (character) from client
+            //req_index = client.read((uint8_t*)HTTP_req, REQ_BUF_SZ);
             
+#if DISP_TIMING_DEBUG == 1
+            totBytes++;
+#endif
+
             // buffer first part of HTTP request in HTTP_req array (string)
             // leave last element in array as 0 to null terminate string (REQ_BUF_SZ - 1)
             if (req_index < (REQ_BUF_SZ - 1)) {
                 HTTP_req[req_index] = c;          // save HTTP request character
                 req_index++;
+#if DISP_TIMING_DEBUG == 1
+                lineTime = millis();
+#endif
             }
 
-            //Serial.print(c);    // print HTTP request character to serial monitor
+            Serial.print(c);    // print HTTP request character to serial monitor
             
-            if ((req_index == 4) && (strstr(HTTP_req, "POST"))){
+            if ((req_index == 4) && (strstr(HTTP_req, "POST"))) {
               post_fl = true;  // http request is POST
             }
-            if (post_fl == true){  // http request is POST
-              if (post_cont.searchString("Content-Length: ", 16)){
+            if (post_fl == true) {  // http request is POST
+              if (post_cont.searchString("Content-Length: ", 16)) {
                 fnd_len = true;
                 post_fl = false;
                 post_cont.clear();
@@ -55,8 +64,8 @@ void handle_http() {
               post_cont.put(c);
             }
 
-            if (fnd_len){
-              if (!((c == '\n') || (c == '\r'))){
+            if (fnd_len) {
+              if (!((c == '\r') || (c == '\n'))) {
                 post_len = post_len * 10 + (c - '0');
               }
               else{
@@ -88,9 +97,16 @@ void handle_http() {
                         return;
                       }
                     }
+        // html requests
                     else if (strstr(HTTP_req, ".htm") || strstr(HTTP_req, "GET / ")){ // if html or index request
                       if (strstr(HTTP_req, "GET / ") || strstr(HTTP_req, "GET /index.htm")) {
+#if DISP_TIMING_DEBUG
+                        time1 = millis();
+#endif
                         sendWebFile(client, "/index.htm");
+#if DISP_TIMING_DEBUG
+                        time2 = millis();
+#endif
                         //webFile = SD.open("index.htm");        // open web page file
                       }
                       else if (strstr(HTTP_req, "GET /gensetup.htm")) {
@@ -140,15 +156,11 @@ void handle_http() {
                         }
                       }
                       else if (strstr(HTTP_req, "GET /pastdown.htm")) {
-#if DISP_TIMING_DEBUG
-                        time1 = millis();
-#endif
+
                         sendWebFile(client, "/pstdown1.htm");
                         sendDownLinks(client, HTTP_req);
                         sendWebFile(client, "/pstdown2.htm");
-#if DISP_TIMING_DEBUG
-                        time2 = millis();
-#endif
+
                         //webFile = SD.open("pstdown1.htm");        // open web page file
                         //reqFlag = 4;
                       }
@@ -173,12 +185,14 @@ void handle_http() {
                       }
                       else{
                         sendWebFile(client, "/nopage.htm");
+
                         //webFile = SD.open("nopage.htm");
 //                        send404(client);
 //                        break;
                       }
                     }
-                    else if (strstr(HTTP_req, ".xml")){
+      //  xml requests
+                    else if (strstr(HTTP_req, ".xml")) {
                       if (strstr(HTTP_req, "GET /gensetup.xml")) {
                         sendWebFile(client, "/gensetup.xml");
                         sendXmlEnd(client, 3);
@@ -219,11 +233,12 @@ void handle_http() {
                         //webFile = SD.open("mtrsetup.xml");
                         //reqFlag = 1;
                       }
-                      else{  // could not find xml file
+                      else {  // could not find xml file
                         send404(client);  // handles http in function
                         break;
                       }   
                     }
+        // txt and csv requests
                     else if (strstr(HTTP_req, ".TXT") || strstr(HTTP_req, ".CSV")) {
                       if (strstr(HTTP_req, "GET /TEST.CSV")) {
                         client.println("HTTP/1.1 200 OK");
@@ -275,16 +290,22 @@ void handle_http() {
                     //sendWebFile(client, reqFlag);  // reset buffer index and all buffer elements to 0 in function
 
 #if DISP_TIMING_DEBUG == 1
-                    doneSend = millis();
-
+                    //doneSend = millis();
+                    Serial.write(HTTP_req, REQ_BUF_SZ - 1);
+                    Serial.println();
+                    Serial.print(F("Message length: "));
+                    Serial.println(totBytes, DEC);
                     Serial.print(F("HTTP Header: "));
                     Serial.println((doneHttp - gotClient), DEC);
+                    Serial.print(F("time to grab first 40: "));
+                    Serial.println((lineTime - gotClient), DEC);
                     Serial.print(F("Find: "));
                     Serial.println((doneFind - doneHttp), DEC);
-                    Serial.print(F("Message: "));
-                    Serial.println((doneSend - doneFind), DEC);
-                    Serial.print(F("time2 - time1: "));
+                    Serial.print(F("time to send page: "));
+                    //Serial.println((doneSend - doneFind), DEC);
+                    //Serial.print(F("time2 - time1: "));
                     Serial.println((time2 - time1), DEC);
+                    Serial.println();
 #endif
                                    
                     break;
@@ -295,8 +316,9 @@ void handle_http() {
                       getPostSetupData(client, post_len);  // reads and stores POST data to EEPROM
                       digitalWrite(epWriteLed, LOW);
 
+                      // write xml files
                       digitalWrite(sdWriteLed, HIGH);
-                      if (strstr(HTTP_req, "mtrsetup.htm")){
+                      if (strstr(HTTP_req, "mtrsetup.htm")){  
                         writeMtrSetupFile();
                       }
                       else if (strstr(HTTP_req, "gensetup.htm")){

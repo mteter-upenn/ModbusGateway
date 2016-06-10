@@ -1,8 +1,8 @@
 
 void getElecRegs(uint16_t grp_strt, uint8_t grp_len, uint16_t &pwrReg, uint16_t &egyReg) {
   //uint16_t lclmtr_strt;
-  uint16_t grp_s/*trt;
-                uint8_t grp_len*/;
+  //uint16_t grp_strt;
+  //uint8_t grp_len;
   uint16_t grp_adr;
   uint8_t numVals;
   uint8_t valType;

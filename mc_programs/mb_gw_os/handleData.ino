@@ -16,7 +16,7 @@ void handle_data() {
     uint16_t egyReg;
     uint16_t stmRegs[4] = {2, 8, 14, 32};  // lbs/hr, T, P, lbs
     uint16_t chwRegs[5] = {0, 6, 8, 10, 30};  // tons, gpm, Ts, Tr, tonhrs
-    uint16_t grp_adr;
+    //uint16_t grp_adr;
     uint8_t mbStat;
     uint8_t in_mb[12];
     uint8_t out_mb[ARR_SIZE];
@@ -54,7 +54,7 @@ void handle_data() {
 
         grp_strt = word(EEPROM.read(lclmtr_strt + 3), EEPROM.read(lclmtr_strt + 4));
         grp_len = EEPROM.read(lclmtr_strt + 5);
-        grp_adr = grp_strt;
+        //grp_adr = grp_strt;
 
         in_mb[6] = dev;   // device id
         in_mb[7] = func;  // modbus function

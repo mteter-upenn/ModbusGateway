@@ -18,7 +18,7 @@
 //#define UPENN_TEENSY_MBGW
 
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
-#define STRM_BUF_SZ  3584                              // array size for buffer between sd card and ethernet
+#define STRM_BUF_SZ  3584UL                            // array size for buffer between sd card and ethernet
 #else
 #define STRM_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
 #endif
@@ -29,7 +29,7 @@
 #define MODBUS_SERIAL 1                                // which hardware serial to use
 #endif
 
-#define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
+#define DISP_TIMING_DEBUG 1                            // debug flag that will print out delta times for web page interface
 #define RT_FROM_NTP 1                                  // 1 for ntp, 0 for rtc
 
 // pin ids
@@ -116,9 +116,9 @@ ByteBuffer post_cont;                                  // circular buffer for st
 bool sdInit = false;                                   // set flag corresponding to sd card initializtion
 
 // test vars
-#if DISP_TIMING_DEBUG
-uint32_t doneHttp, gotClient, doneFind, doneSend, time1, time2;
-#endif
+//#if DISP_TIMING_DEBUG
+//uint32_t doneHttp, gotClient, doneFind, doneSend, time1, time2;
+//#endif
 
 // PROTOTYPES:
 // main
@@ -324,7 +324,7 @@ void setup() {
   }
 
   if (t == 0) {  //  could not get ntp time, or ntp was disabled
-    if (getRtcTime() > 1451606400UL) {  // check if rtc is already working well, if not show as led error
+    if (getRtcTime() > 1451606400L) {  // check if rtc is already working well, if not show as led error
       bGoodRTC = true;  // time in RTC is greater than Jan 1 2016
     }
     //else {
