@@ -13,6 +13,8 @@
 #include <EthernetUdp.h>
 
 #define REQ_BUF_SZ   40                                // buffer size to capture beginning of http request
+#define REQ_ARR_SZ   1024                              // size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
+                                                       //   message, the rest of the array may loop around if the http request is large enough
 #define ARR_SIZE     264                               // array size for modbus/tcp rx/tx buffers
 
 //#define UPENN_TEENSY_MBGW
@@ -31,6 +33,7 @@
 
 #define DISP_TIMING_DEBUG 1                            // debug flag that will print out delta times for web page interface
 #define RT_FROM_NTP 1                                  // 1 for ntp, 0 for rtc
+#define SHOW_FREE_MEM 1                                // 1 for print free memory
 
 // pin ids
 
@@ -97,7 +100,7 @@ uint8_t maxSlvsRcd = 5;
 
 // classes
 EthernetServer serv_web(80);                           // start server on http
-#ifdef UPENN_TEENSY_MBGW
+#ifdef UPENN_TEENSY_MBGW                                // constant from Ethernet.h
 EthernetServer serv_web2(80);                           // start server on http
 #endif
 
@@ -126,6 +129,7 @@ void resetArd(void);
 // handleHTTP
 void handle_http(void);
 // secondaryHTTP
+void flushEthRx(EthernetClient, uint8_t *, uint16_t);
 void send404(EthernetClient);
 void sendBadSD(EthernetClient);
 void sendGifHdr(EthernetClient);
@@ -163,22 +167,22 @@ void getFileName(time_t, char*);
 // debugging
 bool getFakeTime(void);
 
+#if SHOW_FREE_MEM
+extern int __bss_end;
+extern void *__brkval;
 
-//extern int __bss_end;
-//extern void *__brkval;
-//
-//int get_free_memory()
-//{
-//  int free_memory;
-//
-//  if((int)__brkval == 0)
-//    free_memory = ((int)&free_memory) - ((int)&__bss_end);
-//  else
-//    free_memory = ((int)&free_memory) - ((int)__brkval);
-//
-//  return free_memory;
-//}
+int getFreeMemory()
+{
+  int free_memory;
 
+  if((int)__brkval == 0)
+    free_memory = ((int)&free_memory) - ((int)&__bss_end);
+  else
+    free_memory = ((int)&free_memory) - ((int)__brkval);
+
+  return free_memory;
+}
+#endif
 
 void resetArd(){
 //   Serial.println("resetting...");
@@ -195,9 +199,9 @@ void setup() {
   time_t t = 0;
 
   Serial.begin(9600);
-  //Serial.println(F("delay here"));
-  //delay(2000);
-  //Serial.println(F("delay over"));
+  Serial.println(F("delay here"));
+  delay(2000);
+  Serial.println(F("delay over"));
   
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
   pinMode(rtcFailLed, OUTPUT);
@@ -392,6 +396,11 @@ void setup() {
   if (!bGoodRTC) {
     digitalWrite(rtcFailLed, HIGH);
   }
+
+#if SHOW_FREE_MEM
+  Serial.print(F("start: "));
+  Serial.println(getFreeMemory());
+#endif
 }  // end setup
 
 

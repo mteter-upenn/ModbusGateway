@@ -223,8 +223,10 @@ void read_eeprom(char cMenu) {
       // Meter virt ID
       Serial.print(F("Virtual Modbus ID: "));
       Serial.println(EEPROM.read(mtr_strt + j * 9 + 9), DEC);
+
+      Serial.println();
     }
-    Serial.println();
+    
 
     //// Scroll?
     //term_func(F("Continue? (Y)"), verFunc, F(""), F("Continue? (Y)"), inpt, "n", false, 0, false);

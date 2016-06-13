@@ -1,4 +1,5 @@
 /*
+ * void flushEthRx
  * void send404
  * void sendBadSD
  * void sendWebFile
@@ -7,6 +8,12 @@
  * void getPostSetupData
  */
 
+
+void flushEthRx(EthernetClient client, uint8_t * buffer, uint16_t len) {
+  while (client.available()) {
+    client.read(buffer, len);
+  }
+}
 
 
 void send404(EthernetClient client){
@@ -84,6 +91,11 @@ void sendWebFile(EthernetClient client, const char* filename) {
   else {
     send404(client);
   }
+
+#if SHOW_FREE_MEM
+  Serial.print(F("sendWebFile mem: "));
+  Serial.println(getFreeMemory());
+#endif
 }
 
 

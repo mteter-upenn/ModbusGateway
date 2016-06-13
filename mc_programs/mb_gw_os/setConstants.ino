@@ -1,6 +1,5 @@
 /*
  * void setConstants
- * void writeSetupFile
  * void writeGenSetup
  * void writeMeterSetup
  */
@@ -45,7 +44,7 @@ void setConstants(){
 
 
   slaves = EEPROM.read(mtr_strt);
-  
+
   for (i = 0; i < slaves; i++){
     slv_devs[i] = EEPROM.read(9 * i + 8 + mtr_strt);
     slv_vids[i] = EEPROM.read(9 * i + 9 + mtr_strt);
