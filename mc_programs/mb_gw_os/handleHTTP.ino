@@ -1,5 +1,5 @@
 void handle_http() {
-  uint16_t post_len = 0;                             // length of POST message
+  //uint16_t post_len = 0;                             // length of POST message
   uint32_t i;                                        // tickers
   uint8_t meter;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
   char *mtr_ind;                                     // index of 'METER' in GET request
@@ -253,54 +253,63 @@ void handle_http() {
         }
 // POST http
         else if (strstr(reqHttp, "POST") != NULL) {
-          char * postLenPtr;
+          //char * postLenPtr;
 
-          client.read((uint8_t*)headHttp, POST_BUF_SZ); // read
-          headHttp[POST_BUF_SZ] = 0;
+          //client.read((uint8_t*)headHttp, POST_BUF_SZ); // read
+          //headHttp[POST_BUF_SZ] = 0;
 
-          postLenPtr = strstr(headHttp, "Content-Length: ");  // Find 'Content-Length: '
+          //postLenPtr = strstr(headHttp, "Content-Length: ");  // Find 'Content-Length: '
 
-          if (postLenPtr != NULL) {  // found 'Content-Length'
+          //if (postLenPtr != NULL) {  // found 'Content-Length'
+          //  postLenPtr += 16;
 
-            postLenPtr += 16;
-            while (isdigit(*postLenPtr)) {
-              post_len = post_len * 10 + ((*postLenPtr) - '0');
-              postLenPtr++;
+          //  for (i = 0; i < 2; i++) {  // used for loop instead just to be sure it breaks free even if I get nothing out of it
+          //    while (isdigit(*postLenPtr)) {
+          //      post_len = post_len * 10 + ((*postLenPtr) - '0');
+          //      postLenPtr++;
+          //    }
 
-            }
-            // now need to find end of message, continue to rotate through POST_BUF_SZ segments until \n\n found
+          //    if ((*postLenPtr) == '\0') {
+          //      client.read((uint8_t*)headHttp, POST_BUF_SZ); // length was cut off, load next portion into headHttp
+          //      postLenPtr = headHttp;  // reset postLenPtr to start of headHttp
+          //    }
+          //    else {
+          //      break;
+          //    }
+          //  }
+          //  // now need to find end of message, continue to rotate through POST_BUF_SZ segments until \n\n found
 
 
-            //if (postLenPtr < (HTTP_req + REQ_ARR_SZ - 23)) {  // make sure not at end of array
-            //  postLenPtr += 16;
+          //  //if (postLenPtr < (HTTP_req + REQ_ARR_SZ - 23)) {  // make sure not at end of array
+          //  //  postLenPtr += 16;
 
-            //  for (postLenPtr; postLenPtr < postLenPtr + 7; postLenPtr++) {
-            //    if (isdigit(*postLenPtr)) {
-            //      post_len = post_len * 10 + ((*postLenPtr) - '0');
-            //    }
-            //    else {
-            //      break;
-            //    }
-            //  }
-            //}
-            //else {  // phrase occurs near end of array
-            //  // not sure how to handle this except for pray it doesn't happen
-            //}
-          }
-          else {
-            // phrase not found, need to check end of array in case it got split
-            // for now, hope it doesn't happen, but it does need to get fixed
-          }
+          //  //  for (postLenPtr; postLenPtr < postLenPtr + 7; postLenPtr++) {
+          //  //    if (isdigit(*postLenPtr)) {
+          //  //      post_len = post_len * 10 + ((*postLenPtr) - '0');
+          //  //    }
+          //  //    else {
+          //  //      break;
+          //  //    }
+          //  //  }
+          //  //}
+          //  //else {  // phrase occurs near end of array
+          //  //  // not sure how to handle this except for pray it doesn't happen
+          //  //}
+          //}
+          //else {
+          //  // phrase not found, need to check end of array in case it got split
+          //  // for now, hope it doesn't happen, but it does need to get fixed
+          //}
 
-          flushEthRx(client, (uint8_t*)headHttp, REQ_ARR_SZ - 1);
+          //flushEthRx(client, (uint8_t*)headHttp, REQ_ARR_SZ - 1);
 
 
           if (strstr(reqHttp, "setup.htm")) {
             digitalWrite(epWriteLed, HIGH);
-            getPostSetupData(client, post_len);  // reads and stores POST data to EEPROM
+            getPostSetupData(client, headHttp);  // reads and stores POST data to EEPROM
             digitalWrite(epWriteLed, LOW);
 
-            // write xml files
+            // rewrite xml files
             digitalWrite(sdWriteLed, HIGH);
             if (strncmp(reqHttp, "POST /mtrsetup.htm", 18)) {
               writeMtrSetupFile();

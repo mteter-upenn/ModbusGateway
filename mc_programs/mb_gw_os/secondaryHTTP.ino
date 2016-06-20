@@ -3,9 +3,7 @@
  * void send404
  * void sendBadSD
  * void sendWebFile
- * void sendPostResp
  * void LiveXML
- * void getPostSetupData
  */
 
 
@@ -22,7 +20,7 @@ void send404(EthernetClient client){
   strcpy_P(resp404, PSTR("HTTP/1.1 404 Not Found\nConnnection: close\n\n"));
   client.write(resp404);
 
-  post_cont.clear();
+  //post_cont.clear();
   client.flush();
 }
 
@@ -43,7 +41,7 @@ void sendBadSD(EthernetClient client){
 
   client.write(respBadSD);
 
-  post_cont.clear();
+  //post_cont.clear();
   client.flush();
 }
 
@@ -260,47 +258,7 @@ void sendIP(EthernetClient client) {
 }
 
 
-void sendPostResp(EthernetClient client){
-  //int16_t i;
-  //uint16_t j, k;
-  //uint8_t ipOct;
-  char postResp[76]; // = "HTTP/1.1 303 See Other\nLocation: http://";
-//  char postClose[] = "\nConnection: close\n\n";
-
-  strcpy_P(postResp, PSTR("HTTP/1.1 303 See Other\nLocation: /redirect.htm\nConnection: close\n\n"));
-  client.write(postResp, 66);
-
-  /*strcpy_P(postResp, PSTR("HTTP/1.1 303 See Other\nLocation: http://"));
-  j = 40;
-  ipOct = ip[0];
-  for (i = log10(ipOct); i > -1; i--){
-    postResp[j] = ipOct / pow(10, i) + '0';
-    ipOct -= (postResp[j] - '0') * pow(10, i);
-    j++;
-  }
-
-  for (k = 1; k < 4; k++){
-    postResp[j] = '.';
-    j++;
-
-    ipOct = ip[k];
-    for (i = log10(ipOct); i > -1; i--){
-      postResp[j] = ipOct / pow(10, i) + '0';
-      ipOct -= (postResp[j] - '0') * pow(10, i);
-      j++;
-    }
-  }
-
-  strcat(postResp, PSTR("\nConnection: close\n\n"));
-  
-  client.write(postResp, j);*/
-  
-  post_cont.clear();
-  client.flush();
-}
-
-
-void liveXML(EthernetClient cl){
+void liveXML(EthernetClient cl) {  // sends xml file of live meter data
   float data[32];
   int8_t data_b[32];
   uint8_t in_mb[12];  // can make this smaller 
@@ -334,7 +292,7 @@ void liveXML(EthernetClient cl){
     strcat_P(respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
     cl.write(respXml);
 
-    post_cont.clear();
+    //post_cont.clear();
     cl.flush();
     return;  // no registers in eeprom
   }
@@ -410,7 +368,7 @@ void liveXML(EthernetClient cl){
         strcat_P(respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
         cl.write(respXml);
 
-        post_cont.clear();
+        //post_cont.clear();
         cl.flush();
         return;  // if modbus timeout error on first loop, kill further data requests
       }
@@ -529,288 +487,8 @@ void liveXML(EthernetClient cl){
   strcat_P(respXml, PSTR("</inputs>"));
   cl.write(respXml);
   
-  post_cont.clear();
+  //post_cont.clear();
   cl.flush();
 }
 
 
-void getPostSetupData(EthernetClient cl, uint16_t pst_len){
-  uint16_t i, j, k;
-  uint16_t id_strt, id_end, val_strt, val_end;
-  char post_str[pst_len];
-  char ch;
-  uint8_t u8dum, lcl_meter;
-  uint8_t num_mtrs = 0;
-  uint16_t u16dum;
-  uint32_t u32dum;
-  
-  for (i = 0; i < pst_len; i++){
-    if (cl.available()){
-      post_str[i] = cl.read();
-      //Serial.print(post_str[i]);
-    }
-    else{
-      return;  // false
-    }
-  }
-  //Serial.println();
-
-  id_strt = 0;
-  i = 0;
-  digitalWrite(epWriteLed, HIGH);
-//  Serial.println(F("post setup"));
-  while (i < pst_len){
-    ch = post_str[i];
-//    Serial.print(F("ch: "));
-//    Serial.println(ch);
-    if (ch == '='){
-      id_end = i;
-      i++;
-      val_strt = i;
-
-      ch = post_str[i];
-
-      while ((i < pst_len) && (ch != '&')){
-        i++;
-        ch = post_str[i];
-      }
-      val_end = i;
-
-      
-      if (strncmp(post_str + id_strt, "mip", 3) == 0){  //  ****************************************** METER IP *************************************************
-        lcl_meter = 0;
-        for (j = (id_strt + 3); j < id_end; j++){
-          lcl_meter = lcl_meter * 10 + (post_str[j] - '0');
-        }
-
-        if (lcl_meter < num_mtrs){  // make sure to only record necessary number of meters
-          if (val_strt == val_end){  // blank values for ips translate to 0's
-            for (j = 0; j < 4; j++){
-              EEPROM.write((j + mtr_strt + 9 * lcl_meter + 4), 0);
-            }
-          }
-          else{
-            k = val_strt;
-            for (j = 0; j < 4; j++){
-              u8dum = 0;
-              while ((post_str[k] != '.') && (k < val_end)){
-                u8dum = u8dum * 10 + (post_str[k] - '0');
-                k++;
-              }
-              k++;
-              EEPROM.write((j + mtr_strt + 9 * lcl_meter + 4), u8dum);
-            }
-          }
-        }
-      }
-      else if (strncmp(post_str + id_strt, "id", 2) == 0){  //  ****************************************** MODBUS ID *************************************************
-        lcl_meter = 0;
-        for (j = (id_strt + 2); j < id_end; j++){
-          lcl_meter = lcl_meter * 10 + (post_str[j] - '0');
-        }
-
-        if (lcl_meter < num_mtrs){  // make sure to only record necessary number of meters
-          u8dum = 0;
-          for (j = val_strt; j < val_end; j++){
-            u8dum = u8dum * 10 + (post_str[j] - '0');
-          }
-          EEPROM.write((mtr_strt + 9 * lcl_meter + 8), u8dum);
-//          Serial.print(lcl_meter, DEC);
-//          Serial.print(F(": "));
-//          Serial.println(u8dum, DEC);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "vid", 3) == 0) {  //  ************************************ VIRTUAL MODBUS ID *************************************************
-        lcl_meter = 0;
-        for (j = (id_strt + 3); j < id_end; j++) {
-          lcl_meter = lcl_meter * 10 + (post_str[j] - '0');
-        }
-
-        if (lcl_meter < num_mtrs) {  // make sure to only record necessary number of meters
-          u8dum = 0;
-          for (j = val_strt; j < val_end; j++) {
-            u8dum = u8dum * 10 + (post_str[j] - '0');
-          }
-          EEPROM.write((mtr_strt + 9 * lcl_meter + 9), u8dum);
-          //          Serial.print(lcl_meter, DEC);
-          //          Serial.print(F(": "));
-          //          Serial.println(u8dum, DEC);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "mtr", 3) == 0){  //  ****************************************** METER TYPE *************************************************
-        lcl_meter = 0;
-        for (j = (id_strt + 3); j < id_end; j++){
-          lcl_meter = lcl_meter * 10 + (post_str[j] - '0');
-        }
-
-        if (lcl_meter < num_mtrs){  // make sure to only record necessary number of meters
-          k = val_strt;
-          for (j = 0; j < 3; j++){
-            u8dum = 0;
-            while ((post_str[k] != '.') && (k < val_end)){
-              u8dum = u8dum * 10 + (post_str[k] - '0');
-              k++;
-            }
-            k++;
-            EEPROM.write((j + mtr_strt + 9 * lcl_meter + 1), u8dum);
-          }
-        }
-      }
-      else if (strncmp(post_str + id_strt, "numMtrs", 7) == 0){  //  ****************************************** NUM METERS *************************************************
-        for (j = val_strt; j < val_end; j++){
-          num_mtrs = num_mtrs * 10 + (post_str[j] - '0');
-        }
-
-        if (num_mtrs > 20){
-          num_mtrs = 20;
-        }
-
-        EEPROM.write(mtr_strt, num_mtrs);
-      }
-      else if (strncmp(post_str + id_strt, "nm", 2) == 0){  // ******************************** NAME ****************************************
-//        Serial.println(F("nm"));
-        if ((val_end - val_strt) > 30){
-          val_end = val_strt + 30;
-        }
-        for (j = val_strt; j < val_end; j++){  // limited to 30 characters
-          if (post_str[j] == 43){  // filter out '+' as html concatenator
-            post_str[j] = 32;  // replace with blank space
-          }
-          EEPROM.write((j - val_strt + nm_strt), post_str[j]);
-        }
-        if ((val_end - val_strt) != 30){
-          EEPROM.write((val_end - val_strt + nm_strt), 0);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "rd", 2) == 0) {  // ***************************************** Record Data ************************************
-        u16dum = 0;
-        for (j = val_strt; j < val_end; j++){
-          u16dum = u16dum * 10 + (post_str[j] - '0');
-        }
-
-        if (u16dum) {
-          EEPROM.write(nm_strt + 31, true);
-        }
-        else {
-          EEPROM.write(nm_strt + 31, false);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "ms", 2) == 0) {  // ***************************** Max Number of Slaves to Record ************************************
-        u8dum = 0;
-        for (j = val_strt; j < val_end; j++) {
-          u8dum = u8dum * 10 + (post_str[j] - '0');
-        }
-
-        EEPROM.write(nm_strt + 32, u8dum);
-      }      else if (strncmp(post_str + id_strt, "ip", 2) == 0){  //  ***************************************** IP ************************************************
-//        Serial.println(F("ip"));
-        k = val_strt;
-        for (j = 0; j < 4; j++){
-          u8dum = 0;
-          while ((post_str[k] != '.') && (k < val_end)){
-            u8dum = u8dum * 10 + (post_str[k] - '0');
-            k++;
-          }
-          k++;
-          EEPROM.write((j + ip_strt + 6), u8dum);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "sm", 2) == 0){  //  ****************************************** SUBNET MASK *************************************************
-//        Serial.println(F("sm"));
-        k = val_strt;
-        for (j = 0; j < 4; j++){
-          u8dum = 0;
-          while ((post_str[k] != '.') && (k < val_end)){
-            u8dum = u8dum * 10 + (post_str[k] - '0');
-            k++;
-          }
-          k++;
-          EEPROM.write((j + ip_strt + 10), u8dum);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "gw", 2) == 0){  //  ****************************************** DEFAULT GATEWAY *************************************************
-//        Serial.println(F("gw"));
-        k = val_strt;
-        for (j = 0; j < 4; j++){
-          u8dum = 0;
-          while ((post_str[k] != '.') && (k < val_end)){
-            u8dum = u8dum * 10 + (post_str[k] - '0');
-            k++;
-          }
-          k++;
-          EEPROM.write((j + ip_strt + 14), u8dum);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "ntp", 3) == 0) {  // ***************************************** USE NTP? ************************************
-        u16dum = 0;
-        for (j = val_strt; j < val_end; j++) {
-          u16dum = u16dum * 10 + (post_str[j] - '0');
-        }
-
-        if (u16dum) {
-          EEPROM.write(ip_strt + 18, true);
-        }
-        else {
-          EEPROM.write(ip_strt + 18, false);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "nip", 3) == 0) {  //  ************************************ NTP SERVER IP *****************************************
-        k = val_strt;
-        for (j = 0; j < 4; j++) {
-          u8dum = 0;
-          while ((post_str[k] != '.') && (k < val_end)) {
-            u8dum = u8dum * 10 + (post_str[k] - '0');
-            k++;
-          }
-          k++;
-          EEPROM.write((j + ip_strt + 19), u8dum);
-        }
-      }
-      else if (strncmp(post_str + id_strt, "br", 2) == 0){  //  ****************************************** BAUDRATE *************************************************
-//        Serial.println(F("br"));
-        u32dum = 0;
-        
-        for (j = val_strt; j < val_end; j++){
-          u32dum = u32dum * 10 + (post_str[j] - '0');
-        }
-
-        EEPROM.write(ip_strt + 23, (u32dum >> 16));
-        EEPROM.write(ip_strt + 24, (u32dum >> 8));
-        EEPROM.write(ip_strt + 25, u32dum);
-      }
-      else if (strncmp(post_str + id_strt, "to", 2) == 0){  //  ****************************************** MB TIMEOUT *************************************************
-//        Serial.println(F("to"));
-        u16dum = 0;
-        for (j = val_strt; j < val_end; j++){
-          u16dum = u16dum * 10 + (post_str[j] - '0');
-        }
-
-        EEPROM.write(ip_strt + 26,highByte(u16dum));
-        EEPROM.write(ip_strt + 27, lowByte(u16dum));
-      }
-      else if (strncmp(post_str + id_strt, "tm", 2) == 0){  //  ****************************************** TIME *************************************************
-         u32dum = 0;
-        
-        for (j = val_strt; j < val_end; j++){
-          u32dum = u32dum * 10 + (post_str[j] - '0');
-        }
-
-        if (u32dum > 1451606400UL) {
-          bGoodRTC = true;
-#if defined(CORE_TEENSY)
-          Teensy3Clock.set(u32dum);
-#endif
-          setTime(u32dum);
-        }
-      }
-      i++;
-      id_strt = i;
-    }  // end if ch == '='
-    else{
-      i++;
-    }  // end if ch == '='
-  }  // while loop
-
-  digitalWrite(epWriteLed, LOW);
-  setConstants();
-}

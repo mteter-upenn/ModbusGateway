@@ -4,7 +4,7 @@
  */
 
 #include <Time.h>
-#include <ByteBuffer.h>
+//#include <ByteBuffer.h>
 #include <SPI.h>
 #include <Ethernet.h>
 #include <ModbusMaster.h>
@@ -15,9 +15,9 @@
 #define REQ_BUF_SZ   40                                // buffer size to capture beginning of http request
 #define REQ_ARR_SZ   1500                              // size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
                                                        //   message, the rest of the array may loop around if the http request is large enough
-#define POST_BUF_SZ (REQ_ARR_SZ - 1 - 1030 - 50)
+#define POST_BUF_SZ (REQ_ARR_SZ - 1 - 1030 - 50)       // currently 419
 
-#if POST_BUF_SZ < 0
+#if POST_BUF_SZ < 20                                   // make sure post buffer has enough room to play with, 20 bytes sounds good for min
 #error "not enough room in array for POST messages"
 #endif
 
@@ -121,7 +121,7 @@ ModbusMaster node(1, clientIP, mb485Ctrl, MODBUS_SERIAL);                  // in
 
 
 // miscellaneous
-ByteBuffer post_cont;                                  // circular buffer for string searches within entire http request
+//ByteBuffer post_cont;                                  // circular buffer for string searches within entire http request
 bool sdInit = false;                                   // set flag corresponding to sd card initializtion
 
 // test vars
@@ -134,7 +134,7 @@ bool sdInit = false;                                   // set flag corresponding
 void resetArd(void);
 // handleHTTP
 void handle_http(void);
-// secondaryHTTP
+// secondaryHTTP - GET and general functions
 void flushEthRx(EthernetClient, uint8_t *, uint16_t);
 void send404(EthernetClient);
 void sendBadSD(EthernetClient);
@@ -143,8 +143,9 @@ void sendWebFile(EthernetClient, const char*);
 void sendDownLinks(EthernetClient, char*);
 void sendXmlEnd(EthernetClient, uint8_t);
 void sendIP(EthernetClient);
-void sendPostResp(EthernetClient);
 void liveXML(EthernetClient);
+// tertiaryHTTP - POST related functions
+void sendPostResp(EthernetClient);
 void getPostSetupData(EthernetClient, uint16_t);
 // handleModbus
 bool getModbus(uint8_t*, uint16_t, uint8_t*, uint16_t&);
@@ -323,7 +324,7 @@ void setup() {
   node.setTimeout(timeout);
   //Serial3.begin(9600);
   
-  post_cont.init(16);  // creates circular buffer 16 bytes around
+  //post_cont.init(16);  // creates circular buffer 16 bytes around
 
   delay(1100);
   //setTime(4, 40, 0, 30, 10, 2015);
