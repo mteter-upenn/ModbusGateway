@@ -62,7 +62,7 @@ void sendWebFile(EthernetClient client, const char* filename) {
   uint16_t max_i;                                    // number of chunks file must be split into to send via tcp
   uint32_t remBytes;                                 // number of bytes remaining in last chunk (wfSize Mod STRM_BUF_SZ)
   uint16_t lclBufSz;                                 // size of file buffer - min(remBytes, lclBufSz)
-  char streamBuf[STRM_BUF_SZ];                       // buffer for moving data between sd card and ethernet
+  char streamBuf[RESP_BUF_SZ];                       // buffer for moving data between sd card and ethernet
   File streamFile;
 
   streamFile = SD.open(filename);
@@ -70,11 +70,11 @@ void sendWebFile(EthernetClient client, const char* filename) {
   if (streamFile) {
     wfSize = streamFile.size();
 
-    max_i = (wfSize / STRM_BUF_SZ) + 1;
+    max_i = (wfSize / RESP_BUF_SZ) + 1;
 
     for (i = 0; i < max_i; i++) {
-      remBytes = wfSize - (i * STRM_BUF_SZ);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
-      lclBufSz = min(remBytes, STRM_BUF_SZ);
+      remBytes = wfSize - (i * RESP_BUF_SZ);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
+      lclBufSz = min(remBytes, RESP_BUF_SZ);
 
       //for (j = 0; j < lclBufSz; j++) {
       //  streamBuf[j] = streamFile.read();
@@ -104,7 +104,7 @@ void sendDownLinks(EthernetClient client, char* httpReq) {
   uint16_t dirNameLen;
   char * pdPtr;
   char dirName[36];
-  char streamBuf[STRM_BUF_SZ] = {0};                       // buffer for moving data to ethernet
+  char streamBuf[RESP_BUF_SZ] = {0};                       // buffer for moving data to ethernet
   File dir;
 
   strcpy(dirName, httpReq + 4);
@@ -304,7 +304,7 @@ void liveXML(EthernetClient cl){
   float data[32];
   int8_t data_b[32];
   uint8_t in_mb[12];  // can make this smaller 
-  uint8_t out_mb[ARR_SIZE];
+  uint8_t out_mb[MB_ARR_SIZE];
   uint16_t in_len = 12;
   uint16_t out_len = 0;
   uint16_t lclmtr_strt, grp_strt, grp_adr, mb_strt, j, grp_len, i, clc_num, clc_typ;
@@ -543,7 +543,7 @@ void getPostSetupData(EthernetClient cl, uint16_t pst_len){
   uint8_t num_mtrs = 0;
   uint16_t u16dum;
   uint32_t u32dum;
-
+  
   for (i = 0; i < pst_len; i++){
     if (cl.available()){
       post_str[i] = cl.read();

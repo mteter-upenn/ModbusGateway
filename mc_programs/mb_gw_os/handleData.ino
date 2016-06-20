@@ -19,7 +19,7 @@ void handle_data() {
     //uint16_t grp_adr;
     uint8_t mbStat;
     uint8_t in_mb[12];
-    uint8_t out_mb[ARR_SIZE];
+    uint8_t out_mb[MB_ARR_SIZE];
     uint16_t out_len;
     char streamBuf[150] = {0};
     time_t t = now();

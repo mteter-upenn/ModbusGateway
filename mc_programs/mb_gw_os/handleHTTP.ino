@@ -1,21 +1,18 @@
 void handle_http() {
-  bool post_fl = false;                              // set true if http request is POST
-  bool fnd_len = false;                              // set true to find length of POST message
   uint16_t post_len = 0;                             // length of POST message
   uint32_t i;                                        // tickers
   uint8_t meter;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
   char *mtr_ind;                                     // index of 'METER' in GET request
-  //uint8_t reqFlag = 0;                               // flag for different http requests [live.xml, mtrsetup.xml]
-  char HTTP_req[REQ_ARR_SZ] = { 0 };                 // buffered HTTP request stored as null terminated string
-  //uint8_t readBytes = 4;
-  uint8_t req_index = 0;                             // index into HTTP_req buffer
-  char ch;                                           // used for reading GET request with extra information
-  char c;
+  char reqHttp[REQ_BUF_SZ] = { 0 };                 // buffered HTTP request stored as null terminated string
+  char headHttp[REQ_ARR_SZ] = { 0 };
+  //char ch;                                           // used for reading GET request with extra information
+  uint16_t initLen;
+  uint32_t strtMsg;
+
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
   uint32_t totBytes = 0;
 #endif
-//  bool testBool = true;                              // flag used for debug
   
   EthernetClient client = serv_web.available();  // try to get client
 
@@ -26,31 +23,43 @@ void handle_http() {
 #endif
 
     while (client.connected()) {
-      if (client.available() > 3) {   // client data available to read
-        client.read((uint8_t*)HTTP_req, REQ_ARR_SZ - 1);  // dump as much as possible
+      if (client.available()) {   // client data available to read
+        //initLen = client.read((uint8_t*)HTTP_req, REQ_ARR_SZ - 1);  // dump as much as possible, -1 accounts for \0 at end of string
+        initLen = client.read((uint8_t*)reqHttp, REQ_BUF_SZ - 1);
+
+        strtMsg = millis();
+        while (initLen < REQ_BUF_SZ - 1) {  // make sure enough is read
+          //initLen += client.read((uint8_t*)HTTP_req + initLen, REQ_ARR_SZ - initLen - 1);
+          initLen += client.read((uint8_t*)reqHttp + initLen, REQ_BUF_SZ - initLen - 1);
+
+          if ((millis() - strtMsg) > 50) {  // stop after 50 ms
+            client.stop();
+            return;
+          }
+        }
 
 #if DISP_TIMING_DEBUG == 1
         lineTime = millis();
 #endif
 
-        HTTP_req[REQ_BUF_SZ - 1] = 0;  // this will replace a character, though I don't think it is important
-        HTTP_req[REQ_ARR_SZ - 1] = 0;
+        reqHttp[REQ_BUF_SZ - 1] = 0;  // this will replace a character, though I don't think it is important
+        headHttp[REQ_ARR_SZ - 1] = 0;
 
-        Serial.println(HTTP_req);
-        Serial.println(HTTP_req + REQ_BUF_SZ);
+        //Serial.println(HTTP_req);
+        //Serial.println(HTTP_req + REQ_BUF_SZ);
 
-        if (strncmp(HTTP_req, "GET", 3) == 0) {
-          flushEthRx(client, (uint8_t*)HTTP_req + REQ_BUF_SZ, REQ_ARR_SZ - REQ_BUF_SZ - 1);
+        if (strncmp(reqHttp, "GET", 3) == 0) {
+          flushEthRx(client, (uint8_t*)headHttp, REQ_ARR_SZ - 1);
 
 #if DISP_TIMING_DEBUG == 1
           doneHttp = millis();
 #endif
 
           if (sdInit) {
-            if (strstr(HTTP_req, ".css") != NULL) {
+            if (strstr(reqHttp, ".css") != NULL) {
               sendWebFile(client, "/ep_style.css");  // only css available
             }
-            else if (strstr(HTTP_req, ".gif") != NULL) {  // will need to expand if more pictures are desired
+            else if (strstr(reqHttp, ".gif") != NULL) {  // will need to expand if more pictures are desired
               sendGifHdr(client);
               sendWebFile(client, "/images/logo_let.gif");  // only gif available
 
@@ -62,8 +71,8 @@ void handle_http() {
               }
             }
 // html requests
-            else if ((strstr(HTTP_req, ".htm") != NULL) || (strncmp(HTTP_req, "GET / ", 6) == 0)) { // if html or index request
-              if ((strncmp(HTTP_req, "GET / ", 6) == 0) || (strncmp(HTTP_req, "GET /index.htm", 14) == 0)) {
+            else if ((strstr(reqHttp, ".htm") != NULL) || (strncmp(reqHttp, "GET / ", 6) == 0)) { // if html or index request
+              if ((strncmp(reqHttp, "GET / ", 6) == 0) || (strncmp(reqHttp, "GET /index.htm", 14) == 0)) {
 #if DISP_TIMING_DEBUG
                 time1 = millis();
 #endif
@@ -72,31 +81,25 @@ void handle_http() {
                 time2 = millis();
 #endif
               }
-              else if (strncmp(HTTP_req, "GET /gensetup.htm", 17) == 0) {
+              else if (strncmp(reqHttp, "GET /gensetup.htm", 17) == 0) {
                 sendWebFile(client, "/gensetup.htm");
               }
-              else if (strncmp(HTTP_req, "GET /mtrsetup.htm", 17) == 0) {
+              else if (strncmp(reqHttp, "GET /mtrsetup.htm", 17) == 0) {
                 sendWebFile(client, "/mtrsetup.htm");
               }
-              else if (strstr(HTTP_req, "live.htm") != NULL) {
-                mtr_ind = strstr(HTTP_req, "METER=");
+              else if (strstr(reqHttp, "live.htm") != NULL) {
+                mtr_ind = strstr(reqHttp, "METER=");
 
                 if (mtr_ind != NULL) {
                   selSlv = 0;
                   mtr_ind += 6;  // move pointer to end of phrase
 
-                  for (i = 0; i < 3; i++) {  // search all of HTTP_req
-                    ch = HTTP_req[i + (mtr_ind - HTTP_req)];
-                    Serial.print("ch: ");
-                    Serial.println(ch);
-                    Serial.println(*mtr_ind);
-                    //mtr_ind += i;
-                    if ((ch == '&') || (ch == ' ')) {
-                    //if (((*mtr_ind) == '&') || ((*mtr_ind) == ' ')) {
-                      break;
+                  for (mtr_ind; mtr_ind < mtr_ind + 3; mtr_ind++) {
+                    if (isdigit(*mtr_ind)) {
+                      selSlv = selSlv * 10 + ((*mtr_ind) - '0');
                     }
                     else {
-                      selSlv = selSlv * 10 + (ch - '0');
+                      break;
                     }
                   }
 
@@ -120,20 +123,20 @@ void handle_http() {
                   sendWebFile(client, "/elive.htm");        // electric 
                 }
               }
-              else if (strncmp(HTTP_req, "GET /pastdown.htm", 17) == 0) {
+              else if (strncmp(reqHttp, "GET /pastdown.htm", 17) == 0) {
 
                 sendWebFile(client, "/pstdown1.htm");
-                sendDownLinks(client, HTTP_req);
+                sendDownLinks(client, reqHttp);
                 sendWebFile(client, "/pstdown2.htm");
               }
-              else if (strncmp(HTTP_req, "GET /pastview.htm", 17) == 0) {  // need to flesh out ideas for this (mimic pastdown?)
+              else if (strncmp(reqHttp, "GET /pastview.htm", 17) == 0) {  // need to flesh out ideas for this (mimic pastdown?)
                                                                   // graph data?
                 sendWebFile(client, "/pastview.htm");
               }
-              else if (strncmp(HTTP_req, "GET /reset.htm", 14) == 0) {
+              else if (strncmp(reqHttp, "GET /reset.htm", 14) == 0) {
                 sendWebFile(client, "/reset.htm");
               }
-              else if (strncmp(HTTP_req, "GET /redirect.htm", 17) == 0) {
+              else if (strncmp(reqHttp, "GET /redirect.htm", 17) == 0) {
                 sendWebFile(client, "/rdct1.htm");
                 sendIP(client);
                 sendWebFile(client, "/rdct2.htm");
@@ -145,31 +148,28 @@ void handle_http() {
               }
             }
 //  xml requests
-            else if (strstr(HTTP_req, ".xml") != NULL) {
-              if (strncmp(HTTP_req, "GET /gensetup.xml", 17) == 0) {
+            else if (strstr(reqHttp, ".xml") != NULL) {
+              if (strncmp(reqHttp, "GET /gensetup.xml", 17) == 0) {
                 sendWebFile(client, "/gensetup.xml");
                 sendXmlEnd(client, 3);
               }
-              else if (strncmp(HTTP_req, "GET /mtrsetup.xml", 17) == 0) {
+              else if (strncmp(reqHttp, "GET /mtrsetup.xml", 17) == 0) {
                 sendWebFile(client, "/mtrsetup.xml");
                 sendXmlEnd(client, 2);
               }
-              else if (strncmp(HTTP_req, "GET /data.xml", 13) == 0) {
-                mtr_ind = strstr(HTTP_req, "METER=");
+              else if (strncmp(reqHttp, "GET /data.xml", 13) == 0) {
+                mtr_ind = strstr(reqHttp, "METER=");
 
                 if (mtr_ind != NULL) {
                   selSlv = 0;
                   mtr_ind += 6;  // move pointer to end of phrase
 
-                  for (i = 0; i < 3; i++) {  // search all of HTTP_req
-                    ch = HTTP_req[i + (mtr_ind - HTTP_req)];
-                    //mtr_ind += i;
-                    if ((ch == '&') || (ch == ' ')) {
-                    //if (((*mtr_ind) == '&') || ((*mtr_ind) == ' ')) {
-                      break;
+                  for (mtr_ind; mtr_ind < mtr_ind + 3; mtr_ind++) {
+                    if (isdigit(*mtr_ind)) {
+                      selSlv = selSlv * 10 + ((*mtr_ind) - '0');
                     }
                     else {
-                      selSlv = selSlv * 10 + (ch - '0');
+                      break;
                     }
                   }
 
@@ -179,7 +179,7 @@ void handle_http() {
                 }
                 liveXML(client);  // handles http in function
               }
-              else if (strncmp(HTTP_req, "GET /info.xml", 13) == 0) {
+              else if (strncmp(reqHttp, "GET /info.xml", 13) == 0) {
                 sendWebFile(client, "/mtrsetup.xml");
                 sendXmlEnd(client, 1);
               }
@@ -188,7 +188,7 @@ void handle_http() {
               }
             }
 // txt and csv requests
-            else if ((strstr(HTTP_req, ".TXT") != NULL) || (strstr(HTTP_req, ".CSV") != NULL)) {
+            else if ((strstr(reqHttp, ".TXT") != NULL) || (strstr(reqHttp, ".CSV") != NULL)) {
               //if (strncmp(HTTP_req, "GET /TEST.CSV", 13) == 0) {
               //  client.println("HTTP/1.1 200 OK");
               //  client.println("Content-Disposition: attachment; filename=test.txt");
@@ -206,7 +206,7 @@ void handle_http() {
               //else {
                 char filename[36] = { 0 };
 
-                strcpy(filename, HTTP_req + 4);
+                strcpy(filename, reqHttp + 4);
                 filename[35] = 0;
                 for (i = 0; i < 36; i++) {
                   if (filename[i] == 32) {
@@ -252,50 +252,60 @@ void handle_http() {
           }
         }
 // POST http
-        else if (strstr(HTTP_req, "POST") != NULL) {
+        else if (strstr(reqHttp, "POST") != NULL) {
           char * postLenPtr;
 
-          postLenPtr = strstr(HTTP_req + REQ_BUF_SZ, "Content-Length");  // Find 'Content-Length: '
+          client.read((uint8_t*)headHttp, POST_BUF_SZ); // read
+          headHttp[POST_BUF_SZ] = 0;
+
+          postLenPtr = strstr(headHttp, "Content-Length: ");  // Find 'Content-Length: '
 
           if (postLenPtr != NULL) {  // found 'Content-Length'
-            if (postLenPtr < (HTTP_req + REQ_ARR_SZ - 23)) {  // make sure not at end of array
-              postLenPtr += 16;
 
-              //char c = HTTP_req[postLenPtr - HTTP_req];
-              //char c = *postLenPtr;
+            postLenPtr += 16;
+            while (isdigit(*postLenPtr)) {
+              post_len = post_len * 10 + ((*postLenPtr) - '0');
+              postLenPtr++;
 
-              for (postLenPtr; postLenPtr < postLenPtr + 7; postLenPtr++) {
-                if ((*postLenPtr) == '\r' || (*postLenPtr) == '\n') {
-                  post_len = post_len * 10 + ((*postLenPtr) - '0');
-                }
-                else {
-                  break;
-                }
-              }
             }
-            else {  // phrase occurs near end of array
-              // not sure how to handle this except for pray it doesn't happen
-            }
+            // now need to find end of message, continue to rotate through POST_BUF_SZ segments until \n\n found
+
+
+            //if (postLenPtr < (HTTP_req + REQ_ARR_SZ - 23)) {  // make sure not at end of array
+            //  postLenPtr += 16;
+
+            //  for (postLenPtr; postLenPtr < postLenPtr + 7; postLenPtr++) {
+            //    if (isdigit(*postLenPtr)) {
+            //      post_len = post_len * 10 + ((*postLenPtr) - '0');
+            //    }
+            //    else {
+            //      break;
+            //    }
+            //  }
+            //}
+            //else {  // phrase occurs near end of array
+            //  // not sure how to handle this except for pray it doesn't happen
+            //}
           }
           else {
             // phrase not found, need to check end of array in case it got split
             // for now, hope it doesn't happen, but it does need to get fixed
           }
 
-          flushEthRx(client, (uint8_t*)HTTP_req + REQ_BUF_SZ, REQ_ARR_SZ - REQ_BUF_SZ - 1);
+          flushEthRx(client, (uint8_t*)headHttp, REQ_ARR_SZ - 1);
 
 
-          if (strstr(HTTP_req, "setup.htm")) {
+          if (strstr(reqHttp, "setup.htm")) {
             digitalWrite(epWriteLed, HIGH);
             getPostSetupData(client, post_len);  // reads and stores POST data to EEPROM
             digitalWrite(epWriteLed, LOW);
 
             // write xml files
             digitalWrite(sdWriteLed, HIGH);
-            if (strncmp(HTTP_req, "POST /mtrsetup.htm", 18)) {
+            if (strncmp(reqHttp, "POST /mtrsetup.htm", 18)) {
               writeMtrSetupFile();
             }
-            else if (strncmp(HTTP_req, "POST /gensetup.htm", 18)) {
+            else if (strncmp(reqHttp, "POST /gensetup.htm", 18)) {
               writeGenSetupFile();
             }
             digitalWrite(sdWriteLed, LOW);
@@ -307,20 +317,9 @@ void handle_http() {
             return;*/
             break;
           }
-          else {
-            sendWebFile(client, "nopage.htm");
-            break;
-          }
         }
 
       } // end if (client.available())
-      else {
-        // delay and check if we can get more
-        delay(1);
-        if (client.available() < 4) {
-          break;
-        }
-      }
     } // end while (client.connected())
     delay(1);      // give the web browser time to receive the data
     client.stop(); // close the connection

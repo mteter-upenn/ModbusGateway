@@ -13,16 +13,22 @@
 #include <EthernetUdp.h>
 
 #define REQ_BUF_SZ   40                                // buffer size to capture beginning of http request
-#define REQ_ARR_SZ   1024                              // size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
+#define REQ_ARR_SZ   1500                              // size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
                                                        //   message, the rest of the array may loop around if the http request is large enough
-#define ARR_SIZE     264                               // array size for modbus/tcp rx/tx buffers
+#define POST_BUF_SZ (REQ_ARR_SZ - 1 - 1030 - 50)
+
+#if POST_BUF_SZ < 0
+#error "not enough room in array for POST messages"
+#endif
+
+#define MB_ARR_SIZE     264                               // array size for modbus/tcp rx/tx buffers - limited by modbus standards
 
 //#define UPENN_TEENSY_MBGW
 
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-#define STRM_BUF_SZ  3584UL                            // array size for buffer between sd card and ethernet
+#if defined(CORE_TEENSY)  // if teensy3.0 or greater  SHOULD PROBABLY JUST ASSUME TEENSY FOR NOW, ARDUINO BOARDS DEFINITELY WON'T WORK WITHOUT SIGNIFICANT READJUSTMENT ANYWAYS
+#define RESP_BUF_SZ  1400UL                            // array size for buffer between sd card and ethernet
 #else
-#define STRM_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
+#define RESP_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
 #endif
 
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
@@ -33,7 +39,7 @@
 
 #define DISP_TIMING_DEBUG 1                            // debug flag that will print out delta times for web page interface
 #define RT_FROM_NTP 1                                  // 1 for ntp, 0 for rtc
-#define SHOW_FREE_MEM 1                                // 1 for print free memory
+#define SHOW_FREE_MEM 0                                // 1 for print free memory
 
 // pin ids
 
