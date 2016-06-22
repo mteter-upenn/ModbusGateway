@@ -37,7 +37,7 @@
 #define MODBUS_SERIAL 1                                // which hardware serial to use
 #endif
 
-#define DISP_TIMING_DEBUG 1                            // debug flag that will print out delta times for web page interface
+#define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
 #define RT_FROM_NTP 1                                  // 1 for ntp, 0 for rtc
 #define SHOW_FREE_MEM 0                                // 1 for print free memory
 
@@ -146,7 +146,8 @@ void sendIP(EthernetClient);
 void liveXML(EthernetClient);
 // tertiaryHTTP - POST related functions
 void sendPostResp(EthernetClient);
-void getPostSetupData(EthernetClient, uint16_t);
+char * preprocPost(EthernetClient, char *, uint16_t&);
+void getPostSetupData(EthernetClient, char *);
 // handleModbus
 bool getModbus(uint8_t*, uint16_t, uint8_t*, uint16_t&);
 void handle_modbus(void);
@@ -206,9 +207,9 @@ void setup() {
   time_t t = 0;
 
   Serial.begin(9600);
-  Serial.println(F("delay here"));
-  delay(2000);
-  Serial.println(F("delay over"));
+  //Serial.println(F("delay here"));
+  //delay(2000);
+  //Serial.println(F("delay over"));
   
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
   pinMode(rtcFailLed, OUTPUT);

@@ -55,7 +55,7 @@ void sendGifHdr(EthernetClient client) {
 }
 
 void sendWebFile(EthernetClient client, const char* filename) {
-  uint16_t i, j;                                     // tickers
+  uint16_t i;                                        // tickers
   uint32_t wfSize;                                   // size of file being sent over tcp
   uint16_t max_i;                                    // number of chunks file must be split into to send via tcp
   uint32_t remBytes;                                 // number of bytes remaining in last chunk (wfSize Mod STRM_BUF_SZ)

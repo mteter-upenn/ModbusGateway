@@ -3,6 +3,7 @@ void handle_http() {
   uint32_t i;                                        // tickers
   uint8_t meter;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
   char *mtr_ind;                                     // index of 'METER' in GET request
+  char *chPtr;
   char reqHttp[REQ_BUF_SZ] = { 0 };                 // buffered HTTP request stored as null terminated string
   char headHttp[REQ_ARR_SZ] = { 0 };
   //char ch;                                           // used for reading GET request with extra information
@@ -11,13 +12,13 @@ void handle_http() {
 
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
-  uint32_t totBytes = 0;
+  //uint32_t totBytes = 0;
 #endif
   
   EthernetClient client = serv_web.available();  // try to get client
 
   if (client) {  // got client?
-    boolean currentLineIsBlank = true;
+    //boolean currentLineIsBlank = true;
 #if DISP_TIMING_DEBUG == 1
     gotClient = millis();
 #endif
@@ -93,8 +94,9 @@ void handle_http() {
                 if (mtr_ind != NULL) {
                   selSlv = 0;
                   mtr_ind += 6;  // move pointer to end of phrase
+                  chPtr = mtr_ind + 3;
 
-                  for (mtr_ind; mtr_ind < mtr_ind + 3; mtr_ind++) {
+                  for (; mtr_ind < chPtr; mtr_ind++) {
                     if (isdigit(*mtr_ind)) {
                       selSlv = selSlv * 10 + ((*mtr_ind) - '0');
                     }
@@ -163,8 +165,9 @@ void handle_http() {
                 if (mtr_ind != NULL) {
                   selSlv = 0;
                   mtr_ind += 6;  // move pointer to end of phrase
+                  chPtr = mtr_ind + 3;
 
-                  for (mtr_ind; mtr_ind < mtr_ind + 3; mtr_ind++) {
+                  for (; mtr_ind < chPtr; mtr_ind++) {
                     if (isdigit(*mtr_ind)) {
                       selSlv = selSlv * 10 + ((*mtr_ind) - '0');
                     }
