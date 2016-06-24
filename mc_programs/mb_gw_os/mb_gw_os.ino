@@ -16,6 +16,7 @@
 #define REQ_ARR_SZ   1500                              // size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
                                                        //   message, the rest of the array may loop around if the http request is large enough
 #define POST_BUF_SZ (REQ_ARR_SZ - 1 - 1030 - 50)       // currently 419
+//#define POST_BUF_SZ 44      // from chrome starts at 36
 
 #if POST_BUF_SZ < 20                                   // make sure post buffer has enough room to play with, 20 bytes sounds good for min
 #error "not enough room in array for POST messages"
