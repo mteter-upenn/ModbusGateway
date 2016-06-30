@@ -24,10 +24,11 @@
 
 #define MB_ARR_SIZE     264                               // array size for modbus/tcp rx/tx buffers - limited by modbus standards
 
-//#define UPENN_TEENSY_MBGW
+//#define UPENN_TEENSY_MBGW   // this should be defined in Ethernet.h
 
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater  SHOULD PROBABLY JUST ASSUME TEENSY FOR NOW, ARDUINO BOARDS DEFINITELY WON'T WORK WITHOUT SIGNIFICANT READJUSTMENT ANYWAYS
 #define RESP_BUF_SZ  1400UL                            // array size for buffer between sd card and ethernet
+                                                       //     keep short of 1500 to make room for headers
 #else
 #define RESP_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
 #endif
@@ -118,7 +119,7 @@ EthernetServer serv_mb3(502);                           // start server on modbu
 EthernetServer serv_mb4(502);                           // start server on modbus port
 #endif
 
-ModbusMaster node(1, clientIP, mb485Ctrl, MODBUS_SERIAL);                  // initialize node on device 1, client ip, enable pin, serial port
+ModbusMaster node(1, clientIP, mb485Ctrl, MODBUS_SERIAL);   // initialize node on device 1, client ip, enable pin, serial port
 
 
 // miscellaneous

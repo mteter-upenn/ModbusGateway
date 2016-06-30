@@ -85,13 +85,11 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
     func_reg = in_mb_f[7];
     
       
-    if (strt_reg < 10000)
-    {
+    if (strt_reg < 10000) {
       adj_strt_reg = strt_reg;
       adj_lgth_reg = lgth_reg;
     }
-    else if ((strt_reg > 9999) && (strt_reg < 20000))
-    {
+    else if ((strt_reg > 9999) && (strt_reg < 20000)) {
       wc_req = true;  // 10k request
       adj_strt_reg = strt_reg - 10000;
       fnd_reg = findRegister(adj_strt_reg, reg_flags, mtr_typ);
@@ -148,8 +146,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
       mberror = 0x01;
     }
     
-    if (mberror)
-    {  // error occurred prior to actual modbus request, return error
+    if (mberror) {  // error occurred prior to actual modbus request, return error
 //      Serial.println("error in gateway"); 
 //      Serial.println(mberror, HEX);
       out_mb_f[7] = (func_reg | 0x80); // return function  + 128
@@ -163,12 +160,9 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
      
       return false;
     }  // end if error
-    else
-    {  // no error yet, handle code
-      if (!wc_req)
-      {
-        switch (func_reg)
-        {
+    else {  // no error yet, handle code
+      //if (!wc_req) {
+        switch (func_reg) {
 //          case 1:
 //            node.readCoils(adj_strt_reg, adj_lgth_reg);
 //            break;
@@ -194,46 +188,44 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
             result = 0x01;
             break;
         }  // end switch function
-      }  // end if typical register request
-      else
-      {
-        /*Serial.println("requesting...");
-        Serial.println(adj_strt_reg, DEC);
-        Serial.println(adj_lgth_reg, DEC);*/
-        switch (func_reg)
-        {
-          case 3:
-            //Serial.println(F("modbus 10k request"));
-            result = node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
-//            Serial.print(F("sent request: "));
-//            Serial.println(result, HEX);
-            break;
-          case 4:
-            result = node.readInputRegisters(adj_strt_reg, adj_lgth_reg);
-            break;
-          default:
-            result = 0x01;
-            break;
-        }  // end switch function
-//        Serial.print("result: ");
-//        Serial.println(result, HEX);
-      }// end else if 10k request
+//      }  // end if typical register request
+//      else {
+//        /*Serial.println("requesting...");
+//        Serial.println(adj_strt_reg, DEC);
+//        Serial.println(adj_lgth_reg, DEC);*/
+//        switch (func_reg) {
+//          case 3:
+//            //Serial.println(F("modbus 10k request"));
+//            result = node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
+////            Serial.print(F("sent request: "));
+////            Serial.println(result, HEX);
+//            break;
+//          case 4:
+//            result = node.readInputRegisters(adj_strt_reg, adj_lgth_reg);
+//            break;
+//          default:
+//            result = 0x01;
+//            break;
+//        }  // end switch function
+////        Serial.print("result: ");
+////        Serial.println(result, HEX);
+//      }// end else if 10k request
       
-      switch (result){
+      switch (result) {
         case 0:  // node.ku8MBSuccess
-          if (!wc_req){  // no adjustments to data
-            for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=2){
+          if (!wc_req) {  // no adjustments to data
+            for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=2) {
               rgstr1 = node.getResponseBuffer(j);
               
               out_mb_f[i] = highByte(rgstr1);
               out_mb_f[i + 1] = lowByte(rgstr1);
             }
           }
-          else{
+          else {
 //            Serial.println("handling 10k data");
 //            Serial.println((reg_flags & 0x7F), DEC);
           
-            switch (adj_reg_flags){  // ((reg_flags & 0x7F))
+            switch (adj_reg_flags) {  // ((reg_flags & 0x7F))
               case 0:  // float
                 if (reg_flags & 0x80){  // if ws
                   for (j = 0, i = 9; j < adj_lgth_reg; j+=2, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
@@ -622,11 +614,12 @@ void handle_modbus() {
 
         givenLen = word(in_mb[4], in_mb[5]) + 6;
 
-        if (initLen > givenLen) {
+        if ((initLen > givenLen) || (givenLen > MB_ARR_SIZE)) {
           client.stop();  // grabbed too much, just exit without worrying.  It  shouldn't happen, any other connection will have dift sockets
-          return;
+          return;         //     or incoming packet larger than array (this should not happen, modbus/tcp deals with pretty small stuff overall
         }
-        while (initLen < givenLen) {
+
+        while (initLen < givenLen) {  // make sure to grab the full packet
           initLen += client.read(in_mb + initLen, MB_ARR_SIZE - initLen);
 
           if ((millis() - u32MB_Cl_To_old) > 10) {
@@ -634,7 +627,7 @@ void handle_modbus() {
             return;
           }
         }
-
+        
         getModbus(in_mb, initLen, out_mb, out_len);
 
         if (out_len > 0) {
