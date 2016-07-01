@@ -9,10 +9,7 @@
 
 void flushEthRx(EthernetClient client, uint8_t * buffer, uint16_t len) {
   while (client.available()) {
-  //for (int i = 0; i < 4; i++) {
-    //int16_t lenRead = 
     client.read(buffer, len);
-    //Serial.println(lenRead, DEC);
   }
 }
 
