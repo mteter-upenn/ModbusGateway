@@ -28,7 +28,8 @@ bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __Flash
 
 
 void setup() {
-  
+  uint16_t ip_strt, nm_strt, reg_strt, reg_end, mtr_strt;
+
   pinMode(19, OUTPUT);
   pinMode(20, OUTPUT);
   digitalWrite(19, HIGH);
@@ -38,6 +39,20 @@ void setup() {
   delay(2000);
   Serial.println(F("delay over"));
 
+
+  nm_strt = 10;
+  ip_strt = nm_strt + 33; // 43
+  mtr_strt = ip_strt + 28; // 71
+  reg_strt = mtr_strt + 181;  // 252
+
+  EEPROM.write(0, highByte(nm_strt));
+  EEPROM.write(1, lowByte(nm_strt));
+  EEPROM.write(2, highByte(ip_strt));
+  EEPROM.write(3, lowByte(ip_strt));
+  EEPROM.write(4, highByte(mtr_strt));
+  EEPROM.write(5, lowByte(mtr_strt));
+  EEPROM.write(6, highByte(reg_strt));
+  EEPROM.write(7, lowByte(reg_strt));
 }
 
 void loop() {
@@ -47,6 +62,8 @@ void loop() {
   char inpt[50];
   char cMenu;
 
+
+  // duplicate should make this global
   nm_strt = 10;
   ip_strt = nm_strt + 33; // 43
   mtr_strt = ip_strt + 28; // 71
@@ -142,7 +159,7 @@ void loop() {
 
     // ntp server ip
     if (bResponse) {
-      term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now for 485 parameters."),
+      term_func(F("Please insert the address of the NTP server."), ipFunc, F("Ok."),
         F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "128.91.3.136", true, 0, false);
     }
     else {
