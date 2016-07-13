@@ -51,7 +51,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
 #endif
   } int2flt;
   
-  
+  int2flt.u32 = 0;  // unsure if this needs to be done
 
   if (msg_lgth == 12);  // typical modbus/tcp message is 12 bytes long
   {
