@@ -329,7 +329,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                     rgstr1 = node.getResponseBuffer(j + 1);
                   }
 
-                  int2flt.u32 = int2flt.u32 + ((uint32_t)(rgstr1 & 0x7f)) * 1000;  // high word
+                  int2flt.u32 = int2flt.u32 + ((uint32_t)(rgstr1 & 0x7fff)) * 1000;  // high word
                   if (rgstr1 >> 15){ // if negative bit
                     int2flt.s32 *= (-1);
                   }
@@ -357,7 +357,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                     rgstr1 = node.getResponseBuffer(j + 1);
                   }
 
-                  int2flt.u32 = int2flt.u32 + ((uint32_t)(rgstr1 & 0x7f)) * 10000;  // high word
+                  int2flt.u32 = int2flt.u32 + ((uint32_t)(rgstr1 & 0x7fff)) * 10000;  // high word
                   if (rgstr1 >> 15){ // if negative bit
                     int2flt.s32 *= (-1);
                   }
@@ -387,7 +387,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                     rgstr1 = node.getResponseBuffer(j + 2);
                   }
 
-                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7f)) * pow(10, 8);  // high word
+                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(10, 8);  // high word
                   if (rgstr1 >> 15){ // if negative bit
                     int2flt.f *= (-1);
                   }
@@ -417,7 +417,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                     rgstr1 = node.getResponseBuffer(j + 3);
                   }
 
-                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7f)) * pow(10, 12);  // high word
+                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(10, 12);  // high word
                   if (rgstr1 >> 15){ // if negative bit
                     int2flt.f *= (-1);
                   }
@@ -447,7 +447,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                     rgstr1 = node.getResponseBuffer(j + 3);
                   }
 
-                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7f)) * pow(2, 48);  // high word
+                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(2, 48);  // high word
                   if (rgstr1 >> 15){ // if negative bit
                     int2flt.f *= (-1);
                   }

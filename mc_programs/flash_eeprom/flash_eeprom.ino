@@ -28,7 +28,7 @@ bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __Flash
 
 
 void setup() {
-  uint16_t ip_strt, nm_strt, reg_strt, reg_end, mtr_strt;
+  uint16_t ip_strt, nm_strt, reg_strt, mtr_strt;
 
   pinMode(19, OUTPUT);
   pinMode(20, OUTPUT);
