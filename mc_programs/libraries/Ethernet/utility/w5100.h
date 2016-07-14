@@ -17,13 +17,15 @@
 //#define SPI_ETHERNET_SETTINGS SPISettings(8000000, MSBFIRST, SPI_MODE0)
 //#define SPI_ETHERNET_SETTINGS SPISettings(4000000, MSBFIRST, SPI_MODE0)
 
-#define UPENN_TEENSY_MBGW
+// #define UPENN_TEENSY_MBGW
 
-#ifdef UPENN_TEENSY_MBGW
-#define MAX_SOCK_NUM 7
-#else
-#define MAX_SOCK_NUM 4
-#endif
+// #ifdef UPENN_TEENSY_MBGW
+// #define MAX_SOCK_NUM 7
+// #else
+// #define MAX_SOCK_NUM 4
+// #endif
+
+#define MAX_SOCK_NUM 8
 
 typedef uint8_t SOCKET;
 
@@ -96,7 +98,7 @@ public:
 class W5100Class {
 
 public:
-  static uint8_t init(void);
+  static uint8_t init(uint8_t u8MaxUsedSocks, uint16_t * u16SocketSizes);
 
   /**
    * @brief	This function is being used for copy the data form Receive buffer of the chip to application buffer.
@@ -160,6 +162,7 @@ public:
   // W5100 Registers
   // ---------------
 private:
+
   static uint16_t write(uint16_t addr, const uint8_t *buf, uint16_t len);
   static uint8_t write(uint16_t addr, uint8_t data) {
     return write(addr, &data, 1);

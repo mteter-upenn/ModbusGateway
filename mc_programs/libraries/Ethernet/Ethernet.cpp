@@ -2,21 +2,27 @@
 #include "Ethernet.h"
 #include "Dhcp.h"
 
+
 // XXX: don't make assumptions about the value of MAX_SOCK_NUM.
 // MJT: unsure if {0} will compile correctly
-uint8_t EthernetClass::_state[MAX_SOCK_NUM] = {0};
-uint16_t EthernetClass::_server_port[MAX_SOCK_NUM] = {0};
+uint8_t EthernetClass::_state[MAX_SOCK_NUM];
+uint16_t EthernetClass::_server_port[MAX_SOCK_NUM];
 
-#ifdef UPENN_TEENSY_MBGW
-uint16_t EthernetClass::_server_port_mask[MAX_SOCK_NUM] = {80, 80, 502, 502, 502, 502, 0};
-#else
-uint16_t EthernetClass::_server_port_mask[MAX_SOCK_NUM] = {0};
-#endif
+uint16_t EthernetClass::_server_port_mask[MAX_SOCK_NUM];
+// #ifdef UPENN_TEENSY_MBGW
+// uint16_t EthernetClass::_server_port_mask[MAX_SOCK_NUM] = {80, 80, 502, 502, 502, 502, 0};
+// #else
+// uint16_t EthernetClass::_server_port_mask[MAX_SOCK_NUM] = {0};
+// #endif
 
 #ifdef ACH_INSERTION
-// ACH - added
-uint16_t EthernetClass::_client_port[MAX_SOCK_NUM] = {0}; // ACH
+// // ACH - added
+uint16_t EthernetClass::_client_port[MAX_SOCK_NUM]; // ACH
+// uint16_t EthernetClass::_client_port[MAX_SOCK_NUM] = {0}; // ACH
 #endif
+
+uint8_t EthernetClass::_u8MaxUsedSocks = 4;
+
 
 // #if MAX_SOCK_NUM == 8  // keep
 // uint8_t EthernetClass::_state[MAX_SOCK_NUM] = {0, 0, 0, 0, 0, 0, 0, 0 };
@@ -32,14 +38,34 @@ uint16_t EthernetClass::_client_port[MAX_SOCK_NUM] = {0}; // ACH
 
 int EthernetClass::begin(uint8_t *mac_address)
 {
+	uint16_t u16pSocketSizes[4] = {4, 4, 4, 4};
+	uint8_t i;
+	
   static DhcpClass s_dhcp;
   _dhcp = &s_dhcp;
-
+  
+	// MJT start
+	// standard block
+  _u8MaxUsedSocks = 4;
+	
+	for (i = 0; i < _u8MaxUsedSocks; i++) {
+		_state[i] = 0;
+		_server_port[i] = 0;
+	
+		_server_port_mask[i] = 0;
+		
+#ifdef ACH_INSERTION
+		// ACH - added
+		_client_port[_u8MaxUsedSocks] = {0}; // ACH
+#endif
+	}
+// MJT end
 
   // Initialise the basic info
-  W5100.init();
+  W5100.init(_u8MaxUsedSocks, u16pSocketSizes);
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
   W5100.setMACAddress(mac_address);
+	W5100.setRetransmissionCount(3);
   W5100.setIPAddress(IPAddress(0,0,0,0).raw_address());
   SPI.endTransaction();
 
@@ -78,17 +104,88 @@ void EthernetClass::begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dn
   begin(mac_address, local_ip, dns_server, gateway);
 }
 
-void EthernetClass::begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway)
-{
+void EthernetClass::begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway) {
   IPAddress subnet(255, 255, 255, 0);
   begin(mac_address, local_ip, dns_server, gateway, subnet);
 }
 
-void EthernetClass::begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet)
-{
-  W5100.init();
+void EthernetClass::begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet) {
+  begin(mac_address, local_ip, dns_server, gateway, subnet, 4);
+}
+
+void EthernetClass::begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
+		uint8_t u8MaxUsedSocks) {
+	uint16_t u16pSocketSizes[MAX_SOCK_NUM]; // create as large as possible
+	uint8_t i;
+	uint8_t ivar;
+	
+	
+	_u8MaxUsedSocks = ((u8MaxUsedSocks > 8) || (u8MaxUsedSocks < 1)) ? 4 : u8MaxUsedSocks;
+	
+	for (i = 0; i < _u8MaxUsedSocks; i++) {
+		ivar = i + _u8MaxUsedSocks;
+		
+		if (ivar > 7) {
+			u16pSocketSizes[i] = 2;
+		}
+		else if (ivar > 3) {
+			u16pSocketSizes[i] = 4;
+		}
+		else if (ivar > 1) {
+			u16pSocketSizes[i] = 8;
+		}
+		else {
+			u16pSocketSizes[i] = 16;
+		}
+	}
+	
+	begin(mac_address, local_ip, dns_server, gateway, subnet, _u8MaxUsedSocks, u16pSocketSizes);
+}
+
+void EthernetClass::begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
+		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes) {
+	uint16_t u16pSocketPorts[MAX_SOCK_NUM]; // create as large as possible
+	uint8_t i;
+	
+	_u8MaxUsedSocks = ((u8MaxUsedSocks > 8) || (u8MaxUsedSocks < 1)) ? 4 : u8MaxUsedSocks;
+	
+	for (i = 0; i < _u8MaxUsedSocks; i++) {
+		u16pSocketPorts[i] = 0;
+	}
+	
+	begin(mac_address, local_ip, dns_server, gateway, subnet, _u8MaxUsedSocks, u16pSocketSizes, u16pSocketPorts);
+}
+
+void EthernetClass::begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
+		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts) {
+	uint8_t i;
+	uint16_t memSizeTotal = 0;
+	
+	_u8MaxUsedSocks = ((u8MaxUsedSocks > 8) || (u8MaxUsedSocks < 1)) ? 4 : u8MaxUsedSocks;
+	
+	for (i = 0; i < _u8MaxUsedSocks; i++) {
+		memSizeTotal += u16pSocketSizes[i];
+		
+		if (memSizeTotal > 16) {
+			// serious problem
+			_u8MaxUsedSocks = i;
+			
+			if (i == 0) {
+				u16pSocketSizes[i] = 16;
+				_u8MaxUsedSocks = 1;
+			}
+			
+			break;			
+		}
+	}
+	
+	
+	memcpy(_server_port_mask, u16pSocketPorts, _u8MaxUsedSocks * 2);  // ports to be used
+	
+	W5100.init(_u8MaxUsedSocks, u16pSocketSizes);
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
   W5100.setMACAddress(mac);
+	W5100.setRetransmissionCount(3);
 #if ARDUINO > 106 || TEENSYDUINO > 121
   W5100.setIPAddress(local_ip._address.bytes);
   W5100.setGatewayIp(gateway._address.bytes);

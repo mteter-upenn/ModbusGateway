@@ -40,7 +40,7 @@ uint8_t EthernetUDP::begin(uint16_t port) {
   if (_sock != MAX_SOCK_NUM)
     return 0;
 
-  for (int i = 0; i < MAX_SOCK_NUM; i++) {
+  for (int i = 0; i < EthernetClass::_u8MaxUsedSocks; i++) {
     uint8_t s = socketStatus(i);
     if (s == SnSR::CLOSED || s == SnSR::FIN_WAIT) {
       _sock = i;

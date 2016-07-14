@@ -184,18 +184,21 @@ int16_t recv(SOCKET s, uint8_t *buf, int16_t len)
   int16_t ret = W5100.getRXReceivedSize(s);
   if ( ret == 0 )
   {
+	  ret = 0;  // MJT change, I don't like having to check for -1, nor do I understand why there needs to be
+	            //     a distinction
+				
     // No data available.
-    uint8_t status = W5100.readSnSR(s);
-    if ( status == SnSR::LISTEN || status == SnSR::CLOSED || status == SnSR::CLOSE_WAIT )
-    {
-      // The remote end has closed its side of the connection, so this is the eof state
-      ret = 0;
-    }
-    else
-    {
-      // The connection is still up, but there's no data waiting to be read
-      ret = -1;
-    }
+    // uint8_t status = W5100.readSnSR(s);
+    // if ( status == SnSR::LISTEN || status == SnSR::CLOSED || status == SnSR::CLOSE_WAIT )
+    // {
+      // // The remote end has closed its side of the connection, so this is the eof state
+      // ret = 0;
+    // }
+    // else
+    // {
+      // // The connection is still up, but there's no data waiting to be read
+      // ret = -1;
+    // }
   }
   else if (ret > len)
   {

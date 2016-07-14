@@ -39,12 +39,14 @@ int EthernetClient::connect(IPAddress ip, uint16_t port) {
   if (_sock != MAX_SOCK_NUM)
     return 0;
 
-  for (int i = 0; i < MAX_SOCK_NUM; i++) {
-    uint8_t s = socketStatus(i);
-    if (s == SnSR::CLOSED || s == SnSR::FIN_WAIT || s == SnSR::CLOSE_WAIT) {
-      _sock = i;
-      break;
-    }
+  for (int i = 0; i < EthernetClass::_u8MaxUsedSocks; i++) {
+		if (EthernetClass::_server_port_mask[i] == port || !EthernetClass::_server_port_mask[i]){ 
+			uint8_t s = socketStatus(i);
+			if (s == SnSR::CLOSED || s == SnSR::FIN_WAIT || s == SnSR::CLOSE_WAIT) {
+				_sock = i;
+				break;
+			}
+		}
   }
 
   if (_sock == MAX_SOCK_NUM)
@@ -140,13 +142,18 @@ void EthernetClient::stop() {
   if (status() != SnSR::CLOSED)
     close(_sock);
 
-#ifdef UPENN_TEENSY_MBGW
-	if (_sock == MAX_SOCK_NUM - 1) {
+// #ifdef UPENN_TEENSY_MBGW
+	// if (_sock == MAX_SOCK_NUM - 1) {
+		// EthernetClass::_server_port[_sock] = 0;
+	// }
+// #else
+  // EthernetClass::_server_port[_sock] = 0;
+// #endif
+
+	if (EthernetClass::_server_port_mask[_sock] == 0) {
 		EthernetClass::_server_port[_sock] = 0;
 	}
-#else
-  EthernetClass::_server_port[_sock] = 0;
-#endif
+	
 #ifdef ACH_INSERTION
   // ACH - added
   EthernetClass::_client_port[_sock] = 0; // ACH

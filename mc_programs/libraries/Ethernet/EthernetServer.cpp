@@ -20,13 +20,14 @@ void EthernetServer::begin()
 // #else
 	// Serial.println(F("undefined"));
 // #endif
-	for (int sock = 0; sock < MAX_SOCK_NUM; sock++) {
-		if (EthernetClass::_server_port_mask[sock] == _port || !EthernetClass::_server_port_mask[sock]){
+	for (int16_t sock = 0; sock < EthernetClass::_u8MaxUsedSocks; sock++) {
+		if (EthernetClass::_server_port_mask[sock] == _port || !EthernetClass::_server_port_mask[sock]){ 
+			// if mask matches port of this server or mask is 0 (catchall)
 			EthernetClient client(sock);
 			if (client.status() == SnSR::CLOSED) {
 				// Serial.print(F("socket: "));
 				// Serial.println(sock, DEC);
-				socket(sock, SnMR::TCP, _port, 0);
+				socket(sock, SnMR::TCP, _port, 0);  // initializes this socket on the desired port
 				listen(sock);
 				EthernetClass::_server_port[sock] = _port;
 				break;
@@ -35,11 +36,42 @@ void EthernetServer::begin()
 	}  
 }
 
+void EthernetServer::begin(int16_t sock_f) {  // specify desired socket
+	if (EthernetClass::_server_port_mask[sock_f] == _port || !EthernetClass::_server_port_mask[sock_f]){ 
+		// if mask matches port of this server or mask is 0 (catchall)
+		EthernetClient client(sock_f);
+		if (client.status() == SnSR::CLOSED) {
+			// Serial.print(F("socket: "));
+			// Serial.println(sock_f, DEC);
+			socket(sock_f, SnMR::TCP, _port, 0);  // initializes this socket on the desired port
+			listen(sock_f);
+			EthernetClass::_server_port[sock_f] = _port;
+		}
+	}
+	else {
+		for (int16_t sock = 0; sock < EthernetClass::_u8MaxUsedSocks; sock++) {
+			if (EthernetClass::_server_port_mask[sock] == _port || !EthernetClass::_server_port_mask[sock]){ 
+				// if mask matches port of this server or mask is 0 (catchall)
+				EthernetClient client(sock);
+				if (client.status() == SnSR::CLOSED) {
+					// Serial.print(F("socket: "));
+					// Serial.println(sock, DEC);
+					socket(sock, SnMR::TCP, _port, 0);  // initializes this socket on the desired port
+					listen(sock);
+					EthernetClass::_server_port[sock] = _port;
+					break;
+				}
+			}
+		}  
+	}
+}
+
+
 void EthernetServer::accept()
 {
   int listening = 0;
 
-  for (int sock = 0; sock < MAX_SOCK_NUM; sock++) {
+  for (int sock = 0; sock < EthernetClass::_u8MaxUsedSocks; sock++) {
 	  if (EthernetClass::_server_port_mask[sock] == _port || !EthernetClass::_server_port_mask[sock]){
 		EthernetClient client(sock);
 
@@ -67,11 +99,10 @@ void EthernetServer::accept()
   }
 }
 
-EthernetClient EthernetServer::available()
-{
+EthernetClient EthernetServer::available() {
   accept();
 
-  for (int sock = 0; sock < MAX_SOCK_NUM; sock++) {
+  for (int sock = 0; sock < EthernetClass::_u8MaxUsedSocks; sock++) {
 	  if (EthernetClass::_server_port_mask[sock] == _port || !EthernetClass::_server_port_mask[sock]){
 		EthernetClient client(sock);
 		if (EthernetClass::_server_port[sock] == _port &&
@@ -103,7 +134,7 @@ EthernetClient EthernetServer::available()
 	  }
   }
 
-  return EthernetClient(MAX_SOCK_NUM);
+  return EthernetClient(MAX_SOCK_NUM);  // 
 }
 
 size_t EthernetServer::write(uint8_t b) 
@@ -117,7 +148,7 @@ size_t EthernetServer::write(const uint8_t *buffer, size_t size)
   
   accept();
 
-  for (int sock = 0; sock < MAX_SOCK_NUM; sock++) {
+  for (int sock = 0; sock < EthernetClass::_u8MaxUsedSocks; sock++) {
 	  if (EthernetClass::_server_port_mask[sock] == _port || !EthernetClass::_server_port_mask[sock]){
 		EthernetClient client(sock);
 

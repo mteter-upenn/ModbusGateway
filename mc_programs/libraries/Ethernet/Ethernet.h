@@ -1,7 +1,7 @@
 #ifndef ethernet_h
 #define ethernet_h
 
-#define UPENN_TEENSY_MBGW
+// #define UPENN_TEENSY_MBGW  shouldn't need this
 #define ACH_INSERTION
 
 #include <inttypes.h>
@@ -11,11 +11,13 @@
 #include "EthernetServer.h"
 #include "Dhcp.h"
 
-#ifdef UPENN_TEENSY_MBGW
-#define MAX_SOCK_NUM 7
-#else
-#define MAX_SOCK_NUM 4
-#endif
+// #ifdef UPENN_TEENSY_MBGW
+// #define MAX_SOCK_NUM 7
+// #else
+// #define MAX_SOCK_NUM 4
+// #endif
+
+#define MAX_SOCK_NUM 8  // let MAX_SOCK_NUM be the max number of sockets possible for the device
 
 class EthernetClass {
 private:
@@ -30,6 +32,8 @@ public:
   static uint16_t _client_port[MAX_SOCK_NUM]; // ACH
 #endif
 
+  static uint8_t _u8MaxUsedSocks;
+
   // Initialise the Ethernet shield to use the provided MAC address and gain the rest of the
   // configuration through DHCP.
   // Returns 0 if the DHCP configuration failed, and 1 if it succeeded
@@ -38,6 +42,12 @@ public:
   void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server);
   void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway);
   void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet);
+	void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
+		uint8_t u8MaxUsedSocks);
+	void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
+		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes);
+  void begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
+		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts);
   int maintain();
 
   IPAddress localIP();

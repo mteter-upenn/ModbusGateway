@@ -672,16 +672,19 @@ Sequence:
 */
 uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 {
-  uint8_t u8ModbusADU[256];
+  uint8_t u8ModbusADU[264];
   uint8_t u8ModbusADUSize = 0;
   uint8_t i, u8Qty;
   uint16_t u16CRC;
   uint32_t u32StartTime;
-  uint8_t u8BytesLeft = 8;
+  uint8_t u8BytesLeft = 3;
   uint8_t u8MBStatus = ku8MBSuccess;
   uint16_t u16ClientConnect = 0;
-  uint8_t u8MBCutoffSize, u8MBSlv, u8MBFnc, u8MBCntErr, u8MBHigh, u8MBLow;
+  uint8_t u8MBSlv, u8MBFnc, u8MBCntErr, u8MBHigh, u8MBLow, u8MBArrExt;
+  int16_t lenRead;
   EthernetClient ecClient;
+  // uint32_t sendTime, flushTime, availTime, readTime;
+  
   
   // assemble Modbus Request Application Data Unit
   if (!_bSerialTrans){
@@ -691,21 +694,23 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 	  u8ModbusADU[u8ModbusADUSize++] = 0;
 	  u8ModbusADU[u8ModbusADUSize++] = 0;
 	  u8ModbusADU[u8ModbusADUSize++] = 0;  // changed later
-	  u8BytesLeft = 12;
-	  u8MBCutoffSize = 9;
+	  u8BytesLeft = 9;
 	  u8MBSlv = 6;
 	  u8MBFnc = 7;
 	  u8MBCntErr = 8;
+	  // u8MBCutoffSize = 8;
 	  u8MBHigh = 9;
+	  u8MBArrExt = 9;
 	  u8MBLow = 10;
   }
   else{
-	  u8MBCutoffSize = 5;
 	  u8MBSlv = 0;
 	  u8MBFnc = 1;
 	  u8MBCntErr = 2;
+	  // u8MBCutoffSize = 2;
 	  u8MBHigh = 3;
 	  u8MBLow = 4;
+	  u8MBArrExt = 5;
   }
   u8ModbusADU[u8ModbusADUSize++] = _u8MBSlave;
   u8ModbusADU[u8ModbusADUSize++] = u8MBFunction;
@@ -823,20 +828,27 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 	  u8ModbusADU[u8ModbusADUSize] = 0;
 
 	  // flush receive buffer before transmitting request
-	  while (MBSerial->read() != -1);
+	  while (MBSerial->read() != -1);  // flush rx, I'm ok with the potential slowness of this since it should be empty
 
 	  // transmit request
 	  //digitalWrite(_u8EnablePin, LOW);
-	  for (i = 0; i < u8ModbusADUSize; i++)
-	  {
-	#if defined(ARDUINO) && ARDUINO >= 100
-		MBSerial->write(u8ModbusADU[i]);
-	#else
-		MBSerial->print(u8ModbusADU[i], BYTE);
-	#endif
-	  }
+	  
+	  // for (i = 0; i < u8ModbusADUSize; i++)
+	  // {
+	// #if defined(ARDUINO) && ARDUINO >= 100
+		// MBSerial->write(u8ModbusADU[i]);
+	// #else
+		// MBSerial->print(u8ModbusADU[i], BYTE);
+	// #endif
+	  // }
+	  
+	  MBSerial->write(u8ModbusADU, u8ModbusADUSize);
+	  
+	  // sendTime = millis();
 	  
 	  MBSerial->flush();    // flush transmit buffer
+	  
+	  // flushTime = millis();
 	  
 	  // MJT
 	  // wait until message is sent to raise enable pin
@@ -851,7 +863,7 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 		
 	  u16ClientConnect = ecClient.connect(_u8ClientIP, 502);  // should be 502!
 	  if (u16ClientConnect){
-		  while (ecClient.read() != -1);
+		  while (ecClient.read() != -1);  // flush rx, I'm ok with the potential slowness of this since it should be empty
 		  
 		  
 		  ecClient.write(u8ModbusADU, u8ModbusADUSize);
@@ -860,7 +872,7 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 			  // // Serial.println(u8ModbusADU[i], DEC);
 		  // }
 		  
-		  ecClient.flush();
+		  ecClient.flush();  // flush tx
 	  }
   }
   
@@ -873,12 +885,36 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 
   if (_bSerialTrans || u16ClientConnect){
 	  while (u8BytesLeft && !u8MBStatus){
-		if (_bSerialTrans){
-			if (MBSerial->available()){
+		if (_bSerialTrans) {
+			if (MBSerial->available()) {
+				// availTime = millis();
+				
 			  u8ModbusADU[u8ModbusADUSize++] = MBSerial->read();
 			  u8BytesLeft--;
+			  
+			  // lenRead = MBSerial->readBytes(u8ModbusADU + u8ModbusADUSize, u8BytesLeft); //264 - u8ModbusADUSize);
+			  // u8ModbusADUSize += lenRead;
+			  // u8BytesLeft -= lenRead;
+			  
+			  // readTime = millis();
+			  
+			  // Serial.println(F("modbus serial: "));
+			  // for (i = 0; i < u8ModbusADUSize; i++) {
+				// Serial.print(u8ModbusADU[i], DEC);
+				// Serial.print(" ");
+			  // }
+			  // Serial.println();
+			  
+			  // Serial.print(F("flush - send: "));
+			  // Serial.println(flushTime - sendTime);
+			  // Serial.print(F("avail - flush: "));
+			  // Serial.println(availTime - flushTime);
+			  // Serial.print(F("read - avail: "));
+			  // Serial.println(readTime - availTime);
 			}
 			else{
+				// Serial.print("na: ");
+				// Serial.println(MBSerial->available(), DEC);
 			  if (_idle){
 				_idle();
 			  }
@@ -886,13 +922,23 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 		}
 		else{
 			if (ecClient.available()){
-			  u8ModbusADU[u8ModbusADUSize++] = ecClient.read();
-			  // Serial.print((u8ModbusADUSize - 1), DEC);
-			  // Serial.print(F(": "));
-			  // Serial.println(u8ModbusADU[(u8ModbusADUSize - 1)], DEC);
-			  u8BytesLeft--;
-			  // Serial.print(F(", bytes left: "));
-			  // Serial.println(u8BytesLeft, DEC);
+			  // u8ModbusADU[u8ModbusADUSize++] = ecClient.read();
+			  // // Serial.print((u8ModbusADUSize - 1), DEC);
+			  // // Serial.print(F(": "));
+			  // // Serial.println(u8ModbusADU[(u8ModbusADUSize - 1)], DEC);
+			  // u8BytesLeft--;
+			  // // Serial.print(F(", bytes left: "));
+			  // // Serial.println(u8BytesLeft, DEC);
+			  
+			  lenRead = ecClient.read(u8ModbusADU + u8ModbusADUSize, u8BytesLeft); //264 - u8ModbusADUSize);
+			  u8ModbusADUSize += lenRead;
+			  u8BytesLeft -= lenRead;
+			  // Serial.println(F("modbus ethernet: "));
+			  // for (i = 0; i < u8ModbusADUSize; i++) {
+				// Serial.print(u8ModbusADU[i], DEC);
+				// Serial.print(" ");
+			  // }
+			  // Serial.println();
 			}
 			else{
 			  if (_idle){
@@ -902,7 +948,8 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 		}
 		
 		// evaluate slave ID, function code once enough bytes have been read
-		if (u8ModbusADUSize == u8MBCutoffSize)  // 5, 9
+		if (u8ModbusADUSize == u8MBHigh)  // 3, 9
+		// if (u8ModbusADUSize == u8MBCutoffSize + 1)  // 5, 9
 		{
 		  // verify response is for correct Modbus slave
 		  if (u8ModbusADU[u8MBSlv] != _u8MBSlave)  // 0, 6
@@ -933,18 +980,23 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 			case ku8MBReadInputRegisters:
 			case ku8MBReadHoldingRegisters:
 			case ku8MBReadWriteMultipleRegisters:
-			  u8BytesLeft = u8ModbusADU[u8MBCntErr];
+			  u8BytesLeft = u8ModbusADU[u8MBCntErr] + u8MBArrExt - u8ModbusADUSize;  // expected MB msg len + possible TCP
+			  // u8BytesLeft = u8ModbusADU[u8MBCntErr];
+			        // header - total read size
+					// Serial.println(u8BytesLeft, DEC);
+					// Serial.println(u8ModbusADU[u8MBCntErr], DEC);
+					// Serial.println(u8ModbusADUSize, DEC);
 			  break;
 			  
 			case ku8MBWriteSingleCoil:
 			case ku8MBWriteMultipleCoils:
 			case ku8MBWriteSingleRegister:
 			case ku8MBWriteMultipleRegisters:
-			  u8BytesLeft = 3;
+			  u8BytesLeft = 3 + u8MBArrExt - u8ModbusADUSize;
 			  break;
 			  
 			case ku8MBMaskWriteRegister:
-			  u8BytesLeft = 5;
+			  u8BytesLeft = 5 + u8MBArrExt - u8ModbusADUSize;
 			  break;
 		  }
 		}
@@ -954,7 +1006,9 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 		}
 	  }
 	  
-	  ecClient.stop();
+	  if (!_bSerialTrans){
+		ecClient.stop();
+	  }
 	  
 	  if (_bSerialTrans){
 		  if (_u8EnablePin != 255)

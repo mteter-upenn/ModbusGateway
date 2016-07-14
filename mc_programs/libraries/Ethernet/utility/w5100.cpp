@@ -43,7 +43,7 @@ uint8_t  W5100Class::chip;
 W5100Class W5100;
 
 
-uint8_t W5100Class::init(void)
+uint8_t W5100Class::init(uint8_t u8MaxUsedSocks, uint16_t * u16pSocketSizes)
 {
   uint16_t TXBUF_BASE, RXBUF_BASE;
   uint8_t i;
@@ -72,35 +72,42 @@ uint8_t W5100Class::init(void)
 
   } 
   else if (isW5200()) {
+		
     CH_BASE = 0x4000;
     // SSIZE = 4096;  // can only be 0, 1k, 2k, 4k, 8k, 16k  total is 32k for all 8 sockets both tx and rx
     // SMASK = 0x0FFF;  // 0x07ff
     TXBUF_BASE = 0x8000;
     RXBUF_BASE = 0xC000;
 	
-#ifdef UPENN_TEENSY_MBGW
-	SSIZE[0] = 4096;
-	SSIZE[1] = 4096;
-	SSIZE[2] = 1024;
-	SSIZE[3] = 1024;
-	SSIZE[4] = 1024;
-	SSIZE[5] = 1024;
-	SSIZE[6] = 4096;
-#else
-	for (i = 0; i < MAX_SOCK_NUM; i++) {
-		SSIZE[i] = 4096;
-	} 
-#endif
-	for (i=0; i<MAX_SOCK_NUM; i++) {
-	  SMASK[i] = SSIZE[i] - 1;
-	  
-      writeSnRX_SIZE(i, SSIZE[i] >> 10);
-      writeSnTX_SIZE(i, SSIZE[i] >> 10);
-    }
-    for (; i<8; i++) {
-      writeSnRX_SIZE(i, 0);
-      writeSnTX_SIZE(i, 0);
-    }
+	// gonna have fun here
+// #ifdef UPENN_TEENSY_MBGW
+	// SSIZE[0] = 4096;
+	// SSIZE[1] = 4096;
+	// SSIZE[2] = 1024;
+	// SSIZE[3] = 1024;
+	// SSIZE[4] = 1024;
+	// SSIZE[5] = 1024;
+	// SSIZE[6] = 4096;
+// #else
+	// for (i = 0; i < MAX_SOCK_NUM; i++) {
+		// SSIZE[i] = 4096;
+	// } 
+// #endif
+
+
+	
+		for (i = 0; i < u8MaxUsedSocks; i++) {
+			SSIZE[i] = u16pSocketSizes[i] << 10;
+			
+			SMASK[i] = SSIZE[i] - 1;
+			
+			writeSnRX_SIZE(i, SSIZE[i] >> 10);
+			writeSnTX_SIZE(i, SSIZE[i] >> 10);
+		}
+		for (; i<8; i++) {
+			writeSnRX_SIZE(i, 0);
+			writeSnTX_SIZE(i, 0);
+		}
   } 
   else {
     //Serial.println("no chip :-(");
@@ -109,10 +116,11 @@ uint8_t W5100Class::init(void)
     return 0; // no known chip is responding :-(
   }
 
+	// set indexing for all socket buffers
 	SBASE[0] = TXBUF_BASE;
 	RBASE[0] = RXBUF_BASE;
 	
-	for (i = 1; i < MAX_SOCK_NUM; i++) {
+	for (i = 1; i < u8MaxUsedSocks; i++) {
 		SBASE[i] = SBASE[i - 1] + SSIZE[i - 1];
 		RBASE[i] = RBASE[i - 1] + SSIZE[i - 1];
 	}
@@ -468,3 +476,4 @@ void W5100Class::execCmdSn(SOCKET s, SockCMD _cmd) {
   while (readSnCR(s))
     ;
 }
+
