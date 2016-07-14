@@ -1,6 +1,6 @@
 bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t &out_len)
 {
-  uint16_t strt_reg, lgth_reg, adj_strt_reg, adj_lgth_reg;
+  uint16_t strt_reg, lgth_reg, adj_strt_reg = 0, adj_lgth_reg = 0;
   uint16_t i, j;
   uint8_t exp_lgth = 0;
   uint8_t result = 0xFF;
@@ -170,10 +170,10 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
 //            node.readDiscreteInputs(adj_strt_reg, adj_lgth_reg);
 //            break;
           case 3:
-//            Serial.println(F("modbus request"));
+            Serial.println(F("modbus request"));
             result = node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
-//            Serial.print(F("sent request: "));
-//            Serial.println(result, HEX);
+            Serial.print(F("sent request: "));
+            Serial.println(result, HEX);
             break;
           case 4:
             result = node.readInputRegisters(adj_strt_reg, adj_lgth_reg);

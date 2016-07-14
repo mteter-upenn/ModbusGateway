@@ -108,16 +108,16 @@ uint8_t maxSlvsRcd = 5;
 
 // classes
 EthernetServer serv_web(80);                           // start server on http
-#ifdef UPENN_TEENSY_MBGW                                // constant from Ethernet.h
+//#ifdef UPENN_TEENSY_MBGW                                // constant from Ethernet.h
 EthernetServer serv_web2(80);                           // start server on http
-#endif
+//#endif
 
 EthernetServer serv_mb(502);                           // start server on modbus port
-#ifdef UPENN_TEENSY_MBGW
+//#ifdef UPENN_TEENSY_MBGW
 EthernetServer serv_mb2(502);                           // start server on modbus port
 EthernetServer serv_mb3(502);                           // start server on modbus port
 EthernetServer serv_mb4(502);                           // start server on modbus port
-#endif
+//#endif
 
 ModbusMaster node(1, clientIP, mb485Ctrl, MODBUS_SERIAL);   // initialize node on device 1, client ip, enable pin, serial port
 
@@ -206,6 +206,9 @@ void resetArd(){
 
 
 void setup() {
+  uint16_t socketSizes[8] = { 4, 4, 1, 1, 1, 1, 2, 2 };
+  uint16_t socketPorts[8] = { 80, 80, 502, 502, 502 ,502, 0, 0 };
+
   time_t t = 0;
 
   Serial.begin(9600);
@@ -309,19 +312,19 @@ void setup() {
   delay(150);*/
 
   
-  Ethernet.begin(mac, ip, gateway, gateway, subnet);
-  
+  Ethernet.begin(mac, ip, gateway, gateway, subnet, 8, socketSizes, socketPorts);
+
   serv_web.begin();
-#ifdef UPENN_TEENSY_MBGW
+//#ifdef UPENN_TEENSY_MBGW
   serv_web2.begin();
-#endif
+//#endif
 
   serv_mb.begin();
-#ifdef UPENN_TEENSY_MBGW
+//#ifdef UPENN_TEENSY_MBGW
   serv_mb2.begin();
   serv_mb3.begin();
   serv_mb4.begin();
-#endif
+//#endif
 
   node.begin(baudrate);
   node.setTimeout(timeout);
@@ -329,7 +332,7 @@ void setup() {
   
   //post_cont.init(16);  // creates circular buffer 16 bytes around
 
-  delay(1100);
+  delay(1500);  // 1100
   //setTime(4, 40, 0, 30, 10, 2015);
   setSyncProvider(getRtcTime);
 
@@ -365,8 +368,10 @@ void setup() {
 //#endif
   
 //  node.idle(*function_here);  // add function for idling during wait for modbus return message
-  delay(550);  // initial delay
-
+  //delay(550);  // initial delay
+  // 2 s total delay
+  // 450 from flashing leds
+  // 1100 from pre ntp wait, 
 
   digitalWrite(battDeadLed, HIGH);
   delay(50);
