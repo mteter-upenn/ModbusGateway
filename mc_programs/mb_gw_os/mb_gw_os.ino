@@ -39,6 +39,9 @@
 #define MODBUS_SERIAL 1                                // which hardware serial to use
 #endif
 
+#define MB_TCP_TIMEOUT 3000                            // timeout for device to hold on to tcp connection after modbus request
+#define HTTP_TCP_TIMEOUT 3000
+
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
 #define RT_FROM_NTP 1                                  // 1 for ntp, 0 for rtc
 #define SHOW_FREE_MEM 0                                // 1 for print free memory

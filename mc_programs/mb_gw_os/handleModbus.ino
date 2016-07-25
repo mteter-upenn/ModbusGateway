@@ -595,16 +595,17 @@ void handle_modbus() {
   uint16_t givenLen;
   uint16_t out_len = 0;
   uint32_t u32MB_Cl_To_old; // , u32MB_Cl_To_cur;
+  uint32_t u32MB_TCP_to_old;
 
   EthernetClient client = serv_mb.available();
   
   if (client)
   {
-    while (client.connected())
-    {
+    u32MB_TCP_to_old = millis();
+
+    while (client.connected() && ((millis() - u32MB_TCP_to_old) < MB_TCP_TIMEOUT)) {
       //      client.getRemoteIP(rip); // get client IP
-      if (client.available())
-      {
+      if (client.available()) {
         //uint8_t c = client.read();
         //Serial.println(c, DEC);
         //in_mb[i] = c;
@@ -633,7 +634,8 @@ void handle_modbus() {
         if (out_len > 0) {
           client.write(out_mb, out_len);
           client.flush();
-          break;
+          //break;
+          u32MB_TCP_to_old = millis();
         }
         //i++;
       }  // end while

@@ -160,10 +160,19 @@ void getFileName(time_t t, char * fileName) {
       for (i = 0; i < maxSlvs; i++) {
         tempFile.print(F("UTC time,"));
 
-        tempFile.print(slv_ips[i][0], DEC);
-        for (j = 1; j < 4; j++) {
-          tempFile.print(F("."));
-          tempFile.print(slv_ips[i][j], DEC);
+        if (slv_ips[i][0] == 0) { // if serial device, print gateway ip
+          tempFile.print(ip[0], DEC);
+          for (j = 1; j < 4; j++) {
+            tempFile.print(F("."));
+            tempFile.print(ip[j], DEC);
+          }
+        }
+        else {  // otherwise, print device ip
+          tempFile.print(slv_ips[i][0], DEC);
+          for (j = 1; j < 4; j++) {
+            tempFile.print(F("."));
+            tempFile.print(slv_ips[i][j], DEC);
+          }
         }
 
         tempFile.print(F(": "));
