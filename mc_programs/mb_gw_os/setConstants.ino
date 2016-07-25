@@ -86,9 +86,9 @@ void writeGenSetupFile(){
   SD.remove("gensetup.xml");
   webFile = SD.open("gensetup.xml", FILE_WRITE);
   
-  webFile.println(F("HTTP/1.1 200 OK"));
-  webFile.println(F("Content-Type: text/xml"));  
-  webFile.println(F("Connection: close\n"));   
+  //webFile.println(F("HTTP/1.1 200 OK"));
+  //webFile.println(F("Content-Type: text/xml"));  
+  //webFile.println(F("Connection: close\n"));   
   
   webFile.print(F("<?xml version = \"1.0\" ?><setup><name>"));
 
@@ -189,9 +189,9 @@ void writeMtrSetupFile(){
   SD.remove("mtrsetup.xml");
   webFile = SD.open("mtrsetup.xml", FILE_WRITE);
 
-  webFile.println(F("HTTP/1.1 200 OK"));
-  webFile.println(F("Content-Type: text/xml"));  
-  webFile.println(F("Connection: close\n"));   
+  //webFile.println(F("HTTP/1.1 200 OK"));
+  //webFile.println(F("Content-Type: text/xml"));  
+  //webFile.println(F("Connection: close\n"));   
                       
   webFile.print(F("<?xml version = \"1.0\" ?><meterList>"));
   

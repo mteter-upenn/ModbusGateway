@@ -54,7 +54,7 @@ void sendGifHdr(EthernetClient client) {
   client.flush();
 }
 
-void sendWebFile(EthernetClient client, const char* filename) {
+void sendWebFile(EthernetClient client, const char* filename, uint8_t u8FileType) {
   uint16_t i;                                        // tickers
   uint32_t wfSize;                                   // size of file being sent over tcp
   uint16_t max_i;                                    // number of chunks file must be split into to send via tcp
@@ -62,25 +62,48 @@ void sendWebFile(EthernetClient client, const char* filename) {
   uint16_t lclBufSz;                                 // size of file buffer - min(remBytes, lclBufSz)
   char streamBuf[RESP_BUF_SZ];                       // buffer for moving data between sd card and ethernet
   File streamFile;
-
+  uint32_t hdrLength;
+  
   streamFile = SD.open(filename);
 
   if (streamFile) {
     wfSize = streamFile.size();
 
+    if (u8FileType) {
+      strcpy_P(streamBuf, PSTR("HTTP/1.1 200 OK\nContent-Type: "));  // text / html\n"));
+      switch (u8FileType) {
+      case 1:  // html
+        strcat_P(streamBuf, PSTR("text/html\n"));
+        break;
+      case 2:  // css
+        strcat_P(streamBuf, PSTR("text/css\n"));
+        break;
+      case 3:  // gif
+
+        break;
+      case 4:  // xml
+        strcat_P(streamBuf, PSTR("text/xml\n"));
+        break;
+      case 5:  // csv
+
+        break;
+      }
+      strcat_P(streamBuf, PSTR("Connection: Keep-alive\nKeep-Alive: timeout=3, max=10\nContent-Length: "));
+      //strcat_P(streamBuf, PSTR("Connection: close\nContent - Length: "));
+      hdrLength = strlen(streamBuf);
+      sprintf(streamBuf + hdrLength, "%lu\n\n", wfSize);
+
+      client.write(streamBuf);
+    }
     max_i = (wfSize / RESP_BUF_SZ) + 1;
 
     for (i = 0; i < max_i; i++) {
       remBytes = wfSize - (i * RESP_BUF_SZ);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
       lclBufSz = min(remBytes, RESP_BUF_SZ);
-
-      //for (j = 0; j < lclBufSz; j++) {
-      //  streamBuf[j] = streamFile.read();
-      //}
+      
       streamFile.read(streamBuf, lclBufSz);  // expect speed increase
       
       client.write(streamBuf, lclBufSz);
-
     }
 
     client.flush();

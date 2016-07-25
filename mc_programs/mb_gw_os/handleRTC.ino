@@ -46,16 +46,6 @@ time_t getNtpTime(){
       printTime(t);
       ntpClient.stop();
       return t;  // return unix time
-
-      //curExcelDay = (secsSince1900 / 86400UL) + 2UL;  // day in excel date format
-      //initExcelSecs = (secsSince1900 % 86400UL);  // seconds in day
-
-      //Serial.print(F("day: "));
-      //Serial.print(curExcelDay);
-      //Serial.print(F(", seconds: "));
-      //Serial.println(initExcelSecs);
-
-      //break;
     }
 
     curTime = millis();
@@ -76,12 +66,6 @@ time_t getRtcTime() {
 }
 
 
-//bool getFakeTime() {
-//  curExcelDay = 42304;
-//  initExcelSecs = 46000;
-//  return true;
-//}
-
 void printTime(time_t t) {
   Serial.print(month(t));
   Serial.print(F("-"));
@@ -96,21 +80,4 @@ void printTime(time_t t) {
   Serial.println(second(t));
 }
 
-
-//void handle_RT(){
-//  /*uint32_t curArdTime;
-//
-//  curArdTime = millis()*/;
-//
-//  //if (((curArdTime - oldArdTime) / 1000) > 60) {  // this line for debugging
-// // if ((initExcelSecs + ((curArdTime - oldArdTime) / 1000)) > 86400){  // if it's been longer than a day -> 86400 seconds
-// //   oldArdTime = curArdTime;
-// //   //setSyncProvider(getNtpTime);  // get time from ntp server
-// //   //getFakeTime();
-//	////getRtcTime();  // get time from real time clock
-// // }
-//  
-//  
-//  
-//}
 

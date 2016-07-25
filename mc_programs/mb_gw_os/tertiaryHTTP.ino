@@ -169,7 +169,7 @@ void getPostSetupData(EthernetClient cl, char * headHttp) {
   char * postMsgPtr;                                   // pointer to beginning of message
 
   //Serial.println("start preproc");
-  postMsgPtr = preprocPost(cl, headHttp, postLen);
+  postMsgPtr = preprocPost(cl, headHttp, postLen);     // get length of post message and place pointer at its start
   //Serial.println("exited preproc");
   
   totLen = strlen(headHttp) - (postMsgPtr - headHttp);

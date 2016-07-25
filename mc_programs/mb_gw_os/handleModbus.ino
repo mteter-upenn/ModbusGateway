@@ -587,7 +587,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
 }  // end getModbus()
 
 
-void handle_modbus() {
+void handle_modbus(bool bMain) {
   uint8_t in_mb[MB_ARR_SIZE] = {0};
   uint8_t out_mb[MB_ARR_SIZE];
   //uint16_t i = 0;
@@ -603,13 +603,9 @@ void handle_modbus() {
   {
     u32MB_TCP_to_old = millis();
 
-    while (client.connected() && ((millis() - u32MB_TCP_to_old) < MB_TCP_TIMEOUT)) {
+    while (client.connected() && ((millis() - u32MB_TCP_to_old) < MB_TCP_TIMEOUT)) {  // check to see if client is connected and hasn't to'd
       //      client.getRemoteIP(rip); // get client IP
       if (client.available()) {
-        //uint8_t c = client.read();
-        //Serial.println(c, DEC);
-        //in_mb[i] = c;
-        
         initLen = client.read(in_mb, MB_ARR_SIZE);
         u32MB_Cl_To_old = millis();
 
@@ -623,7 +619,7 @@ void handle_modbus() {
         while (initLen < givenLen) {  // make sure to grab the full packet
           initLen += client.read(in_mb + initLen, MB_ARR_SIZE - initLen);
 
-          if ((millis() - u32MB_Cl_To_old) > 10) {
+          if ((millis() - u32MB_Cl_To_old) > 10) {  // 10 ms might be too quick, but not really sure
             client.stop();  // could not get full message, exit
             return;
           }
@@ -637,50 +633,11 @@ void handle_modbus() {
           //break;
           u32MB_TCP_to_old = millis();
         }
-        //i++;
-      }  // end while
-
-      //if (i > 6) {
-      //  if (i == in_mb[5] + 6) {
-      //    //Serial.print(F("time: "));
-      //    //Serial.println(millis() - u32MB_Cl_To_old, DEC);
-
-      //    getModbus(in_mb, i, out_mb, out_len);
-
-      //    if (out_len > 0) {
-      //      //uint16_t j;
-      //      //Serial.println(F("out: "));
-      //      //Serial.println(out_len, DEC);
-      //      //for (j = 0; j < out_len; j++) {
-      //      //  Serial.println(out_mb[j]);
-      //      //}
-
-      //      client.write(out_mb, out_len);
-      //      client.flush();
-      //      break;
-      //    }
-      //  }
-
-      //  u32MB_Cl_To_cur = millis();
-
-      //  if (u32MB_Cl_To_cur - u32MB_Cl_To_old > 10) {
-      //    break;
-      //  }
-      //}
-      //getModbus(in_mb, i, out_mb, out_len);    
-
-      //if (out_len > 0){
-      //  uint16_t j;
-      //  Serial.println(F("out: "));
-      //  //Serial.println(out_len, DEC);
-      //  for (j = 0; j < out_len; j++) {
-      //    Serial.println(out_mb[j]);
-      //  }
-      // 
-      //  client.write(out_mb, out_len);
-      //  client.flush();
-      //}
-    }  // end if (client.connected())
+      }  // end if client available
+      else if (bMain) {
+        //handle_data(false);
+      }
+    }  // end while (client.connected())
   client.stop();
   }  // end if (client)
   

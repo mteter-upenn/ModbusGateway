@@ -4,7 +4,6 @@
  */
 
 #include <Time.h>
-//#include <ByteBuffer.h>
 #include <SPI.h>
 #include <Ethernet.h>
 #include <ModbusMaster.h>
@@ -16,60 +15,54 @@
 #define REQ_ARR_SZ   1500                              // size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
                                                        //   message, the rest of the array may loop around if the http request is large enough
 #define POST_BUF_SZ (REQ_ARR_SZ - 1 - 1030 - 50)       // currently 419
-//#define POST_BUF_SZ 44      // from chrome starts at 36
 
 #if POST_BUF_SZ < 20                                   // make sure post buffer has enough room to play with, 20 bytes sounds good for min
 #error "not enough room in array for POST messages"
 #endif
 
-#define MB_ARR_SIZE     264                               // array size for modbus/tcp rx/tx buffers - limited by modbus standards
-
-//#define UPENN_TEENSY_MBGW   // this should be defined in Ethernet.h
-
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater  SHOULD PROBABLY JUST ASSUME TEENSY FOR NOW, ARDUINO BOARDS DEFINITELY WON'T WORK WITHOUT SIGNIFICANT READJUSTMENT ANYWAYS
-#define RESP_BUF_SZ  1400UL                            // array size for buffer between sd card and ethernet
-                                                       //     keep short of 1500 to make room for headers
-#else
-#define RESP_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
-#endif
-
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-#define MODBUS_SERIAL 3
-#else
-#define MODBUS_SERIAL 1                                // which hardware serial to use
-#endif
+#define MB_ARR_SIZE  264                               // array size for modbus/tcp rx/tx buffers - limited by modbus standards
 
 #define MB_TCP_TIMEOUT 3000                            // timeout for device to hold on to tcp connection after modbus request
-#define HTTP_TCP_TIMEOUT 3000
+#define HTTP_TCP_TIMEOUT 3000                          // timeout for device to hold on to tcp connection after http request
+#define DEBUG_HTTP_TCP_TIMEOUT 1                       
 
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
-#define RT_FROM_NTP 1                                  // 1 for ntp, 0 for rtc
 #define SHOW_FREE_MEM 0                                // 1 for print free memory
 
-// pin ids
+#if defined(CORE_TEENSY)                               // if teensy3.0 or greater  SHOULD PROBABLY JUST ASSUME TEENSY FOR NOW, 
+                                                       //     ARDUINO BOARDS DEFINITELY WON'T WORK WITHOUT SIGNIFICANT READJUSTMENT ANYWAYS
 
+#define RESP_BUF_SZ  1400UL                            // array size for buffer between sd card and ethernet
+                                                       //     keep short of 1500 to make room for headers
+#define MODBUS_SERIAL 3                                // use hardware serial 3
 
-
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-//int resetPin = 255;                                      // when set high, will trigger hard reset
-int sdFailLed = 21;                                     // 
-int sdWriteLed = 20;
-int epWriteLed = 19;
-int rtcFailLed = 22;
-int battDeadLed = 23;
-int mb485Ctrl = 6;                                     // when set low, transmit mode, high is receive mode?
-
+// reset necessaries
 #define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
 #define CPU_RESTART_VAL 0x5FA0004
 #define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL);
+
+
+// pin ids
+int sdFailLed = 21;                                    // sd card unavailable
+int sdWriteLed = 20;                                   // currently writing to sd card
+int epWriteLed = 19;                                   // currently writing to eeprom
+int rtcFailLed = 22;                                   // no rtc set
+int battDeadLed = 23;                                  // dead battery - currently no way to determine
+int mb485Ctrl = 6;                                     // when set low, transmit mode, high is receive mode
 #else
+#define RESP_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
+#define MODBUS_SERIAL 1                                // use hardware serial 1
+
 int resetPin = 6;                                      // when set high, will trigger hard reset
-int sdFailLed = 7;                                     // 
-int sdWriteLed = 11;
-int epWriteLed = 8;
-int mb485Ctrl = 9;
-int rtcFailLed = 8;    // USING EPWRITELED IS SILLY
+int sdFailLed = 7;                                     // sd card unavailable
+int sdWriteLed = 11;                                   // currently writing to sd card
+int epWriteLed = 8;                                    // currently writing to eeprom
+int mb485Ctrl = 9;                                     // when set low, transmit mode, high is receive mode
+int rtcFailLed = 8;                                    // no rtc set
 #endif
+
+
+
 
 // ethernet info
 uint8_t mac[] = {0x46, 0x52, 0x45, 0x53, 0x00, 0x00};  // enter mac, will need some sort of generator for this
@@ -100,9 +93,6 @@ uint8_t selSlv = 1;                                    // selected slave - used 
 
 // rtc info
 bool bGoodRTC = false;
-//uint32_t curExcelDay;                                  // current day - gotten from ntp
-//uint32_t initExcelSecs;                                // time recieved from ntp
-//uint32_t oldArdTime;                                   // local time recorded when message recieved from ntp server
 
 // data collection timing
 uint32_t oldDataTime;
@@ -111,22 +101,17 @@ uint8_t maxSlvsRcd = 5;
 
 // classes
 EthernetServer serv_web(80);                           // start server on http
-//#ifdef UPENN_TEENSY_MBGW                                // constant from Ethernet.h
 EthernetServer serv_web2(80);                           // start server on http
-//#endif
 
 EthernetServer serv_mb(502);                           // start server on modbus port
-//#ifdef UPENN_TEENSY_MBGW
 EthernetServer serv_mb2(502);                           // start server on modbus port
 EthernetServer serv_mb3(502);                           // start server on modbus port
 EthernetServer serv_mb4(502);                           // start server on modbus port
-//#endif
 
 ModbusMaster node(1, clientIP, mb485Ctrl, MODBUS_SERIAL);   // initialize node on device 1, client ip, enable pin, serial port
 
 
 // miscellaneous
-//ByteBuffer post_cont;                                  // circular buffer for string searches within entire http request
 bool sdInit = false;                                   // set flag corresponding to sd card initializtion
 
 // test vars
@@ -138,13 +123,13 @@ bool sdInit = false;                                   // set flag corresponding
 // main
 void resetArd(void);
 // handleHTTP
-void handle_http(void);
+void handle_http(bool);
 // secondaryHTTP - GET and general functions
 void flushEthRx(EthernetClient, uint8_t *, uint16_t);
 void send404(EthernetClient);
 void sendBadSD(EthernetClient);
 void sendGifHdr(EthernetClient);
-void sendWebFile(EthernetClient, const char*);
+void sendWebFile(EthernetClient, const char*, uint8_t);
 void sendDownLinks(EthernetClient, char*);
 void sendXmlEnd(EthernetClient, uint8_t);
 void sendIP(EthernetClient);
@@ -155,7 +140,7 @@ char * preprocPost(EthernetClient, char *, uint16_t&);
 void getPostSetupData(EthernetClient, char *);
 // handleModbus
 bool getModbus(uint8_t*, uint16_t, uint8_t*, uint16_t&);
-void handle_modbus(void);
+void handle_modbus(bool);
 // secondaryModbus
 bool findRegister(uint16_t&, uint8_t&, uint8_t);
 bool isMeterEth(uint8_t, uint8_t&, uint8_t&);
@@ -165,7 +150,6 @@ void writeGenSetupFile(void);
 void writeMtrSetupFile(void);
 // stringFuncs
 void StrClear(char*, char);
-//byte StrContains(char*, const char*);
 // handleRTC
 time_t getNtpTime(void);
 time_t getRtcTime(void);
@@ -244,15 +228,9 @@ void setup() {
   digitalWrite(9, HIGH);
   digitalWrite(10, HIGH);
 #elif MODBUS_SERIAL == 3
-  /*pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);*/
   pinMode(7, INPUT_PULLUP);
-  //pinMode(8, OUTPUT);
+  //pin 8 has external pullup
   digitalWrite(7, HIGH);
-  //digitalWrite(8, HIGH);
-  //Serial3.transmitterEnable(6);
-  /*digitalWrite(7, LOW);
-  digitalWrite(8, LOW);*/
 #else
   digitalWrite(0, HIGH);
   digitalWrite(1, HIGH);
@@ -297,8 +275,6 @@ void setup() {
   Serial.println(F("Initializing SD card..."));
   if (!SD.begin(4)) {
     Serial.println(F("ERROR - SD card initialization failed!"));
-    
-    //digitalWrite(sdFailLed, HIGH);
   }
   else{
     Serial.println(F("SUCCESS - SD card initialized."));
@@ -307,36 +283,21 @@ void setup() {
     writeGenSetupFile();
     writeMtrSetupFile();
   }
-
-  /*delay(1);
-  digitalWrite(9, HIGH);
-  digitalWrite(4, HIGH);
-  digitalWrite(10, HIGH);
-  delay(150);*/
-
   
   Ethernet.begin(mac, ip, gateway, gateway, subnet, 8, socketSizes, socketPorts);
 
   serv_web.begin();
-//#ifdef UPENN_TEENSY_MBGW
   serv_web2.begin();
-//#endif
 
   serv_mb.begin();
-//#ifdef UPENN_TEENSY_MBGW
   serv_mb2.begin();
   serv_mb3.begin();
   serv_mb4.begin();
-//#endif
 
   node.begin(baudrate);
   node.setTimeout(timeout);
-  //Serial3.begin(9600);
-  
-  //post_cont.init(16);  // creates circular buffer 16 bytes around
 
   delay(1500);  // 1100
-  //setTime(4, 40, 0, 30, 10, 2015);
   setSyncProvider(getRtcTime);
 
   if (bNTPserv) {
@@ -347,9 +308,6 @@ void setup() {
     if (getRtcTime() > 1451606400L) {  // check if rtc is already working well, if not show as led error
       bGoodRTC = true;  // time in RTC is greater than Jan 1 2016
     }
-    //else {
-      //digitalWrite(rtcFailLed, HIGH);  // no connection to ntp servers and rtc has not been set
-    //}
   }
   else {  // set clock to time gotten from ntp
 #if defined(CORE_TEENSY)
@@ -360,21 +318,12 @@ void setup() {
   }
 
   setSyncInterval(86400);
-  //setSyncInterval(3600);
-
-
-//#if RT_FROM_NTP
-//  setSyncProvider(getNtpTime);
-//  //getFakeTime();
-//#else
-//  setSyncProvider(getRtcTime);
-//#endif
   
 //  node.idle(*function_here);  // add function for idling during wait for modbus return message
-  //delay(550);  // initial delay
+
   // 2 s total delay
   // 450 from flashing leds
-  // 1100 from pre ntp wait, 
+  // 1500 from pre ntp wait, 
 
   digitalWrite(battDeadLed, HIGH);
   delay(50);
@@ -424,9 +373,8 @@ void setup() {
 
 void loop()
 { 
-  //handle_RT(); // not necessary with time.h
-  handle_modbus();
-  handle_http();
+  handle_modbus(true);
+  handle_http(true);
   if (bRecordData && bGoodRTC) {
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
     handle_data();
