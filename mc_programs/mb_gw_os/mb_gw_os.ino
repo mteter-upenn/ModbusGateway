@@ -5,11 +5,12 @@
 
 #include <Time.h>
 #include <SPI.h>
-#include <Ethernet.h>
+#include <Ethernet52.h>
+#include <EthernetUdp52.h>
 #include <ModbusMaster.h>
 #include <EEPROM.h>
 #include <SD.h>
-#include <EthernetUdp.h>
+
 
 #define REQ_BUF_SZ   40                                // buffer size to capture beginning of http request
 #define REQ_ARR_SZ   1500                              // size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
@@ -100,13 +101,13 @@ bool bRecordData = false;
 uint8_t maxSlvsRcd = 5;
 
 // classes
-EthernetServer serv_web(80);                           // start server on http
-EthernetServer serv_web2(80);                           // start server on http
+EthernetServer52 serv_web(80);                           // start server on http
+EthernetServer52 serv_web2(80);                           // start server on http
 
-EthernetServer serv_mb(502);                           // start server on modbus port
-EthernetServer serv_mb2(502);                           // start server on modbus port
-EthernetServer serv_mb3(502);                           // start server on modbus port
-EthernetServer serv_mb4(502);                           // start server on modbus port
+EthernetServer52 serv_mb(502);                           // start server on modbus port
+EthernetServer52 serv_mb2(502);                           // start server on modbus port
+EthernetServer52 serv_mb3(502);                           // start server on modbus port
+EthernetServer52 serv_mb4(502);                           // start server on modbus port
 
 ModbusMaster node(1, clientIP, mb485Ctrl, MODBUS_SERIAL);   // initialize node on device 1, client ip, enable pin, serial port
 
@@ -125,19 +126,19 @@ void resetArd(void);
 // handleHTTP
 void handle_http(bool);
 // secondaryHTTP - GET and general functions
-void flushEthRx(EthernetClient, uint8_t *, uint16_t);
-void send404(EthernetClient);
-void sendBadSD(EthernetClient);
-void sendGifHdr(EthernetClient);
-void sendWebFile(EthernetClient, const char*, uint8_t);
-void sendDownLinks(EthernetClient, char*);
-void sendXmlEnd(EthernetClient, uint8_t);
-void sendIP(EthernetClient);
-void liveXML(EthernetClient);
+void flushEthRx(EthernetClient52, uint8_t *, uint16_t);
+void send404(EthernetClient52);
+void sendBadSD(EthernetClient52);
+void sendGifHdr(EthernetClient52);
+void sendWebFile(EthernetClient52, const char*, uint8_t);
+void sendDownLinks(EthernetClient52, char*);
+void sendXmlEnd(EthernetClient52, uint8_t);
+void sendIP(EthernetClient52);
+void liveXML(EthernetClient52);
 // tertiaryHTTP - POST related functions
-void sendPostResp(EthernetClient);
-char * preprocPost(EthernetClient, char *, uint16_t&);
-void getPostSetupData(EthernetClient, char *);
+void sendPostResp(EthernetClient52);
+char * preprocPost(EthernetClient52, char *, uint16_t&);
+void getPostSetupData(EthernetClient52, char *);
 // handleModbus
 bool getModbus(uint8_t*, uint16_t, uint8_t*, uint16_t&);
 void handle_modbus(bool);
@@ -284,7 +285,7 @@ void setup() {
     writeMtrSetupFile();
   }
   
-  Ethernet.begin(mac, ip, gateway, gateway, subnet, 8, socketSizes, socketPorts);
+  Ethernet52.begin(mac, ip, gateway, gateway, subnet, 8, socketSizes, socketPorts);
 
   serv_web.begin();
   serv_web2.begin();

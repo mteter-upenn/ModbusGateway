@@ -7,14 +7,14 @@
  */
 
 
-void flushEthRx(EthernetClient client, uint8_t * buffer, uint16_t len) {
+void flushEthRx(EthernetClient52 client, uint8_t * buffer, uint16_t len) {
   while (client.available()) {
     client.read(buffer, len);
   }
 }
 
 
-void send404(EthernetClient client){
+void send404(EthernetClient52 client){
   char resp404[44];
 
   strcpy_P(resp404, PSTR("HTTP/1.1 404 Not Found\nConnnection: close\n\n"));
@@ -25,7 +25,7 @@ void send404(EthernetClient client){
 }
 
 
-void sendBadSD(EthernetClient client){
+void sendBadSD(EthernetClient52 client){
   char respBadSD[220];
 
   strcpy_P(respBadSD, PSTR("HTTP/1.1 200 OK\nContent-Type: text/html\n")); // 41 with \0
@@ -45,7 +45,7 @@ void sendBadSD(EthernetClient client){
   client.flush();
 }
 
-void sendGifHdr(EthernetClient client) {
+void sendGifHdr(EthernetClient52 client) {
   char respBadSD[100];
 
   strcpy_P(respBadSD, PSTR("HTTP/1.1 200 OK\nContent-Type: image/gif\n")); 
@@ -54,7 +54,7 @@ void sendGifHdr(EthernetClient client) {
   client.flush();
 }
 
-void sendWebFile(EthernetClient client, const char* filename, uint8_t u8FileType) {
+void sendWebFile(EthernetClient52 client, const char* filename, uint8_t u8FileType) {
   uint16_t i;                                        // tickers
   uint32_t wfSize;                                   // size of file being sent over tcp
   uint16_t max_i;                                    // number of chunks file must be split into to send via tcp
@@ -99,7 +99,8 @@ void sendWebFile(EthernetClient client, const char* filename, uint8_t u8FileType
 
     for (i = 0; i < max_i; i++) {
       remBytes = wfSize - (i * RESP_BUF_SZ);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
-      lclBufSz = min(remBytes, RESP_BUF_SZ);
+      //lclBufSz = min(remBytes, RESP_BUF_SZ);
+      lclBufSz = (remBytes < RESP_BUF_SZ) ? remBytes : RESP_BUF_SZ;
       
       streamFile.read(streamBuf, lclBufSz);  // expect speed increase
       
@@ -120,7 +121,7 @@ void sendWebFile(EthernetClient client, const char* filename, uint8_t u8FileType
 }
 
 
-void sendDownLinks(EthernetClient client, char* httpReq) {
+void sendDownLinks(EthernetClient52 client, char* httpReq) {
   uint8_t i;
   uint16_t dirNameLen;
   char * pdPtr;
@@ -221,7 +222,7 @@ void sendDownLinks(EthernetClient client, char* httpReq) {
 }
 
 
-void sendXmlEnd(EthernetClient client, uint8_t reqFlag) {
+void sendXmlEnd(EthernetClient52 client, uint8_t reqFlag) {
   char extraBuf[32];
 
   extraBuf[0] = 0;
@@ -251,7 +252,7 @@ void sendXmlEnd(EthernetClient client, uint8_t reqFlag) {
   }
 }
 
-void sendIP(EthernetClient client) {
+void sendIP(EthernetClient52 client) {
   int16_t i;
   uint16_t j, k;
   uint8_t ipOct;
@@ -281,7 +282,7 @@ void sendIP(EthernetClient client) {
 }
 
 
-void liveXML(EthernetClient cl) {  // sends xml file of live meter data
+void liveXML(EthernetClient52 cl) {  // sends xml file of live meter data
   float data[32];
   int8_t data_b[32];
   uint8_t in_mb[12];  // can make this smaller 

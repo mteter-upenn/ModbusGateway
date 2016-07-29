@@ -6,7 +6,7 @@
 
 
 
-void sendPostResp(EthernetClient client) {
+void sendPostResp(EthernetClient52 client) {
   char postResp[76]; // = "HTTP/1.1 303 See Other\nLocation: http://";
 
   strcpy_P(postResp, PSTR("HTTP/1.1 303 See Other\nLocation: /redirect.htm\nConnection: close\n\n"));
@@ -16,7 +16,7 @@ void sendPostResp(EthernetClient client) {
 }
 
 
-char * preprocPost(EthernetClient client, char * headHttp, uint16_t &postLen) {
+char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) {
   char * msgPtr;
   int16_t lenRead;
   uint16_t i;
@@ -155,7 +155,7 @@ char * preprocPost(EthernetClient client, char * headHttp, uint16_t &postLen) {
 }
 
 
-void getPostSetupData(EthernetClient cl, char * headHttp) {
+void getPostSetupData(EthernetClient52 cl, char * headHttp) {
   uint16_t  j;
   char * id_strt, *id_end, *val_strt, *val_end;        // pointers used for setting barriers around values and identifiers
   char * chPtr;                                        // dummy pointer for loops

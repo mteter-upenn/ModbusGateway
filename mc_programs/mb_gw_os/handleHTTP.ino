@@ -14,7 +14,7 @@ void handle_http(bool bMain) {
   //uint32_t totBytes = 0;
 #endif
   
-  EthernetClient client = serv_web.available();  // try to get client
+  EthernetClient52 client = serv_web.available();  // try to get client
 
   if (client) {  // got client?
 #if DISP_TIMING_DEBUG == 1

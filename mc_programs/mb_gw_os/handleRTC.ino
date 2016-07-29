@@ -3,7 +3,7 @@ time_t getNtpTime(){
 //  char timeServer[] = "time.nist.gov"; // time.nist.gov NTP server
   const int NTP_PACKET_SIZE = 48;
   byte packetBuffer[NTP_PACKET_SIZE];
-  EthernetUDP ntpClient;
+  EthernetUDP52 ntpClient;
   unsigned int localPort = 8888;
   uint32_t curTime, oldTime;
   time_t t;

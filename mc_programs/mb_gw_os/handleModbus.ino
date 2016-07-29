@@ -597,7 +597,7 @@ void handle_modbus(bool bMain) {
   uint32_t u32MB_Cl_To_old; // , u32MB_Cl_To_cur;
   uint32_t u32MB_TCP_to_old;
 
-  EthernetClient client = serv_mb.available();
+  EthernetClient52 client = serv_mb.available();
   
   if (client)
   {
