@@ -3,7 +3,7 @@ void handle_data() {
 
   curDataTime = millis();
   
-  if ((curDataTime - oldDataTime) > 300000UL) {  // 300000UL wait every 5 minutes 300000UL
+  if ((curDataTime - g_u32_lastDataRequest) > 300000UL) {  // 300000UL wait every 5 minutes 300000UL
     uint8_t numSlvs;
     uint8_t i, j;
     uint8_t dev;
@@ -19,7 +19,7 @@ void handle_data() {
     //uint16_t grp_adr;
     uint8_t mbStat;
     uint8_t in_mb[12];
-    uint8_t out_mb[MB_ARR_SIZE];
+    uint8_t out_mb[gk_u16_mbArraySize];
     uint16_t out_len;
     char streamBuf[150] = {0};
     time_t t = now();
@@ -32,13 +32,13 @@ void handle_data() {
       uint8_t u8[4];
     } int2flt;
 
-    oldDataTime = curDataTime;
-    numSlvs = slaves > maxSlvsRcd ? maxSlvsRcd : slaves;
+    g_u32_lastDataRequest = curDataTime;
+    numSlvs = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
     memset(in_mb, 0, 5);
     in_mb[5] = 6;     // length of modbus half
 
     fileName[30] = 0;
-    digitalWrite(sdWriteLed, HIGH);
+    digitalWrite(gk_s16_sdWriteLed, HIGH);
     getFileName(t, fileName);  // gets fileName and prints header (if needed) and first column (date)
 
     dataFile = SD.open(fileName, FILE_WRITE);
@@ -47,10 +47,10 @@ void handle_data() {
       Serial.println(F("opened file"));
 
       for (i = 0; i < numSlvs; i++) {
-        meter = slv_typs[i][0];
-        dev = slv_vids[i];
-        func = EEPROM.read(reg_strt + 4 * meter + 2);
-        lclmtr_strt = word(EEPROM.read(reg_strt + 4 * meter - 1), EEPROM.read(reg_strt + 4 * meter));
+        meter = g_u8a_slaveTypes[i][0];
+        dev = g_u8a_slaveVids[i];
+        func = EEPROM.read(g_u16_regBlkStart + 4 * meter + 2);
+        lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
 
         grp_strt = word(EEPROM.read(lclmtr_strt + 3), EEPROM.read(lclmtr_strt + 4));
         grp_len = EEPROM.read(lclmtr_strt + 5);
@@ -195,6 +195,6 @@ void handle_data() {
       dataFile.close();
     }  // end if dataFile
 
-    digitalWrite(sdWriteLed, LOW);
+    digitalWrite(gk_s16_sdWriteLed, LOW);
   }  // end if time
 }

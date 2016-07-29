@@ -27,7 +27,7 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
 
   postLen = 0;
 
-  lenRead = client.read((uint8_t*)headHttp, POST_BUF_SZ); // read out to POST_BUF_SZ
+  lenRead = client.read((uint8_t*)headHttp, gk_u16_postBuffSize); // read out to g_POST_BUF_SZ
   headHttp[lenRead] = 0;
 
   while (!foundPtr) {
@@ -59,7 +59,7 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
         }
       }
 
-      lenRead = client.read((uint8_t*)headHttp, POST_BUF_SZ); // read out to POST_BUF_SZ
+      lenRead = client.read((uint8_t*)headHttp, gk_u16_postBuffSize); // read out to POST_BUF_SZ
       headHttp[lenRead] = 0;
 
       if (charMatches) {
@@ -88,7 +88,7 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
     }
 
     if ((*msgPtr) == '\0') {
-      client.read((uint8_t*)headHttp, POST_BUF_SZ); // length was cut off, load next portion into headHttp
+      client.read((uint8_t*)headHttp, gk_u16_postBuffSize); // length was cut off, load next portion into headHttp
       msgPtr = headHttp;  // reset postLenPtr to start of headHttp
     }
     else {
@@ -129,7 +129,7 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
         }
       }
 
-      lenRead = client.read((uint8_t*)headHttp, POST_BUF_SZ); // read out to POST_BUF_SZ
+      lenRead = client.read((uint8_t*)headHttp, gk_u16_postBuffSize); // read out to gk_u16_postBuffSize
       headHttp[lenRead] = 0;
 
       if (charMatches) {
@@ -150,7 +150,7 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
     }  // else pointer is NULL
   }  // while haven't found pointer
 
-  headHttp[lenRead + client.read((uint8_t*)headHttp + lenRead, REQ_ARR_SZ - lenRead)] = 0;
+  headHttp[lenRead + client.read((uint8_t*)headHttp + lenRead, gk_u16_requestBuffSize - lenRead)] = 0;
   return msgPtr;
 }
 
@@ -176,7 +176,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
 
   id_strt = postMsgPtr;
 
-  digitalWrite(epWriteLed, HIGH);
+  digitalWrite(gk_s16_epWriteLed, HIGH);
 
   while (readingMsg) {
     if ((*postMsgPtr) != '\0') {
@@ -200,7 +200,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
           if (lcl_meter < num_mtrs) {  // make sure to only record necessary number of meters
             if (val_strt == val_end) {  // blank values for ips translate to 0's
               for (j = 0; j < 4; j++) {
-                EEPROM.write((j + mtr_strt + 9 * lcl_meter + 4), 0);
+                EEPROM.write((j + g_u16_mtrBlkStart + 9 * lcl_meter + 4), 0);
               }
             }
             else {
@@ -212,7 +212,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
                   chPtr++;
                 }
                 chPtr++;
-                EEPROM.write((j + mtr_strt + 9 * lcl_meter + 4), u8dum);
+                EEPROM.write((j + g_u16_mtrBlkStart + 9 * lcl_meter + 4), u8dum);
               }
             }
           }
@@ -228,7 +228,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
             for (chPtr = val_strt; chPtr < val_end; chPtr++) {
               u8dum = u8dum * 10 + ((*chPtr) - '0');
             }
-            EEPROM.write((mtr_strt + 9 * lcl_meter + 8), u8dum);
+            EEPROM.write((g_u16_mtrBlkStart + 9 * lcl_meter + 8), u8dum);
             //          Serial.print(lcl_meter, DEC);
             //          Serial.print(F(": "));
             //          Serial.println(u8dum, DEC);
@@ -245,7 +245,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
             for (chPtr = val_strt; chPtr < val_end; chPtr++) {
               u8dum = u8dum * 10 + ((*chPtr) - '0');
             }
-            EEPROM.write((mtr_strt + 9 * lcl_meter + 9), u8dum);
+            EEPROM.write((g_u16_mtrBlkStart + 9 * lcl_meter + 9), u8dum);
             //          Serial.print(lcl_meter, DEC);
             //          Serial.print(F(": "));
             //          Serial.println(u8dum, DEC);
@@ -266,7 +266,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
                 chPtr++;
               }
               chPtr++;
-              EEPROM.write((j + mtr_strt + 9 * lcl_meter + 1), u8dum);
+              EEPROM.write((j + g_u16_mtrBlkStart + 9 * lcl_meter + 1), u8dum);
             }
           }
         }
@@ -279,7 +279,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
             num_mtrs = 20;
           }
 
-          EEPROM.write(mtr_strt, num_mtrs);
+          EEPROM.write(g_u16_mtrBlkStart, num_mtrs);
         }
         else if (strncmp(id_strt, "nm", 2) == 0) {  // ******************************** NAME ****************************************
           //Serial.println(F("nm"));
@@ -291,10 +291,10 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
             if ((*chPtr) == 43) {  // filter out '+' as html concatenator
               (*chPtr) = 32;  // replace with blank space
             }
-            EEPROM.write((chPtr - val_strt + nm_strt), (*chPtr));
+            EEPROM.write((chPtr - val_strt + g_u16_nameBlkStart), (*chPtr));
           }
           if ((val_end - val_strt) != 30) {
-            EEPROM.write((val_end - val_strt + nm_strt), 0);
+            EEPROM.write((val_end - val_strt + g_u16_nameBlkStart), 0);
           }
         }
         else if (strncmp(id_strt, "rd", 2) == 0) {  // ***************************************** Record Data ************************************
@@ -306,10 +306,10 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
           }
 
           if (u16dum) {
-            EEPROM.write(nm_strt + 31, true);
+            EEPROM.write(g_u16_nameBlkStart + 31, true);
           }
           else {
-            EEPROM.write(nm_strt + 31, false);
+            EEPROM.write(g_u16_nameBlkStart + 31, false);
           }
         }
         else if (strncmp(id_strt, "ms", 2) == 0) {  // ***************************** Max Number of Slaves to Record ************************************
@@ -320,7 +320,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
             u8dum = u8dum * 10 + ((*chPtr) - '0');
           }
 
-          EEPROM.write(nm_strt + 32, u8dum);
+          EEPROM.write(g_u16_nameBlkStart + 32, u8dum);
         }
         else if (strncmp(id_strt, "ip", 2) == 0) {  //  ***************************************** IP ************************************************
           //Serial.println(F("ip"));
@@ -333,7 +333,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
               chPtr++;
             }
             chPtr++;
-            EEPROM.write((j + ip_strt + 6), u8dum);
+            EEPROM.write((j + g_u16_ipBlkStart + 6), u8dum);
           }
         }
         else if (strncmp(id_strt, "sm", 2) == 0) {  //  ****************************************** SUBNET MASK *************************************************
@@ -347,7 +347,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
               chPtr++;
             }
             chPtr++;
-            EEPROM.write((j + ip_strt + 10), u8dum);
+            EEPROM.write((j + g_u16_ipBlkStart + 10), u8dum);
           }
         }
         else if (strncmp(id_strt, "gw", 2) == 0) {  //  ****************************************** DEFAULT GATEWAY *************************************************
@@ -360,7 +360,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
               chPtr++;
             }
             chPtr++;
-            EEPROM.write((j + ip_strt + 14), u8dum);
+            EEPROM.write((j + g_u16_ipBlkStart + 14), u8dum);
           }
         }
         else if (strncmp(id_strt, "ntp", 3) == 0) {  // ***************************************** USE NTP? ************************************
@@ -372,10 +372,10 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
           }
 
           if (u16dum) {
-            EEPROM.write(ip_strt + 18, true);
+            EEPROM.write(g_u16_ipBlkStart + 18, true);
           }
           else {
-            EEPROM.write(ip_strt + 18, false);
+            EEPROM.write(g_u16_ipBlkStart + 18, false);
           }
         }
         else if (strncmp(id_strt, "nip", 3) == 0) {  //  ************************************ NTP SERVER IP *****************************************
@@ -389,7 +389,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
               chPtr++;
             }
             chPtr++;
-            EEPROM.write((j + ip_strt + 19), u8dum);
+            EEPROM.write((j + g_u16_ipBlkStart + 19), u8dum);
           }
         }
         else if (strncmp(id_strt, "br", 2) == 0) {  //  ****************************************** BAUDRATE *************************************************
@@ -401,9 +401,9 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
             u32dum = u32dum * 10 + ((*chPtr) - '0');
           }
 
-          EEPROM.write(ip_strt + 23, (u32dum >> 16));
-          EEPROM.write(ip_strt + 24, (u32dum >> 8));
-          EEPROM.write(ip_strt + 25, u32dum);
+          EEPROM.write(g_u16_ipBlkStart + 23, (u32dum >> 16));
+          EEPROM.write(g_u16_ipBlkStart + 24, (u32dum >> 8));
+          EEPROM.write(g_u16_ipBlkStart + 25, u32dum);
         }
         else if (strncmp(id_strt, "to", 2) == 0) {  //  ****************************************** MB TIMEOUT *************************************************
           //Serial.println(F("to"));
@@ -413,8 +413,8 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
             u16dum = u16dum * 10 + ((*chPtr) - '0');
           }
 
-          EEPROM.write(ip_strt + 26, highByte(u16dum));
-          EEPROM.write(ip_strt + 27, lowByte(u16dum));
+          EEPROM.write(g_u16_ipBlkStart + 26, highByte(u16dum));
+          EEPROM.write(g_u16_ipBlkStart + 27, lowByte(u16dum));
         }
         else if (strncmp(id_strt, "tm", 2) == 0) {  //  ****************************************** TIME *************************************************
           //Serial.println(F("time"));
@@ -426,7 +426,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
           }
 
           if (u32dum > 1451606400UL) {
-            bGoodRTC = true;
+            g_b_rtcGood = true;
 #if defined(CORE_TEENSY)
             Teensy3Clock.set(u32dum);
 #endif
@@ -445,7 +445,7 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
       if (totLen < postLen) {
         if (cl.available()) {
           uint16_t lenRead;
-          lenRead = cl.read((uint8_t*)headHttp, REQ_ARR_SZ - 1);
+          lenRead = cl.read((uint8_t*)headHttp, gk_u16_requestBuffSize - 1);
           headHttp[lenRead] = 0;
           totLen += lenRead;
         }
@@ -458,9 +458,9 @@ void getPostSetupData(EthernetClient52 cl, char * headHttp) {
       }
     }
   }  // end while
-  flushEthRx(cl, (uint8_t*)headHttp, REQ_ARR_SZ - 1);  // this shouldn't need to be used, here just in case
+  flushEthRx(cl, (uint8_t*)headHttp, gk_u16_requestBuffSize - 1);  // this shouldn't need to be used, here just in case
 
-  digitalWrite(epWriteLed, LOW);
+  digitalWrite(gk_s16_epWriteLed, LOW);
   setConstants();
 }
 

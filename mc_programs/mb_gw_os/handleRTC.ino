@@ -24,7 +24,7 @@ time_t getNtpTime(){
   packetBuffer[14]  = 49;
   packetBuffer[15]  = 52;
 
-  ntpClient.beginPacket(ntpIp, 123); //NTP requests are to port 123
+  ntpClient.beginPacket(g_ip_ntpIp, 123); //NTP requests are to port 123
   ntpClient.write(packetBuffer, NTP_PACKET_SIZE);
   ntpClient.endPacket();
   

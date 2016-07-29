@@ -12,7 +12,7 @@ void getElecRegs(uint16_t grp_strt, uint8_t grp_len, uint16_t &pwrReg, uint16_t 
   bool fndPwr = false;
   bool fndEgy = false;
 
-  //lclmtr_strt = word(EEPROM.read(reg_strt + 4 * meter - 1), EEPROM.read(reg_strt + 4 * meter));
+  //lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
 
   //grp_strt = word(EEPROM.read(lclmtr_strt + 3), EEPROM.read(lclmtr_strt + 4));  // where the first group starts
   //grp_len = EEPROM.read(lclmtr_strt + 5);  // number of groups in meter
@@ -154,33 +154,33 @@ void getFileName(time_t t, char * fileName) {
     uint8_t maxSlvs;
 
     tempFile = SD.open(fileName, FILE_WRITE);
-    maxSlvs = slaves > maxSlvsRcd ? maxSlvsRcd : slaves;
+    maxSlvs = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
 
     if (tempFile) {
       for (i = 0; i < maxSlvs; i++) {
         tempFile.print(F("UTC time,"));
 
-        if (slv_ips[i][0] == 0) { // if serial device, print gateway ip
-          tempFile.print(ip[0], DEC);
+        if (g_u8a_slaveIps[i][0] == 0) { // if serial device, print gateway ip
+          tempFile.print(g_ip_ip[0], DEC);
           for (j = 1; j < 4; j++) {
             tempFile.print(F("."));
-            tempFile.print(ip[j], DEC);
+            tempFile.print(g_ip_ip[j], DEC);
           }
         }
         else {  // otherwise, print device ip
-          tempFile.print(slv_ips[i][0], DEC);
+          tempFile.print(g_u8a_slaveIps[i][0], DEC);
           for (j = 1; j < 4; j++) {
             tempFile.print(F("."));
-            tempFile.print(slv_ips[i][j], DEC);
+            tempFile.print(g_u8a_slaveIps[i][j], DEC);
           }
         }
 
         tempFile.print(F(": "));
-        tempFile.print(slv_devs[i], DEC);
+        tempFile.print(g_u8a_slaveIds[i], DEC);
         tempFile.print(F("/"));
-        tempFile.print(slv_vids[i], DEC);
+        tempFile.print(g_u8a_slaveVids[i], DEC);
 
-        switch (slv_typs[i][0]) {
+        switch (g_u8a_slaveTypes[i][0]) {
           case 11:
             tempFile.print(F(",,,,"));
           case 12:

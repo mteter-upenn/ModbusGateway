@@ -35,7 +35,7 @@ void sendBadSD(EthernetClient52 client){
 
   
   strcpy_P(respBadSD, PSTR("<!DOCTYPE html><html><head><title>"));// 35 with \0
-  strcat(respBadSD, meter_nm);
+  strcat(respBadSD, g_c_gwName);
   strcat_P(respBadSD, PSTR("</title></head><body><p>The SD card for this gateway did not initialize properly.  "));// 84 with \0
   strcat_P(respBadSD, PSTR("Website functionality is not available at this time.</p></body></html>"));// 71 with \0
 
@@ -60,7 +60,7 @@ void sendWebFile(EthernetClient52 client, const char* filename, uint8_t u8FileTy
   uint16_t max_i;                                    // number of chunks file must be split into to send via tcp
   uint32_t remBytes;                                 // number of bytes remaining in last chunk (wfSize Mod STRM_BUF_SZ)
   uint16_t lclBufSz;                                 // size of file buffer - min(remBytes, lclBufSz)
-  char streamBuf[RESP_BUF_SZ];                       // buffer for moving data between sd card and ethernet
+  char streamBuf[gk_u16_respBuffSize];                       // buffer for moving data between sd card and ethernet
   File streamFile;
   uint32_t hdrLength;
   
@@ -95,12 +95,12 @@ void sendWebFile(EthernetClient52 client, const char* filename, uint8_t u8FileTy
 
       client.write(streamBuf);
     }
-    max_i = (wfSize / RESP_BUF_SZ) + 1;
+    max_i = (wfSize / gk_u16_respBuffSize) + 1;
 
     for (i = 0; i < max_i; i++) {
-      remBytes = wfSize - (i * RESP_BUF_SZ);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
-      //lclBufSz = min(remBytes, RESP_BUF_SZ);
-      lclBufSz = (remBytes < RESP_BUF_SZ) ? remBytes : RESP_BUF_SZ;
+      remBytes = wfSize - (i * gk_u16_respBuffSize);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
+      //lclBufSz = min(remBytes, gk_u16_respBuffSize);
+      lclBufSz = (remBytes < gk_u16_respBuffSize) ? remBytes : gk_u16_respBuffSize;
       
       streamFile.read(streamBuf, lclBufSz);  // expect speed increase
       
@@ -126,7 +126,7 @@ void sendDownLinks(EthernetClient52 client, char* httpReq) {
   uint16_t dirNameLen;
   char * pdPtr;
   char dirName[36];
-  char streamBuf[RESP_BUF_SZ] = {0};                       // buffer for moving data to ethernet
+  char streamBuf[gk_u16_respBuffSize] = {0};                       // buffer for moving data to ethernet
   File dir;
 
   strcpy(dirName, httpReq + 4);
@@ -230,14 +230,14 @@ void sendXmlEnd(EthernetClient52 client, uint8_t reqFlag) {
   switch (reqFlag) {
     case 1:  // info.xml
       strcat_P(extraBuf, PSTR("<selMtr>"));
-      sprintf(extraBuf + 8, "%u", selSlv);
+      sprintf(extraBuf + 8, "%u", g_u8a_selectedSlave);
       strcat_P(extraBuf, PSTR("</selMtr>"));
     case 2:  // mtrsetup.xml
       strcat_P(extraBuf, PSTR("</meterList>"));
       client.write(extraBuf);
       break;
     case 3: // gensetup.xml
-      if (bGoodRTC) {
+      if (g_b_rtcGood) {
         time_t t = now();
 
         strcat_P(extraBuf, PSTR("<rtc>"));
@@ -259,7 +259,7 @@ void sendIP(EthernetClient52 client) {
   char postResp[15];
 
   j = 0;
-  ipOct = ip[0];
+  ipOct = g_ip_ip[0];
   for (i = log10(ipOct); i > -1; i--) {
     postResp[j] = ipOct / pow(10, i) + '0';
     ipOct -= (postResp[j] - '0') * pow(10, i);
@@ -270,7 +270,7 @@ void sendIP(EthernetClient52 client) {
     postResp[j] = '.';
     j++;
 
-    ipOct = ip[k];
+    ipOct = g_ip_ip[k];
     for (i = log10(ipOct); i > -1; i--) {
       postResp[j] = ipOct / pow(10, i) + '0';
       ipOct -= (postResp[j] - '0') * pow(10, i);
@@ -286,7 +286,7 @@ void liveXML(EthernetClient52 cl) {  // sends xml file of live meter data
   float data[32];
   int8_t data_b[32];
   uint8_t in_mb[12];  // can make this smaller 
-  uint8_t out_mb[MB_ARR_SIZE];
+  uint8_t out_mb[gk_u16_mbArraySize];
   uint16_t in_len = 12;
   uint16_t out_len = 0;
   uint16_t lclmtr_strt, grp_strt, grp_adr, mb_strt, j, grp_len, i, clc_num, clc_typ;
@@ -303,14 +303,14 @@ void liveXML(EthernetClient52 cl) {  // sends xml file of live meter data
 
   strcpy_P(respXml, PSTR("HTTP/1.1 200 OK\nContent-Type: text/xml\nConnnection: close\n\n"));  // create http response
   //Serial.print(F("selSlv: "));
-  //Serial.println(selSlv);
-  meter = slv_typs[(selSlv - 1)][0];
+  //Serial.println(g_u8a_selectedSlave);
+  meter = g_u8a_slaveTypes[(g_u8a_selectedSlave - 1)][0];
   //Serial.print(F("meter type: "));
   //Serial.println(meter);
-  //meter = EEPROM.read(mtr_strt + selSlv * 8 - 7);
+  //meter = EEPROM.read(g_u16_mtrBlkStart + g_u8a_selectedSlave * 8 - 7);
 //  Serial.print(F("Mtr type: "));
 //  Serial.println(meter, DEC);
-  if ((meter > EEPROM.read(reg_strt + 2)) || (meter == 0)){  // check if meter higher than number of meter registers listed
+  if ((meter > EEPROM.read(g_u16_regBlkStart + 2)) || (meter == 0)){  // check if meter higher than number of meter registers listed
     //cl.write(respXml);
 
     strcat_P(respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
@@ -320,11 +320,11 @@ void liveXML(EthernetClient52 cl) {  // sends xml file of live meter data
     cl.flush();
     return;  // no registers in eeprom
   }
-  dev = slv_vids[(selSlv - 1)];  // getModbus accounts for vids
+  dev = g_u8a_slaveVids[(g_u8a_selectedSlave - 1)];  // getModbus accounts for vids
   //Serial.print(F("vid: "));
   //Serial.println(dev);
-  func = EEPROM.read(reg_strt + 4 * meter + 2);
-  lclmtr_strt = word(EEPROM.read(reg_strt + 4 * meter - 1), EEPROM.read(reg_strt + 4 * meter));
+  func = EEPROM.read(g_u16_regBlkStart + 4 * meter + 2);
+  lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
   
   grp_strt = word(EEPROM.read(lclmtr_strt + 3), EEPROM.read(lclmtr_strt + 4));
   grp_len = EEPROM.read(lclmtr_strt + 5);

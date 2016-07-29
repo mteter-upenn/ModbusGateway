@@ -62,23 +62,23 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
     
     out_mb_f[6] = in_mb_f[6]; // set device
     
-    //node.setSlave(in_mb_f[6]);
+    //g_mm_node.setSlave(in_mb_f[6]);
     act_dev = in_mb_f[6];  // let id given by incoming packet be default, it will change if it matches with something on the list in isMeterEth
     // search for slave id in eeprom, if there check if ip exists
-    if (isMeterEth(in_mb_f[6], mtr_typ, act_dev)){  // isMeterEth set clientIP
-      node.setSerialEthernet(false);  // false means ethernet
-      node.setClientIP(clientIP);
+    if (isMeterEth(in_mb_f[6], mtr_typ, act_dev)){  // isMeterEth set g_u8a_clientIP
+      g_mm_node.setSerialEthernet(false);  // false means ethernet
+      g_mm_node.setClientIP(g_u8a_clientIP);
       //Serial.println(F("ETHER!"));
     }
     else{
-      node.setSerialEthernet(true);  // true means serial
+      g_mm_node.setSerialEthernet(true);  // true means serial
     }
     
-    node.setSlave(act_dev);
+    g_mm_node.setSlave(act_dev);
     
     
-//        node.setTransmitBuffer(0, in_mb[0]);  // necessary?
-//        node.setTransmitBuffer(1, in_mb[1]);
+//        g_mm_node.setTransmitBuffer(0, in_mb[0]);  // necessary?
+//        g_mm_node.setTransmitBuffer(1, in_mb[1]);
     strt_reg = (in_mb_f[8] << 8) | (in_mb_f[9]);
     lgth_reg = (in_mb_f[10] << 8) | (in_mb_f[11]);
     exp_lgth = lgth_reg * 2;
@@ -164,25 +164,25 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
       //if (!wc_req) {
         switch (func_reg) {
 //          case 1:
-//            node.readCoils(adj_strt_reg, adj_lgth_reg);
+//            g_mm_node.readCoils(adj_strt_reg, adj_lgth_reg);
 //            break;
 //          case 2:
-//            node.readDiscreteInputs(adj_strt_reg, adj_lgth_reg);
+//            g_mm_node.readDiscreteInputs(adj_strt_reg, adj_lgth_reg);
 //            break;
           case 3:
             Serial.println(F("modbus request"));
-            result = node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
+            result = g_mm_node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
             Serial.print(F("sent request: "));
             Serial.println(result, HEX);
             break;
           case 4:
-            result = node.readInputRegisters(adj_strt_reg, adj_lgth_reg);
+            result = g_mm_node.readInputRegisters(adj_strt_reg, adj_lgth_reg);
             break;
 //          case 5:
-//            result = node.writeSingleCoil(adj_strt_reg, adj_lgth_reg);
+//            result = g_mm_node.writeSingleCoil(adj_strt_reg, adj_lgth_reg);
 //            break;
 //          case 6:
-//            result = node.writeSingleRegister(adj_strt_reg, adj_lgth_reg);
+//            result = g_mm_node.writeSingleRegister(adj_strt_reg, adj_lgth_reg);
 //            break;
           default:
             result = 0x01;
@@ -196,12 +196,12 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
 //        switch (func_reg) {
 //          case 3:
 //            //Serial.println(F("modbus 10k request"));
-//            result = node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
+//            result = g_mm_node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
 ////            Serial.print(F("sent request: "));
 ////            Serial.println(result, HEX);
 //            break;
 //          case 4:
-//            result = node.readInputRegisters(adj_strt_reg, adj_lgth_reg);
+//            result = g_mm_node.readInputRegisters(adj_strt_reg, adj_lgth_reg);
 //            break;
 //          default:
 //            result = 0x01;
@@ -212,10 +212,10 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
 //      }// end else if 10k request
       
       switch (result) {
-        case 0:  // node.ku8MBSuccess
+        case 0:  // g_mm_node.ku8MBSuccess
           if (!wc_req) {  // no adjustments to data
             for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=2) {
-              rgstr1 = node.getResponseBuffer(j);
+              rgstr1 = g_mm_node.getResponseBuffer(j);
               
               out_mb_f[i] = highByte(rgstr1);
               out_mb_f[i + 1] = lowByte(rgstr1);
@@ -229,18 +229,18 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
               case 0:  // float
                 if (reg_flags & 0x80){  // if ws
                   for (j = 0, i = 9; j < adj_lgth_reg; j+=2, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
-                    rgstr1 = node.getResponseBuffer(j);
+                    rgstr1 = g_mm_node.getResponseBuffer(j);
                     out_mb_f[i + 2] = (rgstr1 >> 8);  // would memcpy work better here?
                     out_mb_f[i + 3] = rgstr1;
 
-                    rgstr1 = node.getResponseBuffer(j + 1);
+                    rgstr1 = g_mm_node.getResponseBuffer(j + 1);
                     out_mb_f[i] = (rgstr1 >> 8);
                     out_mb_f[i + 1] = rgstr1;
                   }
                 }
                 else{  // no ws, no adjustments needed
                   for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=2){
-                    rgstr1 = node.getResponseBuffer(j);
+                    rgstr1 = g_mm_node.getResponseBuffer(j);
                     out_mb_f[i] = (rgstr1 >> 8);
                     out_mb_f[i + 1] = rgstr1;
                   }
@@ -248,7 +248,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 break;
               case 1: // u16 to float
                 for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
-                  rgstr1 = node.getResponseBuffer(j);
+                  rgstr1 = g_mm_node.getResponseBuffer(j);
       
                   int2flt.f = (float)rgstr1;
                   
@@ -261,7 +261,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 break;
               case 2: // s16 to float
                 for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
-                  int2flt.s16 = node.getResponseBuffer(j);  // may require (int) cast
+                  int2flt.s16 = g_mm_node.getResponseBuffer(j);  // may require (int) cast
                   
                   int2flt.f = (float) int2flt.s16;
                   
@@ -275,12 +275,12 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
               case 3: // u32 to float
                 for (j = 0, i = 9; j < adj_lgth_reg; j+=2, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
                   if((reg_flags & 0x80)){  // WORDSWAP
-                    int2flt.u16[1] = node.getResponseBuffer(j);
-                    int2flt.u16[0] = node.getResponseBuffer(j + 1);
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j);
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j + 1);
                   }
                   else{
-                    int2flt.u16[0] = node.getResponseBuffer(j);
-                    int2flt.u16[1] = node.getResponseBuffer(j + 1);
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j);
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j + 1);
                   }
                   
                   int2flt.f = (float) int2flt.u32;
@@ -297,13 +297,13 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 { 
                   if((reg_flags & 0x80))
                   {
-                    int2flt.u16[1] = node.getResponseBuffer(j);  // high word
-                    int2flt.u16[0] = node.getResponseBuffer(j + 1);  // low word
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j);  // high word
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j + 1);  // low word
                   }
                   else
                   {
-                    int2flt.u16[0] = node.getResponseBuffer(j);  // low word
-                    int2flt.u16[1] = node.getResponseBuffer(j + 1);  // high word
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j);  // low word
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j + 1);  // high word
                   }
                   
                   int2flt.f = (float) int2flt.s32;
@@ -320,13 +320,13 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 { 
                   if((reg_flags & 0x80))  // if word swapped
                   {
-                    int2flt.u32 = node.getResponseBuffer(j + 1);  // low word
-                    rgstr1 = node.getResponseBuffer(j);
+                    int2flt.u32 = g_mm_node.getResponseBuffer(j + 1);  // low word
+                    rgstr1 = g_mm_node.getResponseBuffer(j);
                   }
                   else
                   {
-                    int2flt.u32 = node.getResponseBuffer(j);  // low word
-                    rgstr1 = node.getResponseBuffer(j + 1);
+                    int2flt.u32 = g_mm_node.getResponseBuffer(j);  // low word
+                    rgstr1 = g_mm_node.getResponseBuffer(j + 1);
                   }
 
                   int2flt.u32 = int2flt.u32 + ((uint32_t)(rgstr1 & 0x7fff)) * 1000;  // high word
@@ -348,13 +348,13 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 { 
                   if((reg_flags & 0x80))  // if word swapped
                   {
-                    int2flt.u32 = node.getResponseBuffer(j + 1);  // low word
-                    rgstr1 = node.getResponseBuffer(j);     
+                    int2flt.u32 = g_mm_node.getResponseBuffer(j + 1);  // low word
+                    rgstr1 = g_mm_node.getResponseBuffer(j);     
                   }
                   else
                   {
-                    int2flt.u32 = node.getResponseBuffer(j);  // low word
-                    rgstr1 = node.getResponseBuffer(j + 1);
+                    int2flt.u32 = g_mm_node.getResponseBuffer(j);  // low word
+                    rgstr1 = g_mm_node.getResponseBuffer(j + 1);
                   }
 
                   int2flt.u32 = int2flt.u32 + ((uint32_t)(rgstr1 & 0x7fff)) * 10000;  // high word
@@ -376,15 +376,15 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 { 
                   if((reg_flags & 0x80))  // if word swapped
                   {
-                    int2flt.f = (float)node.getResponseBuffer(j + 2);  // low word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 1))) * pow(10, 4);  // middle word
-                    rgstr1 = node.getResponseBuffer(j);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(j + 2);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(10, 4);  // middle word
+                    rgstr1 = g_mm_node.getResponseBuffer(j);
                   }
                   else
                   {
-                    int2flt.f = (float)node.getResponseBuffer(j);  // low word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 1))) * pow(10, 4);  //middle word
-                    rgstr1 = node.getResponseBuffer(j + 2);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(j);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(10, 4);  //middle word
+                    rgstr1 = g_mm_node.getResponseBuffer(j + 2);
                   }
 
                   int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(10, 8);  // high word
@@ -404,17 +404,17 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 { 
                   if((reg_flags & 0x80))  // if word swapped
                   {
-                    int2flt.f = (float)node.getResponseBuffer(j + 3);  // low word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 2))) * pow(10, 4);  // high word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 1))) * pow(10, 8);  // high word
-                    rgstr1 = node.getResponseBuffer(j);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(j + 3);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(10, 4);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(10, 8);  // high word
+                    rgstr1 = g_mm_node.getResponseBuffer(j);
                   }
                   else
                   {
-                    int2flt.f = (float)node.getResponseBuffer(j);  // low word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 1))) * pow(10, 4);  // high word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 2))) * pow(10, 8);  // high word
-                    rgstr1 = node.getResponseBuffer(j + 3);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(j);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(10, 4);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(10, 8);  // high word
+                    rgstr1 = g_mm_node.getResponseBuffer(j + 3);
                   }
 
                   int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(10, 12);  // high word
@@ -434,17 +434,17 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 { 
                   if((reg_flags & 0x80))  // if word swapped
                   {
-                    int2flt.f = (float)node.getResponseBuffer(j + 3);  // low word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 2))) * pow(2, 16);  // high word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 1))) * pow(2, 32);  // high word
-                    rgstr1 = node.getResponseBuffer(j);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(j + 3);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(2, 16);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(2, 32);  // high word
+                    rgstr1 = g_mm_node.getResponseBuffer(j);
                   }
                   else
                   {
-                    int2flt.f = (float)node.getResponseBuffer(j);  // low word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 1))) * pow(2, 16);  // high word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 2))) * pow(2, 32);  // high word
-                    rgstr1 = node.getResponseBuffer(j + 3);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(j);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(2, 16);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(2, 32);  // high word
+                    rgstr1 = g_mm_node.getResponseBuffer(j + 3);
                   }
 
                   int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(2, 48);  // high word
@@ -464,17 +464,17 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 { 
                   if((reg_flags & 0x80))  // if word swapped
                   {
-                    int2flt.f = (float)node.getResponseBuffer(j + 3);  // low word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 2))) * pow(2, 16);  // high word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 1))) * pow(2, 32);  // high word
-                    rgstr1 = node.getResponseBuffer(j);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(j + 3);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(2, 16);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(2, 32);  // high word
+                    rgstr1 = g_mm_node.getResponseBuffer(j);
                   }
                   else
                   {
-                    int2flt.f = (float)node.getResponseBuffer(j);  // low word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 1))) * pow(2, 16);  // high word
-                    int2flt.f = int2flt.f + ((float)(node.getResponseBuffer(j + 2))) * pow(2, 32);  // high word
-                    rgstr1 = node.getResponseBuffer(j + 3);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(j);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(2, 16);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(2, 32);  // high word
+                    rgstr1 = g_mm_node.getResponseBuffer(j + 3);
                   }
 
                   int2flt.f *= pow(10, (int8_t)(rgstr1 >> 8));
@@ -491,16 +491,16 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 for (j = 0; j < adj_lgth_reg; j += 4)  // adj_lgth_reg is # of registers - divide since handling by two
                 {
                   if ((reg_flags & 0x80)) {  // WORDSWAP
-                    int2flt.u16[3] = node.getResponseBuffer(j);
-                    int2flt.u16[2] = node.getResponseBuffer(j + 1);
-                    int2flt.u16[1] = node.getResponseBuffer(j + 2);
-                    int2flt.u16[0] = node.getResponseBuffer(j + 3);
+                    int2flt.u16[3] = g_mm_node.getResponseBuffer(j);
+                    int2flt.u16[2] = g_mm_node.getResponseBuffer(j + 1);
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j + 2);
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j + 3);
                   }
                   else {
-                    int2flt.u16[0] = node.getResponseBuffer(j);
-                    int2flt.u16[1] = node.getResponseBuffer(j + 1);
-                    int2flt.u16[2] = node.getResponseBuffer(j + 2);
-                    int2flt.u16[3] = node.getResponseBuffer(j + 3);
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j);
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j + 1);
+                    int2flt.u16[2] = g_mm_node.getResponseBuffer(j + 2);
+                    int2flt.u16[3] = g_mm_node.getResponseBuffer(j + 3);
                   }
 
                   int2flt.f = (float)int2flt.dbl;
@@ -515,16 +515,16 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 for (j = 0; j < adj_lgth_reg; j += 4)  // adj_lgth_reg is # of registers - divide since handling by two
                 {
                   if ((reg_flags & 0x80)) {  // WORDSWAP
-                    dblC.u16[3] = node.getResponseBuffer(j);
-                    dblC.u16[2] = node.getResponseBuffer(j + 1);
-                    dblC.u16[1] = node.getResponseBuffer(j + 2);
-                    dblC.u16[0] = node.getResponseBuffer(j + 3);
+                    dblC.u16[3] = g_mm_node.getResponseBuffer(j);
+                    dblC.u16[2] = g_mm_node.getResponseBuffer(j + 1);
+                    dblC.u16[1] = g_mm_node.getResponseBuffer(j + 2);
+                    dblC.u16[0] = g_mm_node.getResponseBuffer(j + 3);
                   }
                   else {
-                    dblC.u16[0] = node.getResponseBuffer(j);
-                    dblC.u16[1] = node.getResponseBuffer(j + 1);
-                    dblC.u16[2] = node.getResponseBuffer(j + 2);
-                    dblC.u16[3] = node.getResponseBuffer(j + 3);
+                    dblC.u16[0] = g_mm_node.getResponseBuffer(j);
+                    dblC.u16[1] = g_mm_node.getResponseBuffer(j + 1);
+                    dblC.u16[2] = g_mm_node.getResponseBuffer(j + 2);
+                    dblC.u16[3] = g_mm_node.getResponseBuffer(j + 3);
                   }
 
                   int e = dblC.sD.e - 1023 + 127;
@@ -544,7 +544,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                 break;
               default: // pass on data with no adjustments
                 for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=2){
-                  rgstr1 = node.getResponseBuffer(j);
+                  rgstr1 = g_mm_node.getResponseBuffer(j);
                   out_mb_f[i] = (rgstr1 >> 8);
                   out_mb_f[i + 1] = rgstr1;
                 }
@@ -555,10 +555,10 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
           }
           
     
-        case 1:  // node.ku8MBIllegalFunction
-        case 2:  // node.ku8MBIllegalDataAddress
-        case 3:  // node.ku8MBIllegalDataValue
-        case 4:  // node.ku8MBSlaveDeviceFailure
+        case 1:  // g_mm_node.ku8MBIllegalFunction
+        case 2:  // g_mm_node.ku8MBIllegalDataAddress
+        case 3:  // g_mm_node.ku8MBIllegalDataValue
+        case 4:  // g_mm_node.ku8MBSlaveDeviceFailure
         default:
   //        Serial.println("error returned");
           if (result > 0){
@@ -588,36 +588,36 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
 
 
 void handle_modbus(bool bMain) {
-  uint8_t in_mb[MB_ARR_SIZE] = {0};
-  uint8_t out_mb[MB_ARR_SIZE];
+  uint8_t in_mb[gk_u16_mbArraySize] = {0};
+  uint8_t out_mb[gk_u16_mbArraySize];
   //uint16_t i = 0;
   uint16_t initLen;
   uint16_t givenLen;
   uint16_t out_len = 0;
   uint32_t u32MB_Cl_To_old; // , u32MB_Cl_To_cur;
   uint32_t u32MB_TCP_to_old;
-
-  EthernetClient52 client = serv_mb.available();
+  const uint32_t k_u32_mbTcpTimeout(3000);              // timeout for device to hold on to tcp connection after modbus request
+  EthernetClient52 client = g_es_mbServ.available();
   
   if (client)
   {
     u32MB_TCP_to_old = millis();
 
-    while (client.connected() && ((millis() - u32MB_TCP_to_old) < MB_TCP_TIMEOUT)) {  // check to see if client is connected and hasn't to'd
+    while (client.connected() && ((millis() - u32MB_TCP_to_old) < k_u32_mbTcpTimeout)) {  // check to see if client is connected and hasn't to'd
       //      client.getRemoteIP(rip); // get client IP
       if (client.available()) {
-        initLen = client.read(in_mb, MB_ARR_SIZE);
+        initLen = client.read(in_mb, gk_u16_mbArraySize);
         u32MB_Cl_To_old = millis();
 
         givenLen = word(in_mb[4], in_mb[5]) + 6;
 
-        if ((initLen > givenLen) || (givenLen > MB_ARR_SIZE)) {
+        if ((initLen > givenLen) || (givenLen > gk_u16_mbArraySize)) {
           client.stop();  // grabbed too much, just exit without worrying.  It  shouldn't happen, any other connection will have dift sockets
           return;         //     or incoming packet larger than array (this should not happen, modbus/tcp deals with pretty small stuff overall
         }
 
         while (initLen < givenLen) {  // make sure to grab the full packet
-          initLen += client.read(in_mb + initLen, MB_ARR_SIZE - initLen);
+          initLen += client.read(in_mb + initLen, gk_u16_mbArraySize - initLen);
 
           if ((millis() - u32MB_Cl_To_old) > 10) {  // 10 ms might be too quick, but not really sure
             client.stop();  // could not get full message, exit

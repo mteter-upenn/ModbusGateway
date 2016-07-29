@@ -3,18 +3,19 @@ void handle_http(bool bMain) {
   uint8_t meter;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
   char *mtr_ind;                                     // index of 'METER' in GET request
   char *chPtr;
-  char reqHttp[REQ_BUF_SZ] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
-  char headHttp[REQ_ARR_SZ] = { 0 };                // buffer for remaining HTTP request
+  char reqHttp[gk_u16_requestLineSize] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
+  char headHttp[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
   uint16_t initLen;
   uint32_t strtMsg;
   uint32_t u32Http_TCP_to_old;                      // time keeper for tcp timeout
+  const uint32_t k_u32_httpTcpTimeout(3000);        // HTTP_TCP_TIMEOUT timeout for device to hold on to tcp connection after http request
 
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
   //uint32_t totBytes = 0;
 #endif
   
-  EthernetClient52 client = serv_web.available();  // try to get client
+  EthernetClient52 client = g_es_webServ.available();  // try to get client
 
   if (client) {  // got client?
 #if DISP_TIMING_DEBUG == 1
@@ -23,14 +24,14 @@ void handle_http(bool bMain) {
     u32Http_TCP_to_old = millis();
 
 
-    while (client.connected() && ((millis() - u32Http_TCP_to_old) < HTTP_TCP_TIMEOUT)) {
+    while (client.connected() && ((millis() - u32Http_TCP_to_old) < k_u32_httpTcpTimeout)) {
     //while (client.connected()) {
       if (client.available()) {   // client data available to read
-        initLen = client.read((uint8_t*)reqHttp, REQ_BUF_SZ - 1);
+        initLen = client.read((uint8_t*)reqHttp, gk_u16_requestLineSize - 1);
 
         strtMsg = millis();
-        while (initLen < REQ_BUF_SZ - 1) {  // make sure enough is read
-          initLen += client.read((uint8_t*)reqHttp + initLen, REQ_BUF_SZ - initLen - 1);
+        while (initLen < gk_u16_requestLineSize - 1) {  // make sure enough is read
+          initLen += client.read((uint8_t*)reqHttp + initLen, gk_u16_requestLineSize - initLen - 1);
 
           if ((millis() - strtMsg) > 50) {  // stop trying to read message after 50 ms - assume it's never coming
             client.stop();
@@ -42,20 +43,20 @@ void handle_http(bool bMain) {
         lineTime = millis();
 #endif
 
-        reqHttp[REQ_BUF_SZ - 1] = 0;  // this will replace a character, though I don't think it is important
-        headHttp[REQ_ARR_SZ - 1] = 0;
+        reqHttp[gk_u16_requestLineSize - 1] = 0;  // this will replace a character, though I don't think it is important
+        headHttp[gk_u16_requestBuffSize - 1] = 0;
 
         Serial.println(reqHttp);
-        //Serial.println(HTTP_req + REQ_BUF_SZ);
+        //Serial.println(HTTP_req + gk_u16_requestLineSize);
 
         if (strncmp(reqHttp, "GET", 3) == 0) {
-          flushEthRx(client, (uint8_t*)headHttp, REQ_ARR_SZ - 1);
+          flushEthRx(client, (uint8_t*)headHttp, gk_u16_requestBuffSize - 1);
 
 #if DISP_TIMING_DEBUG == 1
           doneHttp = millis();
 #endif
 
-          if (sdInit) {
+          if (g_b_sdInit) {
             if (strstr(reqHttp, ".css") != NULL) {
               sendWebFile(client, "/ep_style.css", 2);  // only css available
             }
@@ -64,7 +65,7 @@ void handle_http(bool bMain) {
               sendWebFile(client, "/images/logo_let.gif", 0);  // only gif available
 
               // assuming gif is last request and reset is required, reset
-              if (bReset) {
+              if (g_b_reset) {
                 client.stop();
                 resetArd();  // this will restart the gateway
                 return;  // this should never fire
@@ -92,28 +93,28 @@ void handle_http(bool bMain) {
                 mtr_ind = strstr(reqHttp, "METER=");
 
                 if (mtr_ind != NULL) {
-                  selSlv = 0;
+                  g_u8a_selectedSlave = 0;
                   mtr_ind += 6;  // move pointer to end of phrase
                   chPtr = mtr_ind + 3;
 
                   for (; mtr_ind < chPtr; mtr_ind++) {
                     if (isdigit(*mtr_ind)) {
-                      selSlv = selSlv * 10 + ((*mtr_ind) - '0');
+                      g_u8a_selectedSlave = g_u8a_selectedSlave * 10 + ((*mtr_ind) - '0');
                     }
                     else {
                       break;
                     }
                   }
 
-                  if (selSlv > EEPROM.read(mtr_strt)) {  // if greater than number of meters listed
-                    selSlv = 1;
+                  if (g_u8a_selectedSlave > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
+                    g_u8a_selectedSlave = 1;
                   }
                 }
                 else {
-                  selSlv = 1;
+                  g_u8a_selectedSlave = 1;
                 }
 
-                meter = slv_typs[(selSlv - 1)][0];  // turn meter from slave index to meter type X.x.x
+                meter = g_u8a_slaveTypes[(g_u8a_selectedSlave - 1)][0];  // turn meter from slave index to meter type X.x.x
 
                 if (meter == 11) {
                   sendWebFile(client, "/clive.htm", 1);        // chilled water
@@ -143,7 +144,7 @@ void handle_http(bool bMain) {
                 sendIP(client);
                 sendWebFile(client, "/rdct2.htm", 0);
 
-                bReset = true;  // must wait for css and gif requests before restarting
+                g_b_reset = true;  // must wait for css and gif requests before restarting
               }
               else {
                 sendWebFile(client, "/nopage.htm", 1);
@@ -163,21 +164,21 @@ void handle_http(bool bMain) {
                 mtr_ind = strstr(reqHttp, "METER=");
 
                 if (mtr_ind != NULL) {
-                  selSlv = 0;
+                  g_u8a_selectedSlave = 0;
                   mtr_ind += 6;  // move pointer to end of phrase
                   chPtr = mtr_ind + 3;
 
                   for (; mtr_ind < chPtr; mtr_ind++) {
                     if (isdigit(*mtr_ind)) {
-                      selSlv = selSlv * 10 + ((*mtr_ind) - '0');
+                      g_u8a_selectedSlave = g_u8a_selectedSlave * 10 + ((*mtr_ind) - '0');
                     }
                     else {
                       break;
                     }
                   }
 
-                  if (selSlv > EEPROM.read(mtr_strt)) {  // if greater than number of meters listed
-                    selSlv = 1;
+                  if (g_u8a_selectedSlave > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
+                    g_u8a_selectedSlave = 1;
                   }
                 }
                 liveXML(client);  // handles http in function
@@ -234,7 +235,7 @@ void handle_http(bool bMain) {
 
 #if DISP_TIMING_DEBUG == 1
             //doneSend = millis();
-            //Serial.write(HTTP_req, REQ_BUF_SZ - 1);
+            //Serial.write(HTTP_req, gk_u16_requestLineSize - 1);
             //Serial.println();
             //Serial.print(F("Message length: "));
             //Serial.println(totBytes, DEC);
@@ -265,19 +266,19 @@ void handle_http(bool bMain) {
 // POST http
         else if (strstr(reqHttp, "POST") != NULL) {
           if (strstr(reqHttp, "setup.htm")) {
-            digitalWrite(epWriteLed, HIGH);
+            digitalWrite(gk_s16_epWriteLed, HIGH);
             getPostSetupData(client, headHttp);  // reads and stores POST data to EEPROM
-            digitalWrite(epWriteLed, LOW);
+            digitalWrite(gk_s16_epWriteLed, LOW);
 
             // rewrite xml files
-            digitalWrite(sdWriteLed, HIGH);
+            digitalWrite(gk_s16_sdWriteLed, HIGH);
             if (strncmp(reqHttp, "POST /mtrsetup.htm", 18)) {
               writeMtrSetupFile();
             }
             else if (strncmp(reqHttp, "POST /gensetup.htm", 18)) {
               writeGenSetupFile();
             }
-            digitalWrite(sdWriteLed, LOW);
+            digitalWrite(gk_s16_sdWriteLed, LOW);
 
             sendPostResp(client);
          

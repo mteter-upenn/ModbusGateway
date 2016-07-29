@@ -10,13 +10,13 @@ bool findRegister(uint16_t &adj_strt_reg, uint8_t &reg_flags, uint8_t meter)
 //  Serial.print(F("findReg: "));
 //  Serial.println(meter, DEC);
 //  Serial.print(F("reg_strt: "));
-//  Serial.println(reg_strt, DEC);
+//  Serial.println(g_u16_regBlkStart, DEC);
   
-  if ((meter > EEPROM.read(reg_strt + 2)) || (meter == 0)){  // check if higher than possible number of meters
+  if ((meter > EEPROM.read(g_u16_regBlkStart + 2)) || (meter == 0)){  // check if higher than possible number of meters
     return false;  // no registers in eeprom
   }
   
-  lclmtr_strt = word(EEPROM.read(reg_strt + 4 * meter - 1), EEPROM.read(reg_strt + 4 * meter));
+  lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
   
   strt_blocks = word(EEPROM.read(lclmtr_strt), EEPROM.read(lclmtr_strt + 1));
   num_blocks = EEPROM.read(lclmtr_strt + 2);
@@ -57,21 +57,21 @@ bool isMeterEth(uint8_t dev_id, uint8_t &mtr_typ, uint8_t &act_dev){
   uint8_t num_mtrs;
   uint8_t i, j;
 
-  num_mtrs = EEPROM.read(mtr_strt);
+  num_mtrs = EEPROM.read(g_u16_mtrBlkStart);
   
   for(i = 0; i < num_mtrs; i++){
-    if (dev_id == slv_vids[i]){
-      act_dev = slv_devs[i];
-      if (EEPROM.read(i * 9 + 4 + mtr_strt) == 0){
-        mtr_typ = EEPROM.read(i * 9 + 1 + mtr_strt);
+    if (dev_id == g_u8a_slaveVids[i]){
+      act_dev = g_u8a_slaveIds[i];
+      if (EEPROM.read(i * 9 + 4 + g_u16_mtrBlkStart) == 0){
+        mtr_typ = EEPROM.read(i * 9 + 1 + g_u16_mtrBlkStart);
         return false;  // no ip addr associated with meter
       }
       else{
         for (j = 0; j < 4; j++){
-          clientIP[j] = EEPROM.read(i * 9 + j + 4 + mtr_strt);
-//          Serial.println(clientIP[j]);
+          g_u8a_clientIP[j] = EEPROM.read(i * 9 + j + 4 + g_u16_mtrBlkStart);
+//          Serial.println(g_u8a_clientIP[j]);
         }
-        mtr_typ = EEPROM.read(i * 9 + 1 + mtr_strt);
+        mtr_typ = EEPROM.read(i * 9 + 1 + g_u16_mtrBlkStart);
         return true;  // found ip address associated with meter
       }
     }

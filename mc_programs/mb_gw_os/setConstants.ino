@@ -10,69 +10,69 @@ void setConstants(){
   uint8_t i, j;
 
   for (i = 0; i < 30; i++){
-    meter_nm[i] = (char)EEPROM.read(i + nm_strt);
+    g_c_gwName[i] = (char)EEPROM.read(i + g_u16_nameBlkStart);
 
-    if (meter_nm[i] == 0){
+    if (g_c_gwName[i] == 0){
       break;
     }
   }
-  meter_nm[30] = 0;  // doublecheck to make sure string ends in null
+  g_c_gwName[30] = 0;  // doublecheck to make sure string ends in null
   Serial.print(F("name: "));
-  Serial.println(meter_nm);
+  Serial.println(g_c_gwName);
   
-  bRecordData = EEPROM.read(nm_strt + 31);  // whether or not to record data
-  maxSlvsRcd = EEPROM.read(nm_strt + 32) > 20 ? 5 : EEPROM.read(nm_strt + 32);  // max slaves to record
+  g_b_recordData = EEPROM.read(g_u16_nameBlkStart + 31);  // whether or not to record data
+  g_u8_maxRecordSlaves = EEPROM.read(g_u16_nameBlkStart + 32) > 20 ? 5 : EEPROM.read(g_u16_nameBlkStart + 32);  // max slaves to record
 
   for (i = 0; i < 6; i++){
-    mac[i] = EEPROM.read(ip_strt + i);
+    g_u8a_mac[i] = EEPROM.read(g_u16_ipBlkStart + i);
   }
 
   for (i = 0; i < 4; i++){
-    ip[i] = EEPROM.read(i + ip_strt + 6);
-    subnet[i] = EEPROM.read(i + ip_strt + 10);
-    gateway[i] = EEPROM.read(i + ip_strt + 14);
+    g_ip_ip[i] = EEPROM.read(i + g_u16_ipBlkStart + 6);
+    g_ip_subnet[i] = EEPROM.read(i + g_u16_ipBlkStart + 10);
+    g_ip_gateway[i] = EEPROM.read(i + g_u16_ipBlkStart + 14);
 
-    ntpIp[i] = EEPROM.read(i + ip_strt + 19);
+    g_ip_ntpIp[i] = EEPROM.read(i + g_u16_ipBlkStart + 19);
   }
 
-  bNTPserv = EEPROM.read(ip_strt + 18);
+  g_b_useNtp = EEPROM.read(g_u16_ipBlkStart + 18);
 
-  baudrate = EEPROM.read(ip_strt + 23);
-  baudrate = (uint32_t)((baudrate << 16) | (EEPROM.read(ip_strt + 24) << 8) | (EEPROM.read(ip_strt + 25)));
+  g_u32_baudrate = EEPROM.read(g_u16_ipBlkStart + 23);
+  g_u32_baudrate = (uint32_t)((g_u32_baudrate << 16) | (EEPROM.read(g_u16_ipBlkStart + 24) << 8) | (EEPROM.read(g_u16_ipBlkStart + 25)));
 
-  timeout = word(EEPROM.read(ip_strt + 26), EEPROM.read(ip_strt + 27));
+  g_u16_timeout = word(EEPROM.read(g_u16_ipBlkStart + 26), EEPROM.read(g_u16_ipBlkStart + 27));
 
 
-  slaves = EEPROM.read(mtr_strt);
+  g_u8_numSlaves = EEPROM.read(g_u16_mtrBlkStart);
 
-  for (i = 0; i < slaves; i++){
-    slv_devs[i] = EEPROM.read(9 * i + 8 + mtr_strt);
-    slv_vids[i] = EEPROM.read(9 * i + 9 + mtr_strt);
+  for (i = 0; i < g_u8_numSlaves; i++){
+    g_u8a_slaveIds[i] = EEPROM.read(9 * i + 8 + g_u16_mtrBlkStart);
+    g_u8a_slaveVids[i] = EEPROM.read(9 * i + 9 + g_u16_mtrBlkStart);
 
-    slv_ips[i][0] = EEPROM.read(9 * i + 4 + mtr_strt);
+    g_u8a_slaveIps[i][0] = EEPROM.read(9 * i + 4 + g_u16_mtrBlkStart);
     for (j = 1; j < 4; j++){
-      slv_ips[i][j] = EEPROM.read(9 * i + mtr_strt + j + 4);
-      slv_typs[i][(j - 1)] = EEPROM.read(9 * i + mtr_strt + j);
+      g_u8a_slaveIps[i][j] = EEPROM.read(9 * i + g_u16_mtrBlkStart + j + 4);
+      g_u8a_slaveTypes[i][(j - 1)] = EEPROM.read(9 * i + g_u16_mtrBlkStart + j);
     }
   }
 
-//  for (i = 0; i < slaves; i++){
+//  for (i = 0; i < g_u8_numSlaves; i++){
 //    Serial.print(F("dev: "));
-//    Serial.print(slv_devs[i], DEC);
+//    Serial.print(g_u8a_slaveIds[i], DEC);
 //    Serial.print(F(", ip: "));
 //
-//    Serial.print(slv_ips[i][0], DEC);
+//    Serial.print(g_u8a_slaveIps[i][0], DEC);
 //    for (j = 1; j < 4; j++){
 //      Serial.print(F("."));
-//      Serial.print(slv_ips[i][j], DEC);
+//      Serial.print(g_u8a_slaveIps[i][j], DEC);
 //    }
 //
 //    Serial.print(F(", type: "));
 //
-//    Serial.print(slv_typs[i][0], DEC);
+//    Serial.print(g_u8a_slaveTypes[i][0], DEC);
 //    for (j = 1; j < 3; j++){
 //      Serial.print(F("."));
-//      Serial.print(slv_typs[i][j], DEC);
+//      Serial.print(g_u8a_slaveTypes[i][j], DEC);
 //    }
 //    Serial.println();
 //  }
@@ -93,15 +93,15 @@ void writeGenSetupFile(){
   webFile.print(F("<?xml version = \"1.0\" ?><setup><name>"));
 
   for (i = 0; i < 30; i++){
-    if (meter_nm[i] == 0){
+    if (g_c_gwName[i] == 0){
       break;
     }
-    webFile.print(meter_nm[i]);
+    webFile.print(g_c_gwName[i]);
   }
   
   webFile.print(F("</name><rd>"));
   
-  if (bRecordData) {
+  if (g_b_recordData) {
     webFile.print(F("true"));
   }
   else {
@@ -110,49 +110,49 @@ void writeGenSetupFile(){
 
   webFile.print(F("</rd><mxslvs>"));
 
-  webFile.print(maxSlvsRcd, DEC);
+  webFile.print(g_u8_maxRecordSlaves, DEC);
 
   webFile.print(F("</mxslvs><mac>"));
 
-  if (mac[0] < 16) {
+  if (g_u8a_mac[0] < 16) {
     webFile.print('0');
   }
-  webFile.print(mac[0], HEX);
+  webFile.print(g_u8a_mac[0], HEX);
   for (i = 1; i < 6; i++){
     webFile.print(F(":"));
-    if (mac[i] < 16){
+    if (g_u8a_mac[i] < 16){
       webFile.print('0');
     }
-    webFile.print(mac[i], HEX);
+    webFile.print(g_u8a_mac[i], HEX);
   }
   
   webFile.print(F("</mac><ip>"));
 
-  webFile.print(ip[0], DEC);
+  webFile.print(g_ip_ip[0], DEC);
   for (i = 1; i < 4; i++){
     webFile.print(F("."));
-    webFile.print(ip[i], DEC);
+    webFile.print(g_ip_ip[i], DEC);
   }
   
   webFile.print(F("</ip><sm>"));
 
-  webFile.print(subnet[0], DEC);
+  webFile.print(g_ip_subnet[0], DEC);
   for (i = 1; i < 4; i++){
     webFile.print(F("."));
-    webFile.print(subnet[i], DEC);
+    webFile.print(g_ip_subnet[i], DEC);
   }
   
   webFile.print(F("</sm><gw>"));
 
-  webFile.print(gateway[0], DEC);
+  webFile.print(g_ip_gateway[0], DEC);
   for (i = 1; i < 4; i++){
     webFile.print(F("."));
-    webFile.print(gateway[i], DEC);
+    webFile.print(g_ip_gateway[i], DEC);
   }
   
   webFile.print(F("</gw><ntp>"));
 
-  if (bNTPserv) {
+  if (g_b_useNtp) {
     webFile.print(F("true"));
   }
   else {
@@ -161,19 +161,19 @@ void writeGenSetupFile(){
 
   webFile.print(F("</ntp><nip>"));
 
-  webFile.print(ntpIp[0], DEC);
+  webFile.print(g_ip_ntpIp[0], DEC);
   for (i = 1; i < 4; i++) {
     webFile.print(F("."));
-    webFile.print(ntpIp[i], DEC);
+    webFile.print(g_ip_ntpIp[i], DEC);
   }
 
   webFile.print(F("</nip><br>"));
 
-  webFile.print(baudrate, DEC);
+  webFile.print(g_u32_baudrate, DEC);
   
   webFile.print(F("</br><to>"));
 
-  webFile.print(timeout, DEC);
+  webFile.print(g_u16_timeout, DEC);
   
   //webFile.print(F("</to></setup>"));
   webFile.print(F("</to>"));
@@ -195,30 +195,30 @@ void writeMtrSetupFile(){
                       
   webFile.print(F("<?xml version = \"1.0\" ?><meterList>"));
   
-  for (i = 0; i < slaves; i++){
+  for (i = 0; i < g_u8_numSlaves; i++){
     webFile.print(F("<meter><mip>"));
     
-    if (slv_ips[i][0] != 0){
-      webFile.print(slv_ips[i][0], DEC);
+    if (g_u8a_slaveIps[i][0] != 0){
+      webFile.print(g_u8a_slaveIps[i][0], DEC);
       for (j = 1; j < 4; j++){
         webFile.print(F("."));
-        webFile.print(slv_ips[i][j], DEC);
+        webFile.print(g_u8a_slaveIps[i][j], DEC);
       }
     }
     webFile.print(F("</mip><dev>"));
     
-    webFile.print(slv_devs[i], DEC);
+    webFile.print(g_u8a_slaveIds[i], DEC);
 
     webFile.print(F("</dev><vid>"));
     
-    webFile.print(slv_vids[i], DEC);
+    webFile.print(g_u8a_slaveVids[i], DEC);
 
     webFile.print(F("</vid><type>"));
 
-    webFile.print(slv_typs[i][0], DEC);
+    webFile.print(g_u8a_slaveTypes[i][0], DEC);
     for (j = 1; j < 3; j++){
       webFile.print(F("."));
-      webFile.print(slv_typs[i][j], DEC);
+      webFile.print(g_u8a_slaveTypes[i][j], DEC);
     }
 
     webFile.print(F("</type></meter>"));
