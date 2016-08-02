@@ -89,6 +89,7 @@ extern "C" void __cxa_pure_virtual() {;}
 #include <..\mb_gw_os\handleHTTP.ino>
 #include <..\mb_gw_os\handleModbus.ino>
 #include <..\mb_gw_os\handleRTC.ino>
+#include <..\mb_gw_os\mb_names.h>
 #include <..\mb_gw_os\secondaryData.ino>
 #include <..\mb_gw_os\secondaryHTTP.ino>
 #include <..\mb_gw_os\secondaryModbus.ino>

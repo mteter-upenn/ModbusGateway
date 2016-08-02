@@ -36,8 +36,7 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
   }  dblC;
 #endif
 
-  union convertUnion
-  {
+  union convertUnion {
     float f;
     uint32_t u32;
     int32_t s32;

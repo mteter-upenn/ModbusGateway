@@ -33,7 +33,7 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
   while (!foundPtr) {
     msgPtr = strstr(headHttp, "Content-Length: ");  // Find 'Content-Length: '
 
-    if (msgPtr != NULL) {
+    if (msgPtr != nullptr) {
       msgPtr += 16;  // add 16 to get to end of phrase
       foundPtr = true;  // exit condition
     }
@@ -103,7 +103,7 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
   while (!foundPtr) {
     msgPtr = strstr(headHttp, escHead);
 
-    if (msgPtr != NULL) {  
+    if (msgPtr != nullptr) {
       msgPtr += 4;  // add 4 to get to end of phrase
       foundPtr = true;  // exit condition
     }

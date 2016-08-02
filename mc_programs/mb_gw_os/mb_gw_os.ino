@@ -3,6 +3,7 @@
  Modbus gateway sketch
  */
 
+#include "mb_names.h"
 #include <Time.h>
 #include <SPI.h>
 #include <Ethernet52.h>
@@ -11,7 +12,7 @@
 #include <EEPROM.h>
 #include <SD.h>
 
-#define DEBUG_HTTP_TCP_TIMEOUT 1  
+#define DEBUG_HTTP_TCP_TIMEOUT 0  
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
 #define SHOW_FREE_MEM 0                                // 1 for print free memory
 
@@ -64,15 +65,15 @@ int rtcFailLed = 8;                                    // no rtc set
 
 
 // ethernet info
-uint8_t g_u8a_mac[] = {0x46, 0x52, 0x45, 0x53, 0x00, 0x00};  // enter mac, will need some sort of generator for this
-IPAddress g_ip_ip(130, 91, 138, 140);                       // this value will be overwritten by ip stored in eeprom
-IPAddress g_ip_subnet(255, 255, 252, 0);                    // this value will be overwritten by ip stored in eeprom
-IPAddress g_ip_gateway(130, 91, 136, 1);                    // this value will be overwritten by ip stored in eeprom
-uint8_t g_u8a_clientIP[] = {192, 168, 1, 1};                 // ip of slave on pseudo modbus network
+uint8_t g_u8a_mac[8] = {0};                      // enter mac, will need some sort of generator for this
+IPAddress g_ip_ip(0, 0, 0, 0);                       // this value will be overwritten by ip stored in eeprom
+IPAddress g_ip_subnet(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
+IPAddress g_ip_gateway(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
+uint8_t g_u8a_clientIP[4] = {0};                 // ip of slave on pseudo modbus network
 bool g_b_reset = false;                                    // bReset
 
 bool g_b_useNtp = false;                                 // bNTPserv turns ntp on/off (overwritten by eeprom)
-IPAddress g_ip_ntpIp(128, 91, 3, 136);                      // this value will be overwritten by ip stored in eeprom
+IPAddress g_ip_ntpIp(0, 0, 0, 0);                      // this value will be overwritten by ip stored in eeprom
 
 // gateway info
 char g_c_gwName[31] = {0};                               // meter_nm name of gateway
@@ -124,19 +125,19 @@ bool g_b_sdInit = false;  // sdInit                                   // set fla
 
 // PROTOTYPES:
 // main
-void resetArd(void);
+void resetArd();
 // handleHTTP
-void handle_http(bool);
+void handle_http(bool b_idleModbus);
 // secondaryHTTP - GET and general functions
-void flushEthRx(EthernetClient52, uint8_t *, uint16_t);
-void send404(EthernetClient52);
-void sendBadSD(EthernetClient52);
-void sendGifHdr(EthernetClient52);
-void sendWebFile(EthernetClient52, const char*, uint8_t);
-void sendDownLinks(EthernetClient52, char*);
-void sendXmlEnd(EthernetClient52, uint8_t);
-void sendIP(EthernetClient52);
-void liveXML(EthernetClient52);
+void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
+void send404(EthernetClient52 &ec_client);
+void sendBadSD(EthernetClient52 &ec_client);
+//void sendGifHdr(EthernetClient52 &ec_client);
+void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType en_fileType = FileType::NONE);
+void sendDownLinks(EthernetClient52 &ec_client, char *const cp_firstLine);
+void sendXmlEnd(EthernetClient52 &ec_client, XmlFile en_xmlType);
+void sendIP(EthernetClient52 &ec_client);
+void liveXML(EthernetClient52 &ec_client);
 // tertiaryHTTP - POST related functions
 void sendPostResp(EthernetClient52);
 char * preprocPost(EthernetClient52, char *, uint16_t&);
@@ -145,27 +146,24 @@ void getPostSetupData(EthernetClient52, char *);
 bool getModbus(uint8_t*, uint16_t, uint8_t*, uint16_t&);
 void handle_modbus(bool);
 // secondaryModbus
-bool findRegister(uint16_t&, uint8_t&, uint8_t);
-bool isMeterEth(uint8_t, uint8_t&, uint8_t&);
+bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType);
+bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId);
 // setConstants
-void setConstants(void);
-void writeGenSetupFile(void);
-void writeMtrSetupFile(void);
+void setConstants();
+void writeGenSetupFile();
+void writeMtrSetupFile();
 // stringFuncs
 void StrClear(char*, char);
 // handleRTC
-time_t getNtpTime(void);
-time_t getRtcTime(void);
-void handle_RT(void);
-void printTime(time_t);
+time_t getNtpTime();
+time_t getRtcTime();
+void printTime(time_t t_time);
 // handleData
 void handle_data(void);
 // secondaryData
 void getElecRegs(uint16_t, uint8_t, uint16_t&, uint16_t&);
 void getFileName(time_t, char*);
 
-// debugging
-bool getFakeTime(void);
 
 #if SHOW_FREE_MEM
 extern int __bss_end;
@@ -184,7 +182,7 @@ int getFreeMemory()
 }
 #endif
 
-void resetArd(){
+void resetArd() {
 //   Serial.println("resetting...");
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
   CPU_RESTART
@@ -196,16 +194,12 @@ void resetArd(){
 
 
 void setup() {
-  uint16_t socketSizes[8] = { 4, 4, 1, 1, 1, 1, 2, 2 };
-  uint16_t socketPorts[8] = { 80, 80, 502, 502, 502 ,502, 0, 0 };
-
-  time_t t = 0;
-
   Serial.begin(9600);
   //Serial.println(F("delay here"));
   //delay(2000);
   //Serial.println(F("delay over"));
   
+  // set output pins
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
   pinMode(gk_s16_rtcFailLed, OUTPUT);
   pinMode(gk_s16_battDeadLed, OUTPUT);
@@ -216,12 +210,14 @@ void setup() {
   pinMode(gk_s16_sdWriteLed, OUTPUT);
   pinMode(gk_s16_epWriteLed, OUTPUT);
   
-  
+  // get indices from eeprom
   g_u16_nameBlkStart = word(EEPROM.read(0), EEPROM.read(1));
   g_u16_ipBlkStart = word(EEPROM.read(2), EEPROM.read(3));
   g_u16_mtrBlkStart = word(EEPROM.read(4), EEPROM.read(5));
   g_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));
-  g_c_gwName[30] = 0;
+  //g_c_gwName[30] = 0;
+
+  // take constants from eeprom into memory
   setConstants();
 
   
@@ -242,32 +238,25 @@ void setup() {
       digitalWrite(1, HIGH);
       break;
   }
-
-//#if MODBUS_SERIAL == 2
-//  digitalWrite(9, HIGH);
-//  digitalWrite(10, HIGH);
-//#elif MODBUS_SERIAL == 3
-//  pinMode(7, INPUT_PULLUP);
-//  //pin 8 has external pullup
-//  digitalWrite(7, HIGH);
-//#else
-//  digitalWrite(0, HIGH);
-//  digitalWrite(1, HIGH);
-//#endif
 #else
-#if MODBUS_SERIAL == 1
-  digitalWrite(19, HIGH);
-  digitalWrite(18, HIGH);
-#elif MODBUS_SERIAL == 2
-  digitalWrite(17, HIGH);
-  digitalWrite(16, HIGH);
-#elif MODBUS_SERIAL == 3
-  digitalWrite(15, HIGH);
-  digitalWrite(14, HIGH);
-#else
-  digitalWrite(0, HIGH);
-  digitalWrite(1, HIGH);
-#endif
+  switch (gk_u8_modbusSerialHardware) {
+    case 1:
+      digitalWrite(19, HIGH);
+      digitalWrite(18, HIGH);
+      break;
+    case 2:
+      digitalWrite(17, HIGH);
+      digitalWrite(16, HIGH);
+      break;
+    case 3:
+      digitalWrite(15, HIGH);
+      digitalWrite(14, HIGH);
+      break;
+    default:
+      digitalWrite(0, HIGH);
+      digitalWrite(1, HIGH);
+      break;
+  }
 #endif
 
   // may be necessary to set pin 10 high regardless of arduino type
@@ -299,11 +288,16 @@ void setup() {
     Serial.println(F("SUCCESS - SD card initialized."));
     g_b_sdInit = true;
 
+    // generate xml files for web server  SHOULD THIS FIRE AT THE TOP EVERY TIME?  probably, won't know changes if flash_eeprom used
     writeGenSetupFile();
     writeMtrSetupFile();
   }
   
-  Ethernet52.begin(g_u8a_mac, g_ip_ip, g_ip_gateway, g_ip_gateway, g_ip_subnet, 8, socketSizes, socketPorts);
+  // start ethernet 
+  uint16_t u16a_socketSizes[8] = { 4, 4, 1, 1, 1, 1, 2, 2 };  // sizes are >>10 eg 4->4096
+  uint16_t u16a_socketPorts[8] = { 80, 80, 502, 502, 502 ,502, 0, 0 };
+
+  Ethernet52.begin(g_u8a_mac, g_ip_ip, g_ip_gateway, g_ip_gateway, g_ip_subnet, 8, u16a_socketSizes, u16a_socketPorts);
 
   g_es_webServ.begin();
   g_es_webServ2.begin();
@@ -315,30 +309,31 @@ void setup() {
 
   g_mm_node.begin(g_u32_baudrate);
   g_mm_node.setTimeout(g_u16_timeout);
+  //  g_mm_node.idle(*function_here);  // add function for idling during wait for modbus return message
 
+  // start ntp or rtc
+  time_t t_localTime = 0;
   delay(1500);  // 1100
   setSyncProvider(getRtcTime);
 
   if (g_b_useNtp) {
-    t = getNtpTime();
+    t_localTime = getNtpTime();
   }
 
-  if (t == 0) {  //  could not get ntp time, or ntp was disabled
+  if (t_localTime == 0) {  //  could not get ntp time, or ntp was disabled
     if (getRtcTime() > 1451606400L) {  // check if rtc is already working well, if not show as led error
       g_b_rtcGood = true;  // time in RTC is greater than Jan 1 2016
     }
   }
   else {  // set clock to time gotten from ntp
 #if defined(CORE_TEENSY)
-    Teensy3Clock.set(t);
+    Teensy3Clock.set(t_localTime);
 #endif
-    setTime(t);
+    setTime(t_localTime);
     g_b_rtcGood = true;
   }
 
   setSyncInterval(86400);
-  
-//  g_mm_node.idle(*function_here);  // add function for idling during wait for modbus return message
 
   // 2 s total delay
   // 450 from flashing leds
@@ -390,8 +385,7 @@ void setup() {
 }  // end setup
 
 
-void loop()
-{ 
+void loop() { 
   handle_modbus(true);
   handle_http(true);
   if (g_b_recordData && g_b_rtcGood) {

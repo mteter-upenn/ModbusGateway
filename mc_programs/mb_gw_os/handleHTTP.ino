@@ -1,40 +1,46 @@
-void handle_http(bool bMain) {
-  uint32_t i;                                        // tickers
-  uint8_t meter;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
-  char *mtr_ind;                                     // index of 'METER' in GET request
-  char *chPtr;
-  char reqHttp[gk_u16_requestLineSize] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
-  char headHttp[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
-  uint16_t initLen;
-  uint32_t strtMsg;
-  uint32_t u32Http_TCP_to_old;                      // time keeper for tcp timeout
-  const uint32_t k_u32_httpTcpTimeout(3000);        // HTTP_TCP_TIMEOUT timeout for device to hold on to tcp connection after http request
-
+void handle_http(bool b_idleModbus) {
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
   //uint32_t totBytes = 0;
 #endif
   
-  EthernetClient52 client = g_es_webServ.available();  // try to get client
+  EthernetClient52 ec_client = g_es_webServ.available();  // try to get client
 
-  if (client) {  // got client?
+  if (ec_client) {  // got client?
+#if DEBUG_HTTP_TCP_TIMEOUT == 1
+    uint32_t u32Http_TCP_to_old;                      // time keeper for tcp timeout
+    const uint32_t k_u32_httpTcpTimeout(3000);        // HTTP_TCP_TIMEOUT timeout for device to hold on to tcp connection after http request
+    u32Http_TCP_to_old = millis();
+#endif
+
 #if DISP_TIMING_DEBUG == 1
     gotClient = millis();
 #endif
-    u32Http_TCP_to_old = millis();
+    
 
 
-    while (client.connected() && ((millis() - u32Http_TCP_to_old) < k_u32_httpTcpTimeout)) {
-    //while (client.connected()) {
-      if (client.available()) {   // client data available to read
-        initLen = client.read((uint8_t*)reqHttp, gk_u16_requestLineSize - 1);
+    //while (ec_client.connected() && ((millis() - u32Http_TCP_to_old) < k_u32_httpTcpTimeout)) {
+    while (ec_client.connected()) {
+      uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
+      char *cp_meterInd;                                     // index of 'METER' in GET request
+      char ca_firstLine[gk_u16_requestLineSize] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
+      char ca_remHeader[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
 
-        strtMsg = millis();
-        while (initLen < gk_u16_requestLineSize - 1) {  // make sure enough is read
-          initLen += client.read((uint8_t*)reqHttp + initLen, gk_u16_requestLineSize - initLen - 1);
+      if (ec_client.available()) {   // client data available to read
+        char *cp_dumPtr;
+        uint16_t u16_lenRead;
+        uint32_t u32_msgRecvTime;
 
-          if ((millis() - strtMsg) > 50) {  // stop trying to read message after 50 ms - assume it's never coming
-            client.stop();
+        u16_lenRead = ec_client.read((uint8_t*)ca_firstLine, gk_u16_requestLineSize - 1);
+
+        u32_msgRecvTime = millis();
+        while (u16_lenRead < gk_u16_requestLineSize - 1) {  // make sure enough is read
+          uint32_t k_u32_mesgTimeout(50);
+
+          u16_lenRead += ec_client.read((uint8_t*)ca_firstLine + u16_lenRead, gk_u16_requestLineSize - u16_lenRead - 1);
+
+          if ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout) {  // stop trying to read message after 50 ms - assume it's never coming
+            ec_client.stop();
             return;
           }
         }
@@ -43,63 +49,63 @@ void handle_http(bool bMain) {
         lineTime = millis();
 #endif
 
-        reqHttp[gk_u16_requestLineSize - 1] = 0;  // this will replace a character, though I don't think it is important
-        headHttp[gk_u16_requestBuffSize - 1] = 0;
+        ca_firstLine[gk_u16_requestLineSize - 1] = 0;  // this will replace a character, though I don't think it is important
+        ca_remHeader[gk_u16_requestBuffSize - 1] = 0;
 
-        Serial.println(reqHttp);
+        Serial.println(ca_firstLine);
         //Serial.println(HTTP_req + gk_u16_requestLineSize);
 
-        if (strncmp(reqHttp, "GET", 3) == 0) {
-          flushEthRx(client, (uint8_t*)headHttp, gk_u16_requestBuffSize - 1);
+        if (strncmp(ca_firstLine, "GET", 3) == 0) {
+          flushEthRx(ec_client, (uint8_t*)ca_remHeader, gk_u16_requestBuffSize - 1);
 
 #if DISP_TIMING_DEBUG == 1
           doneHttp = millis();
 #endif
 
           if (g_b_sdInit) {
-            if (strstr(reqHttp, ".css") != NULL) {
-              sendWebFile(client, "/ep_style.css", 2);  // only css available
+            if (strstr(ca_firstLine, ".css") != nullptr) {
+              sendWebFile(ec_client, "/ep_style.css", FileType::CSS);  // only css available
             }
-            else if (strstr(reqHttp, ".gif") != NULL) {  // will need to expand if more pictures are desired
-              sendGifHdr(client);
-              sendWebFile(client, "/images/logo_let.gif", 0);  // only gif available
+            else if (strstr(ca_firstLine, ".gif") != nullptr) {  // will need to expand if more pictures are desired
+              //sendGifHdr(ec_client);
+              sendWebFile(ec_client, "/images/logo_let.gif", FileType::GIF);  // only gif available
 
               // assuming gif is last request and reset is required, reset
               if (g_b_reset) {
-                client.stop();
+                ec_client.stop();
                 resetArd();  // this will restart the gateway
                 return;  // this should never fire
               }
               break;
             }
 // html requests
-            else if ((strstr(reqHttp, ".htm") != NULL) || (strncmp(reqHttp, "GET / ", 6) == 0)) { // if html or index request
-              if ((strncmp(reqHttp, "GET / ", 6) == 0) || (strncmp(reqHttp, "GET /index.htm", 14) == 0)) {
+            else if ((strstr(ca_firstLine, ".htm") != nullptr) || (strncmp(ca_firstLine, "GET / ", 6) == 0)) { // if html or index request
+              if ((strncmp(ca_firstLine, "GET / ", 6) == 0) || (strncmp(ca_firstLine, "GET /index.htm", 14) == 0)) {
 #if DISP_TIMING_DEBUG
                 time1 = millis();
 #endif
-                sendWebFile(client, "/index.htm", 1);
+                sendWebFile(ec_client, "/index.htm", FileType::HTML);
 #if DISP_TIMING_DEBUG
                 time2 = millis();
 #endif
               }
-              else if (strncmp(reqHttp, "GET /gensetup.htm", 17) == 0) {
-                sendWebFile(client, "/gensetup.htm", 1);
+              else if (strncmp(ca_firstLine, "GET /gensetup.htm", 17) == 0) {
+                sendWebFile(ec_client, "/gensetup.htm", FileType::HTML);
               }
-              else if (strncmp(reqHttp, "GET /mtrsetup.htm", 17) == 0) {
-                sendWebFile(client, "/mtrsetup.htm", 1);
+              else if (strncmp(ca_firstLine, "GET /mtrsetup.htm", 17) == 0) {
+                sendWebFile(ec_client, "/mtrsetup.htm", FileType::HTML);
               }
-              else if (strstr(reqHttp, "live.htm") != NULL) {
-                mtr_ind = strstr(reqHttp, "METER=");
+              else if (strstr(ca_firstLine, "live.htm") != nullptr) {
+                cp_meterInd = strstr(ca_firstLine, "METER=");
 
-                if (mtr_ind != NULL) {
+                if (cp_meterInd != nullptr) {
                   g_u8a_selectedSlave = 0;
-                  mtr_ind += 6;  // move pointer to end of phrase
-                  chPtr = mtr_ind + 3;
+                  cp_meterInd += 6;  // move pointer to end of phrase
+                  cp_dumPtr = cp_meterInd + 3;
 
-                  for (; mtr_ind < chPtr; mtr_ind++) {
-                    if (isdigit(*mtr_ind)) {
-                      g_u8a_selectedSlave = g_u8a_selectedSlave * 10 + ((*mtr_ind) - '0');
+                  for (; cp_meterInd < cp_dumPtr; ++cp_meterInd) {
+                    if (isdigit(*cp_meterInd)) {
+                      g_u8a_selectedSlave = g_u8a_selectedSlave * 10 + ((*cp_meterInd) - '0');
                     }
                     else {
                       break;
@@ -114,63 +120,63 @@ void handle_http(bool bMain) {
                   g_u8a_selectedSlave = 1;
                 }
 
-                meter = g_u8a_slaveTypes[(g_u8a_selectedSlave - 1)][0];  // turn meter from slave index to meter type X.x.x
+                u8_meterType = g_u8a_slaveTypes[(g_u8a_selectedSlave - 1)][0];  // turn meter from slave index to meter type X.x.x
 
-                if (meter == 11) {
-                  sendWebFile(client, "/clive.htm", 1);        // chilled water
+                if (u8_meterType == 11) {
+                  sendWebFile(ec_client, "/clive.htm", FileType::HTML);        // chilled water
                 }
-                else if (meter == 12) {
-                  sendWebFile(client, "/slive.htm", 1);        // steam
+                else if (u8_meterType == 12) {
+                  sendWebFile(ec_client, "/slive.htm", FileType::HTML);        // steam
                 }
                 else {
-                  sendWebFile(client, "/elive.htm", 1);        // electric 
+                  sendWebFile(ec_client, "/elive.htm", FileType::HTML);        // electric 
                 }
               }
-              else if (strncmp(reqHttp, "GET /pastdown.htm", 17) == 0) {
+              else if (strncmp(ca_firstLine, "GET /pastdown.htm", 17) == 0) {
 
-                sendWebFile(client, "/pstdown1.htm", 1);
-                sendDownLinks(client, reqHttp);
-                sendWebFile(client, "/pstdown2.htm", 0);
+                sendWebFile(ec_client, "/pstdown1.htm", FileType::HTML);
+                sendDownLinks(ec_client, ca_firstLine);
+                sendWebFile(ec_client, "/pstdown2.htm", FileType::NONE);
               }
-              else if (strncmp(reqHttp, "GET /pastview.htm", 17) == 0) {  // need to flesh out ideas for this (mimic pastdown?)
+              else if (strncmp(ca_firstLine, "GET /pastview.htm", 17) == 0) {  // need to flesh out ideas for this (mimic pastdown?)
                                                                   // graph data?
-                sendWebFile(client, "/pastview.htm", 1);
+                sendWebFile(ec_client, "/pastview.htm", FileType::HTML);
               }
-              else if (strncmp(reqHttp, "GET /reset.htm", 14) == 0) {
-                sendWebFile(client, "/reset.htm", 1);
+              else if (strncmp(ca_firstLine, "GET /reset.htm", 14) == 0) {
+                sendWebFile(ec_client, "/reset.htm", FileType::HTML);
               }
-              else if (strncmp(reqHttp, "GET /redirect.htm", 17) == 0) {
-                sendWebFile(client, "/rdct1.htm", 1);
-                sendIP(client);
-                sendWebFile(client, "/rdct2.htm", 0);
+              else if (strncmp(ca_firstLine, "GET /redirect.htm", 17) == 0) {
+                sendWebFile(ec_client, "/rdct1.htm", FileType::HTML);
+                sendIP(ec_client);
+                sendWebFile(ec_client, "/rdct2.htm", FileType::NONE);
 
                 g_b_reset = true;  // must wait for css and gif requests before restarting
               }
               else {
-                sendWebFile(client, "/nopage.htm", 1);
+                sendWebFile(ec_client, "/nopage.htm", FileType::HTML);
               }
             }
 //  xml requests
-            else if (strstr(reqHttp, ".xml") != NULL) {
-              if (strncmp(reqHttp, "GET /gensetup.xml", 17) == 0) {
-                sendWebFile(client, "/gensetup.xml", 4);
-                sendXmlEnd(client, 3);
+            else if (strstr(ca_firstLine, ".xml") != nullptr) {
+              if (strncmp(ca_firstLine, "GET /gensetup.xml", 17) == 0) {
+                sendWebFile(ec_client, "/gensetup.xml", FileType::XML);
+                sendXmlEnd(ec_client, XmlFile::GENERAL);
               }
-              else if (strncmp(reqHttp, "GET /mtrsetup.xml", 17) == 0) {
-                sendWebFile(client, "/mtrsetup.xml", 4);
-                sendXmlEnd(client, 2);
+              else if (strncmp(ca_firstLine, "GET /mtrsetup.xml", 17) == 0) {
+                sendWebFile(ec_client, "/mtrsetup.xml", FileType::XML);
+                sendXmlEnd(ec_client, XmlFile::METER);
               }
-              else if (strncmp(reqHttp, "GET /data.xml", 13) == 0) {
-                mtr_ind = strstr(reqHttp, "METER=");
+              else if (strncmp(ca_firstLine, "GET /data.xml", 13) == 0) {
+                cp_meterInd = strstr(ca_firstLine, "METER=");
 
-                if (mtr_ind != NULL) {
+                if (cp_meterInd != nullptr) {
                   g_u8a_selectedSlave = 0;
-                  mtr_ind += 6;  // move pointer to end of phrase
-                  chPtr = mtr_ind + 3;
+                  cp_meterInd += 6;  // move pointer to end of phrase
+                  cp_dumPtr = cp_meterInd + 3;
 
-                  for (; mtr_ind < chPtr; mtr_ind++) {
-                    if (isdigit(*mtr_ind)) {
-                      g_u8a_selectedSlave = g_u8a_selectedSlave * 10 + ((*mtr_ind) - '0');
+                  for (; cp_meterInd < cp_dumPtr; ++cp_meterInd) {
+                    if (isdigit(*cp_meterInd)) {
+                      g_u8a_selectedSlave = g_u8a_selectedSlave * 10 + ((*cp_meterInd) - '0');
                     }
                     else {
                       break;
@@ -181,52 +187,52 @@ void handle_http(bool bMain) {
                     g_u8a_selectedSlave = 1;
                   }
                 }
-                liveXML(client);  // handles http in function
+                liveXML(ec_client);  // handles http in function
               }
-              else if (strncmp(reqHttp, "GET /info.xml", 13) == 0) {
-                sendWebFile(client, "/mtrsetup.xml", 4);
-                sendXmlEnd(client, 1);
+              else if (strncmp(ca_firstLine, "GET /info.xml", 13) == 0) {
+                sendWebFile(ec_client, "/mtrsetup.xml", FileType::XML);
+                sendXmlEnd(ec_client, XmlFile::INFO);
               }
               else {  // could not find xml file
-                send404(client);  // handles http in function
+                send404(ec_client);  // handles http in function
               }
             }
 // txt and csv requests
-            else if ((strstr(reqHttp, ".TXT") != NULL) || (strstr(reqHttp, ".CSV") != NULL)) {
+            else if ((strstr(ca_firstLine, ".TXT") != nullptr) || (strstr(ca_firstLine, ".CSV") != nullptr)) {
               //if (strncmp(HTTP_req, "GET /TEST.CSV", 13) == 0) {
-              //  client.println("HTTP/1.1 200 OK");
-              //  client.println("Content-Disposition: attachment; filename=test.txt");
-              //  client.println("Connection: close\n");
+              //  ec_client.println("HTTP/1.1 200 OK");
+              //  ec_client.println("Content-Disposition: attachment; filename=test.txt");
+              //  ec_client.println("Connection: close\n");
 
-              //  sendWebFile(client, "/test.CSV");
+              //  sendWebFile(ec_client, "/test.CSV");
               //}
               //else if (strstr(HTTP_req, "GET /TEST.TXT")) {
-              //  client.println("HTTP/1.1 200 OK");
-              //  client.println("Content-Disposition: attachment; filename=test.txt");
-              //  client.println("Connection: close\n");
+              //  ec_client.println("HTTP/1.1 200 OK");
+              //  ec_client.println("Content-Disposition: attachment; filename=test.txt");
+              //  ec_client.println("Connection: close\n");
 
-              //  sendWebFile(client, "test.txt");
+              //  sendWebFile(ec_client, "test.txt");
               //}
               //else {
                 char filename[36] = { 0 };
 
-                strcpy(filename, reqHttp + 4);
+                strcpy(filename, ca_firstLine + 4);
                 filename[35] = 0;
-                for (i = 0; i < 36; i++) {
-                  if (filename[i] == 32) {
-                    filename[i] = 0;
+                for (int ii = 0; ii < 36; ++ii) {
+                  if (filename[ii] == 32) {
+                    filename[ii] = 0;
                     break;
                   }
-                  else if (filename[i] == 0) {
+                  else if (filename[ii] == 0) {
                     break;
                   }
                 }
-                sendWebFile(client, filename, 0);
+                sendWebFile(ec_client, filename, FileType::NONE);
               //}
             }
 // not htm, css, or xml
             else {  
-              send404(client);
+              send404(ec_client);
             }
 
 #if DISP_TIMING_DEBUG == 1
@@ -259,28 +265,28 @@ void handle_http(bool bMain) {
 #endif
           }
           else {
-            sendBadSD(client);
+            sendBadSD(ec_client);
             break;  // don't bother trying to keep connection open - there's no reason to if there's no sd card
           }
         }
 // POST http
-        else if (strstr(reqHttp, "POST") != NULL) {
-          if (strstr(reqHttp, "setup.htm")) {
+        else if (strstr(ca_firstLine, "POST") != nullptr) {
+          if (strstr(ca_firstLine, "setup.htm")) {
             digitalWrite(gk_s16_epWriteLed, HIGH);
-            getPostSetupData(client, headHttp);  // reads and stores POST data to EEPROM
+            getPostSetupData(ec_client, ca_remHeader);  // reads and stores POST data to EEPROM
             digitalWrite(gk_s16_epWriteLed, LOW);
 
             // rewrite xml files
             digitalWrite(gk_s16_sdWriteLed, HIGH);
-            if (strncmp(reqHttp, "POST /mtrsetup.htm", 18)) {
+            if (strncmp(ca_firstLine, "POST /mtrsetup.htm", 18)) {
               writeMtrSetupFile();
             }
-            else if (strncmp(reqHttp, "POST /gensetup.htm", 18)) {
+            else if (strncmp(ca_firstLine, "POST /gensetup.htm", 18)) {
               writeGenSetupFile();
             }
             digitalWrite(gk_s16_sdWriteLed, LOW);
 
-            sendPostResp(client);
+            sendPostResp(ec_client);
          
 #if DEBUG_HTTP_TCP_TIMEOUT == 1
             u32Http_TCP_to_old = millis();
@@ -290,12 +296,12 @@ void handle_http(bool bMain) {
           }
         }
 
-      } // end if (client.available())
-      else if (bMain) {
+      } // end if (ec_client.available())
+      else if (b_idleModbus) {
         //handle_modbus(false);
       }
-    } // end while (client.connected() && < timeout)
+    } // end while (ec_client.connected() && < timeout)
     delay(1);      // give the web browser time to receive the data
-    client.stop(); // close the connection
-  } // end if (client)
+    ec_client.stop(); // close the connection
+  } // end if (ec_client)
 } // end handle_http
