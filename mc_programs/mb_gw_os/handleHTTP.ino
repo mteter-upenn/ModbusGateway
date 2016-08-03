@@ -52,7 +52,7 @@ void handle_http(bool b_idleModbus) {
         ca_firstLine[gk_u16_requestLineSize - 1] = 0;  // this will replace a character, though I don't think it is important
         ca_remHeader[gk_u16_requestBuffSize - 1] = 0;
 
-        Serial.println(ca_firstLine);
+        //Serial.println(ca_firstLine);
         //Serial.println(HTTP_req + gk_u16_requestLineSize);
 
         if (strncmp(ca_firstLine, "GET", 3) == 0) {

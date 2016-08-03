@@ -1,19 +1,19 @@
-bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t &out_len)
-{
-  uint16_t strt_reg, lgth_reg, adj_strt_reg = 0, adj_lgth_reg = 0;
-  uint16_t i, j;
-  uint8_t exp_lgth = 0;
-  uint8_t result = 0xFF;
-  uint16_t rgstr1 = 0;
-  uint8_t reg_flags = 0;
-  bool fnd_reg = false;
-  uint8_t func_reg = 0;
-  uint8_t mberror = 0;
-  bool wc_req = false;
-  bool mb_stat = false;
-  uint8_t adj_reg_flags = 0;
-  uint8_t mtr_typ = 0;
-  uint8_t act_dev;
+bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], 
+  uint16_t &u16_mbRespLen) {
+
+  uint16_t u16_reqReg, u16_numRegs, u16_adjReqReg = 0, u16_adjNumRegs = 0;
+  uint8_t u8_mbRespNumBytes = 0;
+  uint8_t u8_mbResult = 0xFF;
+  uint16_t u16_tempReg = 0;
+  uint8_t u8_dataTypeFlags = 0;
+  bool b_foundReg = false;
+  uint8_t u8_mbReqFunc = 0;
+  uint8_t u8_mbError = 0;
+  bool b_reqRegManip = false;
+  bool b_mbStatus = false;
+  uint8_t u8_mskdDataTypeFlags = 0;
+  uint8_t u8_mtrType = 0;
+  uint8_t u8_mtrId;
   
 #if defined(__arm__) && defined(CORE_TEENSY)  // if teensy3.0 or greater
 #else
@@ -52,478 +52,478 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
   
   int2flt.u32 = 0;  // unsure if this needs to be done
 
-  if (msg_lgth == 12);  // typical modbus/tcp message is 12 bytes long
+  if (u16_mbReqLen == 12);  // typical modbus/tcp message is 12 bytes long
   {
-    out_mb_f[0] = in_mb_f[0]; // copy first 2 bytes to outbound message
-    out_mb_f[1] = in_mb_f[1];
-    out_mb_f[2] = 0;
-    out_mb_f[3] = 0;
+    u8a_mbResp[0] = u8a_mbReq[0]; // copy first 2 bytes to outbound message
+    u8a_mbResp[1] = u8a_mbReq[1];
+    u8a_mbResp[2] = 0;
+    u8a_mbResp[3] = 0;
     
-    out_mb_f[6] = in_mb_f[6]; // set device
+    u8a_mbResp[6] = u8a_mbReq[6]; // set device
     
-    //g_mm_node.setSlave(in_mb_f[6]);
-    act_dev = in_mb_f[6];  // let id given by incoming packet be default, it will change if it matches with something on the list in isMeterEth
+    uint8_t u8_mtrVid = u8a_mbReq[6];
+    uint8_t u8a_clientIp[4];
+    u8_mtrId = u8a_mbReq[6];  // let id given by incoming packet be default, it will change if it matches with something on the list in isMeterEth
     // search for slave id in eeprom, if there check if ip exists
-    if (isMeterEth(in_mb_f[6], mtr_typ, act_dev)){  // isMeterEth set g_u8a_clientIP
-      g_mm_node.setSerialEthernet(false);  // false means ethernet
-      g_mm_node.setClientIP(g_u8a_clientIP);
+    // isMeterEth changes u8_mtrType and u8_mtrId
+    if (isMeterEth(u8a_clientIp, u8_mtrVid, u8_mtrType, u8_mtrId)){  // isMeterEth set g_u8a_clientIP
+      g_mm_node.setSerialEthernet(false);  // <--false means ethernet
+      g_mm_node.setClientIP(u8a_clientIp);
       //Serial.println(F("ETHER!"));
     }
     else{
       g_mm_node.setSerialEthernet(true);  // true means serial
     }
     
-    g_mm_node.setSlave(act_dev);
+    g_mm_node.setSlave(u8_mtrId);
     
     
-//        g_mm_node.setTransmitBuffer(0, in_mb[0]);  // necessary?
-//        g_mm_node.setTransmitBuffer(1, in_mb[1]);
-    strt_reg = (in_mb_f[8] << 8) | (in_mb_f[9]);
-    lgth_reg = (in_mb_f[10] << 8) | (in_mb_f[11]);
-    exp_lgth = lgth_reg * 2;
-    func_reg = in_mb_f[7];
+    u16_reqReg = (u8a_mbReq[8] << 8) | (u8a_mbReq[9]);
+    u16_numRegs = (u8a_mbReq[10] << 8) | (u8a_mbReq[11]);
+    u8_mbRespNumBytes = u16_numRegs * 2;
+    u8_mbReqFunc = u8a_mbReq[7];
     
       
-    if (strt_reg < 10000) {
-      adj_strt_reg = strt_reg;
-      adj_lgth_reg = lgth_reg;
+    if (u16_reqReg < 10000) {
+      u16_adjReqReg = u16_reqReg;
+      u16_adjNumRegs = u16_numRegs;
     }
-    else if ((strt_reg > 9999) && (strt_reg < 20000)) {
-      wc_req = true;  // 10k request
-      adj_strt_reg = strt_reg - 10000;
-      fnd_reg = findRegister(adj_strt_reg, reg_flags, mtr_typ);
+    else if ((u16_reqReg > 9999) && (u16_reqReg < 20000)) {
+      b_reqRegManip = true;  // 10k request
+      u16_adjReqReg = u16_reqReg - 10000;
+      b_foundReg = findRegister(u16_adjReqReg, u8_dataTypeFlags, u8_mtrType);
       
-  //    Serial.println(adj_strt_reg);
-      if (0x01 & lgth_reg) // if odd number, then can't return float (must be even # of regs)
+  //    Serial.println(u16_adjReqReg);
+      if (0x01 & u16_numRegs) // if odd number, then can't return float (must be even # of regs)
       {
 //        Serial.println("odd");
-        mberror = 0x02;
+        u8_mbError = 0x02;
       }
       else
       {
-        if (fnd_reg)  // found registers
+        if (b_foundReg)  // found registers
         {
-          adj_reg_flags = (0x7f & reg_flags); // ignore ws bit for comparisons
+          u8_mskdDataTypeFlags = (0x7f & u8_dataTypeFlags); // ignore ws bit for comparisons
           
-          // adj_lgth_reg is the length request sent to modbus device
+          // u16_adjNumRegs is the length request sent to modbus device
           // all requests made through 10k registers must be with expectation of float
           // this means the unadjusted length request has 2 registers for every unique data point
-          switch (adj_reg_flags){
+          switch (u8_mskdDataTypeFlags){
             case 1:  // u16
             case 2:  // s16
-              adj_lgth_reg = lgth_reg / 2;  // single register values
+              u16_adjNumRegs = u16_numRegs / 2;  // single register values
               break;
             case 7:  // m20k
-              adj_lgth_reg = lgth_reg * 3 / 2;  // 3 register values
+              u16_adjNumRegs = u16_numRegs * 3 / 2;  // 3 register values
               break;
             case 8:  // m30k
             case 9:  // u64
             case 10:  // engy
             case 11:  // dbl
-              adj_lgth_reg = lgth_reg * 2;  // 4 register values
+              u16_adjNumRegs = u16_numRegs * 2;  // 4 register values
               break;
             default:  // float, u32, s32, m10k, m1k
-              adj_lgth_reg = lgth_reg;  // 2 register values
+              u16_adjNumRegs = u16_numRegs;  // 2 register values
               break;              
           }
         }
         else
         {
 //          Serial.println("no flags");
-          mberror = 0x02;
+          u8_mbError = 0x02;
         }  // end if else check if address in block
       }  // end if else check lgth  
     }  // end if 10k request
     else
     {
 //      Serial.println("reg outside exp");
-      mberror = 0x02;
+      u8_mbError = 0x02;
     }
     
-    if ((!(func_reg == 3) || (func_reg == 4)))
+    if ((!(u8_mbReqFunc == 3) || (u8_mbReqFunc == 4)))
     {
-      mberror = 0x01;
+      u8_mbError = 0x01;
     }
     
-    if (mberror) {  // error occurred prior to actual modbus request, return error
+    if (u8_mbError) {  // error occurred prior to actual modbus request, return error
 //      Serial.println("error in gateway"); 
-//      Serial.println(mberror, HEX);
-      out_mb_f[7] = (func_reg | 0x80); // return function  + 128
-      out_mb_f[8] = mberror; // modbus error function
-      out_mb_f[4] = 0;  // expected tcp length
-      out_mb_f[5] = 3;  // expected tcp length
+//      Serial.println(u8_mbError, HEX);
+      u8a_mbResp[7] = (u8_mbReqFunc | 0x80); // return function  + 128
+      u8a_mbResp[8] = u8_mbError; // modbus error function
+      u8a_mbResp[4] = 0;  // expected tcp length
+      u8a_mbResp[5] = 3;  // expected tcp length
 
-      out_len = 9;
+      u16_mbRespLen = 9;
       /*Serial.print("error: ");
-      Serial.println(mberror, DEC);*/
+      Serial.println(u8_mbError, DEC);*/
      
       return false;
     }  // end if error
     else {  // no error yet, handle code
-      //if (!wc_req) {
-        switch (func_reg) {
+      //if (!b_reqRegManip) {
+        switch (u8_mbReqFunc) {
 //          case 1:
-//            g_mm_node.readCoils(adj_strt_reg, adj_lgth_reg);
+//            g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
 //            break;
 //          case 2:
-//            g_mm_node.readDiscreteInputs(adj_strt_reg, adj_lgth_reg);
+//            g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
 //            break;
           case 3:
-            Serial.println(F("modbus request"));
-            result = g_mm_node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
-            Serial.print(F("sent request: "));
-            Serial.println(result, HEX);
+            //Serial.println(F("modbus request"));
+            u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
+            //Serial.print(F("sent request: "));
+            //Serial.println(u8_mbResult, HEX);
             break;
           case 4:
-            result = g_mm_node.readInputRegisters(adj_strt_reg, adj_lgth_reg);
+            u8_mbResult = g_mm_node.readInputRegisters(u16_adjReqReg, u16_adjNumRegs);
             break;
 //          case 5:
-//            result = g_mm_node.writeSingleCoil(adj_strt_reg, adj_lgth_reg);
+//            u8_mbResult = g_mm_node.writeSingleCoil(u16_adjReqReg, u16_adjNumRegs);
 //            break;
 //          case 6:
-//            result = g_mm_node.writeSingleRegister(adj_strt_reg, adj_lgth_reg);
+//            u8_mbResult = g_mm_node.writeSingleRegister(u16_adjReqReg, u16_adjNumRegs);
 //            break;
           default:
-            result = 0x01;
+            u8_mbResult = 0x01;
             break;
         }  // end switch function
 //      }  // end if typical register request
 //      else {
 //        /*Serial.println("requesting...");
-//        Serial.println(adj_strt_reg, DEC);
-//        Serial.println(adj_lgth_reg, DEC);*/
-//        switch (func_reg) {
+//        Serial.println(u16_adjReqReg, DEC);
+//        Serial.println(u16_adjNumRegs, DEC);*/
+//        switch (u8_mbReqFunc) {
 //          case 3:
 //            //Serial.println(F("modbus 10k request"));
-//            result = g_mm_node.readHoldingRegisters(adj_strt_reg, adj_lgth_reg);
+//            u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
 ////            Serial.print(F("sent request: "));
-////            Serial.println(result, HEX);
+////            Serial.println(u8_mbResult, HEX);
 //            break;
 //          case 4:
-//            result = g_mm_node.readInputRegisters(adj_strt_reg, adj_lgth_reg);
+//            u8_mbResult = g_mm_node.readInputRegisters(u16_adjReqReg, u16_adjNumRegs);
 //            break;
 //          default:
-//            result = 0x01;
+//            u8_mbResult = 0x01;
 //            break;
 //        }  // end switch function
-////        Serial.print("result: ");
-////        Serial.println(result, HEX);
+////        Serial.print("u8_mbResult: ");
+////        Serial.println(u8_mbResult, HEX);
 //      }// end else if 10k request
       
-      switch (result) {
+      switch (u8_mbResult) {
         case 0:  // g_mm_node.ku8MBSuccess
-          if (!wc_req) {  // no adjustments to data
-            for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=2) {
-              rgstr1 = g_mm_node.getResponseBuffer(j);
+          if (!b_reqRegManip) {  // no adjustments to data
+            for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii+=2) {
+              u16_tempReg = g_mm_node.getResponseBuffer(jj);
               
-              out_mb_f[i] = highByte(rgstr1);
-              out_mb_f[i + 1] = lowByte(rgstr1);
+              u8a_mbResp[ii] = highByte(u16_tempReg);
+              u8a_mbResp[ii + 1] = lowByte(u16_tempReg);
             }
           }
           else {
 //            Serial.println("handling 10k data");
-//            Serial.println((reg_flags & 0x7F), DEC);
+//            Serial.println((u8_dataTypeFlags & 0x7F), DEC);
           
-            switch (adj_reg_flags) {  // ((reg_flags & 0x7F))
+            switch (u8_mskdDataTypeFlags) {  // ((u8_dataTypeFlags & 0x7F))
               case 0:  // float
-                if (reg_flags & 0x80){  // if ws
-                  for (j = 0, i = 9; j < adj_lgth_reg; j+=2, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
-                    rgstr1 = g_mm_node.getResponseBuffer(j);
-                    out_mb_f[i + 2] = (rgstr1 >> 8);  // would memcpy work better here?
-                    out_mb_f[i + 3] = rgstr1;
+                if (u8_dataTypeFlags & 0x80){  // if ws
+                  for (int jj = 0, ii = 9; jj < u16_adjNumRegs; jj+=2, ii+=4){  // u16_adjNumRegs is # of registers - divide since handling by two
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj);
+                    u8a_mbResp[ii + 2] = (u16_tempReg >> 8);  // would memcpy work better here?
+                    u8a_mbResp[ii + 3] = u16_tempReg;
 
-                    rgstr1 = g_mm_node.getResponseBuffer(j + 1);
-                    out_mb_f[i] = (rgstr1 >> 8);
-                    out_mb_f[i + 1] = rgstr1;
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj + 1);
+                    u8a_mbResp[ii] = (u16_tempReg >> 8);
+                    u8a_mbResp[ii + 1] = u16_tempReg;
                   }
                 }
                 else{  // no ws, no adjustments needed
-                  for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=2){
-                    rgstr1 = g_mm_node.getResponseBuffer(j);
-                    out_mb_f[i] = (rgstr1 >> 8);
-                    out_mb_f[i + 1] = rgstr1;
+                  for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii+=2){
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj);
+                    u8a_mbResp[ii] = (u16_tempReg >> 8);
+                    u8a_mbResp[ii + 1] = u16_tempReg;
                   }
                 }
                 break;
               case 1: // u16 to float
-                for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
-                  rgstr1 = g_mm_node.getResponseBuffer(j);
+                for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii+=4){  // u16_adjNumRegs is # of registers - divide since handling by two
+                  u16_tempReg = g_mm_node.getResponseBuffer(jj);
       
-                  int2flt.f = (float)rgstr1;
+                  int2flt.f = (float)u16_tempReg;
                   
-                  out_mb_f[i] = (int2flt.u32 >> 8);
-                  out_mb_f[i + 1] = int2flt.u32;
+                  u8a_mbResp[ii] = (int2flt.u32 >> 8);
+                  u8a_mbResp[ii + 1] = int2flt.u32;
                   
-                  out_mb_f[i + 2] = (int2flt.u32 >> 24);
-                  out_mb_f[i + 3] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[ii + 2] = (int2flt.u32 >> 24);
+                  u8a_mbResp[ii + 3] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 2: // s16 to float
-                for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
-                  int2flt.s16 = g_mm_node.getResponseBuffer(j);  // may require (int) cast
+                for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii+=4){  // u16_adjNumRegs is # of registers - divide since handling by two
+                  int2flt.s16 = g_mm_node.getResponseBuffer(jj);  // may require (int) cast
                   
                   int2flt.f = (float) int2flt.s16;
                   
-                  out_mb_f[i] = (int2flt.u32 >> 8);
-                  out_mb_f[i + 1] = int2flt.u32;
+                  u8a_mbResp[ii] = (int2flt.u32 >> 8);
+                  u8a_mbResp[ii + 1] = int2flt.u32;
                   
-                  out_mb_f[i + 2] = (int2flt.u32 >> 24);
-                  out_mb_f[i + 3] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[ii + 2] = (int2flt.u32 >> 24);
+                  u8a_mbResp[ii + 3] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 3: // u32 to float
-                for (j = 0, i = 9; j < adj_lgth_reg; j+=2, i+=4){  // adj_lgth_reg is # of registers - divide since handling by two
-                  if((reg_flags & 0x80)){  // WORDSWAP
-                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j);
-                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j + 1);
+                for (int jj = 0, ii = 9; jj < u16_adjNumRegs; jj+=2, ii+=4){  // u16_adjNumRegs is # of registers - divide since handling by two
+                  if((u8_dataTypeFlags & 0x80)){  // WORDSWAP
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(jj);
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(jj + 1);
                   }
                   else{
-                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j);
-                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j + 1);
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(jj);
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(jj + 1);
                   }
                   
                   int2flt.f = (float) int2flt.u32;
                   
-                  out_mb_f[i] = (int2flt.u32 >> 8);
-                  out_mb_f[i + 1] = int2flt.u32;
+                  u8a_mbResp[ii] = (int2flt.u32 >> 8);
+                  u8a_mbResp[ii + 1] = int2flt.u32;
                   
-                  out_mb_f[i + 2] = (int2flt.u32 >> 24);
-                  out_mb_f[i + 3] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[ii + 2] = (int2flt.u32 >> 24);
+                  u8a_mbResp[ii + 3] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 4: // s32 to float
-                for (j = 0, i = 9; j < adj_lgth_reg; j+=2, i+=4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0, ii = 9; jj < u16_adjNumRegs; jj+=2, ii+=4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 { 
-                  if((reg_flags & 0x80))
+                  if((u8_dataTypeFlags & 0x80))
                   {
-                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j);  // high word
-                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j + 1);  // low word
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(jj);  // high word
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(jj + 1);  // low word
                   }
                   else
                   {
-                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j);  // low word
-                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j + 1);  // high word
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(jj);  // low word
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(jj + 1);  // high word
                   }
                   
                   int2flt.f = (float) int2flt.s32;
                   
-                  out_mb_f[i] = (int2flt.u32 >> 8);
-                  out_mb_f[i + 1] = int2flt.u32;
+                  u8a_mbResp[ii] = (int2flt.u32 >> 8);
+                  u8a_mbResp[ii + 1] = int2flt.u32;
                   
-                  out_mb_f[i + 2] = (int2flt.u32 >> 24);
-                  out_mb_f[i + 3] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[ii + 2] = (int2flt.u32 >> 24);
+                  u8a_mbResp[ii + 3] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 5: // mod1k to float
-                for (j = 0, i = 9; j < adj_lgth_reg; j+=2, i+=4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0, ii = 9; jj < u16_adjNumRegs; jj+=2, ii+=4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 { 
-                  if((reg_flags & 0x80))  // if word swapped
+                  if((u8_dataTypeFlags & 0x80))  // if word swapped
                   {
-                    int2flt.u32 = g_mm_node.getResponseBuffer(j + 1);  // low word
-                    rgstr1 = g_mm_node.getResponseBuffer(j);
+                    int2flt.u32 = g_mm_node.getResponseBuffer(jj + 1);  // low word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj);
                   }
                   else
                   {
-                    int2flt.u32 = g_mm_node.getResponseBuffer(j);  // low word
-                    rgstr1 = g_mm_node.getResponseBuffer(j + 1);
+                    int2flt.u32 = g_mm_node.getResponseBuffer(jj);  // low word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj + 1);
                   }
 
-                  int2flt.u32 = int2flt.u32 + ((uint32_t)(rgstr1 & 0x7fff)) * 1000;  // high word
-                  if (rgstr1 >> 15){ // if negative bit
+                  int2flt.u32 = int2flt.u32 + ((uint32_t)(u16_tempReg & 0x7fff)) * 1000;  // high word
+                  if (u16_tempReg >> 15){ // if negative bit
                     int2flt.s32 *= (-1);
                   }
                     
                   int2flt.f = (float) int2flt.s32;
                   
-                  out_mb_f[i] = (int2flt.u32 >> 8);
-                  out_mb_f[i + 1] = int2flt.u32;
+                  u8a_mbResp[ii] = (int2flt.u32 >> 8);
+                  u8a_mbResp[ii + 1] = int2flt.u32;
                   
-                  out_mb_f[i + 2] = (int2flt.u32 >> 24);
-                  out_mb_f[i + 3] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[ii + 2] = (int2flt.u32 >> 24);
+                  u8a_mbResp[ii + 3] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 6: // mod10k to float
-                for (j = 0, i = 9; j < adj_lgth_reg; j+=2, i+=4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0, ii = 9; jj < u16_adjNumRegs; jj+=2, ii+=4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 { 
-                  if((reg_flags & 0x80))  // if word swapped
+                  if((u8_dataTypeFlags & 0x80))  // if word swapped
                   {
-                    int2flt.u32 = g_mm_node.getResponseBuffer(j + 1);  // low word
-                    rgstr1 = g_mm_node.getResponseBuffer(j);     
+                    int2flt.u32 = g_mm_node.getResponseBuffer(jj + 1);  // low word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj);     
                   }
                   else
                   {
-                    int2flt.u32 = g_mm_node.getResponseBuffer(j);  // low word
-                    rgstr1 = g_mm_node.getResponseBuffer(j + 1);
+                    int2flt.u32 = g_mm_node.getResponseBuffer(jj);  // low word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj + 1);
                   }
 
-                  int2flt.u32 = int2flt.u32 + ((uint32_t)(rgstr1 & 0x7fff)) * 10000;  // high word
-                  if (rgstr1 >> 15){ // if negative bit
+                  int2flt.u32 = int2flt.u32 + ((uint32_t)(u16_tempReg & 0x7fff)) * 10000;  // high word
+                  if (u16_tempReg >> 15){ // if negative bit
                     int2flt.s32 *= (-1);
                   }
                     
                   int2flt.f = (float) int2flt.s32;
                   
-                  out_mb_f[i] = (int2flt.u32 >> 8);
-                  out_mb_f[i + 1] = int2flt.u32;
+                  u8a_mbResp[ii] = (int2flt.u32 >> 8);
+                  u8a_mbResp[ii + 1] = int2flt.u32;
                   
-                  out_mb_f[i + 2] = (int2flt.u32 >> 24);
-                  out_mb_f[i + 3] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[ii + 2] = (int2flt.u32 >> 24);
+                  u8a_mbResp[ii + 3] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 7: // mod20k to float
-                for (j = 0, i = 9; j < adj_lgth_reg; j+=3, i += 4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0, ii = 9; jj < u16_adjNumRegs; jj+=3, ii += 4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 { 
-                  if((reg_flags & 0x80))  // if word swapped
+                  if((u8_dataTypeFlags & 0x80))  // if word swapped
                   {
-                    int2flt.f = (float)g_mm_node.getResponseBuffer(j + 2);  // low word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(10, 4);  // middle word
-                    rgstr1 = g_mm_node.getResponseBuffer(j);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(jj + 2);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 1))) * pow(10, 4);  // middle word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj);
                   }
                   else
                   {
-                    int2flt.f = (float)g_mm_node.getResponseBuffer(j);  // low word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(10, 4);  //middle word
-                    rgstr1 = g_mm_node.getResponseBuffer(j + 2);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(jj);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 1))) * pow(10, 4);  //middle word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj + 2);
                   }
 
-                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(10, 8);  // high word
-                  if (rgstr1 >> 15){ // if negative bit
+                  int2flt.f = int2flt.f + ((float)(u16_tempReg & 0x7fff)) * pow(10, 8);  // high word
+                  if (u16_tempReg >> 15){ // if negative bit
                     int2flt.f *= (-1);
                   }
                   
-                  out_mb_f[i] = (int2flt.u32 >> 8);
-                  out_mb_f[i + 1] = int2flt.u32;
+                  u8a_mbResp[ii] = (int2flt.u32 >> 8);
+                  u8a_mbResp[ii + 1] = int2flt.u32;
                   
-                  out_mb_f[i + 2] = (int2flt.u32 >> 24);
-                  out_mb_f[i + 3] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[ii + 2] = (int2flt.u32 >> 24);
+                  u8a_mbResp[ii + 3] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 8: // mod30k to float
-                for (j = 0; j < adj_lgth_reg; j+=4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0; jj < u16_adjNumRegs; jj+=4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 { 
-                  if((reg_flags & 0x80))  // if word swapped
+                  if((u8_dataTypeFlags & 0x80))  // if word swapped
                   {
-                    int2flt.f = (float)g_mm_node.getResponseBuffer(j + 3);  // low word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(10, 4);  // high word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(10, 8);  // high word
-                    rgstr1 = g_mm_node.getResponseBuffer(j);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(jj + 3);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 2))) * pow(10, 4);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 1))) * pow(10, 8);  // high word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj);
                   }
                   else
                   {
-                    int2flt.f = (float)g_mm_node.getResponseBuffer(j);  // low word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(10, 4);  // high word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(10, 8);  // high word
-                    rgstr1 = g_mm_node.getResponseBuffer(j + 3);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(jj);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 1))) * pow(10, 4);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 2))) * pow(10, 8);  // high word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj + 3);
                   }
 
-                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(10, 12);  // high word
-                  if (rgstr1 >> 15){ // if negative bit
+                  int2flt.f = int2flt.f + ((float)(u16_tempReg & 0x7fff)) * pow(10, 12);  // high word
+                  if (u16_tempReg >> 15){ // if negative bit
                     int2flt.f *= (-1);
                   }
                   
-                  out_mb_f[j + 9] = (int2flt.u32 >> 8);
-                  out_mb_f[j + 10] = int2flt.u32;
+                  u8a_mbResp[jj + 9] = (int2flt.u32 >> 8);
+                  u8a_mbResp[jj + 10] = int2flt.u32;
                   
-                  out_mb_f[j + 11] = (int2flt.u32 >> 24);
-                  out_mb_f[j + 12] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[jj + 11] = (int2flt.u32 >> 24);
+                  u8a_mbResp[jj + 12] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 9: // u64 to float
-                for (j = 0; j < adj_lgth_reg; j+=4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0; jj < u16_adjNumRegs; jj+=4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 { 
-                  if((reg_flags & 0x80))  // if word swapped
+                  if((u8_dataTypeFlags & 0x80))  // if word swapped
                   {
-                    int2flt.f = (float)g_mm_node.getResponseBuffer(j + 3);  // low word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(2, 16);  // high word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(2, 32);  // high word
-                    rgstr1 = g_mm_node.getResponseBuffer(j);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(jj + 3);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 2))) * pow(2, 16);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 1))) * pow(2, 32);  // high word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj);
                   }
                   else
                   {
-                    int2flt.f = (float)g_mm_node.getResponseBuffer(j);  // low word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(2, 16);  // high word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(2, 32);  // high word
-                    rgstr1 = g_mm_node.getResponseBuffer(j + 3);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(jj);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 1))) * pow(2, 16);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 2))) * pow(2, 32);  // high word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj + 3);
                   }
 
-                  int2flt.f = int2flt.f + ((float)(rgstr1 & 0x7fff)) * pow(2, 48);  // high word
-                  if (rgstr1 >> 15){ // if negative bit
+                  int2flt.f = int2flt.f + ((float)(u16_tempReg & 0x7fff)) * pow(2, 48);  // high word
+                  if (u16_tempReg >> 15){ // if negative bit
                     int2flt.f *= (-1);
                   }
                   
-                  out_mb_f[j + 9] = (int2flt.u32 >> 8);
-                  out_mb_f[j + 10] = int2flt.u32;
+                  u8a_mbResp[jj + 9] = (int2flt.u32 >> 8);
+                  u8a_mbResp[jj + 10] = int2flt.u32;
                   
-                  out_mb_f[j + 11] = (int2flt.u32 >> 24);
-                  out_mb_f[j + 12] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[jj + 11] = (int2flt.u32 >> 24);
+                  u8a_mbResp[jj + 12] = (int2flt.u32 >> 16); 
                 }
                 break;
               case 10:  // energy units  (eaton designed unit)
-                for (j = 0; j < adj_lgth_reg; j+=4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0; jj < u16_adjNumRegs; jj+=4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 { 
-                  if((reg_flags & 0x80))  // if word swapped
+                  if((u8_dataTypeFlags & 0x80))  // if word swapped
                   {
-                    int2flt.f = (float)g_mm_node.getResponseBuffer(j + 3);  // low word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(2, 16);  // high word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(2, 32);  // high word
-                    rgstr1 = g_mm_node.getResponseBuffer(j);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(jj + 3);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 2))) * pow(2, 16);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 1))) * pow(2, 32);  // high word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj);
                   }
                   else
                   {
-                    int2flt.f = (float)g_mm_node.getResponseBuffer(j);  // low word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 1))) * pow(2, 16);  // high word
-                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(j + 2))) * pow(2, 32);  // high word
-                    rgstr1 = g_mm_node.getResponseBuffer(j + 3);
+                    int2flt.f = (float)g_mm_node.getResponseBuffer(jj);  // low word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 1))) * pow(2, 16);  // high word
+                    int2flt.f = int2flt.f + ((float)(g_mm_node.getResponseBuffer(jj + 2))) * pow(2, 32);  // high word
+                    u16_tempReg = g_mm_node.getResponseBuffer(jj + 3);
                   }
 
-                  int2flt.f *= pow(10, (int8_t)(rgstr1 >> 8));
+                  int2flt.f *= pow(10, (int8_t)(u16_tempReg >> 8));
                   
-                  out_mb_f[j + 9] = (int2flt.u32 >> 8);
-                  out_mb_f[j + 10] = int2flt.u32;
+                  u8a_mbResp[jj + 9] = (int2flt.u32 >> 8);
+                  u8a_mbResp[jj + 10] = int2flt.u32;
                   
-                  out_mb_f[j + 11] = (int2flt.u32 >> 24);
-                  out_mb_f[j + 12] = (int2flt.u32 >> 16); 
+                  u8a_mbResp[jj + 11] = (int2flt.u32 >> 24);
+                  u8a_mbResp[jj + 12] = (int2flt.u32 >> 16); 
                 }
                 break;
-              case 11:  // energy units  (eaton designed unit)
+              case 11:  // double to float
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
-                for (j = 0; j < adj_lgth_reg; j += 4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0; jj < u16_adjNumRegs; jj += 4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 {
-                  if ((reg_flags & 0x80)) {  // WORDSWAP
-                    int2flt.u16[3] = g_mm_node.getResponseBuffer(j);
-                    int2flt.u16[2] = g_mm_node.getResponseBuffer(j + 1);
-                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j + 2);
-                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j + 3);
+                  if ((u8_dataTypeFlags & 0x80)) {  // WORDSWAP
+                    int2flt.u16[3] = g_mm_node.getResponseBuffer(jj);
+                    int2flt.u16[2] = g_mm_node.getResponseBuffer(jj + 1);
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(jj + 2);
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(jj + 3);
                   }
                   else {
-                    int2flt.u16[0] = g_mm_node.getResponseBuffer(j);
-                    int2flt.u16[1] = g_mm_node.getResponseBuffer(j + 1);
-                    int2flt.u16[2] = g_mm_node.getResponseBuffer(j + 2);
-                    int2flt.u16[3] = g_mm_node.getResponseBuffer(j + 3);
+                    int2flt.u16[0] = g_mm_node.getResponseBuffer(jj);
+                    int2flt.u16[1] = g_mm_node.getResponseBuffer(jj + 1);
+                    int2flt.u16[2] = g_mm_node.getResponseBuffer(jj + 2);
+                    int2flt.u16[3] = g_mm_node.getResponseBuffer(jj + 3);
                   }
 
                   int2flt.f = (float)int2flt.dbl;
 
-                  out_mb_f[j + 9] = (int2flt.u32 >> 8);
-                  out_mb_f[j + 10] = int2flt.u32;
+                  u8a_mbResp[jj + 9] = (int2flt.u32 >> 8);
+                  u8a_mbResp[jj + 10] = int2flt.u32;
 
-                  out_mb_f[j + 11] = (int2flt.u32 >> 24);
-                  out_mb_f[j + 12] = (int2flt.u32 >> 16);
+                  u8a_mbResp[jj + 11] = (int2flt.u32 >> 24);
+                  u8a_mbResp[jj + 12] = (int2flt.u32 >> 16);
                 }
 #else
-                for (j = 0; j < adj_lgth_reg; j += 4)  // adj_lgth_reg is # of registers - divide since handling by two
+                for (int jj = 0; jj < u16_adjNumRegs; jj += 4)  // u16_adjNumRegs is # of registers - divide since handling by two
                 {
-                  if ((reg_flags & 0x80)) {  // WORDSWAP
-                    dblC.u16[3] = g_mm_node.getResponseBuffer(j);
-                    dblC.u16[2] = g_mm_node.getResponseBuffer(j + 1);
-                    dblC.u16[1] = g_mm_node.getResponseBuffer(j + 2);
-                    dblC.u16[0] = g_mm_node.getResponseBuffer(j + 3);
+                  if ((u8_dataTypeFlags & 0x80)) {  // WORDSWAP
+                    dblC.u16[3] = g_mm_node.getResponseBuffer(jj);
+                    dblC.u16[2] = g_mm_node.getResponseBuffer(jj + 1);
+                    dblC.u16[1] = g_mm_node.getResponseBuffer(jj + 2);
+                    dblC.u16[0] = g_mm_node.getResponseBuffer(jj + 3);
                   }
                   else {
-                    dblC.u16[0] = g_mm_node.getResponseBuffer(j);
-                    dblC.u16[1] = g_mm_node.getResponseBuffer(j + 1);
-                    dblC.u16[2] = g_mm_node.getResponseBuffer(j + 2);
-                    dblC.u16[3] = g_mm_node.getResponseBuffer(j + 3);
+                    dblC.u16[0] = g_mm_node.getResponseBuffer(jj);
+                    dblC.u16[1] = g_mm_node.getResponseBuffer(jj + 1);
+                    dblC.u16[2] = g_mm_node.getResponseBuffer(jj + 2);
+                    dblC.u16[3] = g_mm_node.getResponseBuffer(jj + 3);
                   }
 
                   int e = dblC.sD.e - 1023 + 127;
@@ -534,18 +534,18 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
                   }
                   else int2flt.f = NAN;
 
-                  out_mb_f[j + 9] = (int2flt.u32 >> 8);
-                  out_mb_f[j + 10] = int2flt.u32;
+                  u8a_mbResp[jj + 9] = (int2flt.u32 >> 8);
+                  u8a_mbResp[jj + 10] = int2flt.u32;
 
-                  out_mb_f[j + 11] = (int2flt.u32 >> 24);
-                  out_mb_f[j + 12] = (int2flt.u32 >> 16);
+                  u8a_mbResp[jj + 11] = (int2flt.u32 >> 24);
+                  u8a_mbResp[jj + 12] = (int2flt.u32 >> 16);
                 }
                 break;
               default: // pass on data with no adjustments
-                for (j = 0, i = 9; j < adj_lgth_reg; j++, i+=2){
-                  rgstr1 = g_mm_node.getResponseBuffer(j);
-                  out_mb_f[i] = (rgstr1 >> 8);
-                  out_mb_f[i + 1] = rgstr1;
+                for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii+=2){
+                  u16_tempReg = g_mm_node.getResponseBuffer(jj);
+                  u8a_mbResp[ii] = (u16_tempReg >> 8);
+                  u8a_mbResp[ii + 1] = u16_tempReg;
                 }
 #endif
                 break;
@@ -560,84 +560,84 @@ bool getModbus(uint8_t *in_mb_f, uint16_t msg_lgth, uint8_t *out_mb_f, uint16_t 
         case 4:  // g_mm_node.ku8MBSlaveDeviceFailure
         default:
   //        Serial.println("error returned");
-          if (result > 0){
-            exp_lgth = 0; // length of modbus message for MB/TCP
-            out_mb_f[7] = (func_reg | 0x80); // return function  + 128
-            out_mb_f[8] = result; // modbus error function
+          if (u8_mbResult > 0){
+            u8_mbRespNumBytes = 0; // length of modbus message for MB/TCP
+            u8a_mbResp[7] = (u8_mbReqFunc | 0x80); // return function  + 128
+            u8a_mbResp[8] = u8_mbResult; // modbus error function
           }
           else{
-            out_mb_f[7] = func_reg; // return function since no error occured
-            out_mb_f[8] = exp_lgth; // expected modbus length
-            mb_stat = true;
+            u8a_mbResp[7] = u8_mbReqFunc; // return function since no error occured
+            u8a_mbResp[8] = u8_mbRespNumBytes; // expected modbus length
+            b_mbStatus = true;
           }
           
-          out_mb_f[4] = ((exp_lgth + 3) >> 8);  // expected tcp length
-          out_mb_f[5] = exp_lgth + 3;  // expected tcp length
+          u8a_mbResp[4] = ((u8_mbRespNumBytes + 3) >> 8);  // expected tcp length
+          u8a_mbResp[5] = u8_mbRespNumBytes + 3;  // expected tcp length
   
-          out_len = (exp_lgth + 9);
+          u16_mbRespLen = (u8_mbRespNumBytes + 9);
           
-          return mb_stat;        
+          return b_mbStatus;        
           break;
-      }  // end switch (result)
+      }  // end switch (u8_mbResult)
     }  // end else if no error    
-  }  // end if (msg_lgth == 12
+  }  // end if (u16_mbReqLen == 12
   
   return false;
 }  // end getModbus()
 
 
-void handle_modbus(bool bMain) {
-  uint8_t in_mb[gk_u16_mbArraySize] = {0};
-  uint8_t out_mb[gk_u16_mbArraySize];
-  //uint16_t i = 0;
-  uint16_t initLen;
-  uint16_t givenLen;
-  uint16_t out_len = 0;
-  uint32_t u32MB_Cl_To_old; // , u32MB_Cl_To_cur;
-  uint32_t u32MB_TCP_to_old;
+void handle_modbus(bool b_idleHttp) {
+  uint8_t u8a_mbReq[gk_u16_mbArraySize] = {0};
+  uint8_t u8a_mbResp[gk_u16_mbArraySize];
+  uint16_t u16_lenRead;
+  uint16_t u16_givenLen;
+  uint16_t u16_mbRespLen = 0;
+  uint32_t u32_mbReqStart; // , u32MB_Cl_To_cur;
+  uint32_t u32_mbTcpConnStart;
   const uint32_t k_u32_mbTcpTimeout(3000);              // timeout for device to hold on to tcp connection after modbus request
-  EthernetClient52 client = g_es_mbServ.available();
+  const uint32_t k_u32_mbReqTimeout(10);
+  EthernetClient52 ec_client = g_es_mbServ.available();
   
-  if (client)
+  if (ec_client)
   {
-    u32MB_TCP_to_old = millis();
+    u32_mbTcpConnStart = millis();
 
-    while (client.connected() && ((millis() - u32MB_TCP_to_old) < k_u32_mbTcpTimeout)) {  // check to see if client is connected and hasn't to'd
-      //      client.getRemoteIP(rip); // get client IP
-      if (client.available()) {
-        initLen = client.read(in_mb, gk_u16_mbArraySize);
-        u32MB_Cl_To_old = millis();
+    while (ec_client.connected() && ((millis() - u32_mbTcpConnStart) < k_u32_mbTcpTimeout)) {  // check to see if client is connected and hasn't to'd
+      //      ec_client.getRemoteIP(rip); // get client IP
+      if (ec_client.available()) {
+        u16_lenRead = ec_client.read(u8a_mbReq, gk_u16_mbArraySize);
+        u32_mbReqStart = millis();
 
-        givenLen = word(in_mb[4], in_mb[5]) + 6;
+        u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
 
-        if ((initLen > givenLen) || (givenLen > gk_u16_mbArraySize)) {
-          client.stop();  // grabbed too much, just exit without worrying.  It  shouldn't happen, any other connection will have dift sockets
+        if ((u16_lenRead > u16_givenLen) || (u16_givenLen > gk_u16_mbArraySize)) {
+          ec_client.stop();  // grabbed too much, just exit without worrying.  It  shouldn't happen, any other connection will have dift sockets
           return;         //     or incoming packet larger than array (this should not happen, modbus/tcp deals with pretty small stuff overall
         }
 
-        while (initLen < givenLen) {  // make sure to grab the full packet
-          initLen += client.read(in_mb + initLen, gk_u16_mbArraySize - initLen);
+        while (u16_lenRead < u16_givenLen) {  // make sure to grab the full packet
+          u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, gk_u16_mbArraySize - u16_lenRead);
 
-          if ((millis() - u32MB_Cl_To_old) > 10) {  // 10 ms might be too quick, but not really sure
-            client.stop();  // could not get full message, exit
+          if ((millis() - u32_mbReqStart) > k_u32_mbReqTimeout) {  // 10 ms might be too quick, but not really sure
+            ec_client.stop();  // could not get full message, exit
             return;
           }
         }
         
-        getModbus(in_mb, initLen, out_mb, out_len);
+        getModbus(u8a_mbReq, u16_lenRead, u8a_mbResp, u16_mbRespLen);
 
-        if (out_len > 0) {
-          client.write(out_mb, out_len);
-          client.flush();
+        if (u16_mbRespLen > 0) {
+          ec_client.write(u8a_mbResp, u16_mbRespLen);
+          ec_client.flush();
           //break;
-          u32MB_TCP_to_old = millis();
+          u32_mbTcpConnStart = millis();
         }
       }  // end if client available
-      else if (bMain) {
+      else if (b_idleHttp) {
         //handle_data(false);
       }
     }  // end while (client.connected())
-  client.stop();
+    ec_client.stop();
   }  // end if (client)
   
 }

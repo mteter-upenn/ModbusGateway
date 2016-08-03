@@ -20,7 +20,7 @@ void meter15(uint16_t mtr_start) {
 
   EEPROM.write(mtr_start + 3, highByte(grp_strt));
   EEPROM.write(mtr_start + 4, lowByte(grp_strt));
-  EEPROM.write(mtr_start + 5, grp_num);  // number of blocks;
+  EEPROM.write(mtr_start + 5, grp_num);  // number of groups;
 
                                          // Block #1 - [1, 201, 128]
   EEPROM.write(blk_strt, highByte(4002));

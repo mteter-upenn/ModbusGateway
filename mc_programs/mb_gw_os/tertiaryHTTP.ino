@@ -6,47 +6,46 @@
 
 
 
-void sendPostResp(EthernetClient52 client) {
-  char postResp[76]; // = "HTTP/1.1 303 See Other\nLocation: http://";
+void sendPostResp(EthernetClient52 &ec_client) {
+  char ca_postResp[67]; // = "HTTP/1.1 303 See Other\nLocation: http://";
 
-  strcpy_P(postResp, PSTR("HTTP/1.1 303 See Other\nLocation: /redirect.htm\nConnection: close\n\n"));
-  client.write(postResp, 66);
+  strcpy_P(ca_postResp, PSTR("HTTP/1.1 303 See Other\nLocation: /redirect.htm\nConnection: close\n\n"));
+  ec_client.write(ca_postResp);
 
-  client.flush();
+  ec_client.flush();
 }
 
 
-char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) {
-  char * msgPtr;
-  int16_t lenRead;
-  uint16_t i;
-  bool foundPtr = false;
-  const char contLen[] = "Content-Length: ";
-  const char escHead[] = "\r\n\r\n";
-  uint16_t charMatches = 0;
+char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_postLen) {
+  char *cp_srchPtr;
+  int16_t s16_lenRead;
+  bool b_foundPtr = false;
+  const char cca_contLen[] = "Content-Length: ";
+  const char cca_escHead[] = "\r\n\r\n";
+  uint16_t u16_charMatches = 0;
 
-  postLen = 0;
+  u16_postLen = 0;
 
-  lenRead = client.read((uint8_t*)headHttp, gk_u16_postBuffSize); // read out to g_POST_BUF_SZ
-  headHttp[lenRead] = 0;
+  s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, gk_u16_postBuffSize); // read out to g_POST_BUF_SZ
+  cp_httpHdr[s16_lenRead] = 0;
 
-  while (!foundPtr) {
-    msgPtr = strstr(headHttp, "Content-Length: ");  // Find 'Content-Length: '
+  while (!b_foundPtr) {
+    cp_srchPtr = strstr(cp_httpHdr, "Content-Length: ");  // Find 'Content-Length: '
 
-    if (msgPtr != nullptr) {
-      msgPtr += 16;  // add 16 to get to end of phrase
-      foundPtr = true;  // exit condition
+    if (cp_srchPtr != nullptr) {
+      cp_srchPtr += 16;  // add 16 to get to end of phrase
+      b_foundPtr = true;  // exit condition
     }
     else {  // check to see if phrase was cut in 2
-      msgPtr = headHttp + lenRead - 15;  // stick msgPtr at end of read message
+      cp_srchPtr = cp_httpHdr + s16_lenRead - 15;  // stick msgPtr at end of read message
 
-      for (; msgPtr < headHttp + lenRead; msgPtr++) {
-        for (i = 0; i < 16; i++) {
-          if ((msgPtr + i) == (headHttp + lenRead)) {  
+      for (; cp_srchPtr < cp_httpHdr + s16_lenRead; ++cp_srchPtr) {
+        for (uint32_t ii = 0; ii < 16; ++ii) {  // 16 is length of 'Content-Length: '
+          if ((cp_srchPtr + ii) == (cp_httpHdr + s16_lenRead)) {
             // end of msgPtr, // match up to previous point
-            charMatches = i;
+            u16_charMatches = ii;
           }
-          else if (*(msgPtr + i) == contLen[i]) {
+          else if (*(cp_srchPtr + ii) == cca_contLen[ii]) {
             // continue to match headHttp and contLen
           }
           else {
@@ -54,25 +53,25 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
           }
         }
 
-        if (charMatches) {  // a match has been found, no reason to keep looking
+        if (u16_charMatches) {  // a match has been found, no reason to keep looking
           break;
         }
       }
 
-      lenRead = client.read((uint8_t*)headHttp, gk_u16_postBuffSize); // read out to POST_BUF_SZ
-      headHttp[lenRead] = 0;
+      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, gk_u16_postBuffSize); // read out to POST_BUF_SZ
+      cp_httpHdr[s16_lenRead] = 0;
 
-      if (charMatches) {
+      if (u16_charMatches) {
         // try to match beginning of headHttp with remaining chars of contLen
-        for (i = charMatches; i < 16; i++) {
-          if (contLen[i] == headHttp[i - charMatches]) {
-            if (i == 15) {
-              foundPtr = true;  // escape condition
-              msgPtr = headHttp + 16 - charMatches;  // end of phrase
+        for (int ii = u16_charMatches; ii < 16; ++ii) {
+          if (cca_contLen[ii] == cp_httpHdr[ii - u16_charMatches]) {
+            if (ii == 15) {
+              b_foundPtr = true;  // escape condition
+              cp_srchPtr = cp_httpHdr + 16 - u16_charMatches;  // end of phrase
             }
           }
           else {
-            charMatches = 0;
+            u16_charMatches = 0;
             break;
           }
         }
@@ -81,15 +80,15 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
   }  // while haven't found pointer
 
   // after 'Content-Length: ' is found, determine the postLen
-  for (i = 0; i < 2; i++) {  // used for loop instead just to be sure it breaks free even if I get nothing out of it
-    while (isdigit(*msgPtr)) {
-      postLen = postLen * 10 + ((*msgPtr) - '0');
-      msgPtr++;
+  for (int ii = 0; ii < 2; ++ii) {  // used for loop instead just to be sure it breaks free even if I get nothing out of it
+    while (isdigit(*cp_srchPtr)) {
+      u16_postLen = u16_postLen * 10 + ((*cp_srchPtr) - '0');
+      cp_srchPtr++;
     }
 
-    if ((*msgPtr) == '\0') {
-      client.read((uint8_t*)headHttp, gk_u16_postBuffSize); // length was cut off, load next portion into headHttp
-      msgPtr = headHttp;  // reset postLenPtr to start of headHttp
+    if ((*cp_srchPtr) == '\0') {
+      ec_client.read((uint8_t*)cp_httpHdr, gk_u16_postBuffSize); // length was cut off, load next portion into headHttp
+      cp_srchPtr = cp_httpHdr;  // reset postLenPtr to start of headHttp
     }
     else {
       break;  // breaks for loop
@@ -97,26 +96,26 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
   }
 
   // now find '\r\n\r\n'  -  this escapes from the http header
-  foundPtr = false;
-  charMatches = false;
+  b_foundPtr = false;
+  u16_charMatches = 0;
 
-  while (!foundPtr) {
-    msgPtr = strstr(headHttp, escHead);
+  while (!b_foundPtr) {
+    cp_srchPtr = strstr(cp_httpHdr, cca_escHead);
 
-    if (msgPtr != nullptr) {
-      msgPtr += 4;  // add 4 to get to end of phrase
-      foundPtr = true;  // exit condition
+    if (cp_srchPtr != nullptr) {
+      cp_srchPtr += 4;  // add 4 to get to end of phrase
+      b_foundPtr = true;  // exit condition
     }
     else {  // check to see if phrase was cut in 2
-      msgPtr = headHttp + lenRead - 3;  // stick msgPtr at end of read message
+      cp_srchPtr = cp_httpHdr + s16_lenRead - 3;  // stick msgPtr at end of read message
 
-      for (; msgPtr < headHttp + lenRead; msgPtr++) {
-        for (i = 0; i < 4; i++) {
-          if ((msgPtr + i) == (headHttp + lenRead)) {
+      for (; cp_srchPtr < cp_httpHdr + s16_lenRead; ++cp_srchPtr) {
+        for (int ii = 0; ii < 4; ++ii) {
+          if ((cp_srchPtr + ii) == (cp_httpHdr + s16_lenRead)) {
             // end of msgPtr, // match up to previous point
-            charMatches = i;
+            u16_charMatches = ii;
           }
-          else if (*(msgPtr + i) == escHead[i]) {
+          else if (*(cp_srchPtr + ii) == cca_escHead[ii]) {
             // continue to match headHttp and contLen
           }
           else {
@@ -124,25 +123,25 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
           }
         }
 
-        if (charMatches) {  // a match has been found, no reason to keep looking
+        if (u16_charMatches) {  // a match has been found, no reason to keep looking
           break;
         }
       }
 
-      lenRead = client.read((uint8_t*)headHttp, gk_u16_postBuffSize); // read out to gk_u16_postBuffSize
-      headHttp[lenRead] = 0;
+      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, gk_u16_postBuffSize); // read out to gk_u16_postBuffSize
+      cp_httpHdr[s16_lenRead] = 0;
 
-      if (charMatches) {
+      if (u16_charMatches) {
         // try to match beginning of headHttp with remaining chars of escHead
-        for (i = charMatches; i < 4; i++) {
-          if (escHead[i] == headHttp[i - charMatches]) {
-            if (i == 3) {
-              foundPtr = true;  // escape condition
-              msgPtr = headHttp + 3 - charMatches;  // end of phrase
+        for (int ii = u16_charMatches; ii < 4; ++ii) {
+          if (cca_escHead[ii] == cp_httpHdr[ii - u16_charMatches]) {
+            if (ii == 3) {
+              b_foundPtr = true;  // escape condition
+              cp_srchPtr = cp_httpHdr + 3 - u16_charMatches;  // end of phrase
             }
           }
           else {
-            charMatches = 0;
+            u16_charMatches = 0;
             break;
           }
         }
@@ -150,315 +149,314 @@ char * preprocPost(EthernetClient52 client, char * headHttp, uint16_t &postLen) 
     }  // else pointer is NULL
   }  // while haven't found pointer
 
-  headHttp[lenRead + client.read((uint8_t*)headHttp + lenRead, gk_u16_requestBuffSize - lenRead)] = 0;
-  return msgPtr;
+  cp_httpHdr[s16_lenRead + ec_client.read((uint8_t*)cp_httpHdr + s16_lenRead, gk_u16_requestBuffSize - s16_lenRead)] = 0;
+  return cp_srchPtr;
 }
 
 
-void getPostSetupData(EthernetClient52 cl, char * headHttp) {
-  uint16_t  j;
-  char * id_strt, *id_end, *val_strt, *val_end;        // pointers used for setting barriers around values and identifiers
-  char * chPtr;                                        // dummy pointer for loops
-  uint8_t u8dum, lcl_meter;
-  uint8_t num_mtrs = 0;
-  uint16_t u16dum;
-  uint32_t u32dum;
-  bool readingMsg = true;
-  uint16_t postLen;                                    // length of message given in header
-  uint16_t totLen;                                     // length of message actually in headHttp
-  char * postMsgPtr;                                   // pointer to beginning of message
+void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr) {
+  char *cp_paramStart, *cp_paramEnd, *cp_argStart, *cp_argEnd;        // pointers used for setting barriers around values and identifiers
+  char *cp_iterPtr;                                        // dummy pointer for loops
+  uint8_t u8_dum, u8_mtrInd;
+  uint8_t u8_numGivenMtrs = 0;
+  uint16_t u16_dum;
+  uint32_t u32_dum;
+  bool b_readingMsg = true;
+  uint16_t u16_postLen;                                    // length of message given in header
+  uint16_t u16_totLenRead;                                     // length of message actually in headHttp
+  char *cp_postMsgPtr;                                   // pointer to beginning of message
 
   //Serial.println("start preproc");
-  postMsgPtr = preprocPost(cl, headHttp, postLen);     // get length of post message and place pointer at its start
+  cp_postMsgPtr = preprocPost(ec_client, cp_httpHdr, u16_postLen);     // get length of post message and place pointer at its start
   //Serial.println("exited preproc");
   
-  totLen = strlen(headHttp) - (postMsgPtr - headHttp);
+  u16_totLenRead = strlen(cp_httpHdr) - (cp_postMsgPtr - cp_httpHdr);
 
-  id_strt = postMsgPtr;
+  cp_paramStart = cp_postMsgPtr;
 
   digitalWrite(gk_s16_epWriteLed, HIGH);
 
-  while (readingMsg) {
-    if ((*postMsgPtr) != '\0') {
-      if ((*postMsgPtr) == '=') {
-        id_end = postMsgPtr;
-        postMsgPtr++;
-        val_strt = postMsgPtr;
+  while (b_readingMsg) {
+    if ((*cp_postMsgPtr) != '\0') {
+      if ((*cp_postMsgPtr) == '=') {
+        cp_paramEnd = cp_postMsgPtr;
+        cp_postMsgPtr++;
+        cp_argStart = cp_postMsgPtr;
 
-        while (((*postMsgPtr) != '&') && ((*postMsgPtr) != '\0')) {  // not sure how to handle if '\0' pops up with more message to be read
-          postMsgPtr++;
+        while (((*cp_postMsgPtr) != '&') && ((*cp_postMsgPtr) != '\0')) {  // not sure how to handle if '\0' pops up with more message to be read
+          cp_postMsgPtr++;
         }
 
-        val_end = postMsgPtr;
+        cp_argEnd = cp_postMsgPtr;
 
-        if (strncmp(id_strt, "mip", 3) == 0) {  //  ****************************************** METER IP *************************************************
-          lcl_meter = 0;
-          for (chPtr = (id_strt + 3); chPtr < id_end; chPtr++) {
-            lcl_meter = lcl_meter * 10 + ((*chPtr) - '0');
+        if (strncmp(cp_paramStart, "mip", 3) == 0) {  //  ****************************************** METER IP *************************************************
+          u8_mtrInd = 0;
+          for (cp_iterPtr = (cp_paramStart + 3); cp_iterPtr < cp_paramEnd; ++cp_iterPtr) {
+            u8_mtrInd = u8_mtrInd * 10 + ((*cp_iterPtr) - '0');
           }
 
-          if (lcl_meter < num_mtrs) {  // make sure to only record necessary number of meters
-            if (val_strt == val_end) {  // blank values for ips translate to 0's
-              for (j = 0; j < 4; j++) {
-                EEPROM.write((j + g_u16_mtrBlkStart + 9 * lcl_meter + 4), 0);
+          if (u8_mtrInd < u8_numGivenMtrs) {  // make sure to only record necessary number of meters
+            if (cp_argStart == cp_argEnd) {  // blank values for ips translate to 0's
+              for (int jj = 0; jj < 4; ++jj) {
+                EEPROM.write((jj + g_u16_mtrBlkStart + 9 * u8_mtrInd + 4), 0);
               }
             }
             else {
-              chPtr = val_strt;
-              for (j = 0; j < 4; j++) {
-                u8dum = 0;
-                while (((*chPtr) != '.') && (chPtr < val_end)) {
-                  u8dum = u8dum * 10 + ((*chPtr) - '0');
-                  chPtr++;
+              cp_iterPtr = cp_argStart;
+              for (int jj = 0; jj < 4; ++jj) {
+                u8_dum = 0;
+                while (((*cp_iterPtr) != '.') && (cp_iterPtr < cp_argEnd)) {
+                  u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+                  cp_iterPtr++;
                 }
-                chPtr++;
-                EEPROM.write((j + g_u16_mtrBlkStart + 9 * lcl_meter + 4), u8dum);
+                cp_iterPtr++;
+                EEPROM.write((jj + g_u16_mtrBlkStart + 9 * u8_mtrInd + 4), u8_dum);
               }
             }
           }
         }
-        else if (strncmp(id_strt, "id", 2) == 0) {  //  ****************************************** MODBUS ID *************************************************
-          lcl_meter = 0;
-          for (chPtr = (id_strt + 2); chPtr < id_end; chPtr++) {
-            lcl_meter = lcl_meter * 10 + ((*chPtr) - '0');
+        else if (strncmp(cp_paramStart, "id", 2) == 0) {  //  ****************************************** MODBUS ID *************************************************
+          u8_mtrInd = 0;
+          for (cp_iterPtr = (cp_paramStart + 2); cp_iterPtr < cp_paramEnd; ++cp_iterPtr) {
+            u8_mtrInd = u8_mtrInd * 10 + ((*cp_iterPtr) - '0');
           }
 
-          if (lcl_meter < num_mtrs) {  // make sure to only record necessary number of meters
-            u8dum = 0;
-            for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-              u8dum = u8dum * 10 + ((*chPtr) - '0');
+          if (u8_mtrInd < u8_numGivenMtrs) {  // make sure to only record necessary number of meters
+            u8_dum = 0;
+            for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+              u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
             }
-            EEPROM.write((g_u16_mtrBlkStart + 9 * lcl_meter + 8), u8dum);
-            //          Serial.print(lcl_meter, DEC);
+            EEPROM.write((g_u16_mtrBlkStart + 9 * u8_mtrInd + 8), u8_dum);
+            //          Serial.print(u8_mtrInd, DEC);
             //          Serial.print(F(": "));
-            //          Serial.println(u8dum, DEC);
+            //          Serial.println(u8_dum, DEC);
           }
         }
-        else if (strncmp(id_strt, "vid", 3) == 0) {  //  ************************************ VIRTUAL MODBUS ID *************************************************
-          lcl_meter = 0;
-          for (chPtr = (id_strt + 3); chPtr < id_end; chPtr++) {
-            lcl_meter = lcl_meter * 10 + ((*chPtr) - '0');
+        else if (strncmp(cp_paramStart, "vid", 3) == 0) {  //  ************************************ VIRTUAL MODBUS ID *************************************************
+          u8_mtrInd = 0;
+          for (cp_iterPtr = (cp_paramStart + 3); cp_iterPtr < cp_paramEnd; ++cp_iterPtr) {
+            u8_mtrInd = u8_mtrInd * 10 + ((*cp_iterPtr) - '0');
           }
 
-          if (lcl_meter < num_mtrs) {  // make sure to only record necessary number of meters
-            u8dum = 0;
-            for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-              u8dum = u8dum * 10 + ((*chPtr) - '0');
+          if (u8_mtrInd < u8_numGivenMtrs) {  // make sure to only record necessary number of meters
+            u8_dum = 0;
+            for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+              u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
             }
-            EEPROM.write((g_u16_mtrBlkStart + 9 * lcl_meter + 9), u8dum);
-            //          Serial.print(lcl_meter, DEC);
+            EEPROM.write((g_u16_mtrBlkStart + 9 * u8_mtrInd + 9), u8_dum);
+            //          Serial.print(u8_mtrInd, DEC);
             //          Serial.print(F(": "));
-            //          Serial.println(u8dum, DEC);
+            //          Serial.println(u8_dum, DEC);
           }
         }
-        else if (strncmp(id_strt, "mtr", 3) == 0) {  //  ****************************************** METER TYPE *************************************************
-          lcl_meter = 0;
-          for (chPtr = (id_strt + 3); chPtr < id_end; chPtr++) {
-            lcl_meter = lcl_meter * 10 + ((*chPtr) - '0');
+        else if (strncmp(cp_paramStart, "mtr", 3) == 0) {  //  ****************************************** METER TYPE *************************************************
+          u8_mtrInd = 0;
+          for (cp_iterPtr = (cp_paramStart + 3); cp_iterPtr < cp_paramEnd; ++cp_iterPtr) {
+            u8_mtrInd = u8_mtrInd * 10 + ((*cp_iterPtr) - '0');
           }
 
-          if (lcl_meter < num_mtrs) {  // make sure to only record necessary number of meters
-            chPtr = val_strt;
-            for (j = 0; j < 3; j++) {
-              u8dum = 0;
-              while (((*chPtr) != '.') && (chPtr < val_end)) {
-                u8dum = u8dum * 10 + ((*chPtr) - '0');
-                chPtr++;
+          if (u8_mtrInd < u8_numGivenMtrs) {  // make sure to only record necessary number of meters
+            cp_iterPtr = cp_argStart;
+            for (int jj = 0; jj < 3; ++jj) {
+              u8_dum = 0;
+              while (((*cp_iterPtr) != '.') && (cp_iterPtr < cp_argEnd)) {
+                u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+                cp_iterPtr++;
               }
-              chPtr++;
-              EEPROM.write((j + g_u16_mtrBlkStart + 9 * lcl_meter + 1), u8dum);
+              cp_iterPtr++;
+              EEPROM.write((jj + g_u16_mtrBlkStart + 9 * u8_mtrInd + 1), u8_dum);
             }
           }
         }
-        else if (strncmp(id_strt, "numMtrs", 7) == 0) {  //  ****************************************** NUM METERS *************************************************
-          for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-            num_mtrs = num_mtrs * 10 + ((*chPtr) - '0');
+        else if (strncmp(cp_paramStart, "numMtrs", 7) == 0) {  //  ****************************************** NUM METERS *************************************************
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u8_numGivenMtrs = u8_numGivenMtrs * 10 + ((*cp_iterPtr) - '0');
           }
 
-          if (num_mtrs > 20) {
-            num_mtrs = 20;
+          if (u8_numGivenMtrs > 20) {
+            u8_numGivenMtrs = 20;
           }
 
-          EEPROM.write(g_u16_mtrBlkStart, num_mtrs);
+          EEPROM.write(g_u16_mtrBlkStart, u8_numGivenMtrs);
         }
-        else if (strncmp(id_strt, "nm", 2) == 0) {  // ******************************** NAME ****************************************
+        else if (strncmp(cp_paramStart, "nm", 2) == 0) {  // ******************************** NAME ****************************************
           //Serial.println(F("nm"));
 
-          if ((val_end - val_strt) > 30) {
-            val_end = val_strt + 30;
+          if ((cp_argEnd - cp_argStart) > 30) {
+            cp_argEnd = cp_argStart + 30;
           }
-          for (chPtr = val_strt; chPtr < val_end; chPtr++) {  // limited to 30 characters
-            if ((*chPtr) == 43) {  // filter out '+' as html concatenator
-              (*chPtr) = 32;  // replace with blank space
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {  // limited to 30 characters
+            if ((*cp_iterPtr) == 43) {  // filter out '+' as html concatenator
+              (*cp_iterPtr) = 32;  // replace with blank space
             }
-            EEPROM.write((chPtr - val_strt + g_u16_nameBlkStart), (*chPtr));
+            EEPROM.write((cp_iterPtr - cp_argStart + g_u16_nameBlkStart), (*cp_iterPtr));
           }
-          if ((val_end - val_strt) != 30) {
-            EEPROM.write((val_end - val_strt + g_u16_nameBlkStart), 0);
+          if ((cp_argEnd - cp_argStart) != 30) {
+            EEPROM.write((cp_argEnd - cp_argStart + g_u16_nameBlkStart), 0);
           }
         }
-        else if (strncmp(id_strt, "rd", 2) == 0) {  // ***************************************** Record Data ************************************
+        else if (strncmp(cp_paramStart, "rd", 2) == 0) {  // ***************************************** Record Data ************************************
           //Serial.println(F("record data"));
 
-          u16dum = 0;
-          for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-            u16dum = u16dum * 10 + ((*chPtr) - '0');
+          u16_dum = 0;
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u16_dum = u16_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-          if (u16dum) {
+          if (u16_dum) {
             EEPROM.write(g_u16_nameBlkStart + 31, true);
           }
           else {
             EEPROM.write(g_u16_nameBlkStart + 31, false);
           }
         }
-        else if (strncmp(id_strt, "ms", 2) == 0) {  // ***************************** Max Number of Slaves to Record ************************************
+        else if (strncmp(cp_paramStart, "ms", 2) == 0) {  // ***************************** Max Number of Slaves to Record ************************************
           //Serial.println(F("num slaves to record"));
 
-          u8dum = 0;
-          for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-            u8dum = u8dum * 10 + ((*chPtr) - '0');
+          u8_dum = 0;
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-          EEPROM.write(g_u16_nameBlkStart + 32, u8dum);
+          EEPROM.write(g_u16_nameBlkStart + 32, u8_dum);
         }
-        else if (strncmp(id_strt, "ip", 2) == 0) {  //  ***************************************** IP ************************************************
+        else if (strncmp(cp_paramStart, "ip", 2) == 0) {  //  ***************************************** IP ************************************************
           //Serial.println(F("ip"));
 
-          chPtr = val_strt;
-          for (j = 0; j < 4; j++) {
-            u8dum = 0;
-            while (((*chPtr) != '.') && (chPtr < val_end)) {
-              u8dum = u8dum * 10 + ((*chPtr) - '0');
-              chPtr++;
+          cp_iterPtr = cp_argStart;
+          for (int jj = 0; jj < 4; ++jj) {
+            u8_dum = 0;
+            while (((*cp_iterPtr) != '.') && (cp_iterPtr < cp_argEnd)) {
+              u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+              cp_iterPtr++;
             }
-            chPtr++;
-            EEPROM.write((j + g_u16_ipBlkStart + 6), u8dum);
+            cp_iterPtr++;
+            EEPROM.write((jj + g_u16_ipBlkStart + 6), u8_dum);
           }
         }
-        else if (strncmp(id_strt, "sm", 2) == 0) {  //  ****************************************** SUBNET MASK *************************************************
+        else if (strncmp(cp_paramStart, "sm", 2) == 0) {  //  ****************************************** SUBNET MASK *************************************************
           //Serial.println(F("sm"));
 
-          chPtr = val_strt;
-          for (j = 0; j < 4; j++) {
-            u8dum = 0;
-            while (((*chPtr) != '.') && (chPtr < val_end)) {
-              u8dum = u8dum * 10 + ((*chPtr) - '0');
-              chPtr++;
+          cp_iterPtr = cp_argStart;
+          for (int jj = 0; jj < 4; ++jj) {
+            u8_dum = 0;
+            while (((*cp_iterPtr) != '.') && (cp_iterPtr < cp_argEnd)) {
+              u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+              cp_iterPtr++;
             }
-            chPtr++;
-            EEPROM.write((j + g_u16_ipBlkStart + 10), u8dum);
+            cp_iterPtr++;
+            EEPROM.write((jj + g_u16_ipBlkStart + 10), u8_dum);
           }
         }
-        else if (strncmp(id_strt, "gw", 2) == 0) {  //  ****************************************** DEFAULT GATEWAY *************************************************
+        else if (strncmp(cp_paramStart, "gw", 2) == 0) {  //  ****************************************** DEFAULT GATEWAY *************************************************
           //Serial.println(F("gw"));
-          chPtr = val_strt;
-          for (j = 0; j < 4; j++) {
-            u8dum = 0;
-            while (((*chPtr) != '.') && (chPtr < val_end)) {
-              u8dum = u8dum * 10 + ((*chPtr) - '0');
-              chPtr++;
+          cp_iterPtr = cp_argStart;
+          for (int jj = 0; jj < 4; ++jj) {
+            u8_dum = 0;
+            while (((*cp_iterPtr) != '.') && (cp_iterPtr < cp_argEnd)) {
+              u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+              cp_iterPtr++;
             }
-            chPtr++;
-            EEPROM.write((j + g_u16_ipBlkStart + 14), u8dum);
+            cp_iterPtr++;
+            EEPROM.write((jj + g_u16_ipBlkStart + 14), u8_dum);
           }
         }
-        else if (strncmp(id_strt, "ntp", 3) == 0) {  // ***************************************** USE NTP? ************************************
+        else if (strncmp(cp_paramStart, "ntp", 3) == 0) {  // ***************************************** USE NTP? ************************************
           //Serial.println(F("use ntp?"));
 
-          u16dum = 0;
-          for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-            u16dum = u16dum * 10 + ((*chPtr) - '0');
+          u16_dum = 0;
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u16_dum = u16_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-          if (u16dum) {
+          if (u16_dum) {
             EEPROM.write(g_u16_ipBlkStart + 18, true);
           }
           else {
             EEPROM.write(g_u16_ipBlkStart + 18, false);
           }
         }
-        else if (strncmp(id_strt, "nip", 3) == 0) {  //  ************************************ NTP SERVER IP *****************************************
+        else if (strncmp(cp_paramStart, "nip", 3) == 0) {  //  ************************************ NTP SERVER IP *****************************************
           //Serial.println(F("ntp ip"));
 
-          chPtr = val_strt;
-          for (j = 0; j < 4; j++) {
-            u8dum = 0;
-            while (((*chPtr) != '.') && (chPtr < val_end)) {
-              u8dum = u8dum * 10 + ((*chPtr) - '0');
-              chPtr++;
+          cp_iterPtr = cp_argStart;
+          for (int jj = 0; jj < 4; ++jj) {
+            u8_dum = 0;
+            while (((*cp_iterPtr) != '.') && (cp_iterPtr < cp_argEnd)) {
+              u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+              cp_iterPtr++;
             }
-            chPtr++;
-            EEPROM.write((j + g_u16_ipBlkStart + 19), u8dum);
+            cp_iterPtr++;
+            EEPROM.write((jj + g_u16_ipBlkStart + 19), u8_dum);
           }
         }
-        else if (strncmp(id_strt, "br", 2) == 0) {  //  ****************************************** BAUDRATE *************************************************
+        else if (strncmp(cp_paramStart, "br", 2) == 0) {  //  ****************************************** BAUDRATE *************************************************
           //Serial.println(F("br"));
 
-          u32dum = 0;
+          u32_dum = 0;
 
-          for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-            u32dum = u32dum * 10 + ((*chPtr) - '0');
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u32_dum = u32_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-          EEPROM.write(g_u16_ipBlkStart + 23, (u32dum >> 16));
-          EEPROM.write(g_u16_ipBlkStart + 24, (u32dum >> 8));
-          EEPROM.write(g_u16_ipBlkStart + 25, u32dum);
+          EEPROM.write(g_u16_ipBlkStart + 23, (u32_dum >> 16));
+          EEPROM.write(g_u16_ipBlkStart + 24, (u32_dum >> 8));
+          EEPROM.write(g_u16_ipBlkStart + 25, u32_dum);
         }
-        else if (strncmp(id_strt, "to", 2) == 0) {  //  ****************************************** MB TIMEOUT *************************************************
+        else if (strncmp(cp_paramStart, "to", 2) == 0) {  //  ****************************************** MB TIMEOUT *************************************************
           //Serial.println(F("to"));
 
-          u16dum = 0;
-          for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-            u16dum = u16dum * 10 + ((*chPtr) - '0');
+          u16_dum = 0;
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u16_dum = u16_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-          EEPROM.write(g_u16_ipBlkStart + 26, highByte(u16dum));
-          EEPROM.write(g_u16_ipBlkStart + 27, lowByte(u16dum));
+          EEPROM.write(g_u16_ipBlkStart + 26, highByte(u16_dum));
+          EEPROM.write(g_u16_ipBlkStart + 27, lowByte(u16_dum));
         }
-        else if (strncmp(id_strt, "tm", 2) == 0) {  //  ****************************************** TIME *************************************************
+        else if (strncmp(cp_paramStart, "tm", 2) == 0) {  //  ****************************************** TIME *************************************************
           //Serial.println(F("time"));
 
-          u32dum = 0;
+          u32_dum = 0;
 
-          for (chPtr = val_strt; chPtr < val_end; chPtr++) {
-            u32dum = u32dum * 10 + ((*chPtr) - '0');
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u32_dum = u32_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-          if (u32dum > 1451606400UL) {
+          if (u32_dum > 1451606400UL) {
             g_b_rtcGood = true;
 #if defined(CORE_TEENSY)
-            Teensy3Clock.set(u32dum);
+            Teensy3Clock.set(u32_dum);
 #endif
-            setTime(u32dum);
+            setTime(u32_dum);
           }
         }
 
-        postMsgPtr++;
-        id_strt = postMsgPtr;  
-      }  // end if *postMsgPtr == '='
+        cp_postMsgPtr++;
+        cp_paramStart = cp_postMsgPtr;
+      }  // end if *cp_postMsgPtr == '='
       else {  // doesn't equal '='
-        postMsgPtr++;
+        cp_postMsgPtr++;
       }  // end if ch == '='
     }  // if not '\0'
-    else {
-      if (totLen < postLen) {
-        if (cl.available()) {
+    else {  // ((*cp_postMsgPtr) == '\0')
+      if (u16_totLenRead < u16_postLen) {
+        if (ec_client.available()) {
           uint16_t lenRead;
-          lenRead = cl.read((uint8_t*)headHttp, gk_u16_requestBuffSize - 1);
-          headHttp[lenRead] = 0;
-          totLen += lenRead;
+          lenRead = ec_client.read((uint8_t*)cp_httpHdr, gk_u16_requestBuffSize - 1);
+          cp_httpHdr[lenRead] = 0;
+          u16_totLenRead += lenRead;
         }
         else {
-          readingMsg = false;  // exit if no more can be found
+          b_readingMsg = false;  // exit if no more can be found
         }
       }
       else {
-        readingMsg = false;  // read everything already, exit
+        b_readingMsg = false;  // read everything already, exit
       }
     }
   }  // end while
-  flushEthRx(cl, (uint8_t*)headHttp, gk_u16_requestBuffSize - 1);  // this shouldn't need to be used, here just in case
+  flushEthRx(ec_client, (uint8_t*)cp_httpHdr, gk_u16_requestBuffSize - 1);  // this shouldn't need to be used, here just in case
 
   digitalWrite(gk_s16_epWriteLed, LOW);
   setConstants();

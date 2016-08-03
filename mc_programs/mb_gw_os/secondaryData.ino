@@ -1,193 +1,201 @@
 
-void getElecRegs(uint16_t grp_strt, uint8_t grp_len, uint16_t &pwrReg, uint16_t &egyReg) {
+PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart) {
   //uint16_t lclmtr_strt;
-  //uint16_t grp_strt;
-  //uint8_t grp_len;
-  uint16_t grp_adr;
-  uint8_t numVals;
-  uint8_t valType;
-  uint8_t mplr;
-  uint16_t strtReg;
-  uint8_t i, j;
-  bool fndPwr = false;
-  bool fndEgy = false;
+  uint16_t u16_mtrGrpStart;
+  PwrEgyRegs elecReg;
+  uint16_t u16_curGrpInd;
+  uint8_t u8_numGrps;
+  uint8_t u8_numGrpVals;
+  uint8_t u8_valType;
+  uint8_t u8_typeMltplr;
+  uint16_t u16_reqReg;
+  bool b_fndPwr = false;
+  bool b_fndEgy = false;
 
   //lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
 
-  //grp_strt = word(EEPROM.read(lclmtr_strt + 3), EEPROM.read(lclmtr_strt + 4));  // where the first group starts
-  //grp_len = EEPROM.read(lclmtr_strt + 5);  // number of groups in meter
-  grp_adr = grp_strt;
+  u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 3), EEPROM.read(u16_mtrLibStart + 4));  // where the first group starts
+  u8_numGrps = EEPROM.read(u16_mtrLibStart + 5);  // number of groups in meter
+  u16_curGrpInd = u16_mtrGrpStart;
 
-  for (i = 0; i < grp_len; i++) {
-    numVals = EEPROM.read(grp_adr);
-    strtReg = word(EEPROM.read(grp_adr + 1), EEPROM.read(grp_adr + 2));
+  //Serial.println("getElecRegs:");
+  //Serial.println(u16_mtrGrpStart);
+  //Serial.println(u8_numGrps);
+  //Serial.println(u16_curGrpInd);
 
-    for (j = 0; j < numVals; j++) {
-      if ((!fndPwr) && (EEPROM.read(j + grp_adr + 3) == 17)) {
-        valType = (EEPROM.read(j + grp_adr + 3 + numVals) & 0x7F);  // only look at ls 7 bits
+  for (int ii = 0; ii < u8_numGrps; ++ii) {
+    u8_numGrpVals = EEPROM.read(u16_curGrpInd);
+    u16_reqReg = word(EEPROM.read(u16_curGrpInd + 1), EEPROM.read(u16_curGrpInd + 2));
 
-        if ((valType < 3) && (valType > 0)) {
-          mplr = 1;
+    for (int jj = 0; jj < u8_numGrpVals; ++jj) {
+      if ((!b_fndPwr) && (EEPROM.read(jj + u16_curGrpInd + 3) == 17)) {
+        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x7F);  // only look at ls 7 bits
+
+        if ((u8_valType < 3) && (u8_valType > 0)) {
+          u8_typeMltplr = 1;
         }
-        else if (valType == 7) {
-          mplr = 3;
+        else if (u8_valType == 7) {
+          u8_typeMltplr = 3;
         }
-        else if (valType > 7) {
-          mplr = 4;
+        else if (u8_valType > 7) {
+          u8_typeMltplr = 4;
         }
         else {
-          mplr = 2;
+          u8_typeMltplr = 2;
         }
 
-        pwrReg = 10000 + strtReg + j * mplr;
-        fndPwr = true;
+        elecReg.u16_pwr = 10000 + u16_reqReg + jj * u8_typeMltplr;
+        b_fndPwr = true;
       }
-      else if ((!fndEgy) && (EEPROM.read(j + grp_adr + 3) == 30)) {
-        valType = (EEPROM.read(j + grp_adr + 3 + numVals) & 0x7F);  // only look at ls 7 bits
+      else if ((!b_fndEgy) && (EEPROM.read(jj + u16_curGrpInd + 3) == 30)) {
+        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x7F);  // only look at ls 7 bits
 
-        if ((valType < 3) && (valType > 0)) {
-          mplr = 1;
+        if ((u8_valType < 3) && (u8_valType > 0)) {
+          u8_typeMltplr = 1;
         }
-        else if (valType == 7) {
-          mplr = 3;
+        else if (u8_valType == 7) {
+          u8_typeMltplr = 3;
         }
-        else if (valType > 7) {
-          mplr = 4;
+        else if (u8_valType > 7) {
+          u8_typeMltplr = 4;
         }
         else {
-          mplr = 2;
+          u8_typeMltplr = 2;
         }
 
-        egyReg = 10000 + strtReg + j * mplr;
-        fndEgy = true;
+        elecReg.u16_egy = 10000 + u16_reqReg + jj * u8_typeMltplr;
+        b_fndEgy = true;
       }
     }  // end for rotate through values
 
-    if (fndPwr && fndEgy) {
-      break;
+    if (b_fndPwr && b_fndEgy) {
+      return elecReg;
     }
-    grp_adr = 3 + 2 * (numVals)+grp_adr;  // starting address of next group
+    u16_curGrpInd = 3 + 2 * (u8_numGrpVals)+u16_curGrpInd;  // starting address of next group
   }  // end for rotate through groups
+
+  elecReg.u16_pwr = 0;
+  elecReg.u16_egy = 0;
+  return elecReg;
 }
 
 
-void getFileName(time_t t, char * fileName) {
+void getFileName(time_t t_time, char *cp_fileName) {
   int t_yr, t_mn, t_dy, t_hr, t_mm, t_ss;
-  char ch_yr[5];
-  char ch_mn[3];
-  char ch_dy[3];
-  char ch_hr[3];
-  char ch_mm[3];
-  char ch_ss[3];
-  int8_t i, j;
-  uint8_t digit;
+  char ca_yr[5];
+  char ca_mn[3];
+  char ca_dy[3];
+  char ca_hr[3];
+  char ca_mm[3];
+  char ca_ss[3];
+  uint8_t u8_digit;
   File tempFile;
 
-  ch_yr[4] = 0;
-  ch_mn[2] = 0;
-  ch_dy[2] = 0;
-  ch_hr[2] = 0;
-  ch_mm[2] = 0;
-  ch_ss[2] = 0;
-  strcpy_P(fileName, PSTR("/PASTDATA/"));
+  ca_yr[4] = 0;
+  ca_mn[2] = 0;
+  ca_dy[2] = 0;
+  ca_hr[2] = 0;
+  ca_mm[2] = 0;
+  ca_ss[2] = 0;
+  strcpy_P(cp_fileName, PSTR("/PASTDATA/"));
 
-  t_yr = year(t);
-  t_mn = month(t);
-  t_dy = day(t);
-  t_hr = hour(t);
-  t_mm = minute(t);
-  t_ss = second(t);
+  t_yr = year(t_time);
+  t_mn = month(t_time);
+  t_dy = day(t_time);
+  t_hr = hour(t_time);
+  t_mm = minute(t_time);
+  t_ss = second(t_time);
 
-  for (i = 3, j = 0; j < 4; i--, j++) {
-    digit = t_yr / pow(10, i);
-    ch_yr[j] = digit + '0';
-    t_yr -= digit * pow(10, i);
+  for (int ii = 3, jj = 0; jj < 4; --ii, ++jj) {
+    u8_digit = t_yr / pow(10, ii);
+    ca_yr[jj] = u8_digit + '0';
+    t_yr -= u8_digit * pow(10, ii);
   }
 
-  for (i = 1, j = 0; j < 2; i--, j++) {
-    digit = t_mn / pow(10, i);
-    ch_mn[j] = digit + '0';
-    t_mn -= digit * pow(10, i);
+  for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+    u8_digit = t_mn / pow(10, ii);
+    ca_mn[jj] = u8_digit + '0';
+    t_mn -= u8_digit * pow(10, ii);
   }
 
-  for (i = 1, j = 0; j < 2; i--, j++) {
-    digit = t_dy / pow(10, i);
-    ch_dy[j] = digit + '0';
-    t_dy -= digit * pow(10, i);
+  for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+    u8_digit = t_dy / pow(10, ii);
+    ca_dy[jj] = u8_digit + '0';
+    t_dy -= u8_digit * pow(10, ii);
   }
 
-  for (i = 1, j = 0; j < 2; i--, j++) {
-    digit = t_hr / pow(10, i);
-    ch_hr[j] = digit + '0';
-    t_hr -= digit * pow(10, i);
+  for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+    u8_digit = t_hr / pow(10, ii);
+    ca_hr[jj] = u8_digit + '0';
+    t_hr -= u8_digit * pow(10, ii);
   }
 
-  for (i = 1, j = 0; j < 2; i--, j++) {
-    digit = t_mm / pow(10, i);
-    ch_mm[j] = digit + '0';
-    t_mm -= digit * pow(10, i);
+  for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+    u8_digit = t_mm / pow(10, ii);
+    ca_mm[jj] = u8_digit + '0';
+    t_mm -= u8_digit * pow(10, ii);
   }
 
-  for (i = 1, j = 0; j < 2; i--, j++) {
-    digit = t_ss / pow(10, i);
-    ch_ss[j] = digit + '0';
-    t_ss -= digit * pow(10, i);
+  for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+    u8_digit = t_ss / pow(10, ii);
+    ca_ss[jj] = u8_digit + '0';
+    t_ss -= u8_digit * pow(10, ii);
   }
 
-  strcat(fileName, ch_yr);
-  strcat(fileName, "/");
-  strcat(fileName, ch_mn);
+  strcat(cp_fileName, ca_yr);
+  strcat(cp_fileName, "/");
+  strcat(cp_fileName, ca_mn);
 
-  if (!SD.exists(fileName)) {  // can't find this folder!
-    SD.mkdir(fileName);
+  if (!SD.exists(cp_fileName)) {  // can't find this folder!
+    SD.mkdir(cp_fileName);
   }
 
-  strcat(fileName, "/");
-  strcat(fileName, ch_yr);
-  strcat(fileName, ch_mn);
-  strcat(fileName, ch_dy);
-  strcat(fileName, ".csv");
+  strcat(cp_fileName, "/");
+  strcat(cp_fileName, ca_yr);
+  strcat(cp_fileName, ca_mn);
+  strcat(cp_fileName, ca_dy);
+  strcat(cp_fileName, ".csv");
 
-  if (!SD.exists(fileName)) {  // can't find this file!
+  if (!SD.exists(cp_fileName)) {  // can't find this file!
     // write header for the file
     
     uint8_t maxSlvs;
 
-    tempFile = SD.open(fileName, FILE_WRITE);
+    tempFile = SD.open(cp_fileName, FILE_WRITE);
     maxSlvs = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
 
     if (tempFile) {
-      for (i = 0; i < maxSlvs; i++) {
-        tempFile.print(F("UTC time,"));
+      tempFile.print(F("UTC time,"));
 
-        if (g_u8a_slaveIps[i][0] == 0) { // if serial device, print gateway ip
+      for (int ii = 0; ii < maxSlvs; ++ii) {
+        if (g_u8a_slaveIps[ii][0] == 0) { // if serial device, print gateway ip
           tempFile.print(g_ip_ip[0], DEC);
-          for (j = 1; j < 4; j++) {
+          for (int jj = 1; jj < 4; ++jj) {
             tempFile.print(F("."));
-            tempFile.print(g_ip_ip[j], DEC);
+            tempFile.print(g_ip_ip[jj], DEC);
           }
         }
         else {  // otherwise, print device ip
-          tempFile.print(g_u8a_slaveIps[i][0], DEC);
-          for (j = 1; j < 4; j++) {
+          tempFile.print(g_u8a_slaveIps[ii][0], DEC);
+          for (int jj = 1; jj < 4; ++jj) {
             tempFile.print(F("."));
-            tempFile.print(g_u8a_slaveIps[i][j], DEC);
+            tempFile.print(g_u8a_slaveIps[ii][jj], DEC);
           }
         }
 
         tempFile.print(F(": "));
-        tempFile.print(g_u8a_slaveIds[i], DEC);
+        tempFile.print(g_u8a_slaveIds[ii], DEC);
         tempFile.print(F("/"));
-        tempFile.print(g_u8a_slaveVids[i], DEC);
+        tempFile.print(g_u8a_slaveVids[ii], DEC);
 
-        switch (g_u8a_slaveTypes[i][0]) {
+        switch (g_u8a_slaveTypes[ii][0]) {
           case 11:
-            tempFile.print(F(",,,,"));
+            tempFile.print(F(",,,,,"));
           case 12:
-            tempFile.print(F(",,,"));
+            tempFile.print(F(",,,,"));
             break;
           default:
-            tempFile.print(F(","));
+            tempFile.print(F(",,"));
             break;
         }
       }  // end for rotate slaves
@@ -196,20 +204,20 @@ void getFileName(time_t t, char * fileName) {
     }  // if tempFile
   }  // if tempFile exists
   
-  tempFile = SD.open(fileName, FILE_WRITE);
+  tempFile = SD.open(cp_fileName, FILE_WRITE);
 
   // write out date
-  tempFile.write(ch_mn);
+  tempFile.write(ca_mn);  // month
   tempFile.print(F("/"));
-  tempFile.write(ch_dy);
+  tempFile.write(ca_dy);  // day
   tempFile.print(F("/"));
-  tempFile.write(ch_yr);
+  tempFile.write(ca_yr);  // year
   tempFile.print(F(" "));
-  tempFile.write(ch_hr);
+  tempFile.write(ca_hr);  // hour
   tempFile.print(F(":"));
-  tempFile.write(ch_mm);
+  tempFile.write(ca_mm);  // minute
   tempFile.print(F(":"));
-  tempFile.write(ch_ss);
+  tempFile.write(ca_ss);  // second
 
   tempFile.close();
 }

@@ -59,10 +59,10 @@ Set to 1 to enable debugging features within class:
 
 
 /* _____PROJECT INCLUDES_____________________________________________________ */
-#include <Ethernet.h>
+#include <Ethernet52.h>
 
 // functions to calculate Modbus Application Data Unit CRC
-#include "util/crc16.h"
+// #include "util/crc16.h"
 
 // functions to manipulate words
 #include "util/word.h"
@@ -77,10 +77,12 @@ class ModbusMaster
 {
   public:
     ModbusMaster();
-    ModbusMaster(uint8_t); // slave id,  default ip 192.168.1.1, default enable pin 255, default serial 0
-	ModbusMaster(uint8_t, uint8_t (&)[4]); // slave id, ip, default enable pin 255, default serial 0
-    ModbusMaster(uint8_t, uint8_t (&)[4], uint8_t); // slave id, ip, enable pin, default serial 0
-    ModbusMaster(uint8_t, uint8_t (&)[4], uint8_t, uint8_t); // slave id, ip, enable pin,serial
+    // ModbusMaster(uint8_t u8_mbSlave); // slave id,  default ip 192.168.1.1, default enable pin 255, default serial 0
+	// ModbusMaster(uint8_t, uint8_t (&)[4]); // slave id, ip, default enable pin 255, default serial 0
+    // ModbusMaster(uint8_t, uint8_t cl_ip_mem[4], const uint8_t); // slave id, ip, enable pin, default serial 0
+    // ModbusMaster(uint8_t, uint8_t (&)[4], const uint8_t, const uint8_t); // slave id, ip, enable pin,serial
+		ModbusMaster(const uint8_t u8_enablePin);  // enable pin
+		ModbusMaster(const uint8_t u8_enablePin, const uint8_t u8_serialPort);  // enable pin, hardware serial
 	
     void begin();
     void begin(uint16_t);
@@ -210,7 +212,7 @@ class ModbusMaster
 	
 	
 	void     setSlave(uint8_t);  // MJT
-	void     setClientIP(uint8_t (&)[4]);
+	void     setClientIP(uint8_t u8a_clientIp[4]);
 	void     setSerialEthernet(bool);
 	void     setTimeout(uint16_t);  // MJT
     uint16_t getResponseBuffer(uint8_t);
@@ -270,7 +272,8 @@ class ModbusMaster
     static const uint8_t ku8MBReadWriteMultipleRegisters = 0x17; ///< Modbus function 0x17 Read Write Multiple Registers
     
     
-    
+    uint16_t crc16_update(uint16_t crc, uint8_t a);
+		
     // master function that conducts Modbus transactions
     uint8_t ModbusMasterTransaction(uint8_t u8MBFunction);
     

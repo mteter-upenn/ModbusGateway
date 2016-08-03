@@ -94,6 +94,5 @@ extern "C" void __cxa_pure_virtual() {;}
 #include <..\mb_gw_os\secondaryHTTP.ino>
 #include <..\mb_gw_os\secondaryModbus.ino>
 #include <..\mb_gw_os\setConstants.ino>
-#include <..\mb_gw_os\stringFuncs.ino>
 #include <..\mb_gw_os\tertiaryHTTP.ino>
 #endif

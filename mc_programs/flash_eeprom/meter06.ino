@@ -7,7 +7,7 @@ void meter6(uint16_t mtr_start){
   
   // siemens 9510, 9610 meter 6 **********************************************************
   // 126
-  
+ 
   blk_strt = mtr_start + 6;
   blk_num = 4;
   grp_num = 12;

@@ -52,7 +52,7 @@ bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_met
 
 // checks if meter is connected via 485 (false) or ethernet (true)
 // also assigns the meter type
-bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId) {
+bool isMeterEth(uint8_t u8a_clientIp[4], uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId) {
   uint8_t u8_numMeters;
 
   u8_numMeters = EEPROM.read(g_u16_mtrBlkStart);
@@ -66,7 +66,7 @@ bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId) {
       }
       else{
         for (int jj = 0; jj < 4; ++jj){
-          g_u8a_clientIP[jj] = EEPROM.read(ii * 9 + jj + 4 + g_u16_mtrBlkStart);
+          u8a_clientIp[jj] = EEPROM.read(ii * 9 + jj + 4 + g_u16_mtrBlkStart);
 //          Serial.println(g_u8a_clientIP[j]);
         }
         u8_meterType = EEPROM.read(ii * 9 + 1 + g_u16_mtrBlkStart);

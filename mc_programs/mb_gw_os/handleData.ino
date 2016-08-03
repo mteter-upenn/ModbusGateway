@@ -1,30 +1,25 @@
 void handle_data() {
-  uint32_t curDataTime;
+  uint32_t u32_curDataTime;
+  const uint32_t k_u32_period(300000);  // time in ms 300'000UL wait every 5 minutes
 
-  curDataTime = millis();
+  u32_curDataTime = millis();
   
-  if ((curDataTime - g_u32_lastDataRequest) > 300000UL) {  // 300000UL wait every 5 minutes 300000UL
-    uint8_t numSlvs;
-    uint8_t i, j;
-    uint8_t dev;
-    uint8_t func;
-    uint8_t meter;
-    uint16_t lclmtr_strt;
-    uint16_t grp_strt;
-    uint8_t grp_len;
-    uint16_t pwrReg;
-    uint16_t egyReg;
-    uint16_t stmRegs[4] = {2, 8, 14, 32};  // lbs/hr, T, P, lbs
-    uint16_t chwRegs[5] = {0, 6, 8, 10, 30};  // tons, gpm, Ts, Tr, tonhrs
-    //uint16_t grp_adr;
-    uint8_t mbStat;
-    uint8_t in_mb[12];
-    uint8_t out_mb[gk_u16_mbArraySize];
-    uint16_t out_len;
-    char streamBuf[150] = {0};
-    time_t t = now();
+  if ((u32_curDataTime - g_u32_lastDataRequest) > k_u32_period) {  
+    uint8_t u8_numSlvsRcd;
+    uint8_t u8_slvVid;
+    uint8_t u8_slvMbFunc;
+    uint8_t u8_slvMtrType;
+    uint16_t u16_mtrLibStart;
+    uint16_t u16_mtrGrpStart;
+    PwrEgyRegs elecReg;
+    uint8_t u8_mbStatus;
+    uint8_t u8a_mbReq[12];
+    uint8_t u8a_mbResp[gk_u16_mbArraySize];
+    uint16_t u16_mbRespLen;
+    char ca_fileBuffer[150] = {0};
+    time_t t_time = now();
     File dataFile;
-    char fileName[31] = {0};
+    char ca_fileName[31] = {0};
 
     union convertUnion
     {
@@ -32,163 +27,178 @@ void handle_data() {
       uint8_t u8[4];
     } int2flt;
 
-    g_u32_lastDataRequest = curDataTime;
-    numSlvs = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
-    memset(in_mb, 0, 5);
-    in_mb[5] = 6;     // length of modbus half
+    g_u32_lastDataRequest = u32_curDataTime;
+    u8_numSlvsRcd = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
+    memset(u8a_mbReq, 0, 5);
+    u8a_mbReq[5] = 6;     // length of modbus half
 
-    fileName[30] = 0;
+    ca_fileName[30] = 0;
     digitalWrite(gk_s16_sdWriteLed, HIGH);
-    getFileName(t, fileName);  // gets fileName and prints header (if needed) and first column (date)
+    getFileName(t_time, ca_fileName);  // gets ca_fileName and prints header (if needed) and first column (date)
 
-    dataFile = SD.open(fileName, FILE_WRITE);
-    printTime(t);
+    dataFile = SD.open(ca_fileName, FILE_WRITE);
+    //printTime(t_time);
+
     if (dataFile) {
-      Serial.println(F("opened file"));
+      //Serial.println(F("opened file"));
 
-      for (i = 0; i < numSlvs; i++) {
-        meter = g_u8a_slaveTypes[i][0];
-        dev = g_u8a_slaveVids[i];
-        func = EEPROM.read(g_u16_regBlkStart + 4 * meter + 2);
-        lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
+      for (int ii = 0; ii < u8_numSlvsRcd; ++ii) {
+        u8_slvMtrType = g_u8a_slaveTypes[ii][0];
+        u8_slvVid = g_u8a_slaveVids[ii];
+        u8_slvMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType + 2);
+        u16_mtrLibStart = word(EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType - 1), EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType));
 
-        grp_strt = word(EEPROM.read(lclmtr_strt + 3), EEPROM.read(lclmtr_strt + 4));
-        grp_len = EEPROM.read(lclmtr_strt + 5);
-        //grp_adr = grp_strt;
+        u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 3), EEPROM.read(u16_mtrLibStart + 4));
 
-        in_mb[6] = dev;   // device id
-        in_mb[7] = func;  // modbus function
-        in_mb[10] = 0;  // assume no length higher than 255
-        in_mb[11] = 2;  // ask for float conversion = 2*num for registers
+        //Serial.print("type: "); Serial.println(u8_slvMtrType, DEC);
+        //Serial.print("regBlkStart: "); Serial.println(g_u16_regBlkStart, DEC);
+        //Serial.print("lib start: "); Serial.println(u16_mtrLibStart, DEC);
+        //Serial.print("group start: "); Serial.println(u16_mtrGrpStart, DEC);
+
+        u8a_mbReq[6] = u8_slvVid;   // u8_slvVidice id
+        u8a_mbReq[7] = u8_slvMbFunc;  // modbus u8_slvMbFunction
+        u8a_mbReq[10] = 0;  // assume no length higher than 255
+        u8a_mbReq[11] = 2;  // ask for float conversion = 2*num for registers
 
         delay(5); // ensure long enough delay between polls
 
-        switch (meter) {
+        switch (u8_slvMtrType) {
           case 11:  // chw
-            in_mb[8] = 0; // highByte(chwRegs[j]);  // should always be 0
-            in_mb[9] = 0; // lowByte(chwRegs[j]);
-            in_mb[11] = 34;  // ask for float conversion = 2*num for registers
+            u8a_mbReq[8] = 0; // highByte(chwRegs[j]);  // should always be 0
+            u8a_mbReq[9] = 0; // lowByte(chwRegs[j]);
+            u8a_mbReq[11] = 34;  // ask for float conversion = 2*num for registers
 
             //delay(1); // ensure long enough delay between polls
-            mbStat = getModbus(in_mb, 12, out_mb, out_len);
+            
+            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen);
+            
             // {0, 6, 8, 10, 30};
-            for (j = 0; j < 5; j++) {
-              if (mbStat) {  // good message
-                int2flt.u8[3] = out_mb[2 * chwRegs[j] + 11];
-                int2flt.u8[2] = out_mb[2 * chwRegs[j] + 12];
-                int2flt.u8[1] = out_mb[2 * chwRegs[j] + 9]; // high word
-                int2flt.u8[0] = out_mb[2 * chwRegs[j] + 10];  // low word
+            for (int jj = 0; jj < 5; ++jj) {
+              uint16_t u16a_chwRegs[5] = { 0, 6, 8, 10, 30 };  // tons, gpm, Ts, Tr, tonhrs
 
-                strcat_P(streamBuf, PSTR(","));
-                if (j < 4) {
-                  dtostrf(int2flt.f, 1, 3, (streamBuf + strlen(streamBuf)));
+              if (u8_mbStatus) {  // good message
+                int2flt.u8[3] = u8a_mbResp[2 * u16a_chwRegs[jj] + 11];
+                int2flt.u8[2] = u8a_mbResp[2 * u16a_chwRegs[jj] + 12];
+                int2flt.u8[1] = u8a_mbResp[2 * u16a_chwRegs[jj] + 9]; // high word
+                int2flt.u8[0] = u8a_mbResp[2 * u16a_chwRegs[jj] + 10];  // low word
+
+                strcat_P(ca_fileBuffer, PSTR(","));
+                if (jj < 4) {
+                  dtostrf(int2flt.f, 1, 3, (ca_fileBuffer + strlen(ca_fileBuffer)));
                 }
                 else {  // have totalizer use less digits after decimal point
-                  dtostrf(int2flt.f, 1, 1, (streamBuf + strlen(streamBuf)));
+                  dtostrf(int2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
                 }
               }
-              else if (j == 0) {  // bad message on first try, just skip everything to avoid wasting time
-                strcat_P(streamBuf, PSTR(",error,error,error,error,error"));
+              else if (jj == 0) {  // bad message on first try, just skip everything to avoid wasting time
+                strcat_P(ca_fileBuffer, PSTR(",error,error,error,error,error"));
                 break;
               }
               else {  // bad message
-                strcat_P(streamBuf, PSTR(",error"));
+                strcat_P(ca_fileBuffer, PSTR(",error"));
               }
             }
             break;
           case 12:  // stm
-            in_mb[8] = 0; // highByte(stmRegs[j]);
-            in_mb[9] = 0; // lowByte(stmRegs[j]);
-            in_mb[11] = 34;  // ask for float conversion = 2*num for registers
+            u8a_mbReq[8] = 0; // highByte(stmRegs[j]);
+            u8a_mbReq[9] = 0; // lowByte(stmRegs[j]);
+            u8a_mbReq[11] = 34;  // ask for float conversion = 2*num for registers
 
             //delay(1); // ensure long enough delay between polls
-            mbStat = getModbus(in_mb, 12, out_mb, out_len);
+            //Serial.println("sending steam modbus");
+            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen);
+            //Serial.println("got steam modbus");
 
-            for (j = 0; j < 4; j++) {
-              if (mbStat) {  // good message
-                int2flt.u8[3] = out_mb[2 * stmRegs[j] + 11];
-                int2flt.u8[2] = out_mb[2 * stmRegs[j] + 12];
-                int2flt.u8[1] = out_mb[2 * stmRegs[j] + 9]; // high word
-                int2flt.u8[0] = out_mb[2 * stmRegs[j] + 10];  // low word
+            if (u8_mbStatus) {  // good message
+              uint16_t u16a_stmRegs[4] = { 2, 8, 14, 32 };  // lbs/hr, T, P, lbs
 
-                strcat_P(streamBuf, PSTR(","));
-                if (j < 3) {
-                  dtostrf(int2flt.f, 1, 3, (streamBuf + strlen(streamBuf)));
+              for (int jj = 0; jj < 4; ++jj) {
+                int2flt.u8[3] = u8a_mbResp[2 * u16a_stmRegs[jj] + 11];
+                int2flt.u8[2] = u8a_mbResp[2 * u16a_stmRegs[jj] + 12];
+                int2flt.u8[1] = u8a_mbResp[2 * u16a_stmRegs[jj] + 9]; // high word
+                int2flt.u8[0] = u8a_mbResp[2 * u16a_stmRegs[jj] + 10];  // low word
+
+                strcat(ca_fileBuffer, ",");
+                if (jj < 3) {
+                  dtostrf(int2flt.f, 1, 3, (ca_fileBuffer + strlen(ca_fileBuffer)));
                 }
                 else {  // have totalizer use less digits after decimal point
-                  dtostrf(int2flt.f, 1, 1, (streamBuf + strlen(streamBuf)));
+                  dtostrf(int2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
                 }
               }
-              else if (j == 0) {  // bad message on first try, just skip everything to avoid wasting time
-                strcat_P(streamBuf, PSTR(",error,error,error,error"));
-                break;
-              }
-              else {  // bad message
-                strcat_P(streamBuf, PSTR(",error"));
-              }
             }
+            else {  // bad message on first try, just skip everything to avoid wasting time
+              strcat_P(ca_fileBuffer, PSTR(",error,error,error,error"));
+            }
+            
             
             break;
           default:
-            getElecRegs(grp_strt, grp_len, pwrReg, egyReg);
-            /*Serial.print(pwrReg);
-            Serial.print(F(", "));
-            Serial.println(egyReg);*/
+            elecReg = getElecRegs(u16_mtrLibStart);
+            //Serial.print(elecReg.u16_pwr);
+            //Serial.print(F(", "));
+            //Serial.println(elecReg.u16_egy);
 
-            in_mb[8] = highByte(pwrReg);
-            in_mb[9] = lowByte(pwrReg);
+            u8a_mbReq[8] = highByte(elecReg.u16_pwr);
+            u8a_mbReq[9] = lowByte(elecReg.u16_pwr);
             
 
             //delay(5); // ensure long enough delay between polls
-            mbStat = getModbus(in_mb, 12, out_mb, out_len);
-
+            //Serial.println("sending pwr modbus");
+            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen);
+            //Serial.println("got pwr modbus");
             
-            if (mbStat) {
-              int2flt.u8[3] = out_mb[11];
-              int2flt.u8[2] = out_mb[12];
-              int2flt.u8[1] = out_mb[9]; // high word
-              int2flt.u8[0] = out_mb[10];  // low word
+            if (u8_mbStatus) {
+              int2flt.u8[3] = u8a_mbResp[11];
+              int2flt.u8[2] = u8a_mbResp[12];
+              int2flt.u8[1] = u8a_mbResp[9]; // high word
+              int2flt.u8[0] = u8a_mbResp[10];  // low word
 
-              /*Serial.print(i + 1, DEC);
-              Serial.print(F(" power: "));
-              Serial.println(int2flt.f);*/
+              //Serial.print(ii + 1, DEC);
+              //Serial.print(F(" power: "));
+              //Serial.println(int2flt.f);
 
-              strcat_P(streamBuf, PSTR(","));
-              dtostrf(int2flt.f, 1, 3, (streamBuf + 1));
+              strcat_P(ca_fileBuffer, PSTR(","));
+              dtostrf(int2flt.f, 1, 3, (ca_fileBuffer + 1));
 
     // get energy now
-              in_mb[8] = highByte(egyReg);
-              in_mb[9] = lowByte(egyReg);
+              u8a_mbReq[8] = highByte(elecReg.u16_egy);
+              u8a_mbReq[9] = lowByte(elecReg.u16_egy);
 
               //delay(1); // ensure long enough delay between polls
-              mbStat = getModbus(in_mb, 12, out_mb, out_len);
+              //Serial.println("sending egy modbus");
+              u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen);
+              //Serial.println("got egy modbus");
 
-              if (mbStat) {
-                int2flt.u8[3] = out_mb[11];
-                int2flt.u8[2] = out_mb[12];
-                int2flt.u8[1] = out_mb[9]; // high word
-                int2flt.u8[0] = out_mb[10];  // low word
+              if (u8_mbStatus) {
+                int2flt.u8[3] = u8a_mbResp[11];
+                int2flt.u8[2] = u8a_mbResp[12];
+                int2flt.u8[1] = u8a_mbResp[9]; // high word
+                int2flt.u8[0] = u8a_mbResp[10];  // low word
 
                 /*Serial.print(i + 1, DEC);
                 Serial.print(F(" energy: "));
                 Serial.println(int2flt.f);*/
 
-                strcat_P(streamBuf, PSTR(","));
-                dtostrf(int2flt.f, 1, 1, (streamBuf + strlen(streamBuf)));
+                strcat_P(ca_fileBuffer, PSTR(","));
+                dtostrf(int2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
               }
               else {
-                strcat_P(streamBuf, PSTR(",error"));
+                strcat_P(ca_fileBuffer, PSTR(",error"));
               }
             }
             else {
               // print failures for both 
-              strcat_P(streamBuf, PSTR(",error,error"));
+              strcat_P(ca_fileBuffer, PSTR(",error,error"));
             }
             break;
         }  // end switch
 
-        dataFile.write(streamBuf);
-        streamBuf[0] = 0;
+        //Serial.println(ca_fileBuffer);
+        //Serial.println(strlen(ca_fileBuffer), DEC);
+        dataFile.write(ca_fileBuffer);
+        
+        ca_fileBuffer[0] = 0;
       }  // end for rotate through slaves
 
       dataFile.print(F("\n"));

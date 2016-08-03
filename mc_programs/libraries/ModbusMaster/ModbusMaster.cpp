@@ -60,60 +60,84 @@ Creates class object using default serial port 0, Modbus slave ID 1.
 */
 ModbusMaster::ModbusMaster(void)
 {
-  _u8SerialPort = 0;
-  _u8MBSlave = 1;
-  _u8EnablePin = 255;  // MJT
-  _u8ClientIP[0] = 192;
-  _u8ClientIP[1] = 168;
-  _u8ClientIP[2] = 1;
-  _u8ClientIP[3] = 1;
-  _bSerialTrans = true;
+  // _u8SerialPort = 0;
+  // _u8MBSlave = 1;
+  // _u8EnablePin = 255;  // MJT
+  // _u8ClientIP[0] = 192;
+  // _u8ClientIP[1] = 168;
+  // _u8ClientIP[2] = 1;
+  // _u8ClientIP[3] = 1;
+  // _bSerialTrans = true;
+	ModbusMaster(9);
 }
 
+
+// /**
+// Constructor.
+
+// Creates class object using default serial port 0, specified Modbus slave ID.
+
+// @overload void ModbusMaster::ModbusMaster(uint8_t u8MBSlave)
+// @param u8MBSlave Modbus slave ID (1..255)
+// @ingroup setup
+// */
+// ModbusMaster::ModbusMaster(uint8_t u8_mbSlave)
+// {
+  // // _u8SerialPort = 0;
+  // // _u8MBSlave = u8MBSlave;
+  // // _u8EnablePin = 255;  // MJT
+  // // _u8ClientIP[0] = 192;
+  // // _u8ClientIP[1] = 168;
+  // // _u8ClientIP[2] = 1;
+  // // _u8ClientIP[3] = 1;
+  // // _bSerialTrans = true;
+	// ModbusMaster(u8_mbSlave, )
+// }
 
 /**
 Constructor.
 
-Creates class object using default serial port 0, specified Modbus slave ID.
+Creates class object using default serial port 0, specified enable pin
 
 @overload void ModbusMaster::ModbusMaster(uint8_t u8MBSlave)
 @param u8MBSlave Modbus slave ID (1..255)
 @ingroup setup
 */
-ModbusMaster::ModbusMaster(uint8_t u8MBSlave)
+ModbusMaster::ModbusMaster(const uint8_t u8_enablePin)
 {
-  _u8SerialPort = 0;
-  _u8MBSlave = u8MBSlave;
-  _u8EnablePin = 255;  // MJT
-  _u8ClientIP[0] = 192;
-  _u8ClientIP[1] = 168;
-  _u8ClientIP[2] = 1;
-  _u8ClientIP[3] = 1;
-  _bSerialTrans = true;
+  // _u8SerialPort = 0;
+  // _u8MBSlave = u8MBSlave;
+  // _u8EnablePin = 255;  // MJT
+  // _u8ClientIP[0] = 192;
+  // _u8ClientIP[1] = 168;
+  // _u8ClientIP[2] = 1;
+  // _u8ClientIP[3] = 1;
+  // _bSerialTrans = true;
+	ModbusMaster(u8_enablePin, 0);
 }
 
 
-/**
-Constructor.
+// /**
+// Constructor.
 
-Creates class object using specified serial port, Modbus slave ID.
+// Creates class object using specified serial port, Modbus slave ID.
 
-@overload void ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t u8EnablePin)
-@param u8MBSlave Modbus slave ID (1..255)
-@param cl_ip_mem client ip address
-@ingroup setup
-*/
-ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t (&cl_ip_mem)[4])  // MJT
-{
-  _u8EnablePin = 255;  // MJT
-  _u8SerialPort = 0;
-  _u8MBSlave = u8MBSlave;
-  _u8ClientIP[0] = cl_ip_mem[0];
-  _u8ClientIP[1] = cl_ip_mem[1];
-  _u8ClientIP[2] = cl_ip_mem[2];
-  _u8ClientIP[3] = cl_ip_mem[3];
-  _bSerialTrans = true;
-}
+// @overload void ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t u8EnablePin)
+// @param u8MBSlave Modbus slave ID (1..255)
+// @param cl_ip_mem client ip address
+// @ingroup setup
+// */
+// ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t (&cl_ip_mem)[4])  // MJT
+// {
+  // _u8EnablePin = 255;  // MJT
+  // _u8SerialPort = 0;
+  // _u8MBSlave = u8MBSlave;
+  // _u8ClientIP[0] = cl_ip_mem[0];
+  // _u8ClientIP[1] = cl_ip_mem[1];
+  // _u8ClientIP[2] = cl_ip_mem[2];
+  // _u8ClientIP[3] = cl_ip_mem[3];
+  // _bSerialTrans = true;
+// }
 
 
 /**
@@ -127,42 +151,48 @@ Creates class object using specified serial port, Modbus slave ID.
 @param u8EnablePin enable pin (3..13, be careful of other shield requirements)
 @ingroup setup
 */
-ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t (&cl_ip_mem)[4], uint8_t u8EnablePin)  // MJT
+ModbusMaster::ModbusMaster(const uint8_t u8_enablePin, const uint8_t u8_serialPort)  // MJT
 {
-  _u8SerialPort = 0;
-  _u8MBSlave = u8MBSlave;
-  _u8EnablePin = ((u8EnablePin > 13) || (u8EnablePin < 2)) ? 255 : u8EnablePin;  // MJT
-  _u8ClientIP[0] = cl_ip_mem[0];
-  _u8ClientIP[1] = cl_ip_mem[1];
-  _u8ClientIP[2] = cl_ip_mem[2];
-  _u8ClientIP[3] = cl_ip_mem[3];
-  _bSerialTrans = true;
+  // _u8SerialPort = 0;
+  // _u8MBSlave = u8MBSlave;
+  // _u8EnablePin = ((u8EnablePin > 13) || (u8EnablePin < 2)) ? 255 : u8EnablePin;  // MJT
+  // _u8ClientIP[0] = cl_ip_mem[0];
+  // _u8ClientIP[1] = cl_ip_mem[1];
+  // _u8ClientIP[2] = cl_ip_mem[2];
+  // _u8ClientIP[3] = cl_ip_mem[3];
+  // _bSerialTrans = true;
+	
+	_u8EnablePin = ((u8_enablePin > 13) || (u8_enablePin < 2)) ? 255 : u8_enablePin;
+	_u8SerialPort = (u8_serialPort > 3) ? 0 : u8_serialPort;
+	_u8MBSlave = 1;
+	memset(_u8ClientIP, 0, 4);
+	_bSerialTrans = true; // use serial
 }
 
 
-/**
-Constructor.
+// /**
+// Constructor.
 
-Creates class object using specified serial port, Modbus slave ID.
+// Creates class object using specified serial port, Modbus slave ID.
 
-@overload void ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t u8EnablePin, uint8_t u8SerialPort)
-@param u8MBSlave Modbus slave ID (1..255)
-@param cl_ip_mem client ip address
-@param u8EnablePin enable pin (3..13, be careful of other shield requirements)
-@param u8SerialPort serial port (Serial, Serial1..Serial3)
-@ingroup setup
-*/
-ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t (&cl_ip_mem)[4], uint8_t u8EnablePin, uint8_t u8SerialPort)  // MJT
-{
-  _u8SerialPort = (u8SerialPort > 3) ? 0 : u8SerialPort;
-  _u8MBSlave = u8MBSlave;
-  _u8EnablePin = ((u8EnablePin > 13) || (u8EnablePin < 2)) ? 255 : u8EnablePin;  // MJT
-  _u8ClientIP[0] = cl_ip_mem[0];
-  _u8ClientIP[1] = cl_ip_mem[1];
-  _u8ClientIP[2] = cl_ip_mem[2];
-  _u8ClientIP[3] = cl_ip_mem[3];
-  _bSerialTrans = true;
-}
+// @overload void ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t u8EnablePin, uint8_t u8SerialPort)
+// @param u8MBSlave Modbus slave ID (1..255)
+// @param cl_ip_mem client ip address
+// @param u8EnablePin enable pin (3..13, be careful of other shield requirements)
+// @param u8SerialPort serial port (Serial, Serial1..Serial3)
+// @ingroup setup
+// */
+// ModbusMaster::ModbusMaster(uint8_t u8MBSlave, uint8_t (&cl_ip_mem)[4], const uint8_t u8EnablePin, const uint8_t u8SerialPort)  // MJT
+// {
+  // _u8SerialPort = (u8SerialPort > 3) ? 0 : u8SerialPort;
+  // _u8MBSlave = u8MBSlave;
+  // _u8EnablePin = ((u8EnablePin > 13) || (u8EnablePin < 2)) ? 255 : u8EnablePin;  // MJT
+  // _u8ClientIP[0] = cl_ip_mem[0];
+  // _u8ClientIP[1] = cl_ip_mem[1];
+  // _u8ClientIP[2] = cl_ip_mem[2];
+  // _u8ClientIP[3] = cl_ip_mem[3];
+  // _bSerialTrans = true;
+// }
 
 
 /**
@@ -251,12 +281,13 @@ void ModbusMaster::setSlave(uint8_t u8MBSlave)
 
 
  // MJT
-void ModbusMaster::setClientIP(uint8_t (&cl_ip_mem)[4])
+void ModbusMaster::setClientIP(uint8_t u8a_clientIp[4])
 {
-  _u8ClientIP[0] = cl_ip_mem[0];
-  _u8ClientIP[1] = cl_ip_mem[1];
-  _u8ClientIP[2] = cl_ip_mem[2];
-  _u8ClientIP[3] = cl_ip_mem[3];
+	memcpy(_u8ClientIP, u8a_clientIp, 4);
+  // _u8ClientIP[0] = cl_ip_mem[0];
+  // _u8ClientIP[1] = cl_ip_mem[1];
+  // _u8ClientIP[2] = cl_ip_mem[2];
+  // _u8ClientIP[3] = cl_ip_mem[3];
 }
 
 
@@ -682,7 +713,7 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
   uint16_t u16ClientConnect = 0;
   uint8_t u8MBSlv, u8MBFnc, u8MBCntErr, u8MBHigh, u8MBLow, u8MBArrExt;
   int16_t lenRead;
-  EthernetClient ecClient;
+  EthernetClient52 ecClient;
   // uint32_t sendTime, flushTime, availTime, readTime;
   
   
@@ -1086,4 +1117,20 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
   }
   u8MBStatus = ku8MBInvalidClient;  // could not connect
   return u8MBStatus;
+}
+
+uint16_t ModbusMaster::crc16_update(uint16_t crc, uint8_t a)
+{
+  int i;
+
+  crc ^= a;
+  for (i = 0; i < 8; ++i)
+  {
+    if (crc & 1)
+      crc = (crc >> 1) ^ 0xA001;
+    else
+      crc = (crc >> 1);
+  }
+
+  return crc;
 }

@@ -48,7 +48,7 @@ const int gk_s16_sdWriteLed  = 20;                     // currently writing to s
 const int gk_s16_epWriteLed  = 19;                     // currently writing to eeprom
 const int gk_s16_rtcFailLed  = 22;                     // no rtc set
 const int gk_s16_battDeadLed = 23;                     // dead battery - currently no way to determine
-const int gk_s16_mb485Ctrl   =  6;                     // when set low, transmit mode, high is receive mode
+const uint8_t gk_u8_mb485Ctrl   =  6;                     // when set low, transmit mode, high is receive mode
 #else
 #define RESP_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
 #define MODBUS_SERIAL 1                                // use hardware serial 1
@@ -62,6 +62,11 @@ int rtcFailLed = 8;                                    // no rtc set
 #endif
 
 
+// define struct
+struct PwrEgyRegs {
+  uint16_t u16_pwr;
+  uint16_t u16_egy;
+};
 
 
 // ethernet info
@@ -69,7 +74,6 @@ uint8_t g_u8a_mac[8] = {0};                      // enter mac, will need some so
 IPAddress g_ip_ip(0, 0, 0, 0);                       // this value will be overwritten by ip stored in eeprom
 IPAddress g_ip_subnet(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
 IPAddress g_ip_gateway(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
-uint8_t g_u8a_clientIP[4] = {0};                 // ip of slave on pseudo modbus network
 bool g_b_reset = false;                                    // bReset
 
 bool g_b_useNtp = false;                                 // bNTPserv turns ntp on/off (overwritten by eeprom)
@@ -112,7 +116,7 @@ EthernetServer52 g_es_mbServ2(502);                           // start server on
 EthernetServer52 g_es_mbServ3(502);                           // start server on modbus port
 EthernetServer52 g_es_mbServ4(502);                           // start server on modbus port
 
-ModbusMaster g_mm_node(1, g_u8a_clientIP, gk_s16_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
+ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
 
 
 // miscellaneous
@@ -125,7 +129,7 @@ bool g_b_sdInit = false;  // sdInit                                   // set fla
 
 // PROTOTYPES:
 // main
-void resetArd();
+void resetArd(void);
 // handleHTTP
 void handle_http(bool b_idleModbus);
 // secondaryHTTP - GET and general functions
@@ -139,30 +143,28 @@ void sendXmlEnd(EthernetClient52 &ec_client, XmlFile en_xmlType);
 void sendIP(EthernetClient52 &ec_client);
 void liveXML(EthernetClient52 &ec_client);
 // tertiaryHTTP - POST related functions
-void sendPostResp(EthernetClient52);
-char * preprocPost(EthernetClient52, char *, uint16_t&);
-void getPostSetupData(EthernetClient52, char *);
+void sendPostResp(EthernetClient52 &ec_client);
+char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_postLen);
+void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr);
 // handleModbus
-bool getModbus(uint8_t*, uint16_t, uint8_t*, uint16_t&);
-void handle_modbus(bool);
+bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen);
+void handle_modbus(bool b_idleHttp);
 // secondaryModbus
 bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType);
 bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId);
 // setConstants
-void setConstants();
-void writeGenSetupFile();
-void writeMtrSetupFile();
-// stringFuncs
-void StrClear(char*, char);
+void setConstants(void);
+void writeGenSetupFile(void);
+void writeMtrSetupFile(void);
 // handleRTC
-time_t getNtpTime();
-time_t getRtcTime();
+time_t getNtpTime(void);
+time_t getRtcTime(void);
 void printTime(time_t t_time);
 // handleData
-void handle_data(void);
+void handle_data();
 // secondaryData
-void getElecRegs(uint16_t, uint8_t, uint16_t&, uint16_t&);
-void getFileName(time_t, char*);
+PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart);
+void getFileName(time_t t_time, char *cp_fileName);
 
 
 #if SHOW_FREE_MEM
