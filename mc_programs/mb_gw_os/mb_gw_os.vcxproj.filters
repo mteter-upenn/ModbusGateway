@@ -24,11 +24,13 @@
     <None Include="secondaryHTTP.ino" />
     <None Include="secondaryModbus.ino" />
     <None Include="setConstants.ino" />
-    <None Include="stringFuncs.ino" />
     <None Include="tertiaryHTTP.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.mb_gw_os.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mb_names.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
