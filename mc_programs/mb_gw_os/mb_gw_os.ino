@@ -3,19 +3,22 @@
  Modbus gateway sketch
  */
 
+
 #include "mb_names.h"
+#include <FloatConvEnum.h>
 #include <Time.h>
 #include <SPI.h>
 #include <Ethernet52.h>
 #include <EthernetUdp52.h>
 #include <ModbusMaster.h>
 #include <EEPROM.h>
+#include <MeterLibrary.h>
 #include <SD.h>
 
 #define DEBUG_HTTP_TCP_TIMEOUT 0  
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
 #define SHOW_FREE_MEM 0                                // 1 for print free memory
-
+#define NEW_GROUP_STYLE 1
 
 const uint16_t gk_u16_requestLineSize(40);                       // g_REQ_BUF_SZ buffer size to capture beginning of http request
 const uint16_t gk_u16_requestBuffSize(1500);                     // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
@@ -150,7 +153,8 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr);
 bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen);
 void handle_modbus(bool b_idleHttp);
 // secondaryModbus
-bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType);
+//bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType);
+bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meterType);
 bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId);
 // setConstants
 void setConstants(void);

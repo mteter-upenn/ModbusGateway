@@ -10,7 +10,7 @@ void handle_data() {
     uint8_t u8_slvMbFunc;
     uint8_t u8_slvMtrType;
     uint16_t u16_mtrLibStart;
-    uint16_t u16_mtrGrpStart;
+    //uint16_t u16_mtrGrpStart;
     PwrEgyRegs elecReg;
     uint8_t u8_mbStatus;
     uint8_t u8a_mbReq[12];
@@ -25,7 +25,7 @@ void handle_data() {
     {
       float f;
       uint8_t u8[4];
-    } int2flt;
+    } u8a2flt;
 
     g_u32_lastDataRequest = u32_curDataTime;
     u8_numSlvsRcd = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
@@ -48,7 +48,7 @@ void handle_data() {
         u8_slvMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType + 2);
         u16_mtrLibStart = word(EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType - 1), EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType));
 
-        u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 3), EEPROM.read(u16_mtrLibStart + 4));
+        //u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 3), EEPROM.read(u16_mtrLibStart + 4));
 
         //Serial.print("type: "); Serial.println(u8_slvMtrType, DEC);
         //Serial.print("regBlkStart: "); Serial.println(g_u16_regBlkStart, DEC);
@@ -77,17 +77,17 @@ void handle_data() {
               uint16_t u16a_chwRegs[5] = { 0, 6, 8, 10, 30 };  // tons, gpm, Ts, Tr, tonhrs
 
               if (u8_mbStatus) {  // good message
-                int2flt.u8[3] = u8a_mbResp[2 * u16a_chwRegs[jj] + 11];
-                int2flt.u8[2] = u8a_mbResp[2 * u16a_chwRegs[jj] + 12];
-                int2flt.u8[1] = u8a_mbResp[2 * u16a_chwRegs[jj] + 9]; // high word
-                int2flt.u8[0] = u8a_mbResp[2 * u16a_chwRegs[jj] + 10];  // low word
+                u8a2flt.u8[3] = u8a_mbResp[2 * u16a_chwRegs[jj] + 11];
+                u8a2flt.u8[2] = u8a_mbResp[2 * u16a_chwRegs[jj] + 12];
+                u8a2flt.u8[1] = u8a_mbResp[2 * u16a_chwRegs[jj] + 9]; // high word
+                u8a2flt.u8[0] = u8a_mbResp[2 * u16a_chwRegs[jj] + 10];  // low word
 
                 strcat_P(ca_fileBuffer, PSTR(","));
                 if (jj < 4) {
-                  dtostrf(int2flt.f, 1, 3, (ca_fileBuffer + strlen(ca_fileBuffer)));
+                  dtostrf(u8a2flt.f, 1, 3, (ca_fileBuffer + strlen(ca_fileBuffer)));
                 }
                 else {  // have totalizer use less digits after decimal point
-                  dtostrf(int2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
+                  dtostrf(u8a2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
                 }
               }
               else if (jj == 0) {  // bad message on first try, just skip everything to avoid wasting time
@@ -113,17 +113,17 @@ void handle_data() {
               uint16_t u16a_stmRegs[4] = { 2, 8, 14, 32 };  // lbs/hr, T, P, lbs
 
               for (int jj = 0; jj < 4; ++jj) {
-                int2flt.u8[3] = u8a_mbResp[2 * u16a_stmRegs[jj] + 11];
-                int2flt.u8[2] = u8a_mbResp[2 * u16a_stmRegs[jj] + 12];
-                int2flt.u8[1] = u8a_mbResp[2 * u16a_stmRegs[jj] + 9]; // high word
-                int2flt.u8[0] = u8a_mbResp[2 * u16a_stmRegs[jj] + 10];  // low word
+                u8a2flt.u8[3] = u8a_mbResp[2 * u16a_stmRegs[jj] + 11];
+                u8a2flt.u8[2] = u8a_mbResp[2 * u16a_stmRegs[jj] + 12];
+                u8a2flt.u8[1] = u8a_mbResp[2 * u16a_stmRegs[jj] + 9]; // high word
+                u8a2flt.u8[0] = u8a_mbResp[2 * u16a_stmRegs[jj] + 10];  // low word
 
                 strcat(ca_fileBuffer, ",");
                 if (jj < 3) {
-                  dtostrf(int2flt.f, 1, 3, (ca_fileBuffer + strlen(ca_fileBuffer)));
+                  dtostrf(u8a2flt.f, 1, 3, (ca_fileBuffer + strlen(ca_fileBuffer)));
                 }
                 else {  // have totalizer use less digits after decimal point
-                  dtostrf(int2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
+                  dtostrf(u8a2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
                 }
               }
             }
@@ -149,17 +149,17 @@ void handle_data() {
             //Serial.println("got pwr modbus");
             
             if (u8_mbStatus) {
-              int2flt.u8[3] = u8a_mbResp[11];
-              int2flt.u8[2] = u8a_mbResp[12];
-              int2flt.u8[1] = u8a_mbResp[9]; // high word
-              int2flt.u8[0] = u8a_mbResp[10];  // low word
+              u8a2flt.u8[3] = u8a_mbResp[11];
+              u8a2flt.u8[2] = u8a_mbResp[12];
+              u8a2flt.u8[1] = u8a_mbResp[9]; // high word
+              u8a2flt.u8[0] = u8a_mbResp[10];  // low word
 
               //Serial.print(ii + 1, DEC);
               //Serial.print(F(" power: "));
               //Serial.println(int2flt.f);
 
               strcat_P(ca_fileBuffer, PSTR(","));
-              dtostrf(int2flt.f, 1, 3, (ca_fileBuffer + 1));
+              dtostrf(u8a2flt.f, 1, 3, (ca_fileBuffer + 1));
 
     // get energy now
               u8a_mbReq[8] = highByte(elecReg.u16_egy);
@@ -171,17 +171,17 @@ void handle_data() {
               //Serial.println("got egy modbus");
 
               if (u8_mbStatus) {
-                int2flt.u8[3] = u8a_mbResp[11];
-                int2flt.u8[2] = u8a_mbResp[12];
-                int2flt.u8[1] = u8a_mbResp[9]; // high word
-                int2flt.u8[0] = u8a_mbResp[10];  // low word
+                u8a2flt.u8[3] = u8a_mbResp[11];
+                u8a2flt.u8[2] = u8a_mbResp[12];
+                u8a2flt.u8[1] = u8a_mbResp[9]; // high word
+                u8a2flt.u8[0] = u8a_mbResp[10];  // low word
 
                 /*Serial.print(i + 1, DEC);
                 Serial.print(F(" energy: "));
                 Serial.println(int2flt.f);*/
 
                 strcat_P(ca_fileBuffer, PSTR(","));
-                dtostrf(int2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
+                dtostrf(u8a2flt.f, 1, 1, (ca_fileBuffer + strlen(ca_fileBuffer)));
               }
               else {
                 strcat_P(ca_fileBuffer, PSTR(",error"));

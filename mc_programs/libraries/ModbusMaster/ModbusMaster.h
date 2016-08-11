@@ -211,12 +211,13 @@ class ModbusMaster
     static const uint8_t ku8MBInvalidClient                = 0xE4;
 	
 	
-	void     setSlave(uint8_t);  // MJT
-	void     setClientIP(uint8_t u8a_clientIp[4]);
-	void     setSerialEthernet(bool);
-	void     setTimeout(uint16_t);  // MJT
+		void     setSlave(uint8_t);  // MJT
+		void     setClientIP(uint8_t u8a_clientIp[4]);
+		void     setSerialEthernet(bool);
+		void     setTimeout(uint16_t);  // MJT
     uint16_t getResponseBuffer(uint8_t);
     void     clearResponseBuffer();
+		bool     copyResponseBuffer(uint16_t *const u16p_dataDest);
     uint8_t  setTransmitBuffer(uint8_t, uint16_t);
     void     clearTransmitBuffer();
         
@@ -236,26 +237,27 @@ class ModbusMaster
     uint8_t  readWriteMultipleRegisters(uint16_t, uint16_t);
     
   private:
-	bool     _bSerialTrans;
-    uint8_t  _u8SerialPort;                                      ///< serial port (0..3) initialized in constructor
-    uint8_t  _u8MBSlave;                                         ///< Modbus slave (1..255) initialized in constructor
-	uint8_t  _u8EnablePin;
-	uint8_t _u8ClientIP[4];
-    uint16_t _u16BaudRate;                                       ///< baud rate (300..115200) initialized in begin()
-    static const uint8_t ku8MaxBufferSize                = 64;   ///< size of response/transmit buffers    
-    uint16_t _u16ReadAddress;                                    ///< slave register from which to read
-    uint16_t _u16ReadQty;                                        ///< quantity of words to read
-    uint16_t _u16ResponseBuffer[ku8MaxBufferSize];               ///< buffer to store Modbus slave response; read via GetResponseBuffer()
-    uint16_t _u16WriteAddress;                                   ///< slave register to which to write
-    uint16_t _u16WriteQty;                                       ///< quantity of words to write
-    uint16_t _u16TransmitBuffer[ku8MaxBufferSize];               ///< buffer containing data to transmit to Modbus slave; set via SetTransmitBuffer()
+		bool      _bSerialTrans;
+		uint8_t   _u8MBStatus;
+    uint8_t   _u8SerialPort;                                      ///< serial port (0..3) initialized in constructor
+    uint8_t   _u8MBSlave;                                         ///< Modbus slave (1..255) initialized in constructor
+		uint8_t   _u8EnablePin;
+		uint8_t   _u8ClientIP[4];
+    uint16_t  _u16BaudRate;                                       ///< baud rate (300..115200) initialized in begin()
+    static const uint8_t ku8MaxBufferSize{126};                   ///< size of response/transmit buffers (max possible permitted by protocol)  
+    uint16_t  _u16ReadAddress;                                    ///< slave register from which to read
+    uint16_t  _u16ReadQty;                                        ///< quantity of words to read
+    uint16_t  _u16ResponseBuffer[ku8MaxBufferSize];               ///< buffer to store Modbus slave response; read via GetResponseBuffer()
+    uint16_t  _u16WriteAddress;                                   ///< slave register to which to write
+    uint16_t  _u16WriteQty;                                       ///< quantity of words to write
+    uint16_t  _u16TransmitBuffer[ku8MaxBufferSize];               ///< buffer containing data to transmit to Modbus slave; set via SetTransmitBuffer()
     uint16_t* txBuffer; // from Wire.h -- need to clean this up Rx
-    uint8_t _u8TransmitBufferIndex;
-    uint16_t u16TransmitBufferLength;
+    uint8_t   _u8TransmitBufferIndex;
+    uint16_t  u16TransmitBufferLength;
     uint16_t* rxBuffer; // from Wire.h -- need to clean this up Rx
-    uint8_t _u8ResponseBufferIndex;
-    uint8_t _u8ResponseBufferLength;
-    uint16_t _u16MBResponseTimeout          = 2000; ///< Modbus timeout [milliseconds]  // MJT
+    uint16_t  _u16ResponseBufferIndex;
+    uint16_t  _u16ResponseBufferLength;
+    uint16_t  _u16MBResponseTimeout          = 2000; ///< Modbus timeout [milliseconds]  // MJT
 	
     // Modbus function codes for bit access
     static const uint8_t ku8MBReadCoils                  = 0x01; ///< Modbus function 0x01 Read Coils
@@ -279,6 +281,9 @@ class ModbusMaster
     
     // idle callback function; gets called during idle time between TX and RX
     void (*_idle)();
+		
+		public:  // not sure if this is necessary
+		friend class MeterLibrary;
 };
 #endif
 

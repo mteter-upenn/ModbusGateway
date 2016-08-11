@@ -1,23 +1,29 @@
 
+
+
+
+#include <FloatConvEnum.h>
 #include <EEPROM.h>
 #include "mac.h"
 
+
 #define SERIAL_INPUT 1  // 0 for no serial input, 1 for serial input (mac, ip, name, etc)
 
+#define NEW_GROUP_STYLE 1
  
-byte const FLOAT = 0x00;
-byte const U16_to_FLOAT = 0x01;
-byte const S16_to_FLOAT = 0x02;
-byte const U32_to_FLOAT = 0x03;
-byte const S32_to_FLOAT = 0x04;
-byte const M1K_to_FLOAT = 0x05;
-byte const M10K_to_FLOAT = 0x06;
-byte const M20K_to_FLOAT = 0x07;
-byte const M30K_to_FLOAT = 0x08;
-byte const U64_to_FLOAT = 0x09;
-byte const EGY_to_FLOAT = 0x0A;
-byte const DBL_to_FLOAT = 0x0B;
-byte const WORDSWAP = 0x80;
+//byte const FLOAT = 0x00;
+//byte const U16_to_FLOAT = 0x01;
+//byte const S16_to_FLOAT = 0x02;
+//byte const U32_to_FLOAT = 0x03;
+//byte const S32_to_FLOAT = 0x04;
+//byte const M1K_to_FLOAT = 0x05;
+//byte const M10K_to_FLOAT = 0x06;
+//byte const M20K_to_FLOAT = 0x07;
+//byte const M30K_to_FLOAT = 0x08;
+//byte const U64_to_FLOAT = 0x09;
+//byte const EGY_to_FLOAT = 0x0A;
+//byte const DBL_to_FLOAT = 0x0B;
+//byte const WORDSWAP = 0x80;
 
 bool bFirstLoop = true;
 bool bQuit = false;

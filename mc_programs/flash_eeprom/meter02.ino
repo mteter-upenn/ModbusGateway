@@ -27,28 +27,28 @@ void meter2(uint16_t mtr_start){
   EEPROM.write(blk_strt + 1, lowByte(0));
   EEPROM.write(blk_strt + 2, highByte(6));
   EEPROM.write(blk_strt + 3, lowByte(6));  // discount 7 to avoid asking for 8 as well
-  EEPROM.write(blk_strt + 4, (S32_to_FLOAT | WORDSWAP));
+  EEPROM.write(blk_strt + 4, int8_t(FloatConv::INT32_WS));
   
   // Block #2 - [1000, 1074, 128]
   EEPROM.write(blk_strt + 5, highByte(1000));
   EEPROM.write(blk_strt + 6, lowByte(1000));
   EEPROM.write(blk_strt + 7, highByte(1074));
   EEPROM.write(blk_strt + 8, lowByte(1074));
-  EEPROM.write(blk_strt + 9, WORDSWAP);
+  EEPROM.write(blk_strt + 9, int8_t(FloatConv::FLOAT_WS));
 
   // Group #1
   EEPROM.write(grp_strt, 1);
   EEPROM.write(grp_strt + 1, highByte(1000));
   EEPROM.write(grp_strt + 2, lowByte(1000));
   EEPROM.write(grp_strt + 3, 30);
-  EEPROM.write(grp_strt + 4, WORDSWAP);
+  EEPROM.write(grp_strt + 4, int8_t(FloatConv::FLOAT_WS));
 
   // Group #2
   EEPROM.write(grp_strt + 5, 1);
   EEPROM.write(grp_strt + 6, highByte(1004));
   EEPROM.write(grp_strt + 7, lowByte(1004));
   EEPROM.write(grp_strt + 8, 31);
-  EEPROM.write(grp_strt + 9, WORDSWAP);
+  EEPROM.write(grp_strt + 9, int8_t(FloatConv::FLOAT_WS));
 
   // Group #3
   EEPROM.write(grp_strt + 10, 8);
@@ -63,7 +63,7 @@ void meter2(uint16_t mtr_start){
   EEPROM.write(grp_strt + 19, 9);
   EEPROM.write(grp_strt + 20, 13);
   for (i = (grp_strt + 21); i < (grp_strt + 21 + 8); i++){
-    EEPROM.write(i, WORDSWAP);  // data type
+    EEPROM.write(i, int8_t(FloatConv::FLOAT_WS));  // data type
   }
 
   // Group #4
@@ -80,7 +80,7 @@ void meter2(uint16_t mtr_start){
     EEPROM.write(i + grp_strt + 49, i + 9);  // data type
   }
   for (i = (grp_strt + 53); i < (grp_strt + 53 + 21); i++){
-    EEPROM.write(i, WORDSWAP);  // data type
+    EEPROM.write(i, int8_t(FloatConv::FLOAT_WS));  // data type
   }
 
   // Group #5

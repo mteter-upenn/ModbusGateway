@@ -1,4 +1,5 @@
-bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType) {
+//bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType) {
+bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meterType) {
   uint16_t u16_blockStartInd = 0; // strt_blocks
   uint8_t u8_numBlocks = 0;
   uint16_t u16_blkFirstReg = 0;
@@ -43,7 +44,8 @@ bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_met
 //      Serial.println("flags from this address");
 //      Serial.println(((5 * i) + 9));
 //      Serial.println(EEPROM.read(((5 * i) + 9)));
-      u8_regFlags = EEPROM.read(((5 * ii) + u16_blockStartInd + 4));
+      //u8_regFlags = EEPROM.read(((5 * ii) + u16_blockStartInd + 4));
+      fltConv = static_cast<FloatConv>(static_cast<int8_t>(EEPROM.read(((5 * ii) + u16_blockStartInd + 4))));
       return true;
     }
   }

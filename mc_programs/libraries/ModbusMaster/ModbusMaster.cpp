@@ -167,6 +167,7 @@ ModbusMaster::ModbusMaster(const uint8_t u8_enablePin, const uint8_t u8_serialPo
 	_u8MBSlave = 1;
 	memset(_u8ClientIP, 0, 4);
 	_bSerialTrans = true; // use serial
+	_u8MBStatus = ku8MBIllegalDataAddress;  // set status to negative
 }
 
 
@@ -343,6 +344,23 @@ uint16_t ModbusMaster::getResponseBuffer(uint8_t u8Index)
 
 
 /**
+Copies data from response buffer starting at given pointer.
+
+@see ModbusMaster::copyResponseBuffer()
+@param u16p_dataDest pointer 
+@return success
+@ingroup buffer
+*/
+bool ModbusMaster::copyResponseBuffer(uint16_t *const u16p_dataDest) {
+	if (!_u8MBStatus) {
+		memcpy(u16p_dataDest, _u16ResponseBuffer, _u16ResponseBufferLength);
+		return true;
+	}
+	return false;
+}
+
+
+/**
 Clear Modbus response buffer.
 
 @see ModbusMaster::getResponseBuffer(uint8_t u8Index)
@@ -350,12 +368,14 @@ Clear Modbus response buffer.
 */
 void ModbusMaster::clearResponseBuffer()
 {
-  uint8_t i;
+  // uint8_t i;
   
-  for (i = 0; i < ku8MaxBufferSize; i++)
-  {
-    _u16ResponseBuffer[i] = 0;
-  }
+  // for (i = 0; i < ku8MaxBufferSize; i++)
+  // {
+    // _u16ResponseBuffer[i] = 0;
+  // }
+	
+	memset(_u16ResponseBuffer, 0, ku8MaxBufferSize * 2);
 }
 
 
@@ -709,14 +729,15 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
   uint16_t u16CRC;
   uint32_t u32StartTime;
   uint8_t u8BytesLeft = 3;
-  uint8_t u8MBStatus = ku8MBSuccess;
+  // uint8_t u8MBStatus = ku8MBSuccess;
   uint16_t u16ClientConnect = 0;
   uint8_t u8MBSlv, u8MBFnc, u8MBCntErr, u8MBHigh, u8MBLow, u8MBArrExt;
   int16_t lenRead;
   EthernetClient52 ecClient;
   // uint32_t sendTime, flushTime, availTime, readTime;
   
-  
+  _u8MBStatus = ku8MBSuccess;
+	
   // assemble Modbus Request Application Data Unit
   if (!_bSerialTrans){
 	  u8ModbusADU[u8ModbusADUSize++] = 0;  // need to be random
@@ -915,126 +936,124 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
   u32StartTime = millis();
 
   if (_bSerialTrans || u16ClientConnect){
-	  while (u8BytesLeft && !u8MBStatus){
-		if (_bSerialTrans) {
-			if (MBSerial->available()) {
-				// availTime = millis();
+	  while (u8BytesLeft && !_u8MBStatus){
+			if (_bSerialTrans) {
+				if (MBSerial->available()) {
+					// availTime = millis();
+					
+					u8ModbusADU[u8ModbusADUSize++] = MBSerial->read();
+					u8BytesLeft--;
+					
+					// lenRead = MBSerial->readBytes(u8ModbusADU + u8ModbusADUSize, u8BytesLeft); //264 - u8ModbusADUSize);
+					// u8ModbusADUSize += lenRead;
+					// u8BytesLeft -= lenRead;
+					
+					// readTime = millis();
+					
+					// Serial.println(F("modbus serial: "));
+					// for (i = 0; i < u8ModbusADUSize; i++) {
+					// Serial.print(u8ModbusADU[i], DEC);
+					// Serial.print(" ");
+					// }
+					// Serial.println();
+					
+					// Serial.print(F("flush - send: "));
+					// Serial.println(flushTime - sendTime);
+					// Serial.print(F("avail - flush: "));
+					// Serial.println(availTime - flushTime);
+					// Serial.print(F("read - avail: "));
+					// Serial.println(readTime - availTime);
+				}
+				else{
+					// Serial.print("na: ");
+					// Serial.println(MBSerial->available(), DEC);
+					if (_idle){
+					_idle();
+					}
+				}
+			}
+			else{
+				if (ecClient.available()){
+					// u8ModbusADU[u8ModbusADUSize++] = ecClient.read();
+					// // Serial.print((u8ModbusADUSize - 1), DEC);
+					// // Serial.print(F(": "));
+					// // Serial.println(u8ModbusADU[(u8ModbusADUSize - 1)], DEC);
+					// u8BytesLeft--;
+					// // Serial.print(F(", bytes left: "));
+					// // Serial.println(u8BytesLeft, DEC);
+					
+					lenRead = ecClient.read(u8ModbusADU + u8ModbusADUSize, u8BytesLeft); //264 - u8ModbusADUSize);
+					u8ModbusADUSize += lenRead;
+					u8BytesLeft -= lenRead;
+					// Serial.println(F("modbus ethernet: "));
+					// for (i = 0; i < u8ModbusADUSize; i++) {
+					// Serial.print(u8ModbusADU[i], DEC);
+					// Serial.print(" ");
+					// }
+					// Serial.println();
+				}
+				else{
+					if (_idle){
+					_idle();
+					}
+				}
+			}
+			
+			// evaluate slave ID, function code once enough bytes have been read
+			if (u8ModbusADUSize == u8MBHigh)  // 3, 9
+			// if (u8ModbusADUSize == u8MBCutoffSize + 1)  // 5, 9
+			{
+				// verify response is for correct Modbus slave
+				if (u8ModbusADU[u8MBSlv] != _u8MBSlave)  // 0, 6
+				{
+					_u8MBStatus = ku8MBInvalidSlaveID;
+					break;
+				}
 				
-			  u8ModbusADU[u8ModbusADUSize++] = MBSerial->read();
-			  u8BytesLeft--;
-			  
-			  // lenRead = MBSerial->readBytes(u8ModbusADU + u8ModbusADUSize, u8BytesLeft); //264 - u8ModbusADUSize);
-			  // u8ModbusADUSize += lenRead;
-			  // u8BytesLeft -= lenRead;
-			  
-			  // readTime = millis();
-			  
-			  // Serial.println(F("modbus serial: "));
-			  // for (i = 0; i < u8ModbusADUSize; i++) {
-				// Serial.print(u8ModbusADU[i], DEC);
-				// Serial.print(" ");
-			  // }
-			  // Serial.println();
-			  
-			  // Serial.print(F("flush - send: "));
-			  // Serial.println(flushTime - sendTime);
-			  // Serial.print(F("avail - flush: "));
-			  // Serial.println(availTime - flushTime);
-			  // Serial.print(F("read - avail: "));
-			  // Serial.println(readTime - availTime);
+				// verify response is for correct Modbus function code (mask exception bit 7)
+				if ((u8ModbusADU[u8MBFnc] & 0x7F) != u8MBFunction)  // 1, 7
+				{
+					_u8MBStatus = ku8MBInvalidFunction;
+					break;
+				}
+				
+				// check whether Modbus exception occurred; return Modbus Exception Code
+				if (bitRead(u8ModbusADU[u8MBFnc], 7))  // 1, 7
+				{
+					_u8MBStatus = u8ModbusADU[u8MBCntErr];  // 2, 8
+					break;
+				}
+				
+				// evaluate returned Modbus function code
+				switch(u8ModbusADU[u8MBFnc]) {
+					case ku8MBReadCoils:
+					case ku8MBReadDiscreteInputs:
+					case ku8MBReadInputRegisters:
+					case ku8MBReadHoldingRegisters:
+					case ku8MBReadWriteMultipleRegisters:
+						u8BytesLeft = u8ModbusADU[u8MBCntErr] + u8MBArrExt - u8ModbusADUSize;  // expected MB msg len + possible TCP
+						// u8BytesLeft = u8ModbusADU[u8MBCntErr];
+									// header - total read size
+							// Serial.println(u8BytesLeft, DEC);
+							// Serial.println(u8ModbusADU[u8MBCntErr], DEC);
+							// Serial.println(u8ModbusADUSize, DEC);
+						break;
+						
+					case ku8MBWriteSingleCoil:
+					case ku8MBWriteMultipleCoils:
+					case ku8MBWriteSingleRegister:
+					case ku8MBWriteMultipleRegisters:
+						u8BytesLeft = 3 + u8MBArrExt - u8ModbusADUSize;
+						break;
+						
+					case ku8MBMaskWriteRegister:
+						u8BytesLeft = 5 + u8MBArrExt - u8ModbusADUSize;
+						break;
+				}
 			}
-			else{
-				// Serial.print("na: ");
-				// Serial.println(MBSerial->available(), DEC);
-			  if (_idle){
-				_idle();
-			  }
+			if ((millis() - u32StartTime) > _u16MBResponseTimeout) {
+				_u8MBStatus = ku8MBResponseTimedOut;
 			}
-		}
-		else{
-			if (ecClient.available()){
-			  // u8ModbusADU[u8ModbusADUSize++] = ecClient.read();
-			  // // Serial.print((u8ModbusADUSize - 1), DEC);
-			  // // Serial.print(F(": "));
-			  // // Serial.println(u8ModbusADU[(u8ModbusADUSize - 1)], DEC);
-			  // u8BytesLeft--;
-			  // // Serial.print(F(", bytes left: "));
-			  // // Serial.println(u8BytesLeft, DEC);
-			  
-			  lenRead = ecClient.read(u8ModbusADU + u8ModbusADUSize, u8BytesLeft); //264 - u8ModbusADUSize);
-			  u8ModbusADUSize += lenRead;
-			  u8BytesLeft -= lenRead;
-			  // Serial.println(F("modbus ethernet: "));
-			  // for (i = 0; i < u8ModbusADUSize; i++) {
-				// Serial.print(u8ModbusADU[i], DEC);
-				// Serial.print(" ");
-			  // }
-			  // Serial.println();
-			}
-			else{
-			  if (_idle){
-				_idle();
-			  }
-			}
-		}
-		
-		// evaluate slave ID, function code once enough bytes have been read
-		if (u8ModbusADUSize == u8MBHigh)  // 3, 9
-		// if (u8ModbusADUSize == u8MBCutoffSize + 1)  // 5, 9
-		{
-		  // verify response is for correct Modbus slave
-		  if (u8ModbusADU[u8MBSlv] != _u8MBSlave)  // 0, 6
-		  {
-			u8MBStatus = ku8MBInvalidSlaveID;
-			break;
-		  }
-		  
-		  // verify response is for correct Modbus function code (mask exception bit 7)
-		  if ((u8ModbusADU[u8MBFnc] & 0x7F) != u8MBFunction)  // 1, 7
-		  {
-			u8MBStatus = ku8MBInvalidFunction;
-			break;
-		  }
-		  
-		  // check whether Modbus exception occurred; return Modbus Exception Code
-		  if (bitRead(u8ModbusADU[u8MBFnc], 7))  // 1, 7
-		  {
-			u8MBStatus = u8ModbusADU[u8MBCntErr];  // 2, 8
-			break;
-		  }
-		  
-		  // evaluate returned Modbus function code
-		  switch(u8ModbusADU[u8MBFnc])
-		  {
-			case ku8MBReadCoils:
-			case ku8MBReadDiscreteInputs:
-			case ku8MBReadInputRegisters:
-			case ku8MBReadHoldingRegisters:
-			case ku8MBReadWriteMultipleRegisters:
-			  u8BytesLeft = u8ModbusADU[u8MBCntErr] + u8MBArrExt - u8ModbusADUSize;  // expected MB msg len + possible TCP
-			  // u8BytesLeft = u8ModbusADU[u8MBCntErr];
-			        // header - total read size
-					// Serial.println(u8BytesLeft, DEC);
-					// Serial.println(u8ModbusADU[u8MBCntErr], DEC);
-					// Serial.println(u8ModbusADUSize, DEC);
-			  break;
-			  
-			case ku8MBWriteSingleCoil:
-			case ku8MBWriteMultipleCoils:
-			case ku8MBWriteSingleRegister:
-			case ku8MBWriteMultipleRegisters:
-			  u8BytesLeft = 3 + u8MBArrExt - u8ModbusADUSize;
-			  break;
-			  
-			case ku8MBMaskWriteRegister:
-			  u8BytesLeft = 5 + u8MBArrExt - u8ModbusADUSize;
-			  break;
-		  }
-		}
-		if ((millis() - u32StartTime) > _u16MBResponseTimeout)
-		{
-		  u8MBStatus = ku8MBResponseTimedOut;
-		}
 	  }
 	  
 	  if (!_bSerialTrans){
@@ -1044,79 +1063,81 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 	  if (_bSerialTrans){
 		  if (_u8EnablePin != 255)
 		  {
-			digitalWrite(_u8EnablePin, LOW); // MJT, set pin for transmission  was low
+				digitalWrite(_u8EnablePin, LOW); // MJT, set pin for transmission  was low
 		  }
 		  
 		  // verify response is large enough to inspect further
-		  if (!u8MBStatus && u8ModbusADUSize >= 5)
+		  if (!_u8MBStatus && u8ModbusADUSize >= 5)
 		  {
-			// calculate CRC
-			u16CRC = 0xFFFF;
-			for (i = 0; i < (u8ModbusADUSize - 2); i++)
-			{
-			  u16CRC = crc16_update(u16CRC, u8ModbusADU[i]);
-			}
-			
-			// verify CRC
-			if (!u8MBStatus && (lowByte(u16CRC) != u8ModbusADU[u8ModbusADUSize - 2] ||
-			  highByte(u16CRC) != u8ModbusADU[u8ModbusADUSize - 1]))
-			{
-			  u8MBStatus = ku8MBInvalidCRC;
-			}
+				// calculate CRC
+				u16CRC = 0xFFFF;
+				for (i = 0; i < (u8ModbusADUSize - 2); i++)
+				{
+					u16CRC = crc16_update(u16CRC, u8ModbusADU[i]);
+				}
+				
+				// verify CRC
+				if (!_u8MBStatus && (lowByte(u16CRC) != u8ModbusADU[u8ModbusADUSize - 2] ||
+					highByte(u16CRC) != u8ModbusADU[u8ModbusADUSize - 1]))
+				{
+					_u8MBStatus = ku8MBInvalidCRC;
+				}
 		  }
 	  }
 
 	  // disassemble ADU into words
-	  if (!u8MBStatus){
-		// evaluate returned Modbus function code
-		switch(u8ModbusADU[u8MBFnc]){  // 1, 7
-		  case ku8MBReadCoils:
-		  case ku8MBReadDiscreteInputs:
-			// load bytes into word; response bytes are ordered L, H, L, H, ...
-			for (i = 0; i < (u8ModbusADU[u8MBCntErr] >> 1); i++){  // 2, 8
-			  if (i < ku8MaxBufferSize){
-				_u16ResponseBuffer[i] = word(u8ModbusADU[2 * i + u8MBLow], u8ModbusADU[2 * i + u8MBHigh]);
-			  }
-			  _u8ResponseBufferLength = i;
-			}
-			
-			// in the event of an odd number of bytes, load last byte into zero-padded word
-			if (u8ModbusADU[u8MBCntErr] % 2){  // 2, 8
-			  if (i < ku8MaxBufferSize){
-				_u16ResponseBuffer[i] = word(0, u8ModbusADU[2 * i + u8MBHigh]);
-			  }
-			  
-			  _u8ResponseBufferLength = i + 1;
-			}
-			break;
-			
-		  case ku8MBReadInputRegisters:
-		  case ku8MBReadHoldingRegisters:
-		  case ku8MBReadWriteMultipleRegisters:
-			// load bytes into word; response bytes are ordered H, L, H, L, ...
-			// Serial.println(F("buffer:"));
-			for (i = 0; i < (u8ModbusADU[u8MBCntErr] >> 1); i++){  // 2, 8
-			  if (i < ku8MaxBufferSize){
-				_u16ResponseBuffer[i] = word(u8ModbusADU[2 * i + u8MBHigh], u8ModbusADU[2 * i + u8MBLow]);
+	  if (!_u8MBStatus){
+			// evaluate returned Modbus function code
+			switch(u8ModbusADU[u8MBFnc]){  // 1, 7
+				case ku8MBReadCoils:
+				case ku8MBReadDiscreteInputs:
+					// load bytes into word; response bytes are ordered L, H, L, H, ...
+					for (i = 0; i < (u8ModbusADU[u8MBCntErr] >> 1); i++){  // 2, 8
+						if (i < ku8MaxBufferSize){
+						_u16ResponseBuffer[i] = word(u8ModbusADU[2 * i + u8MBLow], u8ModbusADU[2 * i + u8MBHigh]);
+						}
+						_u16ResponseBufferLength = i;
+					}
 				
-				// Serial.print(i, DEC);
-				// Serial.print(F(": "));
-				// Serial.println(_u16ResponseBuffer[i], DEC);
-			  }
-			  
-			  _u8ResponseBufferLength = i;
+					// in the event of an odd number of bytes, load last byte into zero-padded word
+					if (u8ModbusADU[u8MBCntErr] % 2){  // 2, 8
+						if (i < ku8MaxBufferSize){
+						_u16ResponseBuffer[i] = word(0, u8ModbusADU[2 * i + u8MBHigh]);
+						}
+						
+						_u16ResponseBufferLength = i + 1;
+					}
+					break;
+				
+				case ku8MBReadInputRegisters:
+				case ku8MBReadHoldingRegisters:
+				case ku8MBReadWriteMultipleRegisters:
+					// load bytes into word; response bytes are ordered H, L, H, L, ...
+					// Serial.println(F("buffer:"));
+					// divide number of bytes returned by 2 to determine number of registers
+					_u16ResponseBufferLength = (u8ModbusADU[u8MBCntErr] >> 1);
+					for (i = 0; i < _u16ResponseBufferLength; i++){  // 2, 8
+						if (i < ku8MaxBufferSize){
+						_u16ResponseBuffer[i] = word(u8ModbusADU[2 * i + u8MBHigh], u8ModbusADU[2 * i + u8MBLow]);
+						
+						// Serial.print(i, DEC);
+						// Serial.print(F(": "));
+						// Serial.println(_u16ResponseBuffer[i], DEC);
+						}
+						
+						// _u16ResponseBufferLength = i;
+					}
+					break;
 			}
-			break;
-		}
 	  }
 	  
 	  _u8TransmitBufferIndex = 0;
 	  u16TransmitBufferLength = 0;
-	  _u8ResponseBufferIndex = 0;
-	  return u8MBStatus;
+	  _u16ResponseBufferIndex = 0;
+	  return _u8MBStatus;
   }
-  u8MBStatus = ku8MBInvalidClient;  // could not connect
-  return u8MBStatus;
+  _u8MBStatus = ku8MBInvalidClient;  // could not connect
+  return _u8MBStatus;
 }
 
 uint16_t ModbusMaster::crc16_update(uint16_t crc, uint8_t a)
