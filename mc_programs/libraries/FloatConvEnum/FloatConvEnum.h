@@ -1,6 +1,11 @@
 #ifndef FloatConvEnum_h
 #define FloatConvEnum_h
 
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "Arduino.h"
+#else
+#include "WProgram.h"
+#endif
 
 /**
 enum class for definitions of different data types meters can return
@@ -32,5 +37,9 @@ enum class FloatConv {
   ENERGY_WS,        //  74
   DOUBLE_WS,        //  75
 };
+
+uint16_t FloatConvEnumNumRegs(FloatConv dataType);
+int8_t FloatConv2Int8(FloatConv dataType);
+FloatConv Int8_2_FloatConv(int8_t s8_dataType);
 
 #endif

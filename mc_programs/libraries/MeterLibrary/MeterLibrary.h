@@ -41,18 +41,24 @@ class MeterLibrary {
 		uint16_t m_u16_grpStrtInd;
 		uint8_t m_u8_numBlks;
 		uint8_t m_u8_numGrps;
+		uint8_t m_u8_curGrp;
+		uint8_t m_u8_numGrpVals;
+		// uint8_t m_u8_numGrpRegs;
+		// uint16_t m_u16_grpReqReg;
 		
 		bool m_b_allSameType;
 		FloatConv m_reqRegDataType;
 		
-		uint16_t getNumReqVals();
+		// uint16_t getNumReqVals();
 	public:
 		MeterLibrary(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType);
 		
-		int changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType);
+		int changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType, 
+		      bool b_useGrps = false);
 		// bool changeMeterType(uint8_t u8_mtrType);
 		// void changeRegisters(uint16_t u16_reqReg, uint16_t u16_numRegs);
 		
+		bool setGroup(uint8_t u8_grpInd);
 		
 		void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data, bool checkType);
 		float convertToFloat(ModbusMaster &node, uint16_t u16_reg, bool checkType);  // returns float

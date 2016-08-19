@@ -340,8 +340,8 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   u8_mtrMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType + 2);
   u16_mtrLibStart = word(EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType - 1), EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType));
   
-  u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 3), EEPROM.read(u16_mtrLibStart + 4));
-  u16_numGrps = EEPROM.read(u16_mtrLibStart + 5);
+  u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 4), EEPROM.read(u16_mtrLibStart + 5));
+  u16_numGrps = EEPROM.read(u16_mtrLibStart + 3);
   u16_mtrCurGrpInd = u16_mtrGrpStart;
 
   memset(u8a_mbReq, 0, 5);
@@ -364,7 +364,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
     b_mbReqStat = getModbus(u8a_mbReq, u16_reqLen, u8a_mbResp, u16_respLen);  // getModbus uses MB/TCP as inputs and outputs
 
     //const uint16_t *u16p_mbRespData = (uint16_t*)&u8a_mbResp[9];
-
+      
 //    Serial.print(F("group: "));
 //    Serial.print(i, DEC);
     if (b_mbReqStat) {
@@ -422,6 +422,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
     u16_mtrCurGrpInd = 3 + 2 * (u8_numGrpVals) +u16_mtrCurGrpInd;  // starting address of next group
 
   }  // end for
+
   // last group full of duds (if any)
   u8_numGrpVals = EEPROM.read(u16_mtrCurGrpInd);
 
@@ -430,6 +431,8 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
 
     s8a_dataFlags[u8_valType] = 0;  // data does not exist on this hardware
   }  // end for
+  // end handling of last group
+
 
   // add to xml string, indicate that data is contained
   strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>true</has_data>"));

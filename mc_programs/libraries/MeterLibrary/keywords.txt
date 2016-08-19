@@ -1,0 +1,22 @@
+#######################################
+# Syntax Coloring Map For MeterLibrary
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+MeterLibrary	               KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+changeInputs                 KEYWORD2
+convertToFloat               KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+#const public globals	       LITERAL1

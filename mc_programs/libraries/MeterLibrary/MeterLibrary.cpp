@@ -24,7 +24,9 @@ MeterLibrary::MeterLibrary(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8
 	
 }
 
-int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType) {
+
+int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType, 
+      bool b_useGrps) {
 	m_u16_reqReg = u16_reqReg;
 	m_u16_numRegs = u16_numRegs;
 	m_b_allSameType = false;
@@ -34,15 +36,23 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 	}
 	else {
 		m_u8_mtrType = 0;
-		return 1;
+		return 1;  // meter type not viable
 	}
 	
 	m_u16_mtrLibStart = word(EEPROM.read(m_u16_regBlkStart + 4 * u8_mtrType - 1), 
 		EEPROM.read(m_u16_regBlkStart + 4 * u8_mtrType));
 	m_u16_blkStrtInd = word(EEPROM.read(m_u16_mtrLibStart), EEPROM.read(m_u16_mtrLibStart + 1));
 	m_u8_numBlks = EEPROM.read(m_u16_mtrLibStart + 2);
-	m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 3), EEPROM.read(m_u16_mtrLibStart + 4));
-	m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 5);
+	m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4), EEPROM.read(m_u16_mtrLibStart + 5));
+	m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
+	
+	if (b_useGrps) {
+		m_u8_curGrp = 1;
+		
+		m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
+		m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
+		m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
+	}
 	
 	for (int ii = 0; ii < m_u8_numBlks; ++ii) {
 		uint16_t u16_blkFirstReg;
@@ -80,8 +90,8 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 			// EEPROM.read(m_u16_regBlkStart + 4 * u8_mtrType));
 		// m_u16_blkStrtInd = word(EEPROM.read(m_u16_mtrLibStart), EEPROM.read(m_u16_mtrLibStart + 1));
 		// m_u8_numBlks = EEPROM.read(m_u16_mtrLibStart + 2);
-		// m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 3), EEPROM.read(m_u16_mtrLibStart + 4));
-		// m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 5);
+		// m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4), EEPROM.read(m_u16_mtrLibStart + 5));
+		// m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
 		// return true;
 	// }
 	// else {
@@ -94,31 +104,44 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 	// m_u16_numRegs = u16_numRegs;
 // }
 
-uint16_t MeterLibrary::getNumReqVals() {
-	switch (m_reqRegDataType) {
-		case FloatConv::UINT16:
-		case FloatConv::INT16:
-			// return m_u16_numRegs;
-			return 1;
-		case FloatConv::MOD20K:
-		case FloatConv::MOD20K_WS:
-			// return (m_u16_numRegs / 3);
-			return 3;
-		case FloatConv::UINT64:
-		case FloatConv::UINT64_WS:
-		case FloatConv::MOD30K:
-		case FloatConv::MOD30K_WS:
-		case FloatConv::ENERGY:
-		case FloatConv::ENERGY_WS:
-		case FloatConv::DOUBLE:
-		case FloatConv::DOUBLE_WS:
-			// return (m_u16_numRegs / 4);
-			return 4;
-		default:
-			// return (m_u16_numRegs / 2);
-			return 2;
+bool MeterLibrary::setGroup(uint8_t u8_grpInd) {
+	if (u8_grpInd < m_u8_numGrpVals) {
+		m_u8_curGrp = u8_grpInd;
+		
+		m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
+		m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
+		m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
 	}
+	return false;
 }
+
+
+
+// uint16_t MeterLibrary::getNumReqVals() {
+	// switch (m_reqRegDataType) {
+		// case FloatConv::UINT16:
+		// case FloatConv::INT16:
+			// // return m_u16_numRegs;
+			// return 1;
+		// case FloatConv::MOD20K:
+		// case FloatConv::MOD20K_WS:
+			// // return (m_u16_numRegs / 3);
+			// return 3;
+		// case FloatConv::UINT64:
+		// case FloatConv::UINT64_WS:
+		// case FloatConv::MOD30K:
+		// case FloatConv::MOD30K_WS:
+		// case FloatConv::ENERGY:
+		// case FloatConv::ENERGY_WS:
+		// case FloatConv::DOUBLE:
+		// case FloatConv::DOUBLE_WS:
+			// // return (m_u16_numRegs / 4);
+			// return 4;
+		// default:
+			// // return (m_u16_numRegs / 2);
+			// return 2;
+	// }
+// }
 
 
 
@@ -142,7 +165,8 @@ void MeterLibrary::convertToFloat(ModbusMaster &node, uint8_t *const u8p_data, b
 
 	
 	if (!checkType) {
-		u16_regMult = getNumReqVals();
+		// u16_regMult = getNumReqVals();
+		u16_regMult = FloatConvEnumNumRegs(m_reqRegDataType);
 		u16_numReqVals = m_u16_numRegs / u16_regMult;
 		
 		for (int ii = 0, jj = 0; ii < u16_numReqVals; ++ii, jj += 2) {

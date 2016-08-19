@@ -8,19 +8,28 @@ int meter6(uint16_t mtr_start){
   // siemens 9510, 9610 meter 6 **********************************************************
   // 126
  
-  blk_strt = mtr_start + 6;
+  
   blk_num = 4;
+#if NEW_GROUP_STYLE == 1
+  grp_num = 2;
+  blk_strt = mtr_start + 4 + grp_num * 2;
+#else
+  blk_strt = mtr_start + 6;
   grp_num = 12;
+#endif
 
   grp_strt = blk_strt + (blk_num * 5);
   // mtr_start = 3264
-  EEPROM.write(mtr_start, highByte(blk_strt));
+  EEPROM.write(mtr_start, highByte(blk_strt));  // EEPROM address for block start
   EEPROM.write(mtr_start + 1, lowByte(blk_strt));
   EEPROM.write(mtr_start + 2, blk_num);  // number of blocks;
 
-  EEPROM.write(mtr_start + 3, highByte(grp_strt));
-  EEPROM.write(mtr_start + 4, lowByte(grp_strt));
-  EEPROM.write(mtr_start + 5, grp_num);  // number of blocks;
+  EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
+  EEPROM.write(mtr_start + 4, highByte(grp_strt));
+  EEPROM.write(mtr_start + 5, lowByte(grp_strt));
+  EEPROM.write(mtr_start + 6, highByte(grp_strt + 53));
+  EEPROM.write(mtr_start + 7, lowByte(grp_strt + 53));
+
 
   // Block #1 - [149, 164, 1]
   EEPROM.write(blk_strt, highByte(149));
@@ -54,7 +63,7 @@ int meter6(uint16_t mtr_start){
   // New Group #1
   EEPROM.write(grp_strt, 31); // number of values
   EEPROM.write(++grp_num, 116);  // number of registers
-  EEPROM.write(++grp_strt, highByte(149));
+  EEPROM.write(++grp_strt, highByte(149));  // starting register
   EEPROM.write(++grp_strt, lowByte(149));  // +3
   for (i = 1; i < 4; i++) { // 1, 2, 3
     EEPROM.write(++grp_strt, i);  // data type
@@ -136,7 +145,7 @@ int meter6(uint16_t mtr_start){
   //EEPROM.write(++grp_strt, 4);
 
   // New Group #2
-  EEPROM.write(++grp_strt, 1); // number of values
+  EEPROM.write(++grp_strt, 1); // number of values, +53
   EEPROM.write(++grp_num, 5);  // which values
 
   Serial.print(F("group 6: "));

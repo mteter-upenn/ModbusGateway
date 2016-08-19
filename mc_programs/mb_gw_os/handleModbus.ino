@@ -4,7 +4,7 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
   uint16_t u16_reqReg, u16_numRegs, u16_adjReqReg(0), u16_adjNumRegs(0);
   uint8_t u8_mbRespNumBytes(0);
   uint8_t u8_mbResult(0xFF);
-  uint16_t u16_tempReg (0);
+  //uint16_t u16_tempReg (0);
   bool b_foundReg(false);
   uint8_t u8_mbReqFunc(0);
   uint8_t u8_mbError(0);
@@ -163,12 +163,14 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
       switch (u8_mbResult) {  // why even bother with this switch?
         case 0:  // g_mm_node.ku8MBSuccess
           if (!b_reqRegManip) {  // no adjustments to data
-            for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii+=2) {
-              u16_tempReg = g_mm_node.getResponseBuffer(jj);
-              
-              u8a_mbResp[ii] = highByte(u16_tempReg);
-              u8a_mbResp[ii + 1] = lowByte(u16_tempReg);
-            }
+            g_mm_node.copyResponseBuffer((uint16_t*)(u8a_mbResp + 9));
+
+            //for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii+=2) {
+            //  u16_tempReg = g_mm_node.getResponseBuffer(jj);
+            //  
+            //  u8a_mbResp[ii] = highByte(u16_tempReg);
+            //  u8a_mbResp[ii + 1] = lowByte(u16_tempReg);
+            //}
           }
           else {
 //            Serial.println("handling 10k data");

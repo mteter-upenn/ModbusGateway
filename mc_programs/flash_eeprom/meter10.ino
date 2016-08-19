@@ -18,9 +18,9 @@ void meter10(uint16_t mtr_start){
   EEPROM.write(mtr_start + 1, lowByte(blk_strt));
   EEPROM.write(mtr_start + 2, blk_num);  // number of blocks;
 
-  EEPROM.write(mtr_start + 3, highByte(grp_strt));
-  EEPROM.write(mtr_start + 4, lowByte(grp_strt));
-  EEPROM.write(mtr_start + 5, grp_num);  // number of blocks;
+  EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
+  EEPROM.write(mtr_start + 4, highByte(grp_strt));
+  EEPROM.write(mtr_start + 5, lowByte(grp_strt));
 
   // Block #1 - [1099, 1298, 2]
   EEPROM.write(blk_strt, highByte(1099));

@@ -14,8 +14,8 @@ PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart) {
 
   //lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
 
-  u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 3), EEPROM.read(u16_mtrLibStart + 4));  // where the first group starts
-  u8_numGrps = EEPROM.read(u16_mtrLibStart + 5);  // number of groups in meter
+  u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 4), EEPROM.read(u16_mtrLibStart + 5));  // where the first group starts
+  u8_numGrps = EEPROM.read(u16_mtrLibStart + 3);  // number of groups in meter
   u16_curGrpInd = u16_mtrGrpStart;
 
   //Serial.println("getElecRegs:");
@@ -28,8 +28,9 @@ PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart) {
     u16_reqReg = word(EEPROM.read(u16_curGrpInd + 1), EEPROM.read(u16_curGrpInd + 2));
 
     for (int jj = 0; jj < u8_numGrpVals; ++jj) {
-      if ((!b_fndPwr) && (EEPROM.read(jj + u16_curGrpInd + 3) == 17)) {
-        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x7F);  // only look at ls 7 bits
+      if ((!b_fndPwr) && (EEPROM.read(jj + u16_curGrpInd + 3) == 17)) {  // 17 is value of real power total
+        //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x3F);  // only look at ls 6 bits
 
         if ((u8_valType < 3) && (u8_valType > 0)) {
           u8_typeMltplr = 1;
@@ -48,7 +49,7 @@ PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart) {
         b_fndPwr = true;
       }
       else if ((!b_fndEgy) && (EEPROM.read(jj + u16_curGrpInd + 3) == 30)) {
-        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x7F);  // only look at ls 7 bits
+        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x3F);  // only look at ls 7 bits
 
         if ((u8_valType < 3) && (u8_valType > 0)) {
           u8_typeMltplr = 1;
