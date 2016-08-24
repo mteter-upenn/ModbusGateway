@@ -423,15 +423,15 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
 
   }  // end for
 
-  // last group full of duds (if any)
-  u8_numGrpVals = EEPROM.read(u16_mtrCurGrpInd);
-
-  for (int jj = 0; jj < u8_numGrpVals; ++jj){  // shift 2 to get to collection type
-    u8_valType = EEPROM.read(jj + u16_mtrCurGrpInd + 3) - 1;
-
-    s8a_dataFlags[u8_valType] = 0;  // data does not exist on this hardware
-  }  // end for
-  // end handling of last group
+  // last group full of duds (if any) ********************************************************************
+  u8_numGrpVals = EEPROM.read(u16_mtrCurGrpInd);  //                                                     *
+  //                                                                                                     *
+  for (int jj = 0; jj < u8_numGrpVals; ++jj){  // shift 2 to get to collection type                      *
+    u8_valType = EEPROM.read(jj + u16_mtrCurGrpInd + 3) - 1;  //                                         *
+    //                                                                                                   *
+    s8a_dataFlags[u8_valType] = 0;  // data does not exist on this hardware                              *
+  }  // end for                                                                                          *
+  // end handling of last group **************************************************************************
 
 
   // add to xml string, indicate that data is contained

@@ -16,12 +16,24 @@ Constructor.
 
 @ingroup setup
 */
+MeterLibrary::MeterLibrary(uint8_t u8_mtrType) {
+	// address for meter register library, this will never change
+	m_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));	
+		
+	changeInputs(0, 0, u8_mtrType, true);
+}
+
+
+/**
+Constructor.
+
+@ingroup setup
+*/
 MeterLibrary::MeterLibrary(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType) {
 	// address for meter register library, this will never change
 	m_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));	
 		
 	changeInputs(u16_reqReg, u16_numRegs, u8_mtrType);
-	
 }
 
 
@@ -43,6 +55,7 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 		EEPROM.read(m_u16_regBlkStart + 4 * u8_mtrType));
 	m_u16_blkStrtInd = word(EEPROM.read(m_u16_mtrLibStart), EEPROM.read(m_u16_mtrLibStart + 1));
 	m_u8_numBlks = EEPROM.read(m_u16_mtrLibStart + 2);
+	// assume group is 1:
 	m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4), EEPROM.read(m_u16_mtrLibStart + 5));
 	m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
 	
@@ -52,6 +65,7 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 		m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
 		m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
 		m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
+		m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd + 4);
 	}
 	
 	for (int ii = 0; ii < m_u8_numBlks; ++ii) {
@@ -105,17 +119,148 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 // }
 
 bool MeterLibrary::setGroup(uint8_t u8_grpInd) {
-	if (u8_grpInd < m_u8_numGrpVals) {
+	if (u8_grpInd <= m_u8_numGrps) {
 		m_u8_curGrp = u8_grpInd;
+		m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4 + m_u8_curGrp * 2 - 2), 
+			EEPROM.read(m_u16_mtrLibStart + 5 + m_u8_curGrp * 2 - 2));
+		
 		
 		m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
-		m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
-		m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
+		if (u8_grpInd < m_u8_numGrps) {
+			m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
+			m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
+			m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd + 4);
+		}
+		else {  // last group
+			m_u16_numRegs = 0;
+			m_u16_reqReg = 0;
+			m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd) + 1;
+		}
+		
+		return true;
 	}
+	
 	return false;
 }
 
 
+uint16_t MeterLibrary::getNumRegs() {
+	return m_u16_numRegs;
+}
+
+
+uint16_t MeterLibrary::getReqReg() {
+	return m_u16_reqReg;
+}
+
+
+uint8_t MeterLibrary::getCurGrp() {
+	return m_u8_curGrp;
+}
+
+
+bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const fkp_retData, 
+	int8_t *const s8kp_dataFlags) {
+	const uint16_t *k_u16p_data = (uint16_t*)k_u8kp_data;
+	
+	if (!(m_u8_curGrp < m_u8_numGrps)) {  // check to make sure curGrp is not last group
+		return false;
+	}
+	
+	/* GROUP STRUCTURE:
+	*  ADDRESS   0: number of values in group
+	*  ADDRESS   1: number of registers to request in modbus
+	*  ADDRESS   2: high byte of starting register
+	*  ADDRESS   3: low byte of starting register
+	*  ADDRESS   4: add this to ADDRESS 0 to get index of data types
+	*  ADDRESS 5->: value types + skips, value types are [1, 32], skips are negative
+	*  ADDRESS  (ADDRESS 0 + eval(ADDRESS 4)): data types in pairs (FloatConv, which values fall under it)
+	*/
+	
+	
+	uint8_t u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1);
+	FloatConv dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd));
+	uint8_t u8_valInd(0);  // order of value in group (NOT the VALUE TYPE (ie real power))
+	
+	
+	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 5; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
+		int8_t s8_valType;
+		
+		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+		
+		if (s8_valType < 0) {
+			// skip registers
+			k_u16p_data += (-1) * s8_valType;
+		}
+		else {
+			++u8_valInd;
+			
+			while (u8_valInd > u8_dataTypeCmp) {
+				int ii(2); // skip 0 on assumption that u8_dataTypeCmp is initialized in such a case
+				u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1 + ii);
+				dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd + ii));
+				ii += 2;
+			}
+			
+			// convert register data to float and store
+			fkp_retData[s8_valType - 1] = g_convertToFloat(k_u16p_data, dataType);
+			// mark all flags as a successful read
+			s8kp_dataFlags[s8_valType - 1] = 1;
+			// skip necessary number of registers to get to next value
+			k_u16p_data += FloatConvEnumNumRegs(dataType);
+		}
+		
+	}
+	
+	return false;
+}
+
+// set all flags for the values in the group to -1 for unsuccessful modbus read
+bool MeterLibrary::groupMbErr(int8_t *const s8kp_dataFlags) {
+	if (!(m_u8_curGrp < m_u8_numGrps)) {  // check to make sure curGrp is not last group
+		return false;
+	}
+	
+	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 5; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
+		int8_t s8_valType;
+		
+		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+		
+		if (s8_valType > 0) {
+			// mark all flags as an unsuccessful read
+			s8kp_dataFlags[s8_valType - 1] = -1;
+			
+		}
+		// else {
+			// // skip registers
+		// }
+	}
+	
+	return true;
+}
+
+
+bool MeterLibrary::groupLastFlags(int8_t *const s8kp_dataFlags) {
+	if (m_u8_curGrp != m_u8_numGrps) {  // check to make sure curGrp is last group
+		return false;
+	}
+	
+	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 1; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
+		int8_t s8_valType;
+		
+		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+		
+		if (s8_valType > 0) {
+			// mark all flags as not applicable
+			s8kp_dataFlags[s8_valType - 1] = 0;
+		}
+		// else {
+			// // skip registers
+		// }
+	}
+	
+	return true;
+}
 
 // uint16_t MeterLibrary::getNumReqVals() {
 	// switch (m_reqRegDataType) {
@@ -150,12 +295,12 @@ Convert full data request to float.
 
 u8a_data must be address where floats will start (no header spacing accounted for)
 */
-void MeterLibrary::convertToFloat(ModbusMaster &node, uint8_t *const u8p_data, bool checkType) {
+void MeterLibrary::convertToFloat(ModbusMaster &node, uint8_t *const u8kp_data, bool checkType) {
 	uint16_t u16_numReqVals;
 	// multiplier such that u16_regMult * (number of requested values) = (number of requested 
 	//     registers)
 	uint16_t u16_regMult;  
-	uint16_t * const u16p_data = (uint16_t*)u8p_data;
+	uint16_t * const u16kp_data = (uint16_t*)u8kp_data;
 	// float *const fp_data = (float*)u8p_data;
 	uint16_t u16_reg;
 	union cnvtUnion {
@@ -177,8 +322,8 @@ void MeterLibrary::convertToFloat(ModbusMaster &node, uint8_t *const u8p_data, b
 			// Serial.print(ii, DEC); Serial.print(": "); Serial.println(int2flt.fl);
 			
 			// words are in correct order, but the bytes in the words need to be swapped
-			u16p_data[jj] = swapBytes(int2flt.u16[0]);
-			u16p_data[jj + 1] = swapBytes(int2flt.u16[1]);
+			u16kp_data[jj] = swapBytes(int2flt.u16[0]);
+			u16kp_data[jj + 1] = swapBytes(int2flt.u16[1]);
 		}
 		
 	}
@@ -227,7 +372,7 @@ uint16_t swapBytes(uint16_t u16_word) {
 	return ((u16_word >> 8) | (u16_word << 8));
 }
 
-float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
+float g_convertToFloat(const uint16_t *const k_u16kp_reg, FloatConv regDataType) {
 	/** the following commented out is needed for boards other than teensy to handle doubles */
 // #if defined(__arm__) && defined(CORE_TEENSY)  // if teensy3.0 or greater
 // #else
@@ -259,21 +404,21 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 				float fl;
 			} int2flt;
 			if (regDataType == FloatConv::FLOAT_WS) {
-				int2flt.u16[1] = u16p_reg[0];
-				int2flt.u16[0] = u16p_reg[1];
+				int2flt.u16[1] = k_u16kp_reg[0];
+				int2flt.u16[0] = k_u16kp_reg[1];
 			}
 			else{  // no ws, no adjustments needed
-				int2flt.u16[0] = u16p_reg[0];
-				int2flt.u16[1] = u16p_reg[1];
+				int2flt.u16[0] = k_u16kp_reg[0];
+				int2flt.u16[1] = k_u16kp_reg[1];
 			}
 			return int2flt.fl;
 			break;
 		}
 		case FloatConv::UINT16: // u16 to float
-			return float(u16p_reg[0]);
+			return float(k_u16kp_reg[0]);
 			break;
 		case FloatConv::INT16: // s16 to float
-			return float(static_cast<int16_t>(u16p_reg[0]));
+			return float(static_cast<int16_t>(k_u16kp_reg[0]));
 			break;
 		case FloatConv::UINT32: // u32 to float
 		case FloatConv::UINT32_WS: { // u32 to float
@@ -283,12 +428,12 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			} int2u32;
 			
 			if (regDataType == FloatConv::UINT32_WS) {
-				int2u32.u16[1] = u16p_reg[0];
-				int2u32.u16[0] = u16p_reg[1];
+				int2u32.u16[1] = k_u16kp_reg[0];
+				int2u32.u16[0] = k_u16kp_reg[1];
 			}
 			else{  // no ws, no adjustments needed
-				int2u32.u16[0] = u16p_reg[0];
-				int2u32.u16[1] = u16p_reg[1];
+				int2u32.u16[0] = k_u16kp_reg[0];
+				int2u32.u16[1] = k_u16kp_reg[1];
 			}
 			return float(int2u32.u32);
 			break;
@@ -304,12 +449,12 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			} int2s32;
 			
 			if (regDataType == FloatConv::INT32_WS) {
-				int2s32.u16[1] = u16p_reg[0];
-				int2s32.u16[0] = u16p_reg[1];
+				int2s32.u16[1] = k_u16kp_reg[0];
+				int2s32.u16[0] = k_u16kp_reg[1];
 			}
 			else{  // no ws, no adjustments needed
-				int2s32.u16[0] = u16p_reg[0];
-				int2s32.u16[1] = u16p_reg[1];
+				int2s32.u16[0] = k_u16kp_reg[0];
+				int2s32.u16[1] = k_u16kp_reg[1];
 			}
 			return float(int2s32.s32);
 			break;
@@ -320,12 +465,12 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			uint32_t u32_highWord;
 			
 			if (regDataType == FloatConv::MOD1K_WS) {
-				s32_regVal = u16p_reg[1];
-				u32_highWord = u16p_reg[0];
+				s32_regVal = k_u16kp_reg[1];
+				u32_highWord = k_u16kp_reg[0];
 			}
 			else{  // no ws, no adjustments needed
-				s32_regVal = u16p_reg[0];
-				u32_highWord = u16p_reg[1];
+				s32_regVal = k_u16kp_reg[0];
+				u32_highWord = k_u16kp_reg[1];
 			}
 			
 			s32_regVal += (u32_highWord & 0x7fff) * 1000;  // chop off negative bit, multiply and add
@@ -341,12 +486,12 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			uint32_t u32_highWord;
 			
 			if (regDataType == FloatConv::MOD10K_WS) {
-				s32_regVal = u16p_reg[1];
-				u32_highWord = u16p_reg[0];
+				s32_regVal = k_u16kp_reg[1];
+				u32_highWord = k_u16kp_reg[0];
 			}
 			else{  // no ws, no adjustments needed
-				s32_regVal = u16p_reg[0];
-				u32_highWord = u16p_reg[1];
+				s32_regVal = k_u16kp_reg[0];
+				u32_highWord = k_u16kp_reg[1];
 			}
 			
 			s32_regVal += (u32_highWord & 0x7fff) * 10000;  // chop off negative bit, multiply and add
@@ -362,14 +507,14 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			uint32_t u32_highWord;
 			
 			if (regDataType == FloatConv::MOD20K_WS) {
-				f_regVal = float(u16p_reg[2]);
-				f_regVal += float(u16p_reg[1]) * pow(10.0, 4.0);
-				u32_highWord = u16p_reg[0];
+				f_regVal = float(k_u16kp_reg[2]);
+				f_regVal += float(k_u16kp_reg[1]) * pow(10.0, 4.0);
+				u32_highWord = k_u16kp_reg[0];
 			}
 			else{  // no ws, no adjustments needed
-				f_regVal = float(u16p_reg[0]);
-				f_regVal += float(u16p_reg[1]) * pow(10.0, 4.0);
-				u32_highWord = u16p_reg[2];
+				f_regVal = float(k_u16kp_reg[0]);
+				f_regVal += float(k_u16kp_reg[1]) * pow(10.0, 4.0);
+				u32_highWord = k_u16kp_reg[2];
 			}
 			
 			f_regVal += float(u32_highWord & 0x7fff) * pow(10.0, 8.0);
@@ -385,16 +530,16 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			uint32_t u32_highWord;
 			
 			if (regDataType == FloatConv::MOD30K_WS) {
-				f_regVal = float(u16p_reg[3]);
-				f_regVal += float(u16p_reg[2]) * pow(10.0, 4.0);
-				f_regVal += float(u16p_reg[1]) * pow(10.0, 8.0);
-				u32_highWord = u16p_reg[0];
+				f_regVal = float(k_u16kp_reg[3]);
+				f_regVal += float(k_u16kp_reg[2]) * pow(10.0, 4.0);
+				f_regVal += float(k_u16kp_reg[1]) * pow(10.0, 8.0);
+				u32_highWord = k_u16kp_reg[0];
 			}
 			else{  // no ws, no adjustments needed
-				f_regVal = float(u16p_reg[0]);
-				f_regVal += float(u16p_reg[1]) * pow(10.0, 4.0);
-				f_regVal += float(u16p_reg[2]) * pow(10.0, 8.0);
-				u32_highWord = u16p_reg[3];
+				f_regVal = float(k_u16kp_reg[0]);
+				f_regVal += float(k_u16kp_reg[1]) * pow(10.0, 4.0);
+				f_regVal += float(k_u16kp_reg[2]) * pow(10.0, 8.0);
+				u32_highWord = k_u16kp_reg[3];
 			}
 			
 			f_regVal += float(u32_highWord & 0x7fff) * pow(10.0, 12.0);
@@ -409,16 +554,16 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			float f_regVal;
 			
 			if (regDataType == FloatConv::UINT64_WS) {
-				f_regVal = float(u16p_reg[3]);
-				f_regVal += float(u16p_reg[2]) * pow(2.0, 16.0);
-				f_regVal += float(u16p_reg[1]) * pow(2.0, 32.0);
-				f_regVal += float(u16p_reg[0]) * pow(2.0, 48.0);
+				f_regVal = float(k_u16kp_reg[3]);
+				f_regVal += float(k_u16kp_reg[2]) * pow(2.0, 16.0);
+				f_regVal += float(k_u16kp_reg[1]) * pow(2.0, 32.0);
+				f_regVal += float(k_u16kp_reg[0]) * pow(2.0, 48.0);
 			}
 			else{  // no ws, no adjustments needed
-				f_regVal = float(u16p_reg[0]);
-				f_regVal += float(u16p_reg[1]) * pow(2.0, 16.0);
-				f_regVal += float(u16p_reg[2]) * pow(2.0, 32.0);
-				f_regVal += float(u16p_reg[3]) * pow(2.0, 48.0);
+				f_regVal = float(k_u16kp_reg[0]);
+				f_regVal += float(k_u16kp_reg[1]) * pow(2.0, 16.0);
+				f_regVal += float(k_u16kp_reg[2]) * pow(2.0, 32.0);
+				f_regVal += float(k_u16kp_reg[3]) * pow(2.0, 48.0);
 			}
 
 			return f_regVal;
@@ -430,16 +575,16 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			int8_t s8_engrExp;
 			
 			if (regDataType == FloatConv::ENERGY_WS) {
-				f_regVal = float(u16p_reg[3]);
-				f_regVal += float(u16p_reg[2]) * pow(2.0, 16.0);
-				f_regVal += float(u16p_reg[1]) * pow(2.0, 32.0);
-				s8_engrExp = int8_t((u16p_reg[0] >> 8));
+				f_regVal = float(k_u16kp_reg[3]);
+				f_regVal += float(k_u16kp_reg[2]) * pow(2.0, 16.0);
+				f_regVal += float(k_u16kp_reg[1]) * pow(2.0, 32.0);
+				s8_engrExp = int8_t((k_u16kp_reg[0] >> 8));
 			}
 			else{  // no ws, no adjustments needed
-				f_regVal = float(u16p_reg[0]);
-				f_regVal += float(u16p_reg[1]) * pow(2.0, 16.0);
-				f_regVal += float(u16p_reg[2]) * pow(2.0, 32.0);
-				s8_engrExp = int8_t((u16p_reg[3] >> 8));
+				f_regVal = float(k_u16kp_reg[0]);
+				f_regVal += float(k_u16kp_reg[1]) * pow(2.0, 16.0);
+				f_regVal += float(k_u16kp_reg[2]) * pow(2.0, 32.0);
+				s8_engrExp = int8_t((k_u16kp_reg[3] >> 8));
 			}
 			
 			f_regVal *= pow(10.0, s8_engrExp);
@@ -454,16 +599,16 @@ float g_convertToFloat(uint16_t *const u16p_reg, FloatConv regDataType) {
 			} int2dbl;
 			
 			if (regDataType == FloatConv::DOUBLE_WS) {  // WORDSWAP
-				int2dbl.u16[3] = u16p_reg[0];
-				int2dbl.u16[2] = u16p_reg[1];
-				int2dbl.u16[1] = u16p_reg[2];
-				int2dbl.u16[0] = u16p_reg[3];
+				int2dbl.u16[3] = k_u16kp_reg[0];
+				int2dbl.u16[2] = k_u16kp_reg[1];
+				int2dbl.u16[1] = k_u16kp_reg[2];
+				int2dbl.u16[0] = k_u16kp_reg[3];
 			}
 			else {
-				int2dbl.u16[0] = u16p_reg[0];
-				int2dbl.u16[1] = u16p_reg[1];
-				int2dbl.u16[2] = u16p_reg[2];
-				int2dbl.u16[3] = u16p_reg[3];
+				int2dbl.u16[0] = k_u16kp_reg[0];
+				int2dbl.u16[1] = k_u16kp_reg[1];
+				int2dbl.u16[2] = k_u16kp_reg[2];
+				int2dbl.u16[3] = k_u16kp_reg[3];
 			}
 			
 			return float(int2dbl.dbl);
