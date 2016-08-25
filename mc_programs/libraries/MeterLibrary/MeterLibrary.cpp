@@ -158,6 +158,9 @@ uint8_t MeterLibrary::getCurGrp() {
 	return m_u8_curGrp;
 }
 
+uint8_t MeterLibrary::getNumGrps() {
+	return m_u8_numGrps;
+}
 
 bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const fkp_retData, 
 	int8_t *const s8kp_dataFlags) {
@@ -165,6 +168,8 @@ bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const f
 	
 	if (!(m_u8_curGrp < m_u8_numGrps)) {  // check to make sure curGrp is not last group
 		return false;
+	}
+	else {
 	}
 	
 	/* GROUP STRUCTURE:
@@ -182,11 +187,14 @@ bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const f
 	FloatConv dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd));
 	uint8_t u8_valInd(0);  // order of value in group (NOT the VALUE TYPE (ie real power))
 	
-	
+	Serial.print("start: "); Serial.println(m_u16_grpStrtInd + 5, DEC);
+	Serial.print("until: "); Serial.println(m_u16_grpDataTypeInd, DEC);
 	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 5; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
 		int8_t s8_valType;
 		
 		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+		
+		Serial.print("s8_valType: "); Serial.println(s8_valType, DEC);
 		
 		if (s8_valType < 0) {
 			// skip registers

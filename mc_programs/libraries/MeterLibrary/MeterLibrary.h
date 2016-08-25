@@ -68,6 +68,7 @@ class MeterLibrary {
 		uint16_t getNumRegs();
 		uint16_t getReqReg();
 		uint8_t getCurGrp();
+		uint8_t getNumGrps();
 		
 		bool groupToFloat(const uint8_t *const u8p_data, float *const fp_retData, int8_t *const s8kp_dataFlags);
 		bool groupMbErr(int8_t *const s8kp_dataFlags);
