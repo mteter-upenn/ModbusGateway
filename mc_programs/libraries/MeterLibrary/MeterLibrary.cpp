@@ -130,6 +130,21 @@ bool MeterLibrary::setGroup(uint8_t u8_grpInd) {
 			m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
 			m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
 			m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd + 4);
+			
+			Serial.print("curGrp: "); Serial.println(m_u8_curGrp, DEC);
+			Serial.print("grpStrtInd: "); Serial.println(m_u16_grpStrtInd, DEC);
+			Serial.print("numGrpVals: "); Serial.println(m_u8_numGrpVals, DEC);
+			Serial.print("numRegs: "); Serial.println(m_u16_numRegs, DEC);
+			Serial.print("reqReg: "); Serial.println(m_u16_reqReg, DEC);
+			Serial.print("grpDataTypeInd: "); Serial.println(m_u16_grpDataTypeInd, DEC);
+			Serial.print("bytes to skip: "); Serial.println(EEPROM.read(m_u16_grpStrtInd + 4), DEC);
+			
+			Serial.println();
+			
+			// for (int ii = m_u16_mtrLibStart; ii < m_u16_mtrLibStart + 100; ++ii) {
+				// Serial.print(ii, DEC); Serial.print(": "); Serial.println(EEPROM.read(ii), DEC);
+			// }
+			
 		}
 		else {  // last group
 			m_u16_numRegs = 0;
@@ -187,27 +202,32 @@ bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const f
 	FloatConv dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd));
 	uint8_t u8_valInd(0);  // order of value in group (NOT the VALUE TYPE (ie real power))
 	
-	Serial.print("start: "); Serial.println(m_u16_grpStrtInd + 5, DEC);
-	Serial.print("until: "); Serial.println(m_u16_grpDataTypeInd, DEC);
+	// Serial.print("start: "); Serial.println(m_u16_grpStrtInd + 5, DEC);  // 1539
+	// Serial.print("until: "); Serial.println(m_u16_grpDataTypeInd, DEC);  // 1535
+	
+	int ii(2); // skip 0 on assumption that u8_dataTypeCmp is initialized in such a case
+	
 	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 5; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
 		int8_t s8_valType;
 		
 		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
 		
-		Serial.print("s8_valType: "); Serial.println(s8_valType, DEC);
+		// Serial.print("s8_valType: "); Serial.print(s8_valType, DEC);
 		
 		if (s8_valType < 0) {
 			// skip registers
 			k_u16p_data += (-1) * s8_valType;
+			// Serial.println(",  Skip");
 		}
 		else {
 			++u8_valInd;
 			
 			while (u8_valInd > u8_dataTypeCmp) {
-				int ii(2); // skip 0 on assumption that u8_dataTypeCmp is initialized in such a case
+				
 				u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1 + ii);
 				dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd + ii));
 				ii += 2;
+				// Serial.print(", ");	Serial.print(ii, DEC);
 			}
 			
 			// convert register data to float and store
@@ -216,6 +236,8 @@ bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const f
 			s8kp_dataFlags[s8_valType - 1] = 1;
 			// skip necessary number of registers to get to next value
 			k_u16p_data += FloatConvEnumNumRegs(dataType);
+			
+			// Serial.print(",  value: "); Serial.println(fkp_retData[s8_valType - 1]);
 		}
 		
 	}

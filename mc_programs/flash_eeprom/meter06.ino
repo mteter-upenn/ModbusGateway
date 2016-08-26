@@ -62,7 +62,7 @@ int meter6(uint16_t mtr_start){
 #if NEW_GROUP_STYLE == 1
   // New Group #1
   EEPROM.write(grp_strt, 31); // number of values
-  EEPROM.write(++grp_num, 116);  // number of registers
+  EEPROM.write(++grp_strt, 116);  // number of registers
   EEPROM.write(++grp_strt, highByte(149));  // starting register
   EEPROM.write(++grp_strt, lowByte(149));  // +3
   EEPROM.write(++grp_strt, 46);  // registers to add to grp_strt to get to data types, +4
@@ -147,7 +147,7 @@ int meter6(uint16_t mtr_start){
 
   // New Group #2
   EEPROM.write(++grp_strt, 1); // number of values, +54
-  EEPROM.write(++grp_num, 5);  // which values
+  EEPROM.write(++grp_strt, 5);  // which values
 
   Serial.print(F("group 6: "));
   Serial.print(mtr_start, DEC);
