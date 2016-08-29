@@ -11,7 +11,7 @@ void meter2(uint16_t mtr_start){
   blk_strt = mtr_start + 6;
   blk_num = 2;
   grp_num = 5;
-
+  // used to be 95, now it's 
   grp_strt = blk_strt + (blk_num * 5);
   
   EEPROM.write(mtr_start, highByte(blk_strt));
@@ -21,7 +21,6 @@ void meter2(uint16_t mtr_start){
   EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
   EEPROM.write(mtr_start + 4, highByte(grp_strt));
   EEPROM.write(mtr_start + 5, lowByte(grp_strt));
-
 
   // Block #1 - [0, 6, 4 | 128]
   EEPROM.write(blk_strt, highByte(0));

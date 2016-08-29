@@ -11,7 +11,7 @@ void meter9(uint16_t mtr_start){
   blk_strt = mtr_start + 6;
   blk_num = 5;
   grp_num = 7;
-
+  // used to be 116, now it's 
   grp_strt = blk_strt + (blk_num * 5);
   
   EEPROM.write(mtr_start, highByte(blk_strt));  // 3866
