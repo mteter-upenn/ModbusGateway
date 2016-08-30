@@ -8,10 +8,13 @@ void meter12(uint16_t mtr_start){
   // steam kep *****************************************************
   // 
   
-  blk_strt = mtr_start + 6; 
+  Serial.print(F("meter 12: "));
+  Serial.print(mtr_start, DEC);
+
   blk_num = 5;
-  grp_num = 6;
-  // used to be 69, now it's 
+  grp_num = 2;
+  blk_strt = mtr_start + 4 + grp_num * 2;
+  // used to be 69, now it's 55
   grp_strt = blk_strt + (blk_num * 5);
   
   EEPROM.write(mtr_start, highByte(blk_strt));
@@ -21,6 +24,8 @@ void meter12(uint16_t mtr_start){
   EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
   EEPROM.write(mtr_start + 4, highByte(grp_strt));
   EEPROM.write(mtr_start + 5, lowByte(grp_strt));
+  EEPROM.write(++mtr_start, highByte(grp_strt + 19));
+  EEPROM.write(++mtr_start, lowByte(grp_strt + 19));
 
   // Block #1 - [0, 42, 0]
   EEPROM.write(blk_strt, highByte(0));
@@ -58,56 +63,86 @@ void meter12(uint16_t mtr_start){
   EEPROM.write(blk_strt + 24, int8_t(FloatConv::FLOAT));
 
 
-  // Group #1
-  EEPROM.write(grp_strt, 2);
-  EEPROM.write(grp_strt + 1, highByte(0));
-  EEPROM.write(grp_strt + 2, lowByte(0));
-  EEPROM.write(grp_strt + 3, 1);
-  EEPROM.write(grp_strt + 4, 2);
-  EEPROM.write(grp_strt + 5, int8_t(FloatConv::FLOAT));
-  EEPROM.write(grp_strt + 6, int8_t(FloatConv::FLOAT));
 
-  // Group #2
-  EEPROM.write(grp_strt + 7, 2);
-  EEPROM.write(grp_strt + 8, highByte(6));
-  EEPROM.write(grp_strt + 9, lowByte(6));
-  EEPROM.write(grp_strt + 10, 3);
-  EEPROM.write(grp_strt + 11, 4);
-  EEPROM.write(grp_strt + 12, int8_t(FloatConv::FLOAT));
-  EEPROM.write(grp_strt + 13, int8_t(FloatConv::FLOAT));
+  // New Group #1, +0
+  EEPROM.write(grp_strt, 8);                 // number of values
+  EEPROM.write(++grp_strt, 30);              // number of registers
+  EEPROM.write(++grp_strt, highByte(0));  // starting register
+  EEPROM.write(++grp_strt, lowByte(0));   // starting register
+  EEPROM.write(++grp_strt, 17);              // skip bytes to data types
+  // value types
+  EEPROM.write(++grp_strt, 1);
+  EEPROM.write(++grp_strt, 2);
+  EEPROM.write(++grp_strt, int8_t(-2));
+  EEPROM.write(++grp_strt, 3);
+  EEPROM.write(++grp_strt, 4);
+  EEPROM.write(++grp_strt, int8_t(-4));
+  EEPROM.write(++grp_strt, 7);
+  EEPROM.write(++grp_strt, int8_t(-6));
+  EEPROM.write(++grp_strt, 8);
+  EEPROM.write(++grp_strt, 9);
+  EEPROM.write(++grp_strt, int8_t(-2));
+  EEPROM.write(++grp_strt, 10);
+  // data types
+  EEPROM.write(++grp_strt, FloatConv2Int8(FloatConv::FLOAT));
+  EEPROM.write(++grp_strt, 255);
 
-  // Group #3
-  EEPROM.write(grp_strt + 14, 1);
-  EEPROM.write(grp_strt + 15, highByte(14));
-  EEPROM.write(grp_strt + 16, lowByte(14));
-  EEPROM.write(grp_strt + 17, 7);
-  EEPROM.write(grp_strt + 18, int8_t(FloatConv::FLOAT));
 
-  // Group #4
-  EEPROM.write(grp_strt + 19, 2);
-  EEPROM.write(grp_strt + 20, highByte(22));
-  EEPROM.write(grp_strt + 21, lowByte(22));
-  EEPROM.write(grp_strt + 22, 8);
-  EEPROM.write(grp_strt + 23, 9);
-  EEPROM.write(grp_strt + 24, int8_t(FloatConv::FLOAT));
-  EEPROM.write(grp_strt + 25, int8_t(FloatConv::FLOAT));
+  // New Group #2 (LAST), +19
+  EEPROM.write(++grp_strt, 2); // number of values
+  // value types
+  EEPROM.write(++grp_strt, 5);
+  EEPROM.write(++grp_strt, 6);
 
-  // Group #5
-  EEPROM.write(grp_strt + 26, 1);
-  EEPROM.write(grp_strt + 27, highByte(28));
-  EEPROM.write(grp_strt + 28, lowByte(28));
-  EEPROM.write(grp_strt + 29, 10);
-  EEPROM.write(grp_strt + 30, int8_t(FloatConv::FLOAT));
+  //// Group #1
+  //EEPROM.write(grp_strt, 2);
+  //EEPROM.write(grp_strt + 1, highByte(0));
+  //EEPROM.write(grp_strt + 2, lowByte(0));
+  //EEPROM.write(grp_strt + 3, 1);
+  //EEPROM.write(grp_strt + 4, 2);
+  //EEPROM.write(grp_strt + 5, int8_t(FloatConv::FLOAT));
+  //EEPROM.write(grp_strt + 6, int8_t(FloatConv::FLOAT));
 
-  // Group #6
-  EEPROM.write(grp_strt + 31, 2);
-  EEPROM.write(grp_strt + 32, 255);
-  EEPROM.write(grp_strt + 33, 255);
-  EEPROM.write(grp_strt + 34, 5);
-  EEPROM.write(grp_strt + 35, 6);
+  //// Group #2
+  //EEPROM.write(grp_strt + 7, 2);
+  //EEPROM.write(grp_strt + 8, highByte(6));
+  //EEPROM.write(grp_strt + 9, lowByte(6));
+  //EEPROM.write(grp_strt + 10, 3);
+  //EEPROM.write(grp_strt + 11, 4);
+  //EEPROM.write(grp_strt + 12, int8_t(FloatConv::FLOAT));
+  //EEPROM.write(grp_strt + 13, int8_t(FloatConv::FLOAT));
 
-  Serial.print(F("group 12: "));
-  Serial.print(mtr_start, DEC);
+  //// Group #3
+  //EEPROM.write(grp_strt + 14, 1);
+  //EEPROM.write(grp_strt + 15, highByte(14));
+  //EEPROM.write(grp_strt + 16, lowByte(14));
+  //EEPROM.write(grp_strt + 17, 7);
+  //EEPROM.write(grp_strt + 18, int8_t(FloatConv::FLOAT));
+
+  //// Group #4
+  //EEPROM.write(grp_strt + 19, 2);
+  //EEPROM.write(grp_strt + 20, highByte(22));
+  //EEPROM.write(grp_strt + 21, lowByte(22));
+  //EEPROM.write(grp_strt + 22, 8);
+  //EEPROM.write(grp_strt + 23, 9);
+  //EEPROM.write(grp_strt + 24, int8_t(FloatConv::FLOAT));
+  //EEPROM.write(grp_strt + 25, int8_t(FloatConv::FLOAT));
+
+  //// Group #5
+  //EEPROM.write(grp_strt + 26, 1);
+  //EEPROM.write(grp_strt + 27, highByte(28));
+  //EEPROM.write(grp_strt + 28, lowByte(28));
+  //EEPROM.write(grp_strt + 29, 10);
+  //EEPROM.write(grp_strt + 30, int8_t(FloatConv::FLOAT));
+
+  //// Group #6
+  //EEPROM.write(grp_strt + 31, 2);
+  //EEPROM.write(grp_strt + 32, 255);
+  //EEPROM.write(grp_strt + 33, 255);
+  //EEPROM.write(grp_strt + 34, 5);
+  //EEPROM.write(grp_strt + 35, 6);
+
+  
   Serial.print(F(" to "));
-  Serial.println(grp_strt + 37, DEC);
+  Serial.println(grp_strt, DEC);
 }

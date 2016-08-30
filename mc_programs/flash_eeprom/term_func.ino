@@ -118,7 +118,7 @@ void checkDefault(char *input, const char *defaultInput) {
     // input == "default", replace with defaultInput
     uint8_t i, defLen;
     
-    defLen = min(49, strlen(defaultInput));
+    defLen = min(49UL, strlen(defaultInput));
 
     for (i = 0; i < defLen; i++) {
       input[i] = defaultInput[i];

@@ -1,20 +1,21 @@
-int meter6(uint16_t mtr_start){
+void meter6(uint16_t mtr_start){
   uint16_t blk_strt;
   uint8_t blk_num;
   int grp_strt;
   uint8_t grp_num;
-  uint16_t i;
   
   // siemens 9510, 9610 meter 6 **********************************************************
   // 126
  
+  Serial.print(F("meter 6: "));
+  Serial.print(mtr_start, DEC);
   
   blk_num = 4;
   grp_num = 2;
   blk_strt = mtr_start + 4 + grp_num * 2;
 
-  // used to be 126, now it's 83
-  grp_strt = blk_strt + (blk_num * 5);  // 28+55
+  // used to be 126, now it's 84
+  grp_strt = blk_strt + (blk_num * 5);  // 28+56
   // mtr_start = 3264
   EEPROM.write(mtr_start, highByte(blk_strt));  // EEPROM address for block start
   EEPROM.write(mtr_start + 1, lowByte(blk_strt));
@@ -56,64 +57,71 @@ int meter6(uint16_t mtr_start){
   EEPROM.write(blk_strt + 19, int8_t(FloatConv::INT16));
 
 
-  // New Group #1
-  EEPROM.write(grp_strt, 31); // number of values
-  EEPROM.write(++grp_strt, 116);  // number of registers
-  EEPROM.write(++grp_strt, highByte(149));  // starting register
-  EEPROM.write(++grp_strt, lowByte(149));  // +3
-  EEPROM.write(++grp_strt, 46);  // registers to add to grp_strt to get to data types, +4
-  for (i = 1; i < 4; i++) { // 1, 2, 3
-    EEPROM.write(++grp_strt, i);  // value type
-  }
-  EEPROM.write(++grp_strt, uint8_t(int8_t(-2)));  // skip 2 registers
-  EEPROM.write(++grp_strt, 4);
-  EEPROM.write(++grp_strt, int8_t(-10));  // 10
-  for (i = 6; i < 10; i++) { // 6, 7, 8, 9
-    EEPROM.write(++grp_strt, i);  // value type
-  }
-  EEPROM.write(++grp_strt, int8_t(-4));
-  for (i = 10; i < 14; i++) { //
-    EEPROM.write(++grp_strt, i);  // value type
-  }
-  EEPROM.write(++grp_strt, int8_t(-12));
-  for (i = 14; i < 18; i++) { //
-    EEPROM.write(++grp_strt, i);  // value type
-  }
-  EEPROM.write(++grp_strt, int8_t(-2));  // +25
-  for (i = 18; i < 22; i++) { //
-    EEPROM.write(++grp_strt, i);  // value type
-  }
+  // New Group #1, +0
+  EEPROM.write(grp_strt, 31);                 // number of values
+  EEPROM.write(++grp_strt, 116);              // number of registers
+  EEPROM.write(++grp_strt, highByte(149));   // starting register
+  EEPROM.write(++grp_strt, lowByte(149));    // starting register
+  EEPROM.write(++grp_strt, 46);              // skip bytes to data types
+  // value types
+  EEPROM.write(++grp_strt, 1);
+  EEPROM.write(++grp_strt, 2);
+  EEPROM.write(++grp_strt, 3);
   EEPROM.write(++grp_strt, int8_t(-2));
-  for (i = 22; i < 26; i++) { //
-    EEPROM.write(++grp_strt, i);  // value type
-  }
-  EEPROM.write(++grp_strt, int8_t(-4));  // +35
+  EEPROM.write(++grp_strt, 4);
+  EEPROM.write(++grp_strt, int8_t(-10));
+  EEPROM.write(++grp_strt, 6);
+  EEPROM.write(++grp_strt, 7);
+  EEPROM.write(++grp_strt, 8);
+  EEPROM.write(++grp_strt, 9);
+  EEPROM.write(++grp_strt, int8_t(-4));
+  EEPROM.write(++grp_strt, 10);
+  EEPROM.write(++grp_strt, 11);
+  EEPROM.write(++grp_strt, 12);
+  EEPROM.write(++grp_strt, 13);
+  EEPROM.write(++grp_strt, int8_t(-12));
+  EEPROM.write(++grp_strt, 14);
+  EEPROM.write(++grp_strt, 15);
+  EEPROM.write(++grp_strt, 16);
+  EEPROM.write(++grp_strt, 17);
+  EEPROM.write(++grp_strt, int8_t(-2));
+  EEPROM.write(++grp_strt, 18);
+  EEPROM.write(++grp_strt, 19);
+  EEPROM.write(++grp_strt, 20);
+  EEPROM.write(++grp_strt, 21);
+  EEPROM.write(++grp_strt, int8_t(-2));
+  EEPROM.write(++grp_strt, 22);
+  EEPROM.write(++grp_strt, 23);
+  EEPROM.write(++grp_strt, 24);
+  EEPROM.write(++grp_strt, 25);
+  EEPROM.write(++grp_strt, int8_t(-4));
   EEPROM.write(++grp_strt, 30);
   EEPROM.write(++grp_strt, int8_t(-2));
   EEPROM.write(++grp_strt, 31);
   EEPROM.write(++grp_strt, int8_t(-2));
   EEPROM.write(++grp_strt, 32);
   EEPROM.write(++grp_strt, int8_t(-22));
-  for (i = 26; i < 30; i++) { //
-    EEPROM.write(++grp_strt, i);  // value type
-  }  // +45
-
-
-  EEPROM.write(++grp_strt, FloatConv2Int8(FloatConv::UINT16));  // +46
-  EEPROM.write(++grp_strt, 4);  // first four
-  EEPROM.write(++grp_strt, int8_t(FloatConv::UINT32_WS));
-  EEPROM.write(++grp_strt, 12);  // between four and twelve
-  EEPROM.write(++grp_strt, int8_t(FloatConv::INT32_WS));
+  EEPROM.write(++grp_strt, 26);
   EEPROM.write(++grp_strt, 27);
-  EEPROM.write(++grp_strt, int8_t(FloatConv::INT16));
-  EEPROM.write(++grp_strt, 255);  // +53
+  EEPROM.write(++grp_strt, 28);
+  EEPROM.write(++grp_strt, 29);
+  // datatypes
+  EEPROM.write(++grp_strt, FloatConv2Int8(FloatConv::UINT16));
+  EEPROM.write(++grp_strt, 4);
+  EEPROM.write(++grp_strt, FloatConv2Int8(FloatConv::UINT32_WS));
+  EEPROM.write(++grp_strt, 12);
+  EEPROM.write(++grp_strt, FloatConv2Int8(FloatConv::INT32_WS));
+  EEPROM.write(++grp_strt, 27);
+  EEPROM.write(++grp_strt, FloatConv2Int8(FloatConv::INT16));
+  EEPROM.write(++grp_strt, 255);
 
-  // New Group #2
-  EEPROM.write(++grp_strt, 1); // number of values, +54
-  EEPROM.write(++grp_strt, 5);  // which values
 
-  Serial.print(F("group 6: "));
-  Serial.print(mtr_start, DEC);
+  // New Group #2 (LAST), +54
+  EEPROM.write(++grp_strt, 1); // number of values
+  // value types
+  EEPROM.write(++grp_strt, 5);
+
+  
   Serial.print(F(" to "));
   Serial.println(grp_strt, DEC);  // +55
 

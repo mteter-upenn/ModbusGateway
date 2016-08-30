@@ -8,9 +8,9 @@ void meter4(uint16_t mtr_start){
   // ge pqm
   // 384
   
-  blk_strt = mtr_start + 6;
   blk_num = 52;
-  grp_num = 18;
+  grp_num = 0;
+  blk_strt = mtr_start + 4 + grp_num * 2;
   // used to be , now it's 
   grp_strt = blk_strt + (blk_num * 5);
   

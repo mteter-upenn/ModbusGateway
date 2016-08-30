@@ -4,7 +4,7 @@ void read_eeprom(char cMenu) {
   uint32_t baudrate;
   uint16_t timeout;
   uint8_t mtrs, libs;
-  char inpt[50];
+  //char inpt[50];
 
   nm_strt = word(EEPROM.read(0), EEPROM.read(1));
   ip_strt = word(EEPROM.read(2), EEPROM.read(3));
