@@ -1,5 +1,5 @@
 bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], 
-  uint16_t &u16_mbRespLen) {
+  uint16_t &u16_mbRespLen, bool b_byteSwap) {
 
   uint16_t u16_reqReg, u16_numRegs, u16_adjReqReg(0), u16_adjNumRegs(0);
   uint8_t u8_mbRespNumBytes(0);
@@ -59,14 +59,12 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
       b_foundReg = findRegister(u16_adjReqReg, fltConvFlg, u8_mtrType);
       
   //    Serial.println(u16_adjReqReg);
-      if (0x01 & u16_numRegs) // if odd number, then can't return float (must be even # of regs)
-      {
+      if (0x01 & u16_numRegs) { // if odd number, then can't return float (must be even # of regs)
 //        Serial.println("odd");
         u8_mbError = 0x02;
       }
       else {
-        if (b_foundReg)  // found registers
-        {
+        if (b_foundReg) { // found registers
           //u8_mskdDataTypeFlags = (0x7f & u8_dataTypeFlags); // ignore ws bit for comparisons
           //mskdFltConvFlg = static_cast<FloatConv>(0x3f & static_cast<int8_t>(fltConvFlg));
   
@@ -99,21 +97,18 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
               break;              
           }
         }
-        else
-        {
+        else {
 //          Serial.println("no flags");
           u8_mbError = 0x02;
         }  // end if else check if address in block
       }  // end if else check lgth  
     }  // end if 10k request
-    else
-    {
+    else {
 //      Serial.println("reg outside exp");
       u8_mbError = 0x02;
     }
     
-    if ((!(u8_mbReqFunc == 3) || (u8_mbReqFunc == 4)))
-    {
+    if ((!(u8_mbReqFunc == 3) || (u8_mbReqFunc == 4))) {
       u8_mbError = 0x01;
     }
     
@@ -132,45 +127,53 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
       return false;
     }  // end if error
     else {  // no error yet, handle code
-        switch (u8_mbReqFunc) {
+      //Serial.print("reqReg: "); Serial.println(u16_adjReqReg, DEC);
+      //Serial.print("numRegs: "); Serial.println(u16_adjNumRegs, DEC);
+
+      switch (u8_mbReqFunc) {
 //          case 1:
 //            g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
 //            break;
 //          case 2:
 //            g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
 //            break;
-          case 3:
-            //Serial.println(F("modbus request"));
-            u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
-            //Serial.print(F("sent request: "));
-            //Serial.println(u8_mbResult, HEX);
-            break;
-          case 4:
-            u8_mbResult = g_mm_node.readInputRegisters(u16_adjReqReg, u16_adjNumRegs);
-            break;
+        case 3:
+          //Serial.println(F("modbus request"));
+          u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
+          //Serial.print(F("sent request: "));
+          //Serial.println(u8_mbResult, HEX);
+          break;
+        case 4:
+          u8_mbResult = g_mm_node.readInputRegisters(u16_adjReqReg, u16_adjNumRegs);
+          break;
 //          case 5:
 //            u8_mbResult = g_mm_node.writeSingleCoil(u16_adjReqReg, u16_adjNumRegs);
 //            break;
 //          case 6:
 //            u8_mbResult = g_mm_node.writeSingleRegister(u16_adjReqReg, u16_adjNumRegs);
 //            break;
-          default:
-            u8_mbResult = 0x01;
-            break;
-        }  // end switch function
+        default:
+          u8_mbResult = 0x01;
+          break;
+      }  // end switch function
 
       
       switch (u8_mbResult) {  // why even bother with this switch?
         case 0:  // g_mm_node.ku8MBSuccess
           if (!b_reqRegManip) {  // no adjustments to data
-            g_mm_node.copyResponseBuffer((uint16_t*)(u8a_mbResp + 9));
+            if (b_byteSwap) {
+              // would like to use this method, but bytes need to be swapped MSB for network
+              g_mm_node.copyResponseBuffer((uint16_t*)(&u8a_mbResp[9]));
+            }
+            else {
+              uint16_t u16_tempReg;
+              for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii += 2) {
+                u16_tempReg = g_mm_node.getResponseBuffer(jj);
 
-            //for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii+=2) {
-            //  u16_tempReg = g_mm_node.getResponseBuffer(jj);
-            //  
-            //  u8a_mbResp[ii] = highByte(u16_tempReg);
-            //  u8a_mbResp[ii + 1] = lowByte(u16_tempReg);
-            //}
+                u8a_mbResp[ii] = highByte(u16_tempReg);
+                u8a_mbResp[ii + 1] = lowByte(u16_tempReg);
+              }
+            }
           }
           else {
 //            Serial.println("handling 10k data");
@@ -252,7 +255,7 @@ void handle_modbus(bool b_idleHttp) {
           }
         }
         
-        getModbus(u8a_mbReq, u16_lenRead, u8a_mbResp, u16_mbRespLen);
+        getModbus(u8a_mbReq, u16_lenRead, u8a_mbResp, u16_mbRespLen, false);
 
         if (u16_mbRespLen > 0) {
           ec_client.write(u8a_mbResp, u16_mbRespLen);

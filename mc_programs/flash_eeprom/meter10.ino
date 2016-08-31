@@ -23,38 +23,38 @@ void meter10(uint16_t mtr_start){
   EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
   EEPROM.write(mtr_start + 4, highByte(grp_strt));
   EEPROM.write(mtr_start + 5, lowByte(grp_strt));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 40));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 40));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 50));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 50));
+  EEPROM.write(mtr_start + 6, highByte(grp_strt + 40));
+  EEPROM.write(mtr_start + 7, lowByte(grp_strt + 40));
+  EEPROM.write(mtr_start + 8, highByte(grp_strt + 50));
+  EEPROM.write(mtr_start + 9, lowByte(grp_strt + 50));
 
   // Block #1 - [1099, 1298, 2]
   EEPROM.write(blk_strt, highByte(1099));
   EEPROM.write(blk_strt + 1, lowByte(1099));
   EEPROM.write(blk_strt + 2, highByte(1298));
   EEPROM.write(blk_strt + 3, lowByte(1298));
-  EEPROM.write(blk_strt + 4, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 4, FloatConv2Int8(FloatConv::INT16));
 
   // Block #2 - [1699, 1743, 8]
   EEPROM.write(blk_strt + 5, highByte(1699));
   EEPROM.write(blk_strt + 6, lowByte(1699));
   EEPROM.write(blk_strt + 7, highByte(1746));
   EEPROM.write(blk_strt + 8, lowByte(1746));
-  EEPROM.write(blk_strt + 9, int8_t(FloatConv::MOD30K));
+  EEPROM.write(blk_strt + 9, FloatConv2Int8(FloatConv::MOD30K));
 
   // Block #3 - [1747, 1759, 7]
   EEPROM.write(blk_strt + 10, highByte(1747));
   EEPROM.write(blk_strt + 11, lowByte(1747));
   EEPROM.write(blk_strt + 12, highByte(1759));
   EEPROM.write(blk_strt + 13, lowByte(1759));
-  EEPROM.write(blk_strt + 14, int8_t(FloatConv::MOD20K));
+  EEPROM.write(blk_strt + 14, FloatConv2Int8(FloatConv::MOD20K));
 
   // Block #4 - [1766, 1790, 7]
   EEPROM.write(blk_strt + 15, highByte(1766));
   EEPROM.write(blk_strt + 16, lowByte(1766));
   EEPROM.write(blk_strt + 17, highByte(1790));
   EEPROM.write(blk_strt + 18, lowByte(1790));
-  EEPROM.write(blk_strt + 19, int8_t(FloatConv::MOD20K));
+  EEPROM.write(blk_strt + 19, FloatConv2Int8(FloatConv::MOD20K));
 
   
 

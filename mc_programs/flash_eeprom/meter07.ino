@@ -23,10 +23,10 @@ void meter7(uint16_t mtr_start){
   EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
   EEPROM.write(mtr_start + 4, highByte(grp_strt));
   EEPROM.write(mtr_start + 5, lowByte(grp_strt));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 39));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 39));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 49));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 49));
+  EEPROM.write(mtr_start + 6, highByte(grp_strt + 39));
+  EEPROM.write(mtr_start + 7, lowByte(grp_strt + 39));
+  EEPROM.write(mtr_start + 8, highByte(grp_strt + 49));
+  EEPROM.write(mtr_start + 9, lowByte(grp_strt + 49));
 
 
   // Block #1 - [999, 1116, 2]
@@ -34,49 +34,49 @@ void meter7(uint16_t mtr_start){
   EEPROM.write(blk_strt + 1, lowByte(999));
   EEPROM.write(blk_strt + 2, highByte(1116));
   EEPROM.write(blk_strt + 3, lowByte(1116));
-  EEPROM.write(blk_strt + 4, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 4, FloatConv2Int8(FloatConv::INT16));
 
   // Block #2 - [1199, 1272, 2]
   EEPROM.write(blk_strt + 5, highByte(1199));
   EEPROM.write(blk_strt + 6, lowByte(1199));
   EEPROM.write(blk_strt + 7, highByte(1272));
   EEPROM.write(blk_strt + 8, lowByte(1272));
-  EEPROM.write(blk_strt + 9, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 9, FloatConv2Int8(FloatConv::INT16));
   
   // Block #3 - [1399, 1472, 2]
   EEPROM.write(blk_strt + 10, highByte(1399));
   EEPROM.write(blk_strt + 11, lowByte(1399));
   EEPROM.write(blk_strt + 12, highByte(1472));
   EEPROM.write(blk_strt + 13, lowByte(1472));
-  EEPROM.write(blk_strt + 14, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 14, FloatConv2Int8(FloatConv::INT16));
 
   // Block #4 - [1600, 1644, 8]
   EEPROM.write(blk_strt + 15, highByte(1600));
   EEPROM.write(blk_strt + 16, lowByte(1600));
   EEPROM.write(blk_strt + 17, highByte(1644));
   EEPROM.write(blk_strt + 18, lowByte(1644));
-  EEPROM.write(blk_strt + 19, int8_t(FloatConv::MOD30K));
+  EEPROM.write(blk_strt + 19, FloatConv2Int8(FloatConv::MOD30K));
 
   // Block #5 - [1648, 1660, 7]
   EEPROM.write(blk_strt + 20, highByte(1648));
   EEPROM.write(blk_strt + 21, lowByte(1648));
   EEPROM.write(blk_strt + 22, highByte(1660));
   EEPROM.write(blk_strt + 23, lowByte(1660));
-  EEPROM.write(blk_strt + 24, int8_t(FloatConv::MOD20K));
+  EEPROM.write(blk_strt + 24, FloatConv2Int8(FloatConv::MOD20K));
 
   // Block #6 - [1699, 1717, 2]
   EEPROM.write(blk_strt + 25, highByte(1699));
   EEPROM.write(blk_strt + 26, lowByte(1699));
   EEPROM.write(blk_strt + 27, highByte(1717));
   EEPROM.write(blk_strt + 28, lowByte(1717));
-  EEPROM.write(blk_strt + 29, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 29, FloatConv2Int8(FloatConv::INT16));
 
   // Block #7 - [1729, 1751, 2]
   EEPROM.write(blk_strt + 30, highByte(1729));
   EEPROM.write(blk_strt + 31, lowByte(1729));
   EEPROM.write(blk_strt + 32, highByte(1751));
   EEPROM.write(blk_strt + 33, lowByte(1751));
-  EEPROM.write(blk_strt + 34, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 34, FloatConv2Int8(FloatConv::INT16));
   
 
   

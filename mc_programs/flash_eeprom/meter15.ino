@@ -20,19 +20,19 @@ void meter15(uint16_t mtr_start) {
   EEPROM.write(mtr_start + 1, lowByte(blk_strt));
   EEPROM.write(mtr_start + 2, blk_num);  // number of blocks;
 
-  EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
+  EEPROM.write(mtr_start + 3, grp_num);  // number of groups;
   EEPROM.write(mtr_start + 4, highByte(grp_strt));
   EEPROM.write(mtr_start + 5, lowByte(grp_strt));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 15));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 15));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 27));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 27));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 43));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 43));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 60));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 60));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 71));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 71));
+  EEPROM.write(mtr_start + 6, highByte(grp_strt + 15));
+  EEPROM.write(mtr_start + 7, lowByte(grp_strt + 15));
+  EEPROM.write(mtr_start + 8, highByte(grp_strt + 27));
+  EEPROM.write(mtr_start + 9, lowByte(grp_strt + 27));
+  EEPROM.write(mtr_start + 10, highByte(grp_strt + 43));
+  EEPROM.write(mtr_start + 11, lowByte(grp_strt + 43));
+  EEPROM.write(mtr_start + 12, highByte(grp_strt + 60));
+  EEPROM.write(mtr_start + 13, lowByte(grp_strt + 60));
+  EEPROM.write(mtr_start + 14, highByte(grp_strt + 71));
+  EEPROM.write(mtr_start + 15, lowByte(grp_strt + 71));
 
 
 
@@ -41,7 +41,7 @@ void meter15(uint16_t mtr_start) {
   EEPROM.write(blk_strt + 1, lowByte(4002));
   EEPROM.write(blk_strt + 2, highByte(7034));
   EEPROM.write(blk_strt + 3, lowByte(7034));
-  EEPROM.write(blk_strt + 4, int8_t(FloatConv::FLOAT_WS));
+  EEPROM.write(blk_strt + 4, FloatConv2Int8(FloatConv::FLOAT_WS));
 
 
   // New Group #1, +0

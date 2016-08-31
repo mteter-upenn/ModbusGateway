@@ -23,8 +23,8 @@ void meter11(uint16_t mtr_start){
   EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
   EEPROM.write(mtr_start + 4, highByte(grp_strt));
   EEPROM.write(mtr_start + 5, lowByte(grp_strt));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 19));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 19));
+  EEPROM.write(mtr_start + 6, highByte(grp_strt + 19));
+  EEPROM.write(mtr_start + 7, lowByte(grp_strt + 19));
 
 
   // Block #1 - [0, 42, 0]
@@ -32,35 +32,35 @@ void meter11(uint16_t mtr_start){
   EEPROM.write(blk_strt + 1, lowByte(0));
   EEPROM.write(blk_strt + 2, highByte(42));
   EEPROM.write(blk_strt + 3, lowByte(42));
-  EEPROM.write(blk_strt + 4, int8_t(FloatConv::FLOAT));
+  EEPROM.write(blk_strt + 4, FloatConv2Int8(FloatConv::FLOAT));
 
   // Block #2 - [44, 49, 2]
   EEPROM.write(blk_strt + 5, highByte(44));
   EEPROM.write(blk_strt + 6, lowByte(44));
   EEPROM.write(blk_strt + 7, highByte(49));
   EEPROM.write(blk_strt + 8, lowByte(49));
-  EEPROM.write(blk_strt + 9, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 9, FloatConv2Int8(FloatConv::INT16));
 
   // Block #3 - [50, 58, 0]
   EEPROM.write(blk_strt + 10, highByte(50));
   EEPROM.write(blk_strt + 11, lowByte(50));
   EEPROM.write(blk_strt + 12, highByte(58));
   EEPROM.write(blk_strt + 13, lowByte(58));
-  EEPROM.write(blk_strt + 14, int8_t(FloatConv::FLOAT));
+  EEPROM.write(blk_strt + 14, FloatConv2Int8(FloatConv::FLOAT));
 
   // Block #4 - [60, 61, 2]
   EEPROM.write(blk_strt + 15, highByte(60));
   EEPROM.write(blk_strt + 16, lowByte(60));
   EEPROM.write(blk_strt + 17, highByte(61));
   EEPROM.write(blk_strt + 18, lowByte(61));
-  EEPROM.write(blk_strt + 19, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 19, FloatConv2Int8(FloatConv::INT16));
 
   // Block #5 - [62, 62, 0]
   EEPROM.write(blk_strt + 20, highByte(62));
   EEPROM.write(blk_strt + 21, lowByte(62));
   EEPROM.write(blk_strt + 22, highByte(62));
   EEPROM.write(blk_strt + 23, lowByte(62));
-  EEPROM.write(blk_strt + 24, int8_t(FloatConv::FLOAT));
+  EEPROM.write(blk_strt + 24, FloatConv2Int8(FloatConv::FLOAT));
 
 
 

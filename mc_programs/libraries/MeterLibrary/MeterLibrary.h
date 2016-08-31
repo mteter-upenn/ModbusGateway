@@ -82,5 +82,5 @@ class MeterLibrary {
 /* _____FUNCTION DEFINITIONS_________________________________________________ */
 uint16_t swapBytes(uint16_t u16_word);
 float g_convertToFloat(const uint16_t *const u16_reg, FloatConv regDataType);  // returns float
-
+float g_convertToFloat(const uint8_t *const u8_reg, FloatConv regDataType);  // returns float
 #endif

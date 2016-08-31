@@ -353,7 +353,7 @@ Copies data from response buffer starting at given pointer.
 */
 bool ModbusMaster::copyResponseBuffer(uint16_t *const u16p_dataDest) {
 	if (!_u8MBStatus) {
-		memcpy(u16p_dataDest, _u16ResponseBuffer, _u16ResponseBufferLength);
+		memcpy(u16p_dataDest, _u16ResponseBuffer, _u16ResponseBufferLength * 2);
 		return true;
 	}
 	return false;
@@ -1061,6 +1061,7 @@ uint8_t ModbusMaster::ModbusMasterTransaction(uint8_t u8MBFunction)
 	  }
 	  
 	  if (_bSerialTrans){
+			
 		  if (_u8EnablePin != 255)
 		  {
 				digitalWrite(_u8EnablePin, LOW); // MJT, set pin for transmission  was low

@@ -23,8 +23,8 @@ void meter8(uint16_t mtr_start){
   EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
   EEPROM.write(mtr_start + 4, highByte(grp_strt));
   EEPROM.write(mtr_start + 5, lowByte(grp_strt));
-  EEPROM.write(++mtr_start, highByte(grp_strt + 37));
-  EEPROM.write(++mtr_start, lowByte(grp_strt + 37));
+  EEPROM.write(mtr_start + 6, highByte(grp_strt + 37));
+  EEPROM.write(mtr_start + 7, lowByte(grp_strt + 37));
 
 
   // Block #1 - [999, 1201, 128]
@@ -32,21 +32,21 @@ void meter8(uint16_t mtr_start){
   EEPROM.write(blk_strt + 1, lowByte(999));
   EEPROM.write(blk_strt + 2, highByte(1201));
   EEPROM.write(blk_strt + 3, lowByte(1201));
-  EEPROM.write(blk_strt + 4, int8_t(FloatConv::FLOAT_WS));
+  EEPROM.write(blk_strt + 4, FloatConv2Int8(FloatConv::FLOAT_WS));
 
   // Block #2 - [3999, 4003, (3 | 128]
   EEPROM.write(blk_strt + 5, highByte(3999));
   EEPROM.write(blk_strt + 6, lowByte(3999));
   EEPROM.write(blk_strt + 7, highByte(4003));
   EEPROM.write(blk_strt + 8, lowByte(4003));
-  EEPROM.write(blk_strt + 9, int8_t(FloatConv::UINT32_WS));
+  EEPROM.write(blk_strt + 9, FloatConv2Int8(FloatConv::UINT32_WS));
   
   // Block #3 - [4005, 4103, 2]
   EEPROM.write(blk_strt + 10, highByte(4005));
   EEPROM.write(blk_strt + 11, lowByte(4005));
   EEPROM.write(blk_strt + 12, highByte(4103));
   EEPROM.write(blk_strt + 13, lowByte(4103));
-  EEPROM.write(blk_strt + 14, int8_t(FloatConv::INT16));
+  EEPROM.write(blk_strt + 14, FloatConv2Int8(FloatConv::INT16));
 
   
 

@@ -308,7 +308,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   uint16_t u16_mtrLibStart;
   uint16_t u16_mtrGrpStart, u16_mtrCurGrpInd, u16_numGrps;
   uint8_t u8_numGrpVals, u8_valType;
-  uint16_t u16_reqReg;
+  uint16_t u16_reqReg, u16_numRegs;
   uint8_t u8_mtrType, u8_mbVid, u8_mtrMbFunc;
   bool b_mbReqStat;
   char ca_respXml[gk_u16_respBuffSize] = {0};  // 68
@@ -338,18 +338,35 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   //Serial.print(F("vid: "));
   //Serial.println(dev);
   u8_mtrMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType + 2);
+
+  MeterLibrary mtrLib(u8_mtrType);
+  u16_numGrps = mtrLib.getNumGrps();
+
+  /*
   u16_mtrLibStart = word(EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType - 1), EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType));
   
   u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 4), EEPROM.read(u16_mtrLibStart + 5));
   u16_numGrps = EEPROM.read(u16_mtrLibStart + 3);
   u16_mtrCurGrpInd = u16_mtrGrpStart;
+  */
 
   memset(u8a_mbReq, 0, 5);
   u8a_mbReq[5] = 6;     // length of modbus half
   u8a_mbReq[6] = u8_mbVid;   // device id
   u8a_mbReq[7] = u8_mtrMbFunc;  // modbus function
+  
 
-  for (int ii = 0; ii < (u16_numGrps - 1); ++ii){  // the last group is filled with those data requests that cannot be filled
+  for (int ii = 1; ii < u16_numGrps; ++ii){  // the last group is filled with those data requests that cannot be filled
+    mtrLib.setGroup(ii);
+    u16_reqReg = mtrLib.getReqReg();
+    u16_numRegs = mtrLib.getNumRegs();
+
+    u8a_mbReq[8] = highByte(u16_reqReg);
+    u8a_mbReq[9] = lowByte(u16_reqReg);
+    u8a_mbReq[10] = highByte(u16_numRegs);  // assume no length higher than 255
+    u8a_mbReq[11] = lowByte(u16_numRegs);  // ask for float conversion = 2*num for registers
+
+    /*
     u8_numGrpVals = EEPROM.read(u16_mtrCurGrpInd);
 
     u16_reqReg = word(EEPROM.read(u16_mtrCurGrpInd + 1), EEPROM.read(u16_mtrCurGrpInd + 2)) + 10000;  // ask for float conversion
@@ -359,9 +376,9 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
 //    Serial.println(mb_strt, DEC);
     u8a_mbReq[10] = 0;  // assume no length higher than 255
     u8a_mbReq[11] = u8_numGrpVals * 2;  // ask for float conversion = 2*num for registers
-
+    */
     delay(5); // ensure long enough delay between polls
-    b_mbReqStat = getModbus(u8a_mbReq, u16_reqLen, u8a_mbResp, u16_respLen);  // getModbus uses MB/TCP as inputs and outputs
+    b_mbReqStat = getModbus(u8a_mbReq, u16_reqLen, u8a_mbResp, u16_respLen, true);  // getModbus uses MB/TCP as inputs and outputs
 
     //const uint16_t *u16p_mbRespData = (uint16_t*)&u8a_mbResp[9];
       
@@ -369,6 +386,9 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
 //    Serial.print(i, DEC);
     if (b_mbReqStat) {
 //      Serial.println(F(", has had successful modbus"));
+      mtrLib.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
+      
+      /*
       for (int jj = 0; jj < u8_numGrpVals; ++jj){  // shift 2 to get to collection type
         u8_valType = EEPROM.read(jj + u16_mtrCurGrpInd + 3) - 1;
 
@@ -395,12 +415,14 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
         
         s8a_dataFlags[u8_valType] = 1;  // successful read
       }  // end for
+      */
+
     }  // end if
     else{
       //Serial.print(F(", has had MB failure: "));
       //Serial.print(mb_stat, HEX);
       //Serial.print(F("  "));
-      if (ii == 0){ // if first message and error, just dump failures
+      if (ii == 1){ // if first message and error, just dump failures
         //Serial.println(F("Sending false xml"));
         
         strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
@@ -409,6 +431,9 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
         return;  // if modbus timeout error on first loop, kill further data requests
       }
 //      Serial.println(F("Continuing..."));
+      mtrLib.groupMbErr(s8a_dataFlags);
+
+      /*
       for (int jj = 0; jj < u8_numGrpVals; ++jj){
         u8_valType = EEPROM.read(jj + u16_mtrCurGrpInd + 3) - 1;
 //        Serial.print("for group adr ");
@@ -417,13 +442,20 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
 //        Serial.println(clc_typ);
         s8a_dataFlags[u8_valType] = -1;  // unsuccessful read
       }  // end for
+      */
+
     } // end if
 
+    /*
     u16_mtrCurGrpInd = 3 + 2 * (u8_numGrpVals) +u16_mtrCurGrpInd;  // starting address of next group
+    */
 
   }  // end for
 
   // last group full of duds (if any) ********************************************************************
+  mtrLib.setGroup(u16_numGrps);
+  mtrLib.groupLastFlags(s8a_dataFlags);
+  /*
   u8_numGrpVals = EEPROM.read(u16_mtrCurGrpInd);  //                                                     *
   //                                                                                                     *
   for (int jj = 0; jj < u8_numGrpVals; ++jj){  // shift 2 to get to collection type                      *
@@ -431,6 +463,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
     //                                                                                                   *
     s8a_dataFlags[u8_valType] = 0;  // data does not exist on this hardware                              *
   }  // end for                                                                                          *
+  */
   // end handling of last group **************************************************************************
 
 
@@ -475,8 +508,8 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
       }
     }
   }
-  else {
-    for (int ii = 0; ii < k_i_maxNumElecVals; ++ii) {  // MAGIC NUMBER
+  else {  // electric meter
+    for (int ii = 0; ii < k_i_maxNumElecVals; ++ii) {
       if (ii < 5){strcat_P(ca_respXml, PSTR("<curr>"));}
       else if (ii < 9){strcat_P(ca_respXml, PSTR("<v_LN>"));}
       else if (ii < 13){strcat_P(ca_respXml, PSTR("<v_LL>"));}
@@ -485,7 +518,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
       else if (ii < 25){strcat_P(ca_respXml, PSTR("<ap_p>"));}
       else if (ii < 29){strcat_P(ca_respXml, PSTR("<p_fc>"));}
       else{strcat_P(ca_respXml, PSTR("<engy>"));}
-      
+
       switch (s8a_dataFlags[ii]){
         case 1:  // good data
           dtostrf(fa_data[ii], 1, 2, (ca_respXml + strlen(ca_respXml)));
@@ -501,6 +534,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
           break;
       }    
 
+
       if (ii < 5){strcat_P(ca_respXml, PSTR("</curr>"));}
       else if (ii < 9){strcat_P(ca_respXml, PSTR("</v_LN>"));}
       else if (ii < 13){strcat_P(ca_respXml, PSTR("</v_LL>"));}
@@ -509,6 +543,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
       else if (ii < 25){strcat_P(ca_respXml, PSTR("</ap_p>"));}
       else if (ii < 29){strcat_P(ca_respXml, PSTR("</p_fc>"));}
       else{strcat_P(ca_respXml, PSTR("</engy>"));}
+
 
       if ((gk_u16_respBuffSize - strlen(ca_respXml)) < k_u16_minRemBytes) {
         //if ((i % 2) == 1){

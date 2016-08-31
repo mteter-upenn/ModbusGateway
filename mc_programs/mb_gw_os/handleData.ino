@@ -70,7 +70,7 @@ void handle_data() {
 
             //delay(1); // ensure long enough delay between polls
             
-            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen);
+            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen, false);
             
             // {0, 6, 8, 10, 30};
             for (int jj = 0; jj < 5; ++jj) {
@@ -106,7 +106,7 @@ void handle_data() {
 
             //delay(1); // ensure long enough delay between polls
             //Serial.println("sending steam modbus");
-            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen);
+            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen, false);
             //Serial.println("got steam modbus");
 
             if (u8_mbStatus) {  // good message
@@ -145,7 +145,7 @@ void handle_data() {
 
             //delay(5); // ensure long enough delay between polls
             //Serial.println("sending pwr modbus");
-            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen);
+            u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen, false);
             //Serial.println("got pwr modbus");
             
             if (u8_mbStatus) {
@@ -167,7 +167,7 @@ void handle_data() {
 
               //delay(1); // ensure long enough delay between polls
               //Serial.println("sending egy modbus");
-              u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen);
+              u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen, false);
               //Serial.println("got egy modbus");
 
               if (u8_mbStatus) {
