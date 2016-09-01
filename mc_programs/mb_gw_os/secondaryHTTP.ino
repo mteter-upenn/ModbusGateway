@@ -305,18 +305,19 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   uint8_t u8a_mbReq[12];  // can make this smaller 
   uint8_t u8a_mbResp[gk_u16_mbArraySize];
   uint16_t u16_reqLen(12), u16_respLen(0);
-  uint16_t u16_mtrLibStart;
-  uint16_t u16_mtrGrpStart, u16_mtrCurGrpInd, u16_numGrps;
-  uint8_t u8_numGrpVals, u8_valType;
+  //uint16_t u16_mtrLibStart;
+  //uint16_t u16_mtrGrpStart, u16_mtrCurGrpInd;
+  uint16_t u16_numGrps;
+  //uint8_t u8_numGrpVals, u8_valType;
   uint16_t u16_reqReg, u16_numRegs;
   uint8_t u8_mtrType, u8_mbVid, u8_mtrMbFunc;
   bool b_mbReqStat;
   char ca_respXml[gk_u16_respBuffSize] = {0};  // 68
   
-  union {
-    float f;
-    uint8_t u8[4];
-  } int2flt;
+  //union {
+  //  float f;
+  //  uint8_t u8[4];
+  //} int2flt;
 
   strcpy_P(ca_respXml, PSTR("HTTP/1.1 200 OK\nContent-Type: text/xml\nConnnection: close\n\n"));  // create http response
   //Serial.print(F("selSlv: "));
@@ -418,7 +419,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
       */
 
     }  // end if
-    else{
+    else {
       //Serial.print(F(", has had MB failure: "));
       //Serial.print(mb_stat, HEX);
       //Serial.print(F("  "));

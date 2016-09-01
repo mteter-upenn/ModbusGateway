@@ -57,51 +57,51 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
       u16_adjReqReg = u16_reqReg - 10000;
       //b_foundReg = findRegister(u16_adjReqReg, u8_dataTypeFlags, u8_mtrType);
       b_foundReg = findRegister(u16_adjReqReg, fltConvFlg, u8_mtrType);
+
       
   //    Serial.println(u16_adjReqReg);
       if (0x01 & u16_numRegs) { // if odd number, then can't return float (must be even # of regs)
 //        Serial.println("odd");
         u8_mbError = 0x02;
       }
-      else {
-        if (b_foundReg) { // found registers
-          //u8_mskdDataTypeFlags = (0x7f & u8_dataTypeFlags); // ignore ws bit for comparisons
-          //mskdFltConvFlg = static_cast<FloatConv>(0x3f & static_cast<int8_t>(fltConvFlg));
+      else if (b_foundReg) { // found registers
+        //u8_mskdDataTypeFlags = (0x7f & u8_dataTypeFlags); // ignore ws bit for comparisons
+        //mskdFltConvFlg = static_cast<FloatConv>(0x3f & static_cast<int8_t>(fltConvFlg));
   
 
-          // u16_adjNumRegs is the length request sent to modbus device
-          // all requests made through 10k registers must be with expectation of float
-          // this means the unadjusted length request has 2 registers for every unique data point
-          //switch (u8_mskdDataTypeFlags){
-          switch (fltConvFlg) {
-            case FloatConv::UINT16:  // u16
-            case FloatConv::INT16:  // s16
-              u16_adjNumRegs = u16_numRegs / 2;  // single register values
-              break;
-            case FloatConv::MOD20K:  // m20k
-            case FloatConv::MOD20K_WS:  // m20k
-              u16_adjNumRegs = u16_numRegs * 3 / 2;  // 3 register values
-              break;
-            case FloatConv::MOD30K:  // m30k
-            case FloatConv::MOD30K_WS:  // m30k
-            case FloatConv::UINT64:  // u64
-            case FloatConv::UINT64_WS:  // u64
-            case FloatConv::ENERGY:  // engy
-            case FloatConv::ENERGY_WS:  // engy
-            case FloatConv::DOUBLE:  // dbl
-            case FloatConv::DOUBLE_WS:  // dbl
-              u16_adjNumRegs = u16_numRegs * 2;  // 4 register values
-              break;
-            default:  // float, u32, s32, m10k, m1k
-              u16_adjNumRegs = u16_numRegs;  // 2 register values
-              break;              
-          }
+        // u16_adjNumRegs is the length request sent to modbus device
+        // all requests made through 10k registers must be with expectation of float
+        // this means the unadjusted length request has 2 registers for every unique data point
+        //switch (u8_mskdDataTypeFlags){
+        switch (fltConvFlg) {
+          case FloatConv::UINT16:  // u16
+          case FloatConv::INT16:  // s16
+            u16_adjNumRegs = u16_numRegs / 2;  // single register values
+            break;
+          case FloatConv::MOD20K:  // m20k
+          case FloatConv::MOD20K_WS:  // m20k
+            u16_adjNumRegs = u16_numRegs * 3 / 2;  // 3 register values
+            break;
+          case FloatConv::MOD30K:  // m30k
+          case FloatConv::MOD30K_WS:  // m30k
+          case FloatConv::UINT64:  // u64
+          case FloatConv::UINT64_WS:  // u64
+          case FloatConv::ENERGY:  // engy
+          case FloatConv::ENERGY_WS:  // engy
+          case FloatConv::DOUBLE:  // dbl
+          case FloatConv::DOUBLE_WS:  // dbl
+            u16_adjNumRegs = u16_numRegs * 2;  // 4 register values
+            break;
+          default:  // float, u32, s32, m10k, m1k
+            u16_adjNumRegs = u16_numRegs;  // 2 register values
+            break;              
         }
-        else {
+      }
+      else {
 //          Serial.println("no flags");
-          u8_mbError = 0x02;
-        }  // end if else check if address in block
-      }  // end if else check lgth  
+        u8_mbError = 0x02;
+      }  // end if else check if address in block
+      //}  // end if else check lgth  
     }  // end if 10k request
     else {
 //      Serial.println("reg outside exp");
@@ -175,13 +175,13 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
               }
             }
           }
-          else {
+          else { // 10k request
 //            Serial.println("handling 10k data");
 //            Serial.println((u8_dataTypeFlags & 0x7F), DEC);
           
             // create MeterLibrary class which can take the meter type and register to convert and dump requested values
             MeterLibrary mtrLib(u16_adjReqReg, u16_adjNumRegs, u8_mtrType);
-            mtrLib.convertToFloat(g_mm_node, &u8a_mbResp[9], false);
+            mtrLib.convertToFloat(g_mm_node, &u8a_mbResp[9]);
           }
           
     

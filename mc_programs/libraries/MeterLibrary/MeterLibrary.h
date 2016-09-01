@@ -47,7 +47,7 @@ class MeterLibrary {
 		// uint8_t m_u8_numGrpRegs;
 		// uint16_t m_u16_grpReqReg;
 		
-		bool m_b_allSameType;
+		// bool m_b_allSameType;
 		FloatConv m_reqRegDataType;
 		
 		// uint16_t getNumReqVals();
@@ -74,13 +74,13 @@ class MeterLibrary {
 		bool groupMbErr(int8_t *const s8kp_dataFlags);
 		bool groupLastFlags(int8_t *const s8kp_dataFlags);
 		
-		void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data, bool checkType);
-		float convertToFloat(ModbusMaster &node, uint16_t u16_reg, bool checkType);  // returns float
+		void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data);
+		float convertToFloat(ModbusMaster &node, uint16_t u16_reg);  // returns float
 		
 };
 
 /* _____FUNCTION DEFINITIONS_________________________________________________ */
 uint16_t swapBytes(uint16_t u16_word);
 float g_convertToFloat(const uint16_t *const u16_reg, FloatConv regDataType);  // returns float
-float g_convertToFloat(const uint8_t *const u8_reg, FloatConv regDataType);  // returns float
+// float g_convertToFloat(const uint8_t *const u8_reg, FloatConv regDataType);  // returns float
 #endif

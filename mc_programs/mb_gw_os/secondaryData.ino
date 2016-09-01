@@ -1,84 +1,84 @@
 
-PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart) {
-  //uint16_t lclmtr_strt;
-  uint16_t u16_mtrGrpStart;
-  PwrEgyRegs elecReg;
-  uint16_t u16_curGrpInd;
-  uint8_t u8_numGrps;
-  uint8_t u8_numGrpVals;
-  uint8_t u8_valType;
-  uint8_t u8_typeMltplr;
-  uint16_t u16_reqReg;
-  bool b_fndPwr = false;
-  bool b_fndEgy = false;
-
-  //lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
-
-  u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 4), EEPROM.read(u16_mtrLibStart + 5));  // where the first group starts
-  u8_numGrps = EEPROM.read(u16_mtrLibStart + 3);  // number of groups in meter
-  u16_curGrpInd = u16_mtrGrpStart;
-
-  //Serial.println("getElecRegs:");
-  //Serial.println(u16_mtrGrpStart);
-  //Serial.println(u8_numGrps);
-  //Serial.println(u16_curGrpInd);
-
-  for (int ii = 0; ii < u8_numGrps; ++ii) {
-    u8_numGrpVals = EEPROM.read(u16_curGrpInd);
-    u16_reqReg = word(EEPROM.read(u16_curGrpInd + 1), EEPROM.read(u16_curGrpInd + 2));
-
-    for (int jj = 0; jj < u8_numGrpVals; ++jj) {
-      if ((!b_fndPwr) && (EEPROM.read(jj + u16_curGrpInd + 3) == 17)) {  // 17 is value of real power total
-        //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x3F);  // only look at ls 6 bits
-
-        if ((u8_valType < 3) && (u8_valType > 0)) {
-          u8_typeMltplr = 1;
-        }
-        else if (u8_valType == 7) {
-          u8_typeMltplr = 3;
-        }
-        else if (u8_valType > 7) {
-          u8_typeMltplr = 4;
-        }
-        else {
-          u8_typeMltplr = 2;
-        }
-
-        elecReg.u16_pwr = 10000 + u16_reqReg + jj * u8_typeMltplr;
-        b_fndPwr = true;
-      }
-      else if ((!b_fndEgy) && (EEPROM.read(jj + u16_curGrpInd + 3) == 30)) {
-        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x3F);  // only look at ls 7 bits
-
-        if ((u8_valType < 3) && (u8_valType > 0)) {
-          u8_typeMltplr = 1;
-        }
-        else if (u8_valType == 7) {
-          u8_typeMltplr = 3;
-        }
-        else if (u8_valType > 7) {
-          u8_typeMltplr = 4;
-        }
-        else {
-          u8_typeMltplr = 2;
-        }
-
-        elecReg.u16_egy = 10000 + u16_reqReg + jj * u8_typeMltplr;
-        b_fndEgy = true;
-      }
-    }  // end for rotate through values
-
-    if (b_fndPwr && b_fndEgy) {
-      return elecReg;
-    }
-    u16_curGrpInd = 3 + 2 * (u8_numGrpVals)+u16_curGrpInd;  // starting address of next group
-  }  // end for rotate through groups
-
-  elecReg.u16_pwr = 0;
-  elecReg.u16_egy = 0;
-  return elecReg;
-}
+//PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart) {
+//  //uint16_t lclmtr_strt;
+//  uint16_t u16_mtrGrpStart;
+//  PwrEgyRegs elecReg;
+//  uint16_t u16_curGrpInd;
+//  uint8_t u8_numGrps;
+//  uint8_t u8_numGrpVals;
+//  uint8_t u8_valType;
+//  uint8_t u8_typeMltplr;
+//  uint16_t u16_reqReg;
+//  bool b_fndPwr = false;
+//  bool b_fndEgy = false;
+//
+//  //lclmtr_strt = word(EEPROM.read(g_u16_regBlkStart + 4 * meter - 1), EEPROM.read(g_u16_regBlkStart + 4 * meter));
+//
+//  u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 4), EEPROM.read(u16_mtrLibStart + 5));  // where the first group starts
+//  u8_numGrps = EEPROM.read(u16_mtrLibStart + 3);  // number of groups in meter
+//  u16_curGrpInd = u16_mtrGrpStart;
+//
+//  //Serial.println("getElecRegs:");
+//  //Serial.println(u16_mtrGrpStart);
+//  //Serial.println(u8_numGrps);
+//  //Serial.println(u16_curGrpInd);
+//
+//  for (int ii = 0; ii < u8_numGrps; ++ii) {
+//    u8_numGrpVals = EEPROM.read(u16_curGrpInd);
+//    u16_reqReg = word(EEPROM.read(u16_curGrpInd + 1), EEPROM.read(u16_curGrpInd + 2));
+//
+//    for (int jj = 0; jj < u8_numGrpVals; ++jj) {
+//      if ((!b_fndPwr) && (EEPROM.read(jj + u16_curGrpInd + 3) == 17)) {  // 17 is value of real power total
+//        //AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+//        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x3F);  // only look at ls 6 bits
+//
+//        if ((u8_valType < 3) && (u8_valType > 0)) {
+//          u8_typeMltplr = 1;
+//        }
+//        else if (u8_valType == 7) {
+//          u8_typeMltplr = 3;
+//        }
+//        else if (u8_valType > 7) {
+//          u8_typeMltplr = 4;
+//        }
+//        else {
+//          u8_typeMltplr = 2;
+//        }
+//
+//        elecReg.u16_pwr = 10000 + u16_reqReg + jj * u8_typeMltplr;
+//        b_fndPwr = true;
+//      }
+//      else if ((!b_fndEgy) && (EEPROM.read(jj + u16_curGrpInd + 3) == 30)) {
+//        u8_valType = (EEPROM.read(jj + u16_curGrpInd + 3 + u8_numGrpVals) & 0x3F);  // only look at ls 7 bits
+//
+//        if ((u8_valType < 3) && (u8_valType > 0)) {
+//          u8_typeMltplr = 1;
+//        }
+//        else if (u8_valType == 7) {
+//          u8_typeMltplr = 3;
+//        }
+//        else if (u8_valType > 7) {
+//          u8_typeMltplr = 4;
+//        }
+//        else {
+//          u8_typeMltplr = 2;
+//        }
+//
+//        elecReg.u16_egy = 10000 + u16_reqReg + jj * u8_typeMltplr;
+//        b_fndEgy = true;
+//      }
+//    }  // end for rotate through values
+//
+//    if (b_fndPwr && b_fndEgy) {
+//      return elecReg;
+//    }
+//    u16_curGrpInd = 3 + 2 * (u8_numGrpVals)+u16_curGrpInd;  // starting address of next group
+//  }  // end for rotate through groups
+//
+//  elecReg.u16_pwr = 0;
+//  elecReg.u16_egy = 0;
+//  return elecReg;
+//}
 
 
 void getFileName(time_t t_time, char *cp_fileName) {
@@ -160,15 +160,17 @@ void getFileName(time_t t_time, char *cp_fileName) {
   if (!SD.exists(cp_fileName)) {  // can't find this file!
     // write header for the file
     
-    uint8_t maxSlvs;
+    uint8_t u8_maxSlvs;
 
     tempFile = SD.open(cp_fileName, FILE_WRITE);
-    maxSlvs = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
+    u8_maxSlvs = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
 
     if (tempFile) {
-      tempFile.print(F("UTC time,"));
+      tempFile.print(F("UTC time"));
 
-      for (int ii = 0; ii < maxSlvs; ++ii) {
+      for (int ii = 0; ii < u8_maxSlvs; ++ii) {
+        tempFile.print(F(","));
+
         if (g_u8a_slaveIps[ii][0] == 0) { // if serial device, print gateway ip
           tempFile.print(g_ip_ip[0], DEC);
           for (int jj = 1; jj < 4; ++jj) {
@@ -188,15 +190,22 @@ void getFileName(time_t t_time, char *cp_fileName) {
         tempFile.print(g_u8a_slaveIds[ii], DEC);
         tempFile.print(F("/"));
         tempFile.print(g_u8a_slaveVids[ii], DEC);
+        tempFile.print(F(": "));
 
         switch (g_u8a_slaveTypes[ii][0]) {
-          case 11:
-            tempFile.print(F(",,,,,"));
-          case 12:
-            tempFile.print(F(",,,,"));
+          case 11:  // chilled water
+            tempFile.print(F("Heat Flow,Mass Flow,Vol. Flow,Supply Temp,Return Temp,Delta Temp,Reserved,Heat Total,"
+              "Mass Total,Vol. Total"));
             break;
-          default:
-            tempFile.print(F(",,"));
+          case 12:  // steam
+            tempFile.print(F("Heat Flow,Mass Flow,Vol. Flow,Supply Temp,Reserved,Reserved,Pressure,Heat Total,"
+              "Mass Total,Vol. Total"));
+            break;
+          default:  // electric
+            tempFile.print(F("A Curr,B Curr,C Curr,Avg. Curr,Total Curr,A L-N Volt,B L-N Volt,C L-N Volt,L-N Avg.,"
+              "A-B L-L Volt,B-C L-L Volt,C-A L-L Volt,L-L Avg.,A Real Pwr,B Real Pwr,C Real Pwr,Total Real Pwr,"
+              "A Rctv Pwr,B Rctv Pwr,C Rctv Pwr,Total Rctv Pwr,A App Pwr,B App Pwr,C App Pwr,Total App Pwr,"
+              "A PF,B PF,C PF,Total PF,Total Real Egy,Total Rctv Egy,Total App Egy"));
             break;
         }
       }  // end for rotate slaves

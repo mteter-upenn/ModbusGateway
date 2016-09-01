@@ -64,13 +64,13 @@ int mb485Ctrl = 9;                                     // when set low, transmit
 int rtcFailLed = 8;                                    // no rtc set
 #endif
 
-
+/*
 // define struct
 struct PwrEgyRegs {
   uint16_t u16_pwr;
   uint16_t u16_egy;
 };
-
+*/
 
 // ethernet info
 uint8_t g_u8a_mac[8] = {0};                      // enter mac, will need some sort of generator for this
@@ -153,7 +153,7 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr);
 bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen, bool b_byteSwap);
 void handle_modbus(bool b_idleHttp);
 // secondaryModbus
-//bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType);
+/*bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType);*/
 bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meterType);
 bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId);
 // setConstants
@@ -167,7 +167,7 @@ void printTime(time_t t_time);
 // handleData
 void handle_data();
 // secondaryData
-PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart);
+/*PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart);*/
 void getFileName(time_t t_time, char *cp_fileName);
 
 
