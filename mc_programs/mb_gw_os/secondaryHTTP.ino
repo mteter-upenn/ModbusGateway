@@ -340,8 +340,8 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   //Serial.println(dev);
   u8_mtrMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType + 2);
 
-  MeterLibrary mtrLib(u8_mtrType);
-  u16_numGrps = mtrLib.getNumGrps();
+  MeterLibGroups mtrGrps(u8_mtrType);
+  u16_numGrps = mtrGrps.getNumGrps();
 
   /*
   u16_mtrLibStart = word(EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType - 1), EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType));
@@ -358,9 +358,9 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   
 
   for (int ii = 1; ii < u16_numGrps; ++ii){  // the last group is filled with those data requests that cannot be filled
-    mtrLib.setGroup(ii);
-    u16_reqReg = mtrLib.getReqReg();
-    u16_numRegs = mtrLib.getNumRegs();
+    mtrGrps.setGroup(ii);
+    u16_reqReg = mtrGrps.getReqReg();
+    u16_numRegs = mtrGrps.getNumRegs();
 
     u8a_mbReq[8] = highByte(u16_reqReg);
     u8a_mbReq[9] = lowByte(u16_reqReg);
@@ -387,7 +387,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
 //    Serial.print(i, DEC);
     if (b_mbReqStat) {
 //      Serial.println(F(", has had successful modbus"));
-      mtrLib.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
+      mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
       
       /*
       for (int jj = 0; jj < u8_numGrpVals; ++jj){  // shift 2 to get to collection type
@@ -432,7 +432,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
         return;  // if modbus timeout error on first loop, kill further data requests
       }
 //      Serial.println(F("Continuing..."));
-      mtrLib.groupMbErr(s8a_dataFlags);
+      mtrGrps.groupMbErr(s8a_dataFlags);
 
       /*
       for (int jj = 0; jj < u8_numGrpVals; ++jj){
@@ -454,8 +454,8 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   }  // end for
 
   // last group full of duds (if any) ********************************************************************
-  mtrLib.setGroup(u16_numGrps);
-  mtrLib.groupLastFlags(s8a_dataFlags);
+  mtrGrps.setGroup(u16_numGrps);
+  mtrGrps.groupLastFlags(s8a_dataFlags);
   /*
   u8_numGrpVals = EEPROM.read(u16_mtrCurGrpInd);  //                                                     *
   //                                                                                                     *

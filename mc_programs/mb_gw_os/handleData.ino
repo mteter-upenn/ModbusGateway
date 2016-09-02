@@ -38,7 +38,7 @@ void handle_data() {
       const int k_i_maxNumStmChwVals(10);
       int i_numMtrVals;
       int i_totStrtInd;
-      MeterLibrary mtrLib(1);
+      MeterLibGroups mtrGrps(1);
       uint16_t u16_numGrps;
       uint16_t u16_reqReg, u16_numRegs;
       float fa_data[k_i_maxNumElecVals];  // 32 is max number of value types that can be sent
@@ -60,8 +60,9 @@ void handle_data() {
         u8_slvVid = g_u8a_slaveVids[ii];
         u8_slvMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType + 2);
 
-        mtrLib.changeInputs(0, 0, u8_slvMtrType, true);
-        u16_numGrps = mtrLib.getNumGrps();
+        //mtrGrps.changeInputs(0, 0, u8_slvMtrType, true);
+        mtrGrps.setMeterType(u8_slvMtrType);
+        u16_numGrps = mtrGrps.getNumGrps();
 
         u8a_mbReq[6] = u8_slvVid;   // u8_slvVidice id
         u8a_mbReq[7] = u8_slvMbFunc;  // modbus u8_slvMbFunction
@@ -85,9 +86,9 @@ void handle_data() {
 
         // collect all data in float array
         for (int jj = 1; jj < u16_numGrps; ++jj) {
-          mtrLib.setGroup(jj);
-          u16_reqReg = mtrLib.getReqReg();
-          u16_numRegs = mtrLib.getNumRegs();
+          mtrGrps.setGroup(jj);
+          u16_reqReg = mtrGrps.getReqReg();
+          u16_numRegs = mtrGrps.getNumRegs();
 
           u8a_mbReq[8] = highByte(u16_reqReg);
           u8a_mbReq[9] = lowByte(u16_reqReg);
@@ -100,7 +101,7 @@ void handle_data() {
 
           if (b_mbStatus) {
             // record data for group's values
-            mtrLib.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
+            mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
           }
           else if (jj == 1) {
             // set all flags to error - assume that since the first group failed, others will fail as well and cut losses
@@ -108,13 +109,13 @@ void handle_data() {
           }
           else {
             // set groups values to fail state
-            mtrLib.groupMbErr(s8a_dataFlags);
+            mtrGrps.groupMbErr(s8a_dataFlags);
           }
         } // end for loop through groups
 
         // last group full of duds (if any) ********************************************************************
-        mtrLib.setGroup(u16_numGrps);  //                                                                      *
-        mtrLib.groupLastFlags(s8a_dataFlags);  //                                                              *
+        mtrGrps.setGroup(u16_numGrps);  //                                                                      *
+        mtrGrps.groupLastFlags(s8a_dataFlags);  //                                                              *
         // end handling of last group **************************************************************************
 
 

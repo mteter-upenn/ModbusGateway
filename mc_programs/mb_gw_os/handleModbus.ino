@@ -180,8 +180,8 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
 //            Serial.println((u8_dataTypeFlags & 0x7F), DEC);
           
             // create MeterLibrary class which can take the meter type and register to convert and dump requested values
-            MeterLibrary mtrLib(u16_adjReqReg, u16_adjNumRegs, u8_mtrType);
-            mtrLib.convertToFloat(g_mm_node, &u8a_mbResp[9]);
+            MeterLibBlocks mtrBlks(u16_adjReqReg, u16_adjNumRegs, u8_mtrType);
+            mtrBlks.convertToFloat(g_mm_node, &u8a_mbResp[9]);
           }
           
     

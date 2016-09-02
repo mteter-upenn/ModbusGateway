@@ -283,7 +283,7 @@ class ModbusMaster
     void (*_idle)();
 		
 		public:  // not sure if this is necessary
-		friend class MeterLibrary;
+		friend class MeterLibBlocks;
 };
 #endif
 

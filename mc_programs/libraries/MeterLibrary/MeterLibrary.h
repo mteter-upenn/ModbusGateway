@@ -29,40 +29,55 @@ along with selected registers.
 
 class ModbusMaster;
 
-class MeterLibrary {
+class MeterLibBlocks {
 	private:
 		uint16_t m_u16_reqReg;
 		uint16_t m_u16_numRegs;
 		uint8_t m_u8_mtrType;
 		
-		uint16_t m_u16_regBlkStart;
+		uint16_t m_u16_mtrListingStart;
 		uint16_t m_u16_mtrLibStart;
 		uint16_t m_u16_blkStrtInd;
-		uint16_t m_u16_grpStrtInd;
 		uint8_t m_u8_numBlks;
+
+		FloatConv m_reqRegDataType;
+	public:
+		// CONSTRUCTORS
+		MeterLibBlocks(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType);
+		
+		//FUNCTIONS
+		int changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType);
+		
+		uint16_t getNumRegs();
+		uint16_t getReqReg();
+		
+		void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data);
+		float convertToFloat(ModbusMaster &node, uint16_t u16_reg);  // returns float
+		
+};
+
+
+class MeterLibGroups {
+	private:
+		uint16_t m_u16_reqReg;
+		uint16_t m_u16_numRegs;
+		uint8_t m_u8_mtrType;
+		
+		uint16_t m_u16_mtrListingStart;
+		uint16_t m_u16_mtrLibStart;
+		uint16_t m_u16_grpStrtInd;
 		uint8_t m_u8_numGrps;
 		uint8_t m_u8_curGrp;
 		uint8_t m_u8_numGrpVals;
 		uint16_t m_u16_grpDataTypeInd;
-		// uint8_t m_u8_numGrpRegs;
-		// uint16_t m_u16_grpReqReg;
-		
-		// bool m_b_allSameType;
+
 		FloatConv m_reqRegDataType;
-		
-		// uint16_t getNumReqVals();
 	public:
 		// CONSTRUCTORS
-		MeterLibrary(uint8_t u8_mtrType);
-		MeterLibrary(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType);
-		
+		MeterLibGroups(uint8_t u8_mtrType);
 		
 		//FUNCTIONS
-		int changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType, 
-		      bool b_useGrps = false);
-		// bool changeMeterType(uint8_t u8_mtrType);
-		// void changeRegisters(uint16_t u16_reqReg, uint16_t u16_numRegs);
-		
+		bool setMeterType(uint8_t u8_mtrType);
 		bool setGroup(uint8_t u8_grpInd);
 		
 		uint16_t getNumRegs();
@@ -72,11 +87,7 @@ class MeterLibrary {
 		
 		bool groupToFloat(const uint8_t *const u8p_data, float *const fp_retData, int8_t *const s8kp_dataFlags);
 		bool groupMbErr(int8_t *const s8kp_dataFlags);
-		bool groupLastFlags(int8_t *const s8kp_dataFlags);
-		
-		void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data);
-		float convertToFloat(ModbusMaster &node, uint16_t u16_reg);  // returns float
-		
+		bool groupLastFlags(int8_t *const s8kp_dataFlags);		
 };
 
 /* _____FUNCTION DEFINITIONS_________________________________________________ */

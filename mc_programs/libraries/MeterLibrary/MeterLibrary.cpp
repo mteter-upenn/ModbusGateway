@@ -11,39 +11,27 @@
 
 
 /* _____PUBLIC FUNCTIONS_____________________________________________________ */
-/**
-Constructor.
 
-@ingroup setup
-*/
-MeterLibrary::MeterLibrary(uint8_t u8_mtrType) {
-	// address for meter register library, this will never change
-	m_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));	
-		
-	changeInputs(0, 0, u8_mtrType, true);
-}
-
+// MeterLibBlocks ##################################################################################
 
 /**
 Constructor.
 
 @ingroup setup
 */
-MeterLibrary::MeterLibrary(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType) {
+MeterLibBlocks::MeterLibBlocks(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType) {
 	// address for meter register library, this will never change
-	m_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));	
+	m_u16_mtrListingStart = word(EEPROM.read(6), EEPROM.read(7));	
 		
 	changeInputs(u16_reqReg, u16_numRegs, u8_mtrType);
 }
 
 
-int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType, 
-      bool b_useGrps) {
+int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType) {
 	m_u16_reqReg = u16_reqReg;
 	m_u16_numRegs = u16_numRegs;
-	// m_b_allSameType = false;
 	
-	if ((u8_mtrType <= EEPROM.read(m_u16_regBlkStart + 2)) || (u8_mtrType == 0)) {
+	if ((u8_mtrType <= EEPROM.read(m_u16_mtrListingStart + 2)) || (u8_mtrType == 0)) {
 		m_u8_mtrType = u8_mtrType;
 	}
 	else {
@@ -52,31 +40,10 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 		return 1;  // meter type not viable
 	}
 	
-	m_u16_mtrLibStart = word(EEPROM.read(m_u16_regBlkStart + 4 * u8_mtrType - 1), 
-												EEPROM.read(m_u16_regBlkStart + 4 * u8_mtrType));
+	m_u16_mtrLibStart = word(EEPROM.read(m_u16_mtrListingStart + 4 * u8_mtrType - 1), 
+												EEPROM.read(m_u16_mtrListingStart + 4 * u8_mtrType));
 	m_u16_blkStrtInd = word(EEPROM.read(m_u16_mtrLibStart), EEPROM.read(m_u16_mtrLibStart + 1));
 	m_u8_numBlks = EEPROM.read(m_u16_mtrLibStart + 2);
-	// assume group is 1:
-	m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4), EEPROM.read(m_u16_mtrLibStart + 5));
-	m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
-	
-	// Serial.print("reg strt: "); Serial.println(m_u16_regBlkStart, DEC);
-	// Serial.print("type: "); Serial.println(m_u8_mtrType, DEC);
-	// Serial.print("lib start: "); Serial.println(m_u16_mtrLibStart, DEC);
-	// Serial.print("blk start: "); Serial.println(m_u16_blkStrtInd, DEC);
-	// Serial.print("num blks: "); Serial.println(m_u8_numBlks, DEC);
-	// Serial.print("grp strt: "); Serial.println(m_u16_grpStrtInd, DEC);
-	// Serial.print("num grps: "); Serial.println(m_u8_numGrps, DEC);
-	
-	
-	if (b_useGrps) {
-		m_u8_curGrp = 1;
-		
-		m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
-		m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
-		m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
-		m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd + 4);
-	}
 	
 	for (int ii = 0; ii < m_u8_numBlks; ++ii) {
 		uint16_t u16_blkFirstReg;
@@ -90,22 +57,7 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 		if ((m_u16_reqReg >= u16_blkFirstReg) && (m_u16_reqReg <= u16_blkLastReg)) {
 			m_reqRegDataType = Int8_2_FloatConv(static_cast<int8_t>(EEPROM.read(((5 * ii) + 
 				                   m_u16_blkStrtInd + 4))));
-				
-			// Serial.print("found block: "); Serial.println(FloatConv2Int8(m_reqRegDataType), DEC);
-			// Serial.print("dblcheck: "); Serial.println(static_cast<int8_t>(EEPROM.read(((5 * ii) + m_u16_blkStrtInd + 4))), DEC);
-			// Serial.print("wtf3: "); Serial.println(FloatConv2Int8(FloatConv::FLOAT_WS), DEC);
-			// Serial.println(ii, DEC);
-			// Serial.println(m_u16_blkStrtInd, DEC);
-			// Serial.println(u16_blkFirstReg, DEC);
-			// Serial.println(u16_blkLastReg, DEC);
-			
-			// check if the last register will be in this block, this will be used if the user wishes to 
-			//   check all registers for their data types (a costly operation, though it should be easier
-			//   given how the blocks are organized)
-			// if (((m_u16_reqReg + m_u16_numRegs - 1) >= u16_blkFirstReg) && 
-					 // ((m_u16_reqReg + m_u16_numRegs - 1) <= u16_blkLastReg)) {
-				// m_b_allSameType = true;
-		  // }
+
 			return 0;
 		} 
 	} // end for
@@ -115,98 +67,153 @@ int MeterLibrary::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_
 }
 
 
-// bool MeterLibrary::changeMeterType(uint8_t u8_mtrType){
-	// if ((u8_mtrType <= EEPROM.read(m_u16_regBlkStart + 2)) || (u8_mtrType == 0)) {
-		// m_u8_mtrType = u8_mtrType;
-		
-		// // reset meter library pointers
-		// m_u16_mtrLibStart = word(EEPROM.read(m_u16_regBlkStart + 4 * u8_mtrType - 1), 
-			// EEPROM.read(m_u16_regBlkStart + 4 * u8_mtrType));
-		// m_u16_blkStrtInd = word(EEPROM.read(m_u16_mtrLibStart), EEPROM.read(m_u16_mtrLibStart + 1));
-		// m_u8_numBlks = EEPROM.read(m_u16_mtrLibStart + 2);
-		// m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4), EEPROM.read(m_u16_mtrLibStart + 5));
-		// m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
-		// return true;
-	// }
-	// else {
-		// return false;
-	// }
-// }
+uint16_t MeterLibBlocks::getNumRegs() {
+	return m_u16_numRegs;
+}
 
-// void MeterLibrary::changeRegisters(uint16_t u16_reqReg, uint16_t u16_numRegs){
-	// m_u16_reqReg = u16_reqReg;
-	// m_u16_numRegs = u16_numRegs;
-// }
 
-bool MeterLibrary::setGroup(uint8_t u8_grpInd) {
-	if (u8_grpInd <= m_u8_numGrps) {
-		m_u8_curGrp = u8_grpInd;
-		m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4 + m_u8_curGrp * 2 - 2), 
-												 EEPROM.read(m_u16_mtrLibStart + 5 + m_u8_curGrp * 2 - 2));
+uint16_t MeterLibBlocks::getReqReg() {
+	return m_u16_reqReg;
+}
+
+
+/**
+Convert full data request to float.
+
+u8a_data must be address where floats will start (no header spacing accounted for)
+*/
+void MeterLibBlocks::convertToFloat(ModbusMaster &node, uint8_t *const u8kp_data) {
+	uint16_t u16_numReqVals;
+	// multiplier such that u16_regMult * (number of requested values) = (number of requested 
+	//     registers)
+	uint16_t u16_regMult;  
+	uint16_t * const u16kp_data = (uint16_t*)u8kp_data;
+	uint16_t u16_reg;
+	union cnvtUnion {
+		uint16_t u16[2];
+		float fl;
+	} int2flt;
+
+	u16_regMult = FloatConvEnumNumRegs(m_reqRegDataType);
+	u16_numReqVals = m_u16_numRegs / u16_regMult;
+	
+	for (int ii = 0, jj = 0; ii < u16_numReqVals; ++ii, jj += 2) {
+		u16_reg = m_u16_reqReg + ii * u16_regMult;
 		
+		int2flt.fl = convertToFloat(node, u16_reg);
 		
-		m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
-		if (u8_grpInd < m_u8_numGrps) {
-			m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
-			m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
-			m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd + 4);
+		// words are in correct order, but the bytes in the words need to be swapped
+		u16kp_data[jj] = swapBytes(int2flt.u16[0]);
+		u16kp_data[jj + 1] = swapBytes(int2flt.u16[1]);
+	}
+}
+
+
+float MeterLibBlocks::convertToFloat(ModbusMaster &node, uint16_t u16_reg) {
+	uint8_t u8_regInd;
+	
+	// check if register is within requested data range
+	if ((u16_reg >= m_u16_reqReg) && (u16_reg < (m_u16_reqReg + m_u16_numRegs))) {
+		u8_regInd = u16_reg - m_u16_reqReg;
+	}
+	else {
+		return 0.0f;
+	}
+	
+	return g_convertToFloat(&(node._u16ResponseBuffer[u8_regInd]), m_reqRegDataType);
+}
+
+
+// MeterLibGroups ##################################################################################
+
+/**
+Constructor.
+
+@ingroup setup
+*/
+MeterLibGroups::MeterLibGroups(uint8_t u8_mtrType) {
+	// address for meter register library, this will never change
+	m_u16_mtrListingStart = word(EEPROM.read(6), EEPROM.read(7));	
+		
+	setMeterType(u8_mtrType);
+}
+
+bool MeterLibGroups::setMeterType(uint8_t u8_mtrType) {
+	if ((u8_mtrType <= EEPROM.read(m_u16_mtrListingStart + 2)) || (u8_mtrType == 0)) {
+		m_u8_mtrType = u8_mtrType;
+	}
+	else {
+		m_u8_mtrType = 0;
+		m_u16_reqReg = 0xFFFF;
+		return false;  // meter type not viable
+	}
+	
+	m_u16_mtrLibStart = word(EEPROM.read(m_u16_mtrListingStart + 4 * u8_mtrType - 1), 
+												EEPROM.read(m_u16_mtrListingStart + 4 * u8_mtrType));
+	// assume group is 1:
+	m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
+	
+	return setGroup(1);
+}
+
+
+
+bool MeterLibGroups::setGroup(uint8_t u8_grpInd) {
+	if (m_u8_mtrType != 0) {
+		if (u8_grpInd <= m_u8_numGrps) {
+			m_u8_curGrp = u8_grpInd;
+			m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4 + m_u8_curGrp * 2 - 2), 
+													 EEPROM.read(m_u16_mtrLibStart + 5 + m_u8_curGrp * 2 - 2));
 			
-			// Serial.print("curGrp: "); Serial.println(m_u8_curGrp, DEC);
-			// Serial.print("grpStrtInd: "); Serial.println(m_u16_grpStrtInd, DEC);
-			// Serial.print("numGrpVals: "); Serial.println(m_u8_numGrpVals, DEC);
-			// Serial.print("numRegs: "); Serial.println(m_u16_numRegs, DEC);
-			// Serial.print("reqReg: "); Serial.println(m_u16_reqReg, DEC);
-			// Serial.print("grpDataTypeInd: "); Serial.println(m_u16_grpDataTypeInd, DEC);
-			// Serial.print("bytes to skip: "); Serial.println(EEPROM.read(m_u16_grpStrtInd + 4), DEC);
 			
-			// Serial.println();
+			m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
+			if (u8_grpInd < m_u8_numGrps) {
+				m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
+				m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
+				m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd + 4);
+			}
+			else {  // last group
+				m_u16_numRegs = 0;
+				m_u16_reqReg = 0;
+				m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd) + 1;
+			}
 			
-			// for (int ii = m_u16_mtrLibStart; ii < m_u16_mtrLibStart + 100; ++ii) {
-				// Serial.print(ii, DEC); Serial.print(": "); Serial.println(EEPROM.read(ii), DEC);
-			// }
-			
+			return true;
 		}
-		else {  // last group
-			m_u16_numRegs = 0;
-			m_u16_reqReg = 0;
-			m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd) + 1;
-		}
-		
-		return true;
 	}
 	
 	return false;
 }
 
-
-uint16_t MeterLibrary::getNumRegs() {
+uint16_t MeterLibGroups::getNumRegs() {
 	return m_u16_numRegs;
 }
 
 
-uint16_t MeterLibrary::getReqReg() {
+uint16_t MeterLibGroups::getReqReg() {
 	return m_u16_reqReg;
 }
 
-
-uint8_t MeterLibrary::getCurGrp() {
+uint8_t MeterLibGroups::getCurGrp() {
 	return m_u8_curGrp;
 }
 
-uint8_t MeterLibrary::getNumGrps() {
+uint8_t MeterLibGroups::getNumGrps() {
 	return m_u8_numGrps;
 }
 
-bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const fkp_retData, 
+bool MeterLibGroups::groupToFloat(const uint8_t *const k_u8kp_data, float *const fkp_retData, 
 	int8_t *const s8kp_dataFlags) {
 	const uint16_t *k_u16p_data = (uint16_t*)k_u8kp_data;
+	
+	if (m_u8_mtrType == 0) {
+		return false;
+	}
 	
 	if (!(m_u8_curGrp < m_u8_numGrps)) {  // check to make sure curGrp is not last group
 		return false;
 	}
-	else {
-	}
-	
+
 	/* GROUP STRUCTURE:
 	*  ADDRESS   0: number of values in group
 	*  ADDRESS   1: number of registers to request in modbus
@@ -216,28 +223,21 @@ bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const f
 	*  ADDRESS 5->: value types + skips, value types are [1, 32], skips are negative
 	*  ADDRESS  (ADDRESS 0 + eval(ADDRESS 4)): data types in pairs (FloatConv, which values fall under it)
 	*/
-	
-	
+
 	uint8_t u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1);
 	FloatConv dataType = Int8_2_FloatConv(static_cast<int8_t>(EEPROM.read(m_u16_grpDataTypeInd)));
 	uint8_t u8_valInd(0);  // order of value in group (NOT the VALUE TYPE (ie real power))
-	
-	// Serial.print("start: "); Serial.println(m_u16_grpStrtInd + 5, DEC);  // 1539
-	// Serial.print("until: "); Serial.println(m_u16_grpDataTypeInd, DEC);  // 1535
-	
+
 	int ii(2); // skip 0 on assumption that u8_dataTypeCmp is initialized in such a case
 	
 	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 5; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
 		int8_t s8_valType;
 		
 		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
-		
-		// Serial.print("s8_valType: "); Serial.print(s8_valType, DEC);
-		
+	
 		if (s8_valType < 0) {
 			// skip registers
 			k_u16p_data += (-1) * s8_valType;
-			// Serial.println(",  Skip");
 		}
 		else {
 			++u8_valInd;
@@ -247,19 +247,7 @@ bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const f
 				u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1 + ii);
 				dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd + ii));
 				ii += 2;
-				// Serial.print(", ");	Serial.print(ii, DEC);
 			}
-			
-			// Serial.print(s8_valType, DEC); Serial.print(": ");
-			// for (int ii = 0; ii < FloatConvEnumNumRegs(dataType); ++ii) {
-				// Serial.print(*(k_u16p_data + ii), DEC); Serial.print(", ");
-			// }
-			// Serial.println();
-			// Serial.print(s8_valType, DEC); Serial.print(": ");
-			// for (int ii = 0; ii < FloatConvEnumNumRegs(dataType); ++ii) {
-				// Serial.print(swapBytes(*(k_u16p_data + ii)), DEC); Serial.print(", ");
-			// }
-			// Serial.println();
 			
 			// convert register data to float and store
 			fkp_retData[s8_valType - 1] = g_convertToFloat(k_u16p_data, dataType);
@@ -272,8 +260,6 @@ bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const f
 			}
 			// skip necessary number of registers to get to next value
 			k_u16p_data += FloatConvEnumNumRegs(dataType);
-			
-			// Serial.print(",  value: "); Serial.println(fkp_retData[s8_valType - 1]);
 		}
 		
 	}
@@ -282,7 +268,11 @@ bool MeterLibrary::groupToFloat(const uint8_t *const k_u8kp_data, float *const f
 }
 
 // set all flags for the values in the group to -1 for unsuccessful modbus read
-bool MeterLibrary::groupMbErr(int8_t *const s8kp_dataFlags) {
+bool MeterLibGroups::groupMbErr(int8_t *const s8kp_dataFlags) {
+	if (m_u8_mtrType == 0) {
+		return false;
+	}
+	
 	if (!(m_u8_curGrp < m_u8_numGrps)) {  // check to make sure curGrp is not last group
 		return false;
 	}
@@ -297,16 +287,17 @@ bool MeterLibrary::groupMbErr(int8_t *const s8kp_dataFlags) {
 			s8kp_dataFlags[s8_valType - 1] = -1;
 			
 		}
-		// else {
-			// // skip registers
-		// }
 	}
 	
 	return true;
 }
 
 
-bool MeterLibrary::groupLastFlags(int8_t *const s8kp_dataFlags) {
+bool MeterLibGroups::groupLastFlags(int8_t *const s8kp_dataFlags) {
+	if (m_u8_mtrType == 0) {
+		return false;
+	}
+	
 	if (m_u8_curGrp != m_u8_numGrps) {  // check to make sure curGrp is last group
 		return false;
 	}
@@ -320,92 +311,14 @@ bool MeterLibrary::groupLastFlags(int8_t *const s8kp_dataFlags) {
 			// mark all flags as not applicable
 			s8kp_dataFlags[s8_valType - 1] = 0;
 		}
-		// else {
-			// // skip registers
-		// }
 	}
 	
 	return true;
 }
 
 
-/**
-Convert full data request to float.
+// General Functions ###############################################################################
 
-u8a_data must be address where floats will start (no header spacing accounted for)
-*/
-void MeterLibrary::convertToFloat(ModbusMaster &node, uint8_t *const u8kp_data) {
-	uint16_t u16_numReqVals;
-	// multiplier such that u16_regMult * (number of requested values) = (number of requested 
-	//     registers)
-	uint16_t u16_regMult;  
-	uint16_t * const u16kp_data = (uint16_t*)u8kp_data;
-	// float *const fp_data = (float*)u8p_data;
-	uint16_t u16_reg;
-	union cnvtUnion {
-		uint16_t u16[2];
-		float fl;
-	} int2flt;
-
-	
-	// if (!checkType) {
-	// u16_regMult = getNumReqVals();
-	u16_regMult = FloatConvEnumNumRegs(m_reqRegDataType);
-	u16_numReqVals = m_u16_numRegs / u16_regMult;
-	
-	
-	for (int ii = 0, jj = 0; ii < u16_numReqVals; ++ii, jj += 2) {
-		u16_reg = m_u16_reqReg + ii * u16_regMult;
-		
-		int2flt.fl = convertToFloat(node, u16_reg);
-		
-		// Serial.print(ii, DEC); Serial.print(": "); Serial.println(int2flt.fl);
-		
-		// words are in correct order, but the bytes in the words need to be swapped
-		u16kp_data[jj] = swapBytes(int2flt.u16[0]);
-		u16kp_data[jj + 1] = swapBytes(int2flt.u16[1]);
-	}		
-	// }
-	
-}
-
-
-float MeterLibrary::convertToFloat(ModbusMaster &node, uint16_t u16_reg) {
-	// FloatConv regDataType(m_reqRegDataType);
-	uint8_t u8_regInd;
-	
-	// check if register is within requested data range
-	if ((u16_reg >= m_u16_reqReg) && (u16_reg < (m_u16_reqReg + m_u16_numRegs))) {
-		u8_regInd = u16_reg - m_u16_reqReg;
-	}
-	else {
-		return 0.0f;
-	}
-	
-	// if user requests to check individual registers and the data request spans multiple blocks
-	// if (checkType && !m_b_allSameType) {
-		// for (int ii = 0; ii < m_u8_numBlks; ++ii) {
-			// uint16_t u16_blkFirstReg;
-			// uint16_t u16_blkLastReg;
-		
-			// u16_blkFirstReg = word(EEPROM.read(((5 * ii) + m_u16_blkStrtInd)), EEPROM.read(((5 * ii) + 
-				// m_u16_blkStrtInd + 1)));
-			// u16_blkLastReg = word(EEPROM.read(((5 * ii) + m_u16_blkStrtInd + 2)), EEPROM.read(((5 * ii) + 
-				// m_u16_blkStrtInd + 3)));
-
-			// if ((u16_reg >= u16_blkFirstReg) && (u16_reg <= u16_blkLastReg)) {
-				// regDataType = Int8_2_FloatConv(static_cast<int8_t>(EEPROM.read(((5 * ii) + 
-					// m_u16_blkStrtInd + 4))));
-				// break;
-			// } 
-		// } // end for
-	// }
-	
-	// Serial.println(static_cast<int8_t>(regDataType), DEC);
-	
-	return g_convertToFloat(&(node._u16ResponseBuffer[u8_regInd]), m_reqRegDataType);
-	// return g_convertToFloat(node.getResponseBuffer(u8_regInd), m_reqRegDataType);
-}
 
 
 uint16_t swapBytes(uint16_t u16_word) {
