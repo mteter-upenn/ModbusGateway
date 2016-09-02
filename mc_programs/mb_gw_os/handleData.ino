@@ -51,7 +51,7 @@ void handle_data() {
       //uint16_t u16_mtrLibStart;
       //uint16_t u16_mtrGrpStart;
       //PwrEgyRegs elecReg;
-      bool b_mbStatus;
+      uint8_t u8_mbStatus;
       uint8_t u8a_mbResp[gk_u16_mbArraySize];
       uint16_t u16_mbRespLen;
 
@@ -97,9 +97,9 @@ void handle_data() {
 
           delay(5); // ensure long enough delay between polls
 
-          b_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen, true);  // getModbus uses MB/TCP as inputs and outputs
+          u8_mbStatus = getModbus(u8a_mbReq, 12, u8a_mbResp, u16_mbRespLen, true);  // getModbus uses MB/TCP as inputs and outputs
 
-          if (b_mbStatus) {
+          if (u8_mbStatus == 0) {
             // record data for group's values
             mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
           }

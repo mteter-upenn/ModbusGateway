@@ -1,15 +1,14 @@
-bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], 
+uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], 
   uint16_t &u16_mbRespLen, bool b_byteSwap) {
 
   uint16_t u16_reqReg, u16_numRegs, u16_adjReqReg(0), u16_adjNumRegs(0);
   uint8_t u8_mbRespNumBytes(0);
-  uint8_t u8_mbResult(0xFF);
+  uint8_t u8_mbResult(0x0A);
   //uint16_t u16_tempReg (0);
   bool b_foundReg(false);
   uint8_t u8_mbReqFunc(0);
   uint8_t u8_mbError(0);
   bool b_reqRegManip(false);
-  bool b_mbRetStatus(false);
   //uint8_t u8_dataTypeFlags(0);
   //uint8_t u8_mskdDataTypeFlags(0);
   FloatConv fltConvFlg(FloatConv::FLOAT);
@@ -124,7 +123,7 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
       /*Serial.print("error: ");
       Serial.println(u8_mbError, DEC);*/
      
-      return false;
+      return u8_mbError;
     }  // end if error
     else {  // no error yet, handle code
       //Serial.print("reqReg: "); Serial.println(u16_adjReqReg, DEC);
@@ -153,7 +152,7 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
 //            u8_mbResult = g_mm_node.writeSingleRegister(u16_adjReqReg, u16_adjNumRegs);
 //            break;
         default:
-          u8_mbResult = 0x01;
+          u8_mbResult = 0x10;
           break;
       }  // end switch function
 
@@ -199,7 +198,6 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
           else{
             u8a_mbResp[7] = u8_mbReqFunc; // return function since no error occured
             u8a_mbResp[8] = u8_mbRespNumBytes; // expected modbus length
-            b_mbRetStatus = true;
           }
           
           u8a_mbResp[4] = ((u8_mbRespNumBytes + 3) >> 8);  // expected tcp length
@@ -207,13 +205,13 @@ bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uin
   
           u16_mbRespLen = (u8_mbRespNumBytes + 9);
           
-          return b_mbRetStatus;
+          return u8_mbResult;
           break;
       }  // end switch (u8_mbResult)
     }  // end else if no error    
   }  // end if (u16_mbReqLen == 12
   
-  return false;
+  return 10;  // Gateway path unavailable
 }  // end getModbus()
 
 

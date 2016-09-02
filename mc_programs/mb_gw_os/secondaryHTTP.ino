@@ -311,7 +311,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   //uint8_t u8_numGrpVals, u8_valType;
   uint16_t u16_reqReg, u16_numRegs;
   uint8_t u8_mtrType, u8_mbVid, u8_mtrMbFunc;
-  bool b_mbReqStat;
+  uint8_t u8_mbReqStat;
   char ca_respXml[gk_u16_respBuffSize] = {0};  // 68
   
   //union {
@@ -379,13 +379,13 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
     u8a_mbReq[11] = u8_numGrpVals * 2;  // ask for float conversion = 2*num for registers
     */
     delay(5); // ensure long enough delay between polls
-    b_mbReqStat = getModbus(u8a_mbReq, u16_reqLen, u8a_mbResp, u16_respLen, true);  // getModbus uses MB/TCP as inputs and outputs
+    u8_mbReqStat = getModbus(u8a_mbReq, u16_reqLen, u8a_mbResp, u16_respLen, true);  // getModbus uses MB/TCP as inputs and outputs
 
     //const uint16_t *u16p_mbRespData = (uint16_t*)&u8a_mbResp[9];
       
 //    Serial.print(F("group: "));
 //    Serial.print(i, DEC);
-    if (b_mbReqStat) {
+    if (u8_mbReqStat == 0) {
 //      Serial.println(F(", has had successful modbus"));
       mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
       

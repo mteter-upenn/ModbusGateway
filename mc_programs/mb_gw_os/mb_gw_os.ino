@@ -150,7 +150,7 @@ void sendPostResp(EthernetClient52 &ec_client);
 char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_postLen);
 void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr);
 // handleModbus
-bool getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen, bool b_byteSwap);
+uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen, bool b_byteSwap);
 void handle_modbus(bool b_idleHttp);
 // secondaryModbus
 /*bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType);*/
