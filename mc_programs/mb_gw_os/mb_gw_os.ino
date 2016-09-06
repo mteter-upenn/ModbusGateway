@@ -104,6 +104,8 @@ uint8_t g_u8a_selectedSlave = 1;      // selSlv                              // 
 
 // rtc info
 bool g_b_rtcGood = false;  // bGoodRTC
+uint32_t g_u32_rtcNtpLastReset(0UL);  // for resetting rtc with ntp
+const uint32_t gk_u32_rtcNtpResetDelay(604800000UL);  // delay in ms
 
 // data collection timing
 uint32_t g_u32_lastDataRequest;  // oldDataTime
@@ -318,12 +320,13 @@ void setup() {
   //  g_mm_node.idle(*function_here);  // add function for idling during wait for modbus return message
 
   // start ntp or rtc
-  time_t t_localTime = 0;
+  time_t t_localTime(0);
   delay(1500);  // 1100
   setSyncProvider(getRtcTime);
 
   if (g_b_useNtp) {
     t_localTime = getNtpTime();
+    g_u32_rtcNtpLastReset = millis();
   }
 
   if (t_localTime == 0) {  //  could not get ntp time, or ntp was disabled
@@ -401,6 +404,22 @@ void loop() {
 #else
     handle_data();
 #endif
+  }
+  if (g_b_useNtp && ((millis() - g_u32_rtcNtpLastReset) > gk_u32_rtcNtpResetDelay)) {
+    // if enough time has elapsed and we want to use ntp
+    time_t t_localTime(0);
+
+    t_localTime = getNtpTime();
+
+    if (t_localTime != 0) {  // set clock to time gotten from ntp
+      Teensy3Clock.set(t_localTime);  // just need to set Teensy3 time, class defined time updates from here
+      //setTime(t_localTime);  // this should not be strictly necessary, though update will be delayed
+      g_b_rtcGood = true;
+
+      digitalWrite(gk_s16_rtcFailLed, LOW);
+    }
+
+    g_u32_rtcNtpLastReset = millis();  // reset timer
   }
 }  // end loop
 
