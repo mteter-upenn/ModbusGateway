@@ -17,6 +17,7 @@
 #define LAYOUT_US_ENGLISH
 #define ARDUINO 165
 #define ARDUINO_ARCH_AVR
+#define SERIAL3_SIZE_256
 #define __cplusplus
 #define __AVR__
 #define __inline__
