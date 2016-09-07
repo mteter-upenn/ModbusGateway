@@ -166,3 +166,22 @@ size_t EthernetServer52::write(const uint8_t *buffer, size_t size)
   
   return n;
 }
+
+#if DEBUG_PRINT == 1
+void EthernetServer52::printAll() {
+	for (int sock = 0; sock < EthernetClass52::_u8MaxUsedSocks; sock++) {
+		EthernetClient52 client(sock);
+		
+		Serial.print("socket "); Serial.print(sock, DEC); Serial.print(":  ");
+		Serial.print("port mask: "); Serial.print(EthernetClass52::_server_port_mask[sock], DEC);
+		Serial.print(", port: "); Serial.print(EthernetClass52::_server_port[sock], DEC);
+		Serial.print(", cl port: "); Serial.print(EthernetClass52::_client_port[sock], DEC);
+		Serial.print(", cl stat: 0x"); Serial.print(client.status(), HEX);
+		
+		if (client.status() == SnSR::ESTABLISHED || client.status() == SnSR::CLOSE_WAIT) {
+			Serial.print(", avail: "); Serial.print(client.available(), DEC);
+		}
+		Serial.println();
+	}
+}
+#endif

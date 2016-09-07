@@ -2,6 +2,8 @@
 #define ethernetserver52_h
 
 #define ACH_INSERTION
+#define DEBUG_PRINT 0
+
 
 #include "Server.h"
 
@@ -20,6 +22,10 @@ public:
 	virtual void begin(int16_t sock_f); // specify desired socket
   virtual size_t write(uint8_t);
   virtual size_t write(const uint8_t *buf, size_t size);
+	
+#if DEBUG_PRINT == 1
+	void printAll();
+#endif
   using Print::write;
 };
 

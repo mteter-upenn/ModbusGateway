@@ -9,8 +9,14 @@ void handle_http(bool b_idleModbus) {
   if (ec_client) {  // got client?
 #if DEBUG_HTTP_TCP_TIMEOUT == 1
     uint32_t u32Http_TCP_to_old;                      // time keeper for tcp timeout
+    uint32_t u32Http_print_to;
+    uint16_t u16_prntCntr(0);
     const uint32_t k_u32_httpTcpTimeout(3000);        // HTTP_TCP_TIMEOUT timeout for device to hold on to tcp connection after http request
     u32Http_TCP_to_old = millis();
+    u32Http_print_to = u32Http_TCP_to_old;
+
+    Serial.print("round "); Serial.print(u16_prntCntr++, DEC); Serial.println(":");
+    g_es_mbServ.printAll();
 #endif
 
 #if DISP_TIMING_DEBUG == 1
@@ -18,13 +24,20 @@ void handle_http(bool b_idleModbus) {
 #endif
     
 
-
     //while (ec_client.connected() && ((millis() - u32Http_TCP_to_old) < k_u32_httpTcpTimeout)) {
     while (ec_client.connected()) {
       uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
       char *cp_meterInd;                                     // index of 'METER' in GET request
       char ca_firstLine[gk_u16_requestLineSize] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
       char ca_remHeader[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
+
+#if DEBUG_HTTP_TCP_TIMEOUT == 1
+      if ((millis() - u32Http_print_to) > 500) {  // every 500 ms
+        Serial.print("round "); Serial.print(u16_prntCntr++, DEC); Serial.println(":");
+        g_es_mbServ.printAll();
+        u32Http_print_to = millis();
+      }
+#endif
 
       if (ec_client.available()) {   // client data available to read
         char *cp_dumPtr;

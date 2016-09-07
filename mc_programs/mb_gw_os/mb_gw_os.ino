@@ -15,7 +15,7 @@
 #include <MeterLibrary.h>
 #include <SD.h>
 
-#define DEBUG_HTTP_TCP_TIMEOUT 0  
+#define DEBUG_HTTP_TCP_TIMEOUT 0                       // debug flag for keep-alive attempt  
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
 #define SHOW_FREE_MEM 0                                // 1 for print free memory
 #define NEW_GROUP_STYLE 1

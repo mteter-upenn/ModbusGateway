@@ -92,8 +92,11 @@ void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType
         strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
       }
       else {
-        //strcat_P(streamBuf, PSTR("Connection: Keep-alive\nKeep-Alive: timeout=3, max=10\nContent-Length: "));
+#if DEBUG_HTTP_TCP_TIMEOUT == 1
+        strcat_P(ca_streamBuf, PSTR("Connection: Keep-alive\nKeep-Alive: timeout=3, max=10\nContent-Length: "));
+#else
         strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
+#endif
       }
       hdrLength = strlen(ca_streamBuf);
       sprintf(ca_streamBuf + hdrLength, "%lu\n\n", u32_fileSize);
