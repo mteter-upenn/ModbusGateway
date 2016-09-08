@@ -34,11 +34,9 @@ Arduino library for communicating with Modbus slaves over RS232/485 (via RTU pro
 
 /* _____GLOBAL VARIABLES_____________________________________________________ */
 #if defined(ARDUINO_ARCH_AVR)
-#if defined(__arm__) && defined(CORE_TEENSY)  // if teensy3.0 or greater
+	HardwareSerial* MBSerial = &Serial; ///< Pointer to Serial class object
+#elif defined(CORE_TEENSY)  // if teensy3.0 or greater
 	HardwareSerial* MBSerial = &Serial1; ///< Pointer to Serial class object
-#else
-  HardwareSerial* MBSerial = &Serial; ///< Pointer to Serial class object
-#endif
 #elif defined(ARDUINO_ARCH_SAM)
   UARTClass* MBSerial = &Serial; ///< Pointer to Serial class object
 #else
