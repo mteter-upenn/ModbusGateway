@@ -6,6 +6,7 @@
 
 
 #include "Server.h"
+// #include "socket.h"
 
 class EthernetClient52;
 
@@ -16,7 +17,7 @@ private:
   void accept();
 public:
 	uint8_t _clientIP[4];
-  EthernetServer52(uint16_t);
+  EthernetServer52(uint16_t port);
   EthernetClient52 available();
   virtual void begin();
 	virtual void begin(int16_t sock_f); // specify desired socket

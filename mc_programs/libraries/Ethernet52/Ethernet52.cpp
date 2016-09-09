@@ -158,20 +158,20 @@ void EthernetClass52::begin(uint8_t *mac_address, IPAddress local_ip, IPAddress 
 
 void EthernetClass52::begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
 		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts) {
-	uint8_t i;
+			
 	uint16_t memSizeTotal = 0;
 	
 	_u8MaxUsedSocks = ((u8MaxUsedSocks > 8) || (u8MaxUsedSocks < 1)) ? 4 : u8MaxUsedSocks;
 	
-	for (i = 0; i < _u8MaxUsedSocks; i++) {
-		memSizeTotal += u16pSocketSizes[i];
+	for (uint8_t ii = 0; ii < _u8MaxUsedSocks; ++ii) {
+		memSizeTotal += u16pSocketSizes[ii];
 		
 		if (memSizeTotal > 16) {
 			// serious problem
-			_u8MaxUsedSocks = i;
+			_u8MaxUsedSocks = ii;
 			
 			if (i == 0) {
-				u16pSocketSizes[i] = 16;
+				u16pSocketSizes[ii] = 16;
 				_u8MaxUsedSocks = 1;
 			}
 			
@@ -187,18 +187,13 @@ void EthernetClass52::begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_serv
   W5200.setMACAddress(mac);
 	W5200.setRetransmissionCount(3);
 	
-// #if ARDUINO > 106 || TEENSYDUINO > 121
+
 	_ethAddress.dword = (uint32_t)local_ip;
   W5200.setIPAddress(_ethAddress.bytes);
 	_ethAddress.dword = (uint32_t)gateway;
   W5200.setGatewayIp(_ethAddress.bytes);
 	_ethAddress.dword = (uint32_t)subnet;
   W5200.setSubnetMask(_ethAddress.bytes);
-// #else
-  // W5200.setIPAddress(local_ip._address);
-  // W5200.setGatewayIp(gateway._address);
-  // W5200.setSubnetMask(subnet._address);
-// #endif
   SPI.endTransaction();
   // _dnsServerAddress = dns_server;
 }

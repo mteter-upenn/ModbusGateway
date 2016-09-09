@@ -23,8 +23,8 @@ private:
 	
   // IPAddress _dnsServerAddress;
   // DhcpClass* _dhcp;
-public:
-  static uint8_t _state[MAX_SOCK_NUM];
+	
+	static uint8_t _state[MAX_SOCK_NUM];
   static uint16_t _server_port[MAX_SOCK_NUM];
   static uint16_t _server_port_mask[MAX_SOCK_NUM];
 #ifdef ACH_INSERTION
@@ -34,7 +34,8 @@ public:
 #endif
 
   static uint8_t _u8MaxUsedSocks;
-
+	
+public:
   // Initialise the Ethernet shield to use the provided MAC address and gain the rest of the
   // configuration through DHCP.
   // Returns 0 if the DHCP configuration failed, and 1 if it succeeded
@@ -57,8 +58,10 @@ public:
   // IPAddress dnsServerIP();
 
 	// these should not be needed with no private variables or functions
-  // friend class EthernetClient52;
-  // friend class EthernetServer52;
+  friend class EthernetClient52;
+  friend class EthernetServer52;
+	friend class EthernetUDP52;
+	friend class socket52;
 };
 
 extern EthernetClass52 Ethernet52;

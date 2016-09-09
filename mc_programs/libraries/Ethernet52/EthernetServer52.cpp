@@ -17,14 +17,16 @@ void EthernetServer52::begin() {
 	for (int16_t sock = 0; sock < EthernetClass52::_u8MaxUsedSocks; sock++) {
 		if (EthernetClass52::_server_port_mask[sock] == _port || !EthernetClass52::_server_port_mask[sock]){ 
 			// if mask matches port of this server or mask is 0 (catchall)
-			EthernetClient52 client(sock);  // why make client?  only thing needed is status which could be run
+			// EthernetClient52 client(sock);  // why make client?  only thing needed is status which could be run
 																		//   as socketStatus(sock).  Does this create unnecessary overhead
 																		//   with the creation and destruction of many clients?
-			if (client.status() == SnSR::CLOSED) {
+			if (socketStatus(sock) == SnSR::CLOSED) {
 				// Serial.print(F("socket: "));
 				// Serial.println(sock, DEC);
-				socket(sock, SnMR::TCP, _port, 0);  // initializes this socket on the desired port
-				listen(sock);
+				// socket(sock, SnMR::TCP, _port, 0);  // initializes this socket on the desired port
+				// listen(sock);
+				socketBegin(SnMR::TCP, _port);
+				socketListen(sock);
 				EthernetClass52::_server_port[sock] = _port;
 				break;
 			}

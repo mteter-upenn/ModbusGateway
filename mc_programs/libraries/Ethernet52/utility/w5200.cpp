@@ -101,8 +101,10 @@ uint8_t W5200Class::init(uint8_t u8MaxUsedSocks, uint16_t * u16pSocketSizes) {
 			
 			SMASK[i] = SSIZE[i] - 1;
 			
-			writeSnRX_SIZE(i, SSIZE[i] >> 10);
-			writeSnTX_SIZE(i, SSIZE[i] >> 10);
+			// writeSnRX_SIZE(i, SSIZE[i] >> 10);
+			// writeSnTX_SIZE(i, SSIZE[i] >> 10);
+			writeSnRX_SIZE(i, u16pSocketSizes[i]);
+			writeSnTX_SIZE(i, u16pSocketSizes[i]);
 		}
 		for (; i<8; i++) {
 			writeSnRX_SIZE(i, 0);
@@ -144,20 +146,20 @@ void W5200Class::reset(void)
   }
 }
 
-uint8_t W5200Class::isW5100(void)
-{
-  chip = 51;
-  //Serial.println("W5100 detect W5100 chip");
-  reset();
-  writeMR(0x10);
-  if (readMR() != 0x10) return 0;
-  writeMR(0x12);
-  if (readMR() != 0x12) return 0;
-  writeMR(0x00);
-  if (readMR() != 0x00) return 0;
-  //Serial.println("chip is W5100");
-  return 1;
-}
+// uint8_t W5200Class::isW5100(void)
+// {
+  // chip = 51;
+  // //Serial.println("W5100 detect W5100 chip");
+  // reset();
+  // writeMR(0x10);
+  // if (readMR() != 0x10) return 0;
+  // writeMR(0x12);
+  // if (readMR() != 0x12) return 0;
+  // writeMR(0x00);
+  // if (readMR() != 0x00) return 0;
+  // //Serial.println("chip is W5100");
+  // return 1;
+// }
 
 uint8_t W5200Class::isW5200(void)
 {
@@ -169,7 +171,7 @@ uint8_t W5200Class::isW5200(void)
   digitalWrite(W5200_RESET_PIN, LOW);
   delay(1);
   digitalWrite(W5200_RESET_PIN, HIGH);
-  delay(150);
+  delay(450);  // used to be 150, not sure why changed
 #endif
   reset();
   writeMR(0x08);
@@ -194,111 +196,111 @@ uint8_t W5200Class::isW5200(void)
 
 
 
-uint16_t W5200Class::getTXFreeSize(SOCKET s)
-{
-  uint16_t val=0, val1=0;
-  do {
-    val1 = readSnTX_FSR(s);
-    if (val1 != 0)
-      val = readSnTX_FSR(s);
-  } 
-  while (val != val1);
-  return val;
-}
+// uint16_t W5200Class::getTXFreeSize(SOCKET s)
+// {
+  // uint16_t val=0, val1=0;
+  // do {
+    // val1 = readSnTX_FSR(s);
+    // if (val1 != 0)
+      // val = readSnTX_FSR(s);
+  // } 
+  // while (val != val1);
+  // return val;
+// }
 
-uint16_t W5200Class::getRXReceivedSize(SOCKET s)
-{
-  uint16_t val=0,val1=0;
-  do {
-    val1 = readSnRX_RSR(s);
-    if (val1 != 0)
-      val = readSnRX_RSR(s);
-  } 
-  while (val != val1);
-  return val;
-}
+// uint16_t W5200Class::getRXReceivedSize(SOCKET s)
+// {
+  // uint16_t val=0,val1=0;
+  // do {
+    // val1 = readSnRX_RSR(s);
+    // if (val1 != 0)
+      // val = readSnRX_RSR(s);
+  // } 
+  // while (val != val1);
+  // return val;
+// }
 
 
-void W5200Class::send_data_processing(SOCKET s, const uint8_t *data, uint16_t len)
-{
-  // This is same as having no offset in a call to send_data_processing_offset
-  send_data_processing_offset(s, 0, data, len);
-}
+// void W5200Class::send_data_processing(SOCKET s, const uint8_t *data, uint16_t len)
+// {
+  // // This is same as having no offset in a call to send_data_processing_offset
+  // send_data_processing_offset(s, 0, data, len);
+// }
 
-void W5200Class::send_data_processing_offset(SOCKET s, uint16_t data_offset, const uint8_t *data, uint16_t len)
-{
-  uint16_t ptr = readSnTX_WR(s);
-  ptr += data_offset;
-  uint16_t offset = ptr & SMASK[s];
-  uint16_t dstAddr = offset + SBASE[s];
+// void W5200Class::send_data_processing_offset(SOCKET s, uint16_t data_offset, const uint8_t *data, uint16_t len)
+// {
+  // uint16_t ptr = readSnTX_WR(s);
+  // ptr += data_offset;
+  // uint16_t offset = ptr & SMASK[s];
+  // uint16_t dstAddr = offset + SBASE[s];
 
   
-  // Serial.print(F("socket: "));
-  // Serial.println(s);
+  // // Serial.print(F("socket: "));
+  // // Serial.println(s);
   
-  // Serial.print(F("ptr: "));
-  // Serial.print(ptr, DEC);
-  // Serial.print(", ");
-  // Serial.println(ptr, HEX);
+  // // Serial.print(F("ptr: "));
+  // // Serial.print(ptr, DEC);
+  // // Serial.print(", ");
+  // // Serial.println(ptr, HEX);
   
-  // Serial.print(F("offset: "));
-  // Serial.print(offset, DEC);
-  // Serial.print(", ");
-  // Serial.println(offset, HEX);
+  // // Serial.print(F("offset: "));
+  // // Serial.print(offset, DEC);
+  // // Serial.print(", ");
+  // // Serial.println(offset, HEX);
   
-  // Serial.print(F("dstAddr: "));
-  // Serial.print(dstAddr, DEC);
-  // Serial.print(", ");
-  // Serial.println(dstAddr, HEX);
+  // // Serial.print(F("dstAddr: "));
+  // // Serial.print(dstAddr, DEC);
+  // // Serial.print(", ");
+  // // Serial.println(dstAddr, HEX);
   
   
-  if (offset + len > SSIZE[s]) 
-  {
-    // Wrap around circular buffer
-    uint16_t size = SSIZE[s] - offset;
-    write(dstAddr, data, size);
-    write(SBASE[s], data + size, len - size);
-  } 
-  else {
-    write(dstAddr, data, len);
-  }
+  // if (offset + len > SSIZE[s]) 
+  // {
+    // // Wrap around circular buffer
+    // uint16_t size = SSIZE[s] - offset;
+    // write(dstAddr, data, size);
+    // write(SBASE[s], data + size, len - size);
+  // } 
+  // else {
+    // write(dstAddr, data, len);
+  // }
 
-  ptr += len;
-  writeSnTX_WR(s, ptr);
-}
+  // ptr += len;
+  // writeSnTX_WR(s, ptr);
+// }
 
 
-void W5200Class::recv_data_processing(SOCKET s, uint8_t *data, uint16_t len, uint8_t peek)
-{
-  uint16_t ptr;
-  ptr = readSnRX_RD(s);
-  read_data(s, ptr, data, len);
-  if (!peek)
-  {
-    ptr += len;
-    writeSnRX_RD(s, ptr);
-  }
-}
+// void W5200Class::recv_data_processing(SOCKET s, uint8_t *data, uint16_t len, uint8_t peek)
+// {
+  // uint16_t ptr;
+  // ptr = readSnRX_RD(s);
+  // read_data(s, ptr, data, len);
+  // if (!peek)
+  // {
+    // ptr += len;
+    // writeSnRX_RD(s, ptr);
+  // }
+// }
 
-void W5200Class::read_data(SOCKET s, uint16_t src, volatile uint8_t *dst, uint16_t len)
-{
-  uint16_t size;
-  uint16_t src_mask;
-  uint16_t src_ptr;
+// void W5200Class::read_data(SOCKET s, uint16_t src, volatile uint8_t *dst, uint16_t len)
+// {
+  // uint16_t size;
+  // uint16_t src_mask;
+  // uint16_t src_ptr;
 
-  src_mask = (uint16_t)src & SMASK[s];
-  src_ptr = RBASE[s] + src_mask;
+  // src_mask = (uint16_t)src & SMASK[s];
+  // src_ptr = RBASE[s] + src_mask;
 
-  if( (src_mask + len) > SSIZE[s] ) 
-  {
-    size = SSIZE[s] - src_mask;
-    read(src_ptr, (uint8_t *)dst, size);
-    dst += size;
-    read(RBASE[s], (uint8_t *) dst, len - size);
-  } 
-  else
-    read(src_ptr, (uint8_t *) dst, len);
-}
+  // if( (src_mask + len) > SSIZE[s] ) 
+  // {
+    // size = SSIZE[s] - src_mask;
+    // read(src_ptr, (uint8_t *)dst, size);
+    // dst += size;
+    // read(RBASE[s], (uint8_t *) dst, len - size);
+  // } 
+  // else
+    // read(src_ptr, (uint8_t *) dst, len);
+// }
 
 
 #ifdef USE_SPIFIFO
@@ -476,4 +478,3 @@ void W5200Class::execCmdSn(SOCKET s, SockCMD _cmd) {
   while (readSnCR(s))
     ;
 }
-
