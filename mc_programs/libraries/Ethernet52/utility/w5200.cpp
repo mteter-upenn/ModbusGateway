@@ -43,8 +43,7 @@ uint8_t  W5200Class::chip;
 W5200Class W5100;
 
 
-uint8_t W5200Class::init(uint8_t u8MaxUsedSocks, uint16_t * u16pSocketSizes)
-{
+uint8_t W5200Class::init(uint8_t u8MaxUsedSocks, uint16_t * u16pSocketSizes) {
   uint16_t TXBUF_BASE, RXBUF_BASE;
   uint8_t i;
 
@@ -61,17 +60,18 @@ uint8_t W5200Class::init(uint8_t u8MaxUsedSocks, uint16_t * u16pSocketSizes)
 #endif
   
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-  if (isW5100()) {
-    CH_BASE = 0x0400;
-    // SSIZE = 2048;
-    // SMASK = 0x07FF;
-    TXBUF_BASE = 0x4000;
-    RXBUF_BASE = 0x6000;
-    writeTMSR(0x55);
-    writeRMSR(0x55);
+  // if (isW5100()) {
+    // CH_BASE = 0x0400;
+    // // SSIZE = 2048;
+    // // SMASK = 0x07FF;
+    // TXBUF_BASE = 0x4000;
+    // RXBUF_BASE = 0x6000;
+    // writeTMSR(0x55);
+    // writeRMSR(0x55);
 
-  } 
-  else if (isW5200()) {
+  // } 
+	// else if (isW5200()) {
+  if (isW5200()) {
 		
     CH_BASE = 0x4000;
     // SSIZE = 4096;  // can only be 0, 1k, 2k, 4k, 8k, 16k  total is 32k for all 8 sockets both tx and rx

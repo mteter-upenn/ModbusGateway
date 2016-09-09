@@ -16,7 +16,7 @@
 class EthernetClass52 {
 private:
 	union {  // ugly way of avoiding a friend class designation in IPAddress.h, trying to keep this library possible 
-					 //   without modifications to generic libraries
+					 //   without modifications to generic libraries (could always make IPAddress52 lib)
 		uint8_t bytes[4]; // IPv4 address
 		uint32_t dword;
 	} _ethAddress;

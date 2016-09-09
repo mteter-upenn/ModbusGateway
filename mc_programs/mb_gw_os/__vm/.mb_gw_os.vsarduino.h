@@ -18,6 +18,7 @@
 #define F_CPU 72000000
 #define USB_SERIAL
 #define LAYOUT_US_ENGLISH
+#define SERIAL3_SIZE_256
 #define __cplusplus 201103L
 #define __arm__
 #define __ARM__
