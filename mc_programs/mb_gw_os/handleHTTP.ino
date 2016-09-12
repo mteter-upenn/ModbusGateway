@@ -44,7 +44,12 @@ void handle_http(bool b_idleModbus) {
         uint16_t u16_lenRead;
         uint32_t u32_msgRecvTime;
 
+        g_u32_httpReqTime = millis();
+        Serial.print("got msg at "); Serial.println(g_u32_httpReqTime);
+
         u16_lenRead = ec_client.read((uint8_t*)ca_firstLine, gk_u16_requestLineSize - 1);
+
+        Serial.print("read first line: "); Serial.println(millis() - g_u32_httpReqTime);
 
         u32_msgRecvTime = millis();
         while (u16_lenRead < gk_u16_requestLineSize - 1) {  // make sure enough is read
@@ -58,6 +63,8 @@ void handle_http(bool b_idleModbus) {
           }
         }
 
+        Serial.print("finish first line: "); Serial.println(millis() - g_u32_httpReqTime);
+
 #if DISP_TIMING_DEBUG == 1
         lineTime = millis();
 #endif
@@ -69,7 +76,11 @@ void handle_http(bool b_idleModbus) {
         //Serial.println(HTTP_req + gk_u16_requestLineSize);
 
         if (strncmp(ca_firstLine, "GET", 3) == 0) {
+          Serial.print("preflush: "); Serial.println(millis() - g_u32_httpReqTime);
+
           flushEthRx(ec_client, (uint8_t*)ca_remHeader, gk_u16_requestBuffSize - 1);
+
+          Serial.print("postflush: "); Serial.println(millis() - g_u32_httpReqTime);
 
 #if DISP_TIMING_DEBUG == 1
           doneHttp = millis();

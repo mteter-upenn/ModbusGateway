@@ -20,6 +20,8 @@
 #define SHOW_FREE_MEM 0                                // 1 for print free memory
 #define NEW_GROUP_STYLE 1
 
+uint32_t g_u32_httpReqTime;
+
 const uint16_t gk_u16_requestLineSize(40);                       // g_REQ_BUF_SZ buffer size to capture beginning of http request
 const uint16_t gk_u16_requestBuffSize(1500);                     // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
                                                        //   message, the rest of the array may loop around if the http request is large enough

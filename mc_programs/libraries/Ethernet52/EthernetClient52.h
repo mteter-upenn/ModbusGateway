@@ -7,12 +7,13 @@
 #include "Print.h"
 #include "Client.h"
 #include "IPAddress.h"
+#include "socket52.h"
 
 class EthernetClient52 : public Client {
 
 public:
-  EthernetClient52();
-  EthernetClient52(uint8_t sock);
+  EthernetClient52(): _sock(MAX_SOCK_NUM) {}
+  EthernetClient52(uint8_t sock): _sock(sock) {}
 
   uint8_t status();
   virtual int connect(IPAddress ip, uint16_t port);
@@ -27,8 +28,13 @@ public:
   virtual void stop();
 	virtual void forceClose();
   virtual uint8_t connected();
-  virtual operator bool();
-
+  virtual operator bool() { return _sock < MAX_SOCK_NUM; }
+	virtual bool operator==(const bool value) { return bool() == value; }
+  virtual bool operator!=(const bool value) { return bool() != value; }
+  virtual bool operator==(const EthernetClient52&);
+  virtual bool operator!=(const EthernetClient52& rhs) { return !this->operator==(rhs); };
+  uint8_t getSocketNumber() const { return _sock; }
+	
   friend class EthernetServer52;
   
   using Print::write;
@@ -39,10 +45,10 @@ private:
   
 #ifdef ACH_INSERTION
   // ACH - added
-  uint16_t _dstport; // ACH
+  // uint16_t _dstport; // ACH
   
   // ACH - added
-  void getRemoteIP(uint8_t remoteIP[]); // ACH
+  void getRemoteIP(uint8_t remoteIP[4]); // ACH
   uint16_t getRemotePort(); // ACH
 #endif
 };

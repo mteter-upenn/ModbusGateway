@@ -155,7 +155,7 @@ public:
 
   static void execCmdSn(SOCKET s, SockCMD _cmd);
   
-  // static uint16_t getTXFreeSize(SOCKET s);  // appears to be gone from 5100
+  // static uint16_t getTXFreeSize(SOCKET s);  // appears to be gone from 5100, never used it anyways
   // static uint16_t getRXReceivedSize(SOCKET s);
   
 

@@ -58,6 +58,9 @@ void sendBadSD(EthernetClient52 &ec_client){
 void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType en_fileType) {
   File streamFile = SD.open(ccp_fileName);
 
+  Serial.print("Request for "); Serial.print(ccp_fileName); Serial.print(" took ");
+  Serial.println((millis() - g_u32_httpReqTime));
+
   if (streamFile) {
     uint32_t u32_fileSize;                                   // size of file being sent over tcp
     char ca_streamBuf[gk_u16_respBuffSize];                       // buffer for moving data between sd card and ethernet

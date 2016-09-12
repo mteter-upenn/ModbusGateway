@@ -1,7 +1,8 @@
 #include "w5200.h"
 #include "socket52.h"
 #include "IPAddress.h"  // might be able to get rid of this
-#include "EthernetServer.h"  // pretty sure this can go
+#include "Ethernet52.h"
+#include "EthernetServer52.h"  // pretty sure this can go
 
 #include "Arduino.h"
 
@@ -45,12 +46,13 @@ void socketPortRand(uint16_t n) {
 uint8_t socketBegin(uint8_t protocol, uint16_t port) {
 	uint8_t s, status[MAX_SOCK_NUM];
 	
-	EthernetClass52::_server_port[sock] = 0;
+	// EthernetClass52::_server_port[sock] = 0;  // don't know which socket we'll pick, and once we 
+	//   do, we'll set it to an actual port number anyways
 	
 	//Serial.printf("W5000socket begin, protocol=%d, port=%d\n", protocol, port);
 	SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
 	// look at all the hardware sockets, use any that are closed (unused)
-	for (s=0; s < MAX_SOCK_NUM; s++) {
+	for (s=0; s < EthernetClass52::_u8MaxUsedSocks; s++) {
 		status[s] = W5200.readSnSR(s);
 		if (status[s] == SnSR::CLOSED) goto makesocket;
 		// try going to begin with sock parameter after check for closed, otherwise wait to try and 
@@ -61,7 +63,7 @@ uint8_t socketBegin(uint8_t protocol, uint16_t port) {
 	}
 	//Serial.printf("W5000socket step2\n");
 	// as a last resort, forcibly close any already closing
-	for (s=0; s < MAX_SOCK_NUM; s++) {
+	for (s=0; s < EthernetClass52::_u8MaxUsedSocks; s++) {
 		uint8_t stat = status[s];
 		if (stat == SnSR::LAST_ACK) goto closemakesocket;
 		if (stat == SnSR::TIME_WAIT) goto closemakesocket;
@@ -80,7 +82,7 @@ uint8_t socketBegin(uint8_t protocol, uint16_t port) {
 #if 0
 	Serial.printf("W5000socket step3\n");
 	// next, use any that are effectively closed
-	for (s=0; s < MAX_SOCK_NUM; s++) {
+	for (s=0; s < EthernetClass52::_u8MaxUsedSocks; s++) {
 		uint8_t stat = status[s];
 		// TODO: this also needs to check if no more data
 		if (stat == SnSR::CLOSE_WAIT) goto closemakesocket;
@@ -102,12 +104,12 @@ makesocket:
 	W5200.writeSnIR(s, 0xFF);
 	if (port > 0) {
 		W5200.writeSnPORT(s, port);
-		EthernetClass52::_server_port[sock] = port;
+		EthernetClass52::_server_port[s] = port;
 	} else {
 		// if don't set the source port, set local_port number.
 		if (++local_port < 49152) local_port = 49152;
 		W5200.writeSnPORT(s, local_port);
-		EthernetClass52::_server_port[sock] = local_port;
+		EthernetClass52::_server_port[s] = local_port;
 	}
 	W5200.execCmdSn(s, Sock_OPEN);
 	state[s].RX_RSR = 0;
@@ -241,6 +243,28 @@ uint8_t socketListen(uint8_t s)
 }
 
 
+// Get the remote port of the socket
+// 
+uint16_t socketRemotePort(uint8_t s) {
+	uint16_t u16_sockPort;
+	
+	SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
+	u16_sockPort = W5200.readSnDPORT(s);
+	SPI.endTransaction();
+	return u16_sockPort;
+}
+
+
+// get the remote ip of the socket
+//
+void socketRemoteIP(uint8_t s, uint8_t remoteIP[4]) {
+	SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
+	W5200.readSnDIPR(s, remoteIP);
+	SPI.endTransaction();
+	return;
+}
+
+
 /*****************************************/
 /*    Socket Data Receive Functions      */
 /*****************************************/
@@ -255,6 +279,7 @@ static uint16_t getSnRX_RSR(uint8_t s) {
 		val = W5200.readSnRX_RSR(s);
 		if (val == prev) {
 			state[s].RX_RSR = val;
+			// state[s].RX_RD = W5200.readSnRX_RD(s);  // does this help ??????????????????????????
 			return val;
 		}
 		prev = val;
@@ -310,6 +335,7 @@ int socketRecv(uint8_t s, uint8_t *buf, int16_t len)
 		}
 	} else {
 		if (ret > len) ret = len; // more data available than buffer length
+		
 		uint16_t ptr = state[s].RX_RD;
 		read_data(s, ptr, buf, ret);
 		ptr += len;

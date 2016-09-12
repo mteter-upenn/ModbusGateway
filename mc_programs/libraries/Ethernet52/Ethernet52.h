@@ -61,7 +61,17 @@ public:
   friend class EthernetClient52;
   friend class EthernetServer52;
 	friend class EthernetUDP52;
-	friend class socket52;
+	
+	friend uint8_t socketBegin(uint8_t protocol, uint16_t port);
+	friend uint8_t socketBegin(uint8_t protocol, uint16_t port, uint8_t sock);
+	// friend ;
+	// friend ;
+	// friend ;
+	// friend ;
+	// friend ;
+	// friend ;
+	// friend ;
+	// friend ;
 };
 
 extern EthernetClass52 Ethernet52;

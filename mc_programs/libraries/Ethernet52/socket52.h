@@ -9,20 +9,25 @@ void socketPortRand(uint16_t n);
 uint8_t  socketBegin(uint8_t protocol, uint16_t port);
 uint8_t  socketBegin(uint8_t protocol, uint16_t port, uint8_t sock);
 uint8_t  socketStatus(uint8_t s);
-// Close socket
+// Close socket forcefully
 void     socketClose(uint8_t s);
 // Establish TCP connection (Active connection)
 void     socketConnect(uint8_t s, uint8_t * addr, uint16_t port);
-// disconnect the connection
+// disconnect the connection gracefully
 void     socketDisconnect(uint8_t s);
 // Establish TCP connection (Passive connection)
 uint8_t  socketListen(uint8_t s);
+// get remote port
+uint16_t socketRemotePort(uint8_t s);
+// get remote IP
+void socketRemoteIP(uint8_t s, uint8_t remoteIP[4]);
 // Send data (TCP)
 uint16_t socketSend(uint8_t s, const uint8_t * buf, uint16_t len);
 // Receive data (TCP)
 int      socketRecv(uint8_t s, uint8_t * buf, int16_t len);
 uint16_t socketRecvAvailable(uint8_t s);
 uint8_t  socketPeek(uint8_t s);
+
 
 /*
   @brief This function sets up a UDP datagram, the data for which will be provided by one

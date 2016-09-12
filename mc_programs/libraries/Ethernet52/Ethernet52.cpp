@@ -170,7 +170,7 @@ void EthernetClass52::begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_serv
 			// serious problem
 			_u8MaxUsedSocks = ii;
 			
-			if (i == 0) {
+			if (ii == 0) {
 				u16pSocketSizes[ii] = 16;
 				_u8MaxUsedSocks = 1;
 			}
