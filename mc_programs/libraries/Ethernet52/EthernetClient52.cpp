@@ -49,9 +49,9 @@ int EthernetClient52::connect(IPAddress ip, uint16_t port) {
 	}
 	if (ip == IPAddress(0ul) || ip == IPAddress(0xFFFFFFFFul)) return 0;
 	
-	_sock = socketBegin(SnMR::TCP, 0);
+	_sock = socketBegin(SnMR::TCP, 0);  // sending 0 for port means it will be a global ticker (good)
 	if (_sock >= MAX_SOCK_NUM) return 0;
-	socketConnect(_sock, rawIPAddress(ip), port);
+	socketConnect(_sock, rawIPAddress(ip), port);  // the destination port is important for server peers
 	
 	while (1) {
 		uint8_t stat = socketStatus(_sock);

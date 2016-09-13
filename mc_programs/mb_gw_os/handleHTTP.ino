@@ -44,12 +44,12 @@ void handle_http(bool b_idleModbus) {
         uint16_t u16_lenRead;
         uint32_t u32_msgRecvTime;
 
-        g_u32_httpReqTime = millis();
-        Serial.print("got msg at "); Serial.println(g_u32_httpReqTime);
+        //g_u32_httpReqTime = millis();
+        //Serial.print("got msg at "); Serial.println(g_u32_httpReqTime);
 
         u16_lenRead = ec_client.read((uint8_t*)ca_firstLine, gk_u16_requestLineSize - 1);
 
-        Serial.print("read first line: "); Serial.println(millis() - g_u32_httpReqTime);
+        //Serial.print("read first line: "); Serial.println(millis() - g_u32_httpReqTime);
 
         u32_msgRecvTime = millis();
         while (u16_lenRead < gk_u16_requestLineSize - 1) {  // make sure enough is read
@@ -59,11 +59,12 @@ void handle_http(bool b_idleModbus) {
 
           if ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout) {  // stop trying to read message after 50 ms - assume it's never coming
             ec_client.stop();
+            Ethernet52.cleanSockets(80);
             return;
           }
         }
 
-        Serial.print("finish first line: "); Serial.println(millis() - g_u32_httpReqTime);
+        //Serial.print("finish first line: "); Serial.println(millis() - g_u32_httpReqTime);
 
 #if DISP_TIMING_DEBUG == 1
         lineTime = millis();
@@ -76,11 +77,13 @@ void handle_http(bool b_idleModbus) {
         //Serial.println(HTTP_req + gk_u16_requestLineSize);
 
         if (strncmp(ca_firstLine, "GET", 3) == 0) {
-          Serial.print("preflush: "); Serial.println(millis() - g_u32_httpReqTime);
+          //Serial.print("preflush: "); Serial.println(millis() - g_u32_httpReqTime);
+          // clear rx buffer before responding, responses might generate more requests, and it would be
+          //   bad to flush the new request with the remains of the old one.
+          // what if we didn't flush at all and closed the ?  would there be problems
+          //flushEthRx(ec_client, (uint8_t*)ca_remHeader, gk_u16_requestBuffSize - 1);
 
-          flushEthRx(ec_client, (uint8_t*)ca_remHeader, gk_u16_requestBuffSize - 1);
-
-          Serial.print("postflush: "); Serial.println(millis() - g_u32_httpReqTime);
+          //Serial.print("postflush: "); Serial.println(millis() - g_u32_httpReqTime);
 
 #if DISP_TIMING_DEBUG == 1
           doneHttp = millis();
@@ -325,7 +328,13 @@ void handle_http(bool b_idleModbus) {
         //handle_modbus(false);
       }
     } // end while (ec_client.connected() && < timeout)
+
+
     delay(1);      // give the web browser time to receive the data
     ec_client.stop(); // close the connection
+
+    Ethernet52.cleanSockets(80);
+
+    //g_es_webServ.printAll();
   } // end if (ec_client)
 } // end handle_http

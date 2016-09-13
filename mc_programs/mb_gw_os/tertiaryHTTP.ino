@@ -456,7 +456,7 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr) {
       }
     }
   }  // end while
-  flushEthRx(ec_client, (uint8_t*)cp_httpHdr, gk_u16_requestBuffSize - 1);  // this shouldn't need to be used, here just in case
+  //flushEthRx(ec_client, (uint8_t*)cp_httpHdr, gk_u16_requestBuffSize - 1);  // this shouldn't need to be used, here just in case
 
   digitalWrite(gk_s16_epWriteLed, LOW);
   setConstants();

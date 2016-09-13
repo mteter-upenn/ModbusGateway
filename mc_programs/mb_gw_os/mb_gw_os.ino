@@ -20,7 +20,7 @@
 #define SHOW_FREE_MEM 0                                // 1 for print free memory
 #define NEW_GROUP_STYLE 1
 
-uint32_t g_u32_httpReqTime;
+//uint32_t g_u32_httpReqTime;
 
 const uint16_t gk_u16_requestLineSize(40);                       // g_REQ_BUF_SZ buffer size to capture beginning of http request
 const uint16_t gk_u16_requestBuffSize(1500);                     // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
@@ -116,12 +116,12 @@ uint8_t g_u8_maxRecordSlaves = 5;  // maxSlvsRcd
 
 // classes
 EthernetServer52 g_es_webServ(80);  //serv_web                           // start server on http
-EthernetServer52 g_es_webServ2(80);                           // start server on http
+//EthernetServer52 g_es_webServ2(80);                           // start server on http
 
 EthernetServer52 g_es_mbServ(502);  // serv_mb                           // start server on modbus port
-EthernetServer52 g_es_mbServ2(502);                           // start server on modbus port
-EthernetServer52 g_es_mbServ3(502);                           // start server on modbus port
-EthernetServer52 g_es_mbServ4(502);                           // start server on modbus port
+//EthernetServer52 g_es_mbServ2(502);                           // start server on modbus port
+//EthernetServer52 g_es_mbServ3(502);                           // start server on modbus port
+//EthernetServer52 g_es_mbServ4(502);                           // start server on modbus port
 
 ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
 
@@ -310,12 +310,18 @@ void setup() {
   Ethernet52.begin(g_u8a_mac, g_ip_ip, g_ip_gateway, g_ip_gateway, g_ip_subnet, 8, u16a_socketSizes, u16a_socketPorts);
 
   g_es_webServ.begin();
-  g_es_webServ2.begin();
+  //g_es_webServ2.begin();
 
   g_es_mbServ.begin();
-  g_es_mbServ2.begin();
-  g_es_mbServ3.begin();
-  g_es_mbServ4.begin();
+  //g_es_mbServ2.begin();
+  //g_es_mbServ3.begin();
+  //g_es_mbServ4.begin();
+
+  // test
+  g_es_webServ.begin();
+  g_es_mbServ.begin();
+  g_es_mbServ.begin();
+  g_es_mbServ.begin();
 
   g_mm_node.begin(g_u32_baudrate);
   g_mm_node.setTimeout(g_u16_timeout);

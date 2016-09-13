@@ -1,8 +1,11 @@
+
+#if DEBUG_PRINT == 1
 #include "w5200.h"
+#endif
 #include "socket52.h"
-extern "C" {
-#include "string.h"
-}
+// extern "C" {
+// #include "string.h"
+// }
 
 #include "Ethernet52.h"
 #include "EthernetClient52.h"
@@ -27,6 +30,9 @@ void EthernetServer52::begin() {
 				// listen(sock);
 				socketBegin(SnMR::TCP, _port, sock);
 				socketListen(sock);
+				// Serial.print("created socket "); Serial.print(sock, DEC); Serial.print(" on port ");
+				// Serial.print(_port, DEC); Serial.print(" at time "); Serial.println(millis());
+				
 				// EthernetClass52::_server_port[sock] = _port;  // _server_port is set in socketBegin
 				break;
 			}
@@ -76,34 +82,34 @@ void EthernetServer52::accept() { // make sure all sockets on _port are clean
   for (int sock = 0; sock < EthernetClass52::_u8MaxUsedSocks; ++sock) {
 	  if (EthernetClass52::_server_port_mask[sock] == _port || !EthernetClass52::_server_port_mask[sock]) {
 			// if ports match or port mask is 0 (all ports available)
-			// EthernetClient52 client(sock);
 
 			if (EthernetClass52::_server_port[sock] == _port) {
-				// uint8_t clStatus = client.status();
 				uint8_t u8_sockStatus = socketStatus(sock);
 				
-				if (u8_sockStatus == SnSR::LISTEN) {  // || u8_sockStatus == SnSR::ESTABLISHED) {  // MJT: not sure about adding established
-					listening = true;
-				} 
-				// else if (clStatus == SnSR::CLOSE_WAIT && !client.available()) {
-				else if (u8_sockStatus == SnSR::CLOSE_WAIT && socketRecvAvailable(sock) < 1) {
-					socketDisconnect(sock);
-					// EthernetClient52 client(sock);
-					// // Serial.println(F("close wait"));
-					// client.stop();
+				switch (u8_sockStatus) {
+					case SnSR::LISTEN:
+					case SnSR::ESTABLISHED:
+					case SnSR::SYNSENT:
+					case SnSR::SYNRECV:
+						listening = true;  // should we return here?
+						return; // kick once we found a socket that is listening to the desired port
+						break;
+					case SnSR::CLOSE_WAIT:
+						if (socketRecvAvailable(sock) < 1) socketDisconnect(sock);
+						break;
+					default:
+						// if (u8_sockStatus != SnSR::CLOSED) {
+							// Serial.print("sock "); Serial.print(sock, DEC); Serial.print(" stat: 0x"); 
+							// Serial.println(u8_sockStatus, HEX);
+						// }
+						break;
 				}
-				// else {
-					// Serial.print(F("extra: "));
-					// Serial.println(clStatus);
-				// }
+
 			} 
 	  }
   }
 
-  if (!listening) {
-	  // Serial.println(F(" problem here: "));
-    begin();
-  }
+  if (!listening) begin();
 }
 
 EthernetClient52 EthernetServer52::available() {
@@ -199,7 +205,8 @@ void EthernetServer52::printAll() {
 		
 		Serial.print("socket "); Serial.print(sock, DEC); Serial.print(":  ");
 		Serial.print("port mask: "); Serial.print(EthernetClass52::_server_port_mask[sock], DEC);
-		Serial.print(", port: "); Serial.print(EthernetClass52::_server_port[sock], DEC);
+		Serial.print(", port arr: "); Serial.print(EthernetClass52::_server_port[sock], DEC);
+		Serial.print(", port 5200: "); Serial.print(W5200.readSnPORT(sock), DEC);
 		Serial.print(", cl port: "); Serial.print(EthernetClass52::_client_port[sock], DEC);
 		Serial.print(", cl stat: 0x"); Serial.print(client.status(), HEX);
 		

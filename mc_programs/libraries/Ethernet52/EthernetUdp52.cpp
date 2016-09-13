@@ -81,6 +81,7 @@ void EthernetUDP52::stop()
 {
 	if (_sock < MAX_SOCK_NUM) {
 		socketClose(_sock);
+		EthernetClass52::_server_port[_sock] = 0;
 		_sock = MAX_SOCK_NUM;
 	}
 	

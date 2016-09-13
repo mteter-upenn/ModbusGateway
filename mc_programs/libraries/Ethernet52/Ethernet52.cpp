@@ -1,5 +1,8 @@
 #include "w5200.h"
 #include "Ethernet52.h"
+#include "EthernetServer52.h"
+#include "socket52.h"
+
 // #include "Dhcp.h"
 
 
@@ -224,6 +227,63 @@ void EthernetClass52::begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_serv
   // }
   // return rc;
 // }
+
+
+// make sure no sockets on port are closed
+// if all such sockets are busy, then open emergency socket (if available) to listen
+// if not, then make sure any non established emergency sockets are closed
+void EthernetClass52::cleanSockets(uint16_t port) {
+	bool b_busySocks = true;
+	
+	if (port == 0) return;  // bad things could happen
+	
+	for (int ii = 0; ii < _u8MaxUsedSocks; ++ii) {
+		if (_server_port_mask[ii] == port){
+			uint8_t u8_sockStat = socketStatus(ii);
+			
+			if (u8_sockStat == SnSR::CLOSED) {
+				socketBegin(SnMR::TCP, port, ii);
+				socketListen(ii);
+				b_busySocks = false;
+			}
+			else if (u8_sockStat == SnSR::LISTEN) {
+				b_busySocks = false;
+			}
+			// for any other status, do nothing to the socket and don't change b_busySocks to false			
+		}
+		else if (_server_port_mask[ii] == 0 && _server_port[ii] == port && b_busySocks) {
+			// if any emergency sockets are already listening, then don't bother opening up more
+			uint8_t u8_sockStat = socketStatus(ii);
+			
+			if (u8_sockStat == SnSR::LISTEN) {
+				b_busySocks = false;
+			}
+		}
+	}
+	
+	if (b_busySocks) {
+		for (int ii = 0; ii < _u8MaxUsedSocks; ++ii) {
+			if (_server_port_mask[ii] == 0) {
+				uint8_t u8_sockStat = socketStatus(ii);
+				
+				if (u8_sockStat == SnSR::CLOSED) {
+					socketBegin(SnMR::TCP, port, ii);
+					socketListen(ii);
+				}
+			}
+		}
+	}
+	else {  // close all emergency sockets on given port
+		for (int ii = 0; ii < _u8MaxUsedSocks; ++ii) {
+			if (_server_port_mask[ii] == 0 && _server_port[ii] == port) {
+				uint8_t u8_sockStat = socketStatus(ii);
+				
+				if (u8_sockStat == SnSR::LISTEN) socketClose(ii);
+			}
+		}
+	}
+}
+
 
 IPAddress EthernetClass52::localIP() {
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);

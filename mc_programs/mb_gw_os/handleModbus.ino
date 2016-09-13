@@ -240,8 +240,9 @@ void handle_modbus(bool b_idleHttp) {
         u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
 
         if ((u16_lenRead > u16_givenLen) || (u16_givenLen > gk_u16_mbArraySize)) {
-          ec_client.stop();  // grabbed too much, just exit without worrying.  It  shouldn't happen, any other connection will have dift sockets
-          return;         //     or incoming packet larger than array (this should not happen, modbus/tcp deals with pretty small stuff overall
+          ec_client.stop();               // grabbed too much, just exit without worrying.  It  shouldn't happen, any other 
+          Ethernet52.cleanSockets(502);   //   connection will have dift sockets or incoming packet larger than array (this 
+          return;                         //   should not happen, modbus/tcp deals with pretty small stuff overall)
         }
 
         while (u16_lenRead < u16_givenLen) {  // make sure to grab the full packet
@@ -249,6 +250,7 @@ void handle_modbus(bool b_idleHttp) {
 
           if ((millis() - u32_mbReqStart) > k_u32_mbReqTimeout) {  // 10 ms might be too quick, but not really sure
             ec_client.stop();  // could not get full message, exit
+            Ethernet52.cleanSockets(502);
             return;
           }
         }
@@ -267,6 +269,7 @@ void handle_modbus(bool b_idleHttp) {
       }
     }  // end while (client.connected())
     ec_client.stop();
+    Ethernet52.cleanSockets(502);
   }  // end if (client)
   
 }

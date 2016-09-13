@@ -338,7 +338,8 @@ int socketRecv(uint8_t s, uint8_t *buf, int16_t len)
 		
 		uint16_t ptr = state[s].RX_RD;
 		read_data(s, ptr, buf, ret);
-		ptr += len;
+		// ptr += len;
+		ptr += ret;
 		state[s].RX_RD = ptr;
 		state[s].RX_RSR -= ret;
 		uint16_t inc = state[s].RX_inc + ret;

@@ -52,6 +52,8 @@ public:
 		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts);
   // int maintain();
 
+	void cleanSockets(uint16_t port);
+	
   IPAddress localIP();
   IPAddress subnetMask();
   IPAddress gatewayIP();
