@@ -4,15 +4,11 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
   uint16_t u16_reqReg, u16_numRegs, u16_adjReqReg(0), u16_adjNumRegs(0);
   uint8_t u8_mbRespNumBytes(0);
   uint8_t u8_mbResult(0x0A);
-  //uint16_t u16_tempReg (0);
   bool b_foundReg(false);
   uint8_t u8_mbReqFunc(0);
   uint8_t u8_mbError(0);
   bool b_reqRegManip(false);
-  //uint8_t u8_dataTypeFlags(0);
-  //uint8_t u8_mskdDataTypeFlags(0);
   FloatConv fltConvFlg(FloatConv::FLOAT);
-  //FloatConv mskdFltConvFlg(FloatConv::FLOAT);
   uint8_t u8_mtrType(0);
   uint8_t u8_mtrId;
   
@@ -32,7 +28,6 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
     if (isMeterEth(u8a_clientIp, u8_mtrVid, u8_mtrType, u8_mtrId)){  // isMeterEth set g_u8a_clientIP
       g_mm_node.setSerialEthernet(false);  // <--false means ethernet
       g_mm_node.setClientIP(u8a_clientIp);
-      //Serial.println(F("ETHER!"));
     }
     else{
       g_mm_node.setSerialEthernet(true);  // true means serial
@@ -54,20 +49,13 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
     else if ((u16_reqReg > 9999) && (u16_reqReg < 20000)) {
       b_reqRegManip = true;  // 10k request
       u16_adjReqReg = u16_reqReg - 10000;
-      //b_foundReg = findRegister(u16_adjReqReg, u8_dataTypeFlags, u8_mtrType);
       b_foundReg = findRegister(u16_adjReqReg, fltConvFlg, u8_mtrType);
 
       
-  //    Serial.println(u16_adjReqReg);
       if (0x01 & u16_numRegs) { // if odd number, then can't return float (must be even # of regs)
-//        Serial.println("odd");
         u8_mbError = 0x02;
       }
       else if (b_foundReg) { // found registers
-        //u8_mskdDataTypeFlags = (0x7f & u8_dataTypeFlags); // ignore ws bit for comparisons
-        //mskdFltConvFlg = static_cast<FloatConv>(0x3f & static_cast<int8_t>(fltConvFlg));
-  
-
         // u16_adjNumRegs is the length request sent to modbus device
         // all requests made through 10k registers must be with expectation of float
         // this means the unadjusted length request has 2 registers for every unique data point
@@ -120,15 +108,9 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
       u8a_mbResp[5] = 3;  // expected tcp length
 
       u16_mbRespLen = 9;
-      /*Serial.print("error: ");
-      Serial.println(u8_mbError, DEC);*/
-     
       return u8_mbError;
     }  // end if error
     else {  // no error yet, handle code
-      //Serial.print("reqReg: "); Serial.println(u16_adjReqReg, DEC);
-      //Serial.print("numRegs: "); Serial.println(u16_adjNumRegs, DEC);
-
       switch (u8_mbReqFunc) {
 //          case 1:
 //            g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
@@ -137,10 +119,7 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
 //            g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
 //            break;
         case 3:
-          //Serial.println(F("modbus request"));
           u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
-          //Serial.print(F("sent request: "));
-          //Serial.println(u8_mbResult, HEX);
           break;
         case 4:
           u8_mbResult = g_mm_node.readInputRegisters(u16_adjReqReg, u16_adjNumRegs);
@@ -175,9 +154,6 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
             }
           }
           else { // 10k request
-//            Serial.println("handling 10k data");
-//            Serial.println((u8_dataTypeFlags & 0x7F), DEC);
-          
             // create MeterLibrary class which can take the meter type and register to convert and dump requested values
             MeterLibBlocks mtrBlks(u16_adjReqReg, u16_adjNumRegs, u8_mtrType);
             mtrBlks.convertToFloat(g_mm_node, &u8a_mbResp[9]);

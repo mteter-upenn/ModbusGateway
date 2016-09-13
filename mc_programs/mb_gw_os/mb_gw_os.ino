@@ -15,12 +15,13 @@
 #include <MeterLibrary.h>
 #include <SD.h>
 
-#define DEBUG_HTTP_TCP_TIMEOUT 0                       // debug flag for keep-alive attempt  
+#ifndef CORE_TEENSY
+#error "This program designed for the Teensy 3.2"
+#endif
+
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
 #define SHOW_FREE_MEM 0                                // 1 for print free memory
-#define NEW_GROUP_STYLE 1
 
-//uint32_t g_u32_httpReqTime;
 
 const uint16_t gk_u16_requestLineSize(40);                       // g_REQ_BUF_SZ buffer size to capture beginning of http request
 const uint16_t gk_u16_requestBuffSize(1500);                     // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
@@ -34,9 +35,6 @@ const uint16_t gk_u16_postBuffSize((gk_u16_requestBuffSize - 1 - 1030 - 50));  /
 
 const uint16_t gk_u16_mbArraySize(264);                    // MB_ARR_SIZE array size for modbus/tcp rx/tx buffers - limited by modbus standards
     
-#if defined(CORE_TEENSY)                               // if teensy3.0 or greater  SHOULD PROBABLY JUST ASSUME TEENSY FOR NOW, 
-                                                       //     ARDUINO BOARDS DEFINITELY WON'T WORK WITHOUT SIGNIFICANT READJUSTMENT ANYWAYS
-
 const uint16_t gk_u16_respBuffSize(1400);              // RESP_BUF_SZ array size for buffer between sd card and ethernet
                                                        //     keep short of 1500 to make room for headers
 const uint8_t gk_u8_modbusSerialHardware(3);           // MODBUS_SERIAL use hardware serial 3
@@ -46,7 +44,6 @@ const uint8_t gk_u8_modbusSerialHardware(3);           // MODBUS_SERIAL use hard
 #define CPU_RESTART_VAL 0x5FA0004
 #define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL);
 
-
 // pin ids
 const int gk_s16_sdFailLed   = 21;                     // sd card unavailable
 const int gk_s16_sdWriteLed  = 20;                     // currently writing to sd card
@@ -54,25 +51,6 @@ const int gk_s16_epWriteLed  = 19;                     // currently writing to e
 const int gk_s16_rtcFailLed  = 22;                     // no rtc set
 const int gk_s16_battDeadLed = 23;                     // dead battery - currently no way to determine
 const uint8_t gk_u8_mb485Ctrl   =  6;                     // when set low, transmit mode, high is receive mode
-#else
-#define RESP_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
-#define MODBUS_SERIAL 1                                // use hardware serial 1
-
-int resetPin = 6;                                      // when set high, will trigger hard reset
-int sdFailLed = 7;                                     // sd card unavailable
-int sdWriteLed = 11;                                   // currently writing to sd card
-int epWriteLed = 8;                                    // currently writing to eeprom
-int mb485Ctrl = 9;                                     // when set low, transmit mode, high is receive mode
-int rtcFailLed = 8;                                    // no rtc set
-#endif
-
-/*
-// define struct
-struct PwrEgyRegs {
-  uint16_t u16_pwr;
-  uint16_t u16_egy;
-};
-*/
 
 // ethernet info
 uint8_t g_u8a_mac[8] = {0};                      // enter mac, will need some sort of generator for this
@@ -116,12 +94,8 @@ uint8_t g_u8_maxRecordSlaves = 5;  // maxSlvsRcd
 
 // classes
 EthernetServer52 g_es_webServ(80);  //serv_web                           // start server on http
-//EthernetServer52 g_es_webServ2(80);                           // start server on http
 
 EthernetServer52 g_es_mbServ(502);  // serv_mb                           // start server on modbus port
-//EthernetServer52 g_es_mbServ2(502);                           // start server on modbus port
-//EthernetServer52 g_es_mbServ3(502);                           // start server on modbus port
-//EthernetServer52 g_es_mbServ4(502);                           // start server on modbus port
 
 ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
 
@@ -130,9 +104,9 @@ ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  //
 bool g_b_sdInit = false;  // sdInit                                   // set flag corresponding to sd card initializtion
 
 // test vars
-//#if DISP_TIMING_DEBUG
-//uint32_t doneHttp, gotClient, doneFind, doneSend, time1, time2;
-//#endif
+#if DISP_TIMING_DEBUG
+uint32_t doneHttp, gotClient, doneFind, doneSend, time1, time2;
+#endif
 
 // PROTOTYPES:
 // main
@@ -140,7 +114,7 @@ void resetArd(void);
 // handleHTTP
 void handle_http(bool b_idleModbus);
 // secondaryHTTP - GET and general functions
-void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
+//void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
 void send404(EthernetClient52 &ec_client);
 void sendBadSD(EthernetClient52 &ec_client);
 //void sendGifHdr(EthernetClient52 &ec_client);
@@ -157,7 +131,6 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr);
 uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen, bool b_byteSwap);
 void handle_modbus(bool b_idleHttp);
 // secondaryModbus
-/*bool findRegister(uint16_t u16_reqRegister, uint8_t &u8_regFlags, uint8_t u8_meterType);*/
 bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meterType);
 bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId);
 // setConstants
@@ -171,7 +144,6 @@ void printTime(time_t t_time);
 // handleData
 void handle_data();
 // secondaryData
-/*PwrEgyRegs getElecRegs(uint16_t u16_mtrLibStart);*/
 void getFileName(time_t t_time, char *cp_fileName);
 
 
@@ -194,12 +166,8 @@ int getFreeMemory()
 
 void resetArd() {
 //   Serial.println("resetting...");
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
   CPU_RESTART
   delay(20);
-#else
-   digitalWrite(resetPin, HIGH);
-#endif
 }
 
 
@@ -210,12 +178,8 @@ void setup() {
   //Serial.println(F("delay over"));
   
   // set output pins
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
   pinMode(gk_s16_rtcFailLed, OUTPUT);
   pinMode(gk_s16_battDeadLed, OUTPUT);
-#else
-  pinMode(resetPin, OUTPUT);
-#endif
   pinMode(gk_s16_sdFailLed, OUTPUT);
   pinMode(gk_s16_sdWriteLed, OUTPUT);
   pinMode(gk_s16_epWriteLed, OUTPUT);
@@ -225,14 +189,12 @@ void setup() {
   g_u16_ipBlkStart = word(EEPROM.read(2), EEPROM.read(3));
   g_u16_mtrBlkStart = word(EEPROM.read(4), EEPROM.read(5));
   g_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));
-  //g_c_gwName[30] = 0;
 
   // take constants from eeprom into memory
   setConstants();
 
   
 //  set serial1 pins high - needed for 485 shield to work
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
   switch (gk_u8_modbusSerialHardware) {
     case 2:
       digitalWrite(9, HIGH);
@@ -248,26 +210,6 @@ void setup() {
       digitalWrite(1, HIGH);
       break;
   }
-#else
-  switch (gk_u8_modbusSerialHardware) {
-    case 1:
-      digitalWrite(19, HIGH);
-      digitalWrite(18, HIGH);
-      break;
-    case 2:
-      digitalWrite(17, HIGH);
-      digitalWrite(16, HIGH);
-      break;
-    case 3:
-      digitalWrite(15, HIGH);
-      digitalWrite(14, HIGH);
-      break;
-    default:
-      digitalWrite(0, HIGH);
-      digitalWrite(1, HIGH);
-      break;
-  }
-#endif
 
   // may be necessary to set pin 10 high regardless of arduino type
   pinMode(10, OUTPUT);  
@@ -275,20 +217,9 @@ void setup() {
   pinMode(4, OUTPUT);
   digitalWrite(4, HIGH);
   
-//  168 and 328 arduino
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
-  Serial.println(F("uno"));
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  pinMode(53, OUTPUT);  // set ethernet high
-  digitalWrite(53, HIGH);
-  Serial.println(F("mega"));
-#elif defined(CORE_TEENSY)  // if teensy3.0 or greater
+//  reset w5200 ethernet chip
   pinMode(9, OUTPUT);
   digitalWrite(9, LOW);
-  Serial.println(F("teensy"));  
-#endif
-
-  
   
   Serial.println(F("Initializing SD card..."));
   if (!SD.begin(4)) {
@@ -309,16 +240,11 @@ void setup() {
 
   Ethernet52.begin(g_u8a_mac, g_ip_ip, g_ip_gateway, g_ip_gateway, g_ip_subnet, 8, u16a_socketSizes, u16a_socketPorts);
 
+  // initialize sockets
   g_es_webServ.begin();
-  //g_es_webServ2.begin();
+  g_es_webServ.begin();
 
   g_es_mbServ.begin();
-  //g_es_mbServ2.begin();
-  //g_es_mbServ3.begin();
-  //g_es_mbServ4.begin();
-
-  // test
-  g_es_webServ.begin();
   g_es_mbServ.begin();
   g_es_mbServ.begin();
   g_es_mbServ.begin();
@@ -343,9 +269,7 @@ void setup() {
     }
   }
   else {  // set clock to time gotten from ntp
-#if defined(CORE_TEENSY)
     Teensy3Clock.set(t_localTime);
-#endif
     setTime(t_localTime);
     g_b_rtcGood = true;
   }
@@ -406,12 +330,7 @@ void loop() {
   handle_modbus(true);
   handle_http(true);
   if (g_b_recordData && g_b_rtcGood) {
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
     handle_data();
-    
-#else
-    handle_data();
-#endif
   }
   if (g_b_useNtp && ((millis() - g_u32_rtcNtpLastReset) > gk_u32_rtcNtpResetDelay)) {
     // if enough time has elapsed and we want to use ntp

@@ -53,27 +53,6 @@ void setConstants() {
       g_u8a_slaveTypes[ii][(jj - 1)] = EEPROM.read(9 * ii + g_u16_mtrBlkStart + jj);
     }
   }
-
-//  for (i = 0; i < g_u8_numSlaves; i++){
-//    Serial.print(F("dev: "));
-//    Serial.print(g_u8a_slaveIds[i], DEC);
-//    Serial.print(F(", ip: "));
-//
-//    Serial.print(g_u8a_slaveIps[i][0], DEC);
-//    for (j = 1; j < 4; j++){
-//      Serial.print(F("."));
-//      Serial.print(g_u8a_slaveIps[i][j], DEC);
-//    }
-//
-//    Serial.print(F(", type: "));
-//
-//    Serial.print(g_u8a_slaveTypes[i][0], DEC);
-//    for (j = 1; j < 3; j++){
-//      Serial.print(F("."));
-//      Serial.print(g_u8a_slaveTypes[i][j], DEC);
-//    }
-//    Serial.println();
-//  }
 }
 
 
@@ -82,10 +61,6 @@ void writeGenSetupFile(){
 
   SD.remove("gensetup.xml");
   webFile = SD.open("gensetup.xml", FILE_WRITE);
-  
-  //webFile.println(F("HTTP/1.1 200 OK"));
-  //webFile.println(F("Content-Type: text/xml"));  
-  //webFile.println(F("Connection: close\n"));   
   
   webFile.print(F("<?xml version = \"1.0\" ?><setup><name>"));
 
@@ -184,10 +159,6 @@ void writeMtrSetupFile(){
 
   SD.remove("mtrsetup.xml");
   webFile = SD.open("mtrsetup.xml", FILE_WRITE);
-
-  //webFile.println(F("HTTP/1.1 200 OK"));
-  //webFile.println(F("Content-Type: text/xml"));  
-  //webFile.println(F("Connection: close\n"));   
                       
   webFile.print(F("<?xml version = \"1.0\" ?><meterList>"));
   

@@ -1,7 +1,6 @@
 #ifndef ethernet52_h
 #define ethernet52_h
 
-// #define UPENN_TEENSY_MBGW  shouldn't need this
 #define ACH_INSERTION
 
 #include <inttypes.h>
@@ -59,21 +58,12 @@ public:
   IPAddress gatewayIP();
   // IPAddress dnsServerIP();
 
-	// these should not be needed with no private variables or functions
   friend class EthernetClient52;
   friend class EthernetServer52;
 	friend class EthernetUDP52;
 	
 	friend uint8_t socketBegin(uint8_t protocol, uint16_t port);
 	friend uint8_t socketBegin(uint8_t protocol, uint16_t port, uint8_t sock);
-	// friend ;
-	// friend ;
-	// friend ;
-	// friend ;
-	// friend ;
-	// friend ;
-	// friend ;
-	// friend ;
 };
 
 extern EthernetClass52 Ethernet52;

@@ -7,11 +7,11 @@
  */
 
 
-void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length) {
-  while (ec_client.available()) {
-    ec_client.read(u8p_buffer, u16_length);
-  }
-}
+//void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length) {
+//  while (ec_client.available()) {
+//    ec_client.read(u8p_buffer, u16_length);
+//  }
+//}
 
 
 void send404(EthernetClient52 &ec_client){
@@ -20,7 +20,6 @@ void send404(EthernetClient52 &ec_client){
   strcpy_P(ca_resp404, PSTR("HTTP/1.1 404 Not Found\nConnnection: close\n\n"));
   ec_client.write(ca_resp404);
 
-  //post_cont.clear();
   ec_client.flush();
 }
 
@@ -33,7 +32,6 @@ void sendBadSD(EthernetClient52 &ec_client){
 
   ec_client.write(ca_respBadSD);
 
-  
   strcpy_P(ca_respBadSD, PSTR("<!DOCTYPE html><html><head><title>"));// 35 with \0
   strcat(ca_respBadSD, g_c_gwName);
   strcat_P(ca_respBadSD, PSTR("</title></head><body><p>The SD card for this gateway did not initialize properly.  "));// 84 with \0
@@ -41,25 +39,12 @@ void sendBadSD(EthernetClient52 &ec_client){
 
   ec_client.write(ca_respBadSD);
 
-  //post_cont.clear();
   ec_client.flush();
 }
 
 
-//void sendGifHdr(EthernetClient52 &ec_client) {
-//  char ca_respGif[100];
-//
-//  strcpy_P(ca_respGif, PSTR("HTTP/1.1 200 OK\nContent-Type: image/gif\n"));
-//  strcat_P(ca_respGif, PSTR("Connection: close\n\n"));
-//  ec_client.write(ca_respGif);
-//  ec_client.flush();
-//}
-
 void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType en_fileType) {
   File streamFile = SD.open(ccp_fileName);
-
-  //Serial.print("Request for "); Serial.print(ccp_fileName); Serial.print(" took ");
-  //Serial.println((millis() - g_u32_httpReqTime));
 
   if (streamFile) {
     uint32_t u32_fileSize;                                   // size of file being sent over tcp
@@ -95,11 +80,7 @@ void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType
         strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
       }
       else {
-#if DEBUG_HTTP_TCP_TIMEOUT == 1
-        strcat_P(ca_streamBuf, PSTR("Connection: Keep-alive\nKeep-Alive: timeout=3, max=10\nContent-Length: "));
-#else
         strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
-#endif
       }
       hdrLength = strlen(ca_streamBuf);
       sprintf(ca_streamBuf + hdrLength, "%lu\n\n", u32_fileSize);
@@ -159,8 +140,6 @@ void sendDownLinks(EthernetClient52 &ec_client, char *const cp_firstLine) {
       break;
     }
   }
-
-  //pdPtr = strstr(dirName, "PASTDATA");
   
   if (strstr(ca_dirName, "PASTDATA") == nullptr) {  // can't find PASTDATA
     // add /PASTDATA, don't want to look in higher folders than this
@@ -175,9 +154,6 @@ void sendDownLinks(EthernetClient52 &ec_client, char *const cp_firstLine) {
   }
 
   File dir = SD.open(ca_dirName + 13);  // do not include "/pastdown.htm" which is 13 chars long
-  /*Serial.write(dirName + 13);
-  Serial.println();
-  Serial.println();*/
 
   if (dir) {
     char ca_streamBuf[gk_u16_respBuffSize] = { 0 };                       // buffer for moving data to ethernet
@@ -228,8 +204,8 @@ void sendDownLinks(EthernetClient52 &ec_client, char *const cp_firstLine) {
 
       entry.close();
 
-      //if (iter > 9) {  // MAGIC NUMBER!
-      if ((gk_u16_respBuffSize - strlen(ca_streamBuf)) < k_u16_minRemBytes) {  // if remaining room is less than desired, send message 
+      // if remaining room is less than desired, send message 
+      if ((gk_u16_respBuffSize - strlen(ca_streamBuf)) < k_u16_minRemBytes) {  
         ec_client.write(ca_streamBuf);
         ec_client.flush();
 
@@ -311,29 +287,16 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   uint8_t u8a_mbReq[12];  // can make this smaller 
   uint8_t u8a_mbResp[gk_u16_mbArraySize];
   uint16_t u16_reqLen(12), u16_respLen(0);
-  //uint16_t u16_mtrLibStart;
-  //uint16_t u16_mtrGrpStart, u16_mtrCurGrpInd;
   uint16_t u16_numGrps;
-  //uint8_t u8_numGrpVals, u8_valType;
   uint16_t u16_reqReg, u16_numRegs;
   uint8_t u8_mtrType, u8_mbVid, u8_mtrMbFunc;
   uint8_t u8_mbReqStat;
   char ca_respXml[gk_u16_respBuffSize] = {0};  // 68
-  
-  //union {
-  //  float f;
-  //  uint8_t u8[4];
-  //} int2flt;
 
   strcpy_P(ca_respXml, PSTR("HTTP/1.1 200 OK\nContent-Type: text/xml\nConnnection: close\n\n"));  // create http response
-  //Serial.print(F("selSlv: "));
-  //Serial.println(g_u8a_selectedSlave);
+
   u8_mtrType = g_u8a_slaveTypes[(g_u8a_selectedSlave - 1)][0];
-  //Serial.print(F("meter type: "));
-  //Serial.println(u8_mtrType);
-  //u8_mtrType = EEPROM.read(g_u16_mtrBlkStart + g_u8a_selectedSlave * 8 - 7);
-//  Serial.print(F("Mtr type: "));
-//  Serial.println(u8_mtrType, DEC);
+
   if ((u8_mtrType > EEPROM.read(g_u16_regBlkStart + 2)) || (u8_mtrType == 0)){  // check if meter higher than number of meter registers listed
     strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
     ec_client.write(ca_respXml);
@@ -342,20 +305,11 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
     return;  // no registers in eeprom
   }
   u8_mbVid = g_u8a_slaveVids[(g_u8a_selectedSlave - 1)];  // getModbus accounts for vids
-  //Serial.print(F("vid: "));
-  //Serial.println(dev);
+
   u8_mtrMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType + 2);
 
   MeterLibGroups mtrGrps(u8_mtrType);
   u16_numGrps = mtrGrps.getNumGrps();
-
-  /*
-  u16_mtrLibStart = word(EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType - 1), EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType));
-  
-  u16_mtrGrpStart = word(EEPROM.read(u16_mtrLibStart + 4), EEPROM.read(u16_mtrLibStart + 5));
-  u16_numGrps = EEPROM.read(u16_mtrLibStart + 3);
-  u16_mtrCurGrpInd = u16_mtrGrpStart;
-  */
 
   memset(u8a_mbReq, 0, 5);
   u8a_mbReq[5] = 6;     // length of modbus half
@@ -373,106 +327,27 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
     u8a_mbReq[10] = highByte(u16_numRegs);  // assume no length higher than 255
     u8a_mbReq[11] = lowByte(u16_numRegs);  // ask for float conversion = 2*num for registers
 
-    /*
-    u8_numGrpVals = EEPROM.read(u16_mtrCurGrpInd);
-
-    u16_reqReg = word(EEPROM.read(u16_mtrCurGrpInd + 1), EEPROM.read(u16_mtrCurGrpInd + 2)) + 10000;  // ask for float conversion
-    u8a_mbReq[8] = highByte(u16_reqReg);
-    u8a_mbReq[9] = lowByte(u16_reqReg);
-//    Serial.print(F("Start"));
-//    Serial.println(mb_strt, DEC);
-    u8a_mbReq[10] = 0;  // assume no length higher than 255
-    u8a_mbReq[11] = u8_numGrpVals * 2;  // ask for float conversion = 2*num for registers
-    */
     delay(5); // ensure long enough delay between polls
     u8_mbReqStat = getModbus(u8a_mbReq, u16_reqLen, u8a_mbResp, u16_respLen, true);  // getModbus uses MB/TCP as inputs and outputs
 
-    //const uint16_t *u16p_mbRespData = (uint16_t*)&u8a_mbResp[9];
-      
-//    Serial.print(F("group: "));
-//    Serial.print(i, DEC);
     if (u8_mbReqStat == 0) {
-//      Serial.println(F(", has had successful modbus"));
       mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
-      
-      /*
-      for (int jj = 0; jj < u8_numGrpVals; ++jj){  // shift 2 to get to collection type
-        u8_valType = EEPROM.read(jj + u16_mtrCurGrpInd + 3) - 1;
-
-        int2flt.u8[3] = u8a_mbResp[(4 * jj) + 11];
-        int2flt.u8[2] = u8a_mbResp[(4 * jj) + 12];
-        int2flt.u8[1] = u8a_mbResp[(4 * jj) + 9]; // high word
-        int2flt.u8[0] = u8a_mbResp[(4 * jj) + 10];  // low word
-
-        fa_data[u8_valType] = int2flt.f;
-//        if (i == 0){
-//          Serial.print("at ");
-//          Serial.print(clc_typ, DEC);
-//          Serial.print(" stored ");
-//          Serial.print(int2flt.f);
-//          Serial.print(", ");
-//          Serial.print(int2flt.u8[3], BIN);
-//          Serial.print(", ");
-//          Serial.print(int2flt.u8[2], BIN);
-//          Serial.print(", ");
-//          Serial.print(int2flt.u8[1], BIN);
-//          Serial.print(", ");
-//          Serial.println(int2flt.u8[0], BIN);
-//        }
-        
-        s8a_dataFlags[u8_valType] = 1;  // successful read
-      }  // end for
-      */
-
     }  // end if
     else {
-      //Serial.print(F(", has had MB failure: "));
-      //Serial.print(mb_stat, HEX);
-      //Serial.print(F("  "));
       if (ii == 1){ // if first message and error, just dump failures
-        //Serial.println(F("Sending false xml"));
-        
         strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
         ec_client.write(ca_respXml);
         ec_client.flush();
         return;  // if modbus timeout error on first loop, kill further data requests
       }
-//      Serial.println(F("Continuing..."));
       mtrGrps.groupMbErr(s8a_dataFlags);
-
-      /*
-      for (int jj = 0; jj < u8_numGrpVals; ++jj){
-        u8_valType = EEPROM.read(jj + u16_mtrCurGrpInd + 3) - 1;
-//        Serial.print("for group adr ");
-//        Serial.print(grp_adr, DEC);
-//        Serial.print(" clc_typ = ");
-//        Serial.println(clc_typ);
-        s8a_dataFlags[u8_valType] = -1;  // unsuccessful read
-      }  // end for
-      */
-
     } // end if
-
-    /*
-    u16_mtrCurGrpInd = 3 + 2 * (u8_numGrpVals) +u16_mtrCurGrpInd;  // starting address of next group
-    */
-
   }  // end for
 
   // last group full of duds (if any) ********************************************************************
   mtrGrps.setGroup(u16_numGrps);
   mtrGrps.groupLastFlags(s8a_dataFlags);
-  /*
-  u8_numGrpVals = EEPROM.read(u16_mtrCurGrpInd);  //                                                     *
-  //                                                                                                     *
-  for (int jj = 0; jj < u8_numGrpVals; ++jj){  // shift 2 to get to collection type                      *
-    u8_valType = EEPROM.read(jj + u16_mtrCurGrpInd + 3) - 1;  //                                         *
-    //                                                                                                   *
-    s8a_dataFlags[u8_valType] = 0;  // data does not exist on this hardware                              *
-  }  // end for                                                                                          *
-  */
   // end handling of last group **************************************************************************
-
 
   // add to xml string, indicate that data is contained
   strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>true</has_data>"));
@@ -509,7 +384,6 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
       else strcat_P(ca_respXml, PSTR("</engy>"));
 
       if ((gk_u16_respBuffSize - strlen(ca_respXml)) < k_u16_minRemBytes) {
-      //if ((i % 2) == 1){
         ec_client.write(ca_respXml);  // write line of xml response every other time (stacks 2 together)
         ca_respXml[0] = 0;  // reset respXml to 0 length so strcat starts at beginning
       }
@@ -553,7 +427,6 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
 
 
       if ((gk_u16_respBuffSize - strlen(ca_respXml)) < k_u16_minRemBytes) {
-        //if ((i % 2) == 1){
         ec_client.write(ca_respXml);  // write line of xml response
         ca_respXml[0] = 0;  // reset respXml to 0 length
       }
@@ -563,7 +436,6 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
   strcat_P(ca_respXml, PSTR("</inputs>"));
   ec_client.write(ca_respXml);
   
-  //post_cont.clear();
   ec_client.flush();
 }
 

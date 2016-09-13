@@ -12,82 +12,14 @@ uint8_t EthernetClass52::_state[MAX_SOCK_NUM];
 uint16_t EthernetClass52::_server_port[MAX_SOCK_NUM];
 
 uint16_t EthernetClass52::_server_port_mask[MAX_SOCK_NUM];
-// #ifdef UPENN_TEENSY_MBGW
-// uint16_t EthernetClass52::_server_port_mask[MAX_SOCK_NUM] = {80, 80, 502, 502, 502, 502, 0};
-// #else
-// uint16_t EthernetClass52::_server_port_mask[MAX_SOCK_NUM] = {0};
-// #endif
 
 #ifdef ACH_INSERTION
 // // ACH - added
 uint16_t EthernetClass52::_client_port[MAX_SOCK_NUM]; // ACH
-// uint16_t EthernetClass52::_client_port[MAX_SOCK_NUM] = {0}; // ACH
 #endif
 
 uint8_t EthernetClass52::_u8MaxUsedSocks = 4;
 
-
-// #if MAX_SOCK_NUM == 8  // keep
-// uint8_t EthernetClass52::_state[MAX_SOCK_NUM] = {0, 0, 0, 0, 0, 0, 0, 0 };
-// uint16_t EthernetClass52::_server_port[MAX_SOCK_NUM] = {0, 0, 0, 0, 0, 0, 0, 0 };
-// // ACH - added
-// uint16_t EthernetClass52::_client_port[MAX_SOCK_NUM] = {0, 0, 0, 0, 0, 0, 0, 0}; // ACH
-// #else
-// uint8_t EthernetClass52::_state[MAX_SOCK_NUM] = {0, 0, 0, 0};
-// uint16_t EthernetClass52::_server_port[MAX_SOCK_NUM] = {0, 0, 0, 0};
-// // ACH - added
-// uint16_t EthernetClass52::_client_port[MAX_SOCK_NUM] = {0, 0, 0, 0}; // ACH
-// #endif
-
-// int EthernetClass52::begin(uint8_t *mac_address)
-// {
-	// uint16_t u16pSocketSizes[4] = {4, 4, 4, 4};
-	// uint8_t i;
-	
-  // static DhcpClass s_dhcp;
-  // _dhcp = &s_dhcp;
-  
-	// // MJT start
-	// // standard block
-  // _u8MaxUsedSocks = 4;
-	
-	// for (i = 0; i < _u8MaxUsedSocks; i++) {
-		// _state[i] = 0;
-		// _server_port[i] = 0;
-	
-		// _server_port_mask[i] = 0;
-		
-// #ifdef ACH_INSERTION
-		// // ACH - added
-		// _client_port[_u8MaxUsedSocks] = {0}; // ACH
-// #endif
-	// }
-// // MJT end
-
-  // // Initialise the basic info
-  // W5200.init(_u8MaxUsedSocks, u16pSocketSizes);
-  // SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-  // W5200.setMACAddress(mac_address);
-	// W5200.setRetransmissionCount(3);
-  // W5200.setIPAddress(IPAddress(0,0,0,0).raw_address());
-  // SPI.endTransaction();
-
-  // // Now try to get our config info from a DHCP server
-  // int ret = _dhcp->beginWithDHCP(mac_address);
-  // if(ret == 1)
-  // {
-    // // We've successfully found a DHCP server and got our configuration info, so set things
-    // // accordingly
-    // SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-    // W5200.setIPAddress(_dhcp->getLocalIp().raw_address());
-    // W5200.setGatewayIp(_dhcp->getGatewayIp().raw_address());
-    // W5200.setSubnetMask(_dhcp->getSubnetMask().raw_address());
-    // SPI.endTransaction();
-    // _dnsServerAddress = _dhcp->getDnsServerIp();
-  // }
-
-  // return ret;
-// }
 
 void EthernetClass52::begin(uint8_t *mac_address, IPAddress local_ip)
 {
@@ -201,32 +133,6 @@ void EthernetClass52::begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_serv
   // _dnsServerAddress = dns_server;
 }
 
-// int EthernetClass52::maintain(){
-  // int rc = DHCP_CHECK_NONE;
-  // if(_dhcp != NULL){
-    // //we have a pointer to dhcp, use it
-    // rc = _dhcp->checkLease();
-    // switch ( rc ){
-      // case DHCP_CHECK_NONE:
-        // //nothing done
-        // break;
-      // case DHCP_CHECK_RENEW_OK:
-      // case DHCP_CHECK_REBIND_OK:
-        // //we might have got a new IP.
-        // SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-        // W5200.setIPAddress(_dhcp->getLocalIp().raw_address());
-        // W5200.setGatewayIp(_dhcp->getGatewayIp().raw_address());
-        // W5200.setSubnetMask(_dhcp->getSubnetMask().raw_address());
-        // SPI.endTransaction();
-        // _dnsServerAddress = _dhcp->getDnsServerIp();
-        // break;
-      // default:
-        // //this is actually a error, it will retry though
-        // break;
-    // }
-  // }
-  // return rc;
-// }
 
 
 // make sure no sockets on port are closed

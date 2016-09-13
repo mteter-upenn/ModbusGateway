@@ -1,14 +1,10 @@
 time_t getNtpTime() {
-  //IPAddress timeServer(128, 91, 2, 13);
-//  char timeServer[] = "time.nist.gov"; // time.nist.gov NTP server
   const int k_s_ntpPacketSize = 48;  // NTP_PACKET_SIZE
   char ca_packetBuffer[k_s_ntpPacketSize] = {0};
   EthernetUDP52 eu_ntpClient;
   uint16_t u16_localPort = 8888;
 
   eu_ntpClient.begin(u16_localPort);
-
-  //memset(ca_packetBuffer, 0, k_s_ntpPacketSize);
 
   ca_packetBuffer[0] = 0b11100011;   // LI, Version, Mode
   ca_packetBuffer[1] = 0;     // Stratum, or type of clock
@@ -53,11 +49,7 @@ time_t getNtpTime() {
 
 
 time_t getRtcTime() {
-#if defined(CORE_TEENSY)
   return Teensy3Clock.get();
-#else
-  return 0;
-#endif
 }
 
 

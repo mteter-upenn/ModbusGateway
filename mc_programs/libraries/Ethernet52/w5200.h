@@ -17,13 +17,6 @@
 //#define SPI_ETHERNET_SETTINGS SPISettings(8000000, MSBFIRST, SPI_MODE0)
 //#define SPI_ETHERNET_SETTINGS SPISettings(4000000, MSBFIRST, SPI_MODE0)
 
-// #define UPENN_TEENSY_MBGW
-
-// #ifdef UPENN_TEENSY_MBGW
-// #define MAX_SOCK_NUM 7
-// #else
-// #define MAX_SOCK_NUM 4
-// #endif
 
 #define MAX_SOCK_NUM 8
 
@@ -100,44 +93,6 @@ class W5200Class {
 public:
   static uint8_t init(uint8_t u8MaxUsedSocks, uint16_t * u16SocketSizes);
 
-  // /**
-   // * @brief	This function is being used for copy the data form Receive buffer of the chip to application buffer.
-   // * 
-   // * It calculate the actual physical address where one has to read
-   // * the data from Receive buffer. Here also take care of the condition while it exceed
-   // * the Rx memory uper-bound of socket.
-   // */
-  // static void read_data(SOCKET s, uint16_t src, volatile uint8_t * dst, uint16_t len);
-  
-  // /**
-   // * @brief	 This function is being called by send() and sendto() function also. 
-   // * 
-   // * This function read the Tx write pointer register and after copy the data in buffer update the Tx write pointer
-   // * register. User should read upper byte first and lower byte later to get proper value.
-   // */
-  // static void send_data_processing(SOCKET s, const uint8_t *data, uint16_t len);
-  // /**
-   // * @brief A copy of send_data_processing that uses the provided ptr for the
-   // *        write offset.  Only needed for the "streaming" UDP API, where
-   // *        a single UDP packet is built up over a number of calls to
-   // *        send_data_processing_ptr, because TX_WR doesn't seem to get updated
-   // *        correctly in those scenarios
-   // * @param ptr value to use in place of TX_WR.  If 0, then the value is read
-   // *        in from TX_WR
-   // * @return New value for ptr, to be used in the next call
-   // */
-// // FIXME Update documentation
-  // static void send_data_processing_offset(SOCKET s, uint16_t data_offset, const uint8_t *data, uint16_t len);
-
-  // /**
-   // * @brief	This function is being called by recv() also.
-   // * 
-   // * This function read the Rx read pointer register
-   // * and after copy the data from receive buffer update the Rx write pointer register.
-   // * User should read upper byte first and lower byte later to get proper value.
-   // */
-  // static void recv_data_processing(SOCKET s, uint8_t *data, uint16_t len, uint8_t peek = 0);
-
   inline void setGatewayIp(const uint8_t * addr) { writeGAR(addr); }
   inline void getGatewayIp(uint8_t * addr) { readGAR(addr); }
 
@@ -153,11 +108,7 @@ public:
   inline void setRetransmissionTime(uint16_t timeout) { writeRTR(timeout); }
   inline void setRetransmissionCount(uint8_t retry) { writeRCR(retry); }
 
-  static void execCmdSn(SOCKET s, SockCMD _cmd);
-  
-  // static uint16_t getTXFreeSize(SOCKET s);  // appears to be gone from 5100, never used it anyways
-  // static uint16_t getRXReceivedSize(SOCKET s);
-  
+  static void execCmdSn(SOCKET s, SockCMD _cmd); 
 
   // W5200 Registers
   // ---------------

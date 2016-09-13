@@ -7,49 +7,21 @@ void handle_http(bool b_idleModbus) {
   EthernetClient52 ec_client = g_es_webServ.available();  // try to get client
 
   if (ec_client) {  // got client?
-#if DEBUG_HTTP_TCP_TIMEOUT == 1
-    uint32_t u32Http_TCP_to_old;                      // time keeper for tcp timeout
-    uint32_t u32Http_print_to;
-    uint16_t u16_prntCntr(0);
-    const uint32_t k_u32_httpTcpTimeout(3000);        // HTTP_TCP_TIMEOUT timeout for device to hold on to tcp connection after http request
-    u32Http_TCP_to_old = millis();
-    u32Http_print_to = u32Http_TCP_to_old;
-
-    Serial.print("round "); Serial.print(u16_prntCntr++, DEC); Serial.println(":");
-    g_es_mbServ.printAll();
-#endif
-
 #if DISP_TIMING_DEBUG == 1
     gotClient = millis();
 #endif
-    
-
-    //while (ec_client.connected() && ((millis() - u32Http_TCP_to_old) < k_u32_httpTcpTimeout)) {
     while (ec_client.connected()) {
       uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
       char *cp_meterInd;                                     // index of 'METER' in GET request
       char ca_firstLine[gk_u16_requestLineSize] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
       char ca_remHeader[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
 
-#if DEBUG_HTTP_TCP_TIMEOUT == 1
-      if ((millis() - u32Http_print_to) > 500) {  // every 500 ms
-        Serial.print("round "); Serial.print(u16_prntCntr++, DEC); Serial.println(":");
-        g_es_mbServ.printAll();
-        u32Http_print_to = millis();
-      }
-#endif
-
       if (ec_client.available()) {   // client data available to read
         char *cp_dumPtr;
         uint16_t u16_lenRead;
         uint32_t u32_msgRecvTime;
 
-        //g_u32_httpReqTime = millis();
-        //Serial.print("got msg at "); Serial.println(g_u32_httpReqTime);
-
         u16_lenRead = ec_client.read((uint8_t*)ca_firstLine, gk_u16_requestLineSize - 1);
-
-        //Serial.print("read first line: "); Serial.println(millis() - g_u32_httpReqTime);
 
         u32_msgRecvTime = millis();
         while (u16_lenRead < gk_u16_requestLineSize - 1) {  // make sure enough is read
@@ -64,8 +36,6 @@ void handle_http(bool b_idleModbus) {
           }
         }
 
-        //Serial.print("finish first line: "); Serial.println(millis() - g_u32_httpReqTime);
-
 #if DISP_TIMING_DEBUG == 1
         lineTime = millis();
 #endif
@@ -73,28 +43,15 @@ void handle_http(bool b_idleModbus) {
         ca_firstLine[gk_u16_requestLineSize - 1] = 0;  // this will replace a character, though I don't think it is important
         ca_remHeader[gk_u16_requestBuffSize - 1] = 0;
 
-        //Serial.println(ca_firstLine);
-        //Serial.println(HTTP_req + gk_u16_requestLineSize);
-
         if (strncmp(ca_firstLine, "GET", 3) == 0) {
-          //Serial.print("preflush: "); Serial.println(millis() - g_u32_httpReqTime);
-          // clear rx buffer before responding, responses might generate more requests, and it would be
-          //   bad to flush the new request with the remains of the old one.
-          // what if we didn't flush at all and closed the ?  would there be problems
-          //flushEthRx(ec_client, (uint8_t*)ca_remHeader, gk_u16_requestBuffSize - 1);
-
-          //Serial.print("postflush: "); Serial.println(millis() - g_u32_httpReqTime);
-
 #if DISP_TIMING_DEBUG == 1
           doneHttp = millis();
 #endif
-
           if (g_b_sdInit) {
             if (strstr(ca_firstLine, ".css") != nullptr) {
               sendWebFile(ec_client, "/ep_style.css", FileType::CSS);  // only css available
             }
             else if (strstr(ca_firstLine, ".gif") != nullptr) {  // will need to expand if more pictures are desired
-              //sendGifHdr(ec_client);
               sendWebFile(ec_client, "/images/logo_let.gif", FileType::GIF);  // only gif available
 
               // assuming gif is last request and reset is required, reset
@@ -284,12 +241,7 @@ void handle_http(bool b_idleModbus) {
             Serial.println((time2 - time1), DEC);
             Serial.println();
 #endif
-
-#if DEBUG_HTTP_TCP_TIMEOUT == 1
-            u32Http_TCP_to_old = millis();  // continue loop until timeout
-#else
             break;  // break from while loop to kill client and end func
-#endif
           }
           else {
             sendBadSD(ec_client);
@@ -315,11 +267,7 @@ void handle_http(bool b_idleModbus) {
 
             sendPostResp(ec_client);
          
-#if DEBUG_HTTP_TCP_TIMEOUT == 1
-            u32Http_TCP_to_old = millis();
-#else
             break;
-#endif
           }
         }
 
@@ -334,7 +282,5 @@ void handle_http(bool b_idleModbus) {
     ec_client.stop(); // close the connection
 
     Ethernet52.cleanSockets(80);
-
-    //g_es_webServ.printAll();
   } // end if (ec_client)
 } // end handle_http

@@ -166,10 +166,8 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr) {
   uint16_t u16_totLenRead;                                     // length of message actually in headHttp
   char *cp_postMsgPtr;                                   // pointer to beginning of message
 
-  //Serial.println("start preproc");
   cp_postMsgPtr = preprocPost(ec_client, cp_httpHdr, u16_postLen);     // get length of post message and place pointer at its start
-  //Serial.println("exited preproc");
-  
+
   u16_totLenRead = strlen(cp_httpHdr) - (cp_postMsgPtr - cp_httpHdr);
 
   cp_paramStart = cp_postMsgPtr;
@@ -244,9 +242,6 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr) {
               u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
             }
             EEPROM.write((g_u16_mtrBlkStart + 9 * u8_mtrInd + 9), u8_dum);
-            //          Serial.print(u8_mtrInd, DEC);
-            //          Serial.print(F(": "));
-            //          Serial.println(u8_dum, DEC);
           }
         }
         else if (strncmp(cp_paramStart, "mtr", 3) == 0) {  //  ****************************************** METER TYPE *************************************************
@@ -425,9 +420,7 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr) {
 
           if (u32_dum > 1451606400UL) {
             g_b_rtcGood = true;
-#if defined(CORE_TEENSY)
             Teensy3Clock.set(u32_dum);
-#endif
             setTime(u32_dum);
           }
         }
@@ -456,7 +449,6 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr) {
       }
     }
   }  // end while
-  //flushEthRx(ec_client, (uint8_t*)cp_httpHdr, gk_u16_requestBuffSize - 1);  // this shouldn't need to be used, here just in case
 
   digitalWrite(gk_s16_epWriteLed, LOW);
   setConstants();

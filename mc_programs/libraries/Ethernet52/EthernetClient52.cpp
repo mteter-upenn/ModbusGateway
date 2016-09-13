@@ -14,35 +14,12 @@ extern "C" {
 
 uint16_t EthernetClient52::_srcport = 1024;
 
-// EthernetClient52::EthernetClient52() : _sock(MAX_SOCK_NUM) {
-// }
-
-// EthernetClient52::EthernetClient52(uint8_t sock) : _sock(sock) {
-// }
-
 
 int EthernetClient52::connect(const char* host, uint16_t port) {
 	return 0;
 }
-// int EthernetClient52::connect(const char* host, uint16_t port) {
-  // // Look up the host first
-  // int ret = 0;
-  // DNSClient52 dns;
-  // IPAddress remote_addr;
-
-  // dns.begin(Ethernet52.dnsServerIP());
-  // ret = dns.getHostByName(host, remote_addr);
-  // if (ret == 1) {
-    // return connect(remote_addr, port);
-  // } else {
-    // return ret;
-  // }
-// }
 
 int EthernetClient52::connect(IPAddress ip, uint16_t port) {
-  // if (_sock != MAX_SOCK_NUM)
-    // return 0;
-	
 	if (_sock < MAX_SOCK_NUM) {
 		if (socketStatus(_sock) != SnSR::CLOSED) socketDisconnect(_sock);
 		_sock = MAX_SOCK_NUM;
@@ -50,6 +27,7 @@ int EthernetClient52::connect(IPAddress ip, uint16_t port) {
 	if (ip == IPAddress(0ul) || ip == IPAddress(0xFFFFFFFFul)) return 0;
 	
 	_sock = socketBegin(SnMR::TCP, 0);  // sending 0 for port means it will be a global ticker (good)
+	
 	if (_sock >= MAX_SOCK_NUM) return 0;
 	socketConnect(_sock, rawIPAddress(ip), port);  // the destination port is important for server peers
 	
@@ -59,38 +37,6 @@ int EthernetClient52::connect(IPAddress ip, uint16_t port) {
 		if (stat == SnSR::CLOSED) return 0;
 		delay(1);
 	}
-	
-  // for (int i = 0; i < EthernetClass52::_u8MaxUsedSocks; i++) {
-		// if (EthernetClass52::_server_port_mask[i] == port || !EthernetClass52::_server_port_mask[i]){ 
-			// uint8_t s = socketStatus(i);
-			// if (s == SnSR::CLOSED || s == SnSR::FIN_WAIT || s == SnSR::CLOSE_WAIT) {
-				// _sock = i;
-				// break;
-			// }
-		// }
-  // }
-
-  // if (_sock == MAX_SOCK_NUM)
-    // return 0;
-
-  // _srcport++;
-  // if (_srcport < 1024) _srcport = 1024;
-  // socket(_sock, SnMR::TCP, _srcport, 0);
-
-  // if (!::connect(_sock, rawIPAddress(ip), port)) {
-    // _sock = MAX_SOCK_NUM;
-    // return 0;
-  // }
-
-  // while (status() != SnSR::ESTABLISHED) {
-    // delay(1);
-    // if (status() == SnSR::CLOSED) {
-      // _sock = MAX_SOCK_NUM;
-      // return 0;
-    // }
-  // }
-
-  // return 1;
 }
 
 size_t EthernetClient52::write(uint8_t b) {
@@ -132,19 +78,8 @@ int EthernetClient52::peek() {
 	if (_sock >= MAX_SOCK_NUM) return -1;
 	if (!available()) return -1;
 	return socketPeek(_sock);
-	
-  // uint8_t b;
-  // // Unlike recv, peek doesn't check to see if there's any data available, so we must
-  // if (!available())
-    // return -1;
-  // ::peek(_sock, &b);
-  // return b;
 }
 
-// void EthernetClient52::flushRx() {
-  // while (available())
-    // read();
-// }
 
 void EthernetClient52::flush()
 {
@@ -172,14 +107,6 @@ void EthernetClient52::forceClose() {
 	// if it hasn't closed, close it forcefully
   if (socketStatus(_sock) != SnSR::CLOSED)
     socketClose(_sock);
-
-// #ifdef UPENN_TEENSY_MBGW
-	// if (_sock == MAX_SOCK_NUM - 1) {
-		// EthernetClass52::_server_port[_sock] = 0;
-	// }
-// #else
-  // EthernetClass52::_server_port[_sock] = 0;
-// #endif
 
 	if (EthernetClass52::_server_port_mask[_sock] == 0) {
 		EthernetClass52::_server_port[_sock] = 0;
