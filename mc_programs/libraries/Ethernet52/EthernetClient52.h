@@ -48,6 +48,7 @@ private:
   // uint16_t _dstport; // ACH
   
   // ACH - added
+public:
   void getRemoteIP(uint8_t remoteIP[4]); // ACH
   uint16_t getRemotePort(); // ACH
 #endif

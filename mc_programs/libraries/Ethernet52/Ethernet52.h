@@ -58,6 +58,7 @@ public:
   IPAddress gatewayIP();
   // IPAddress dnsServerIP();
 
+	
   friend class EthernetClient52;
   friend class EthernetServer52;
 	friend class EthernetUDP52;

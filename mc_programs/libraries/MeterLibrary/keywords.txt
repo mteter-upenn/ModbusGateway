@@ -6,17 +6,37 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-MeterLibrary	               KEYWORD1
+MeterLibBlocks	             KEYWORD1
+MeterLibGroups               KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
+# MeterLibBlocks
 changeInputs                 KEYWORD2
+getNumRegs                   KEYWORD2
+getReqReg                    KEYWORD2
 convertToFloat               KEYWORD2
+
+# MeterLibGroups
+setMeterType                 KEYWORD2
+setGroup                     KEYWORD2
+getNumRegs                   KEYWORD2
+getReqReg                    KEYWORD2
+getCurGrp                    KEYWORD2
+getNumGrps                   KEYWORD2
+groupToFloat                 KEYWORD2
+groupMbErr                   KEYWORD2
+groupLastFlags               KEYWORD2
+
+# Functions
+swapBytes                    KEYWORD2
+g_convertToFloat             KEYWORD2
+
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 
-#const public globals	       LITERAL1
+#const public globals	        LITERAL1
