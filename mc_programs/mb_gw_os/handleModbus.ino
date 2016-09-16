@@ -15,8 +15,8 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
   if (u16_mbReqLen == 12) { // typical modbus/tcp message is 12 bytes long
     u8a_mbResp[0] = u8a_mbReq[0]; // copy first 2 bytes to outbound message
     u8a_mbResp[1] = u8a_mbReq[1];
-    u8a_mbResp[2] = 0;
-    u8a_mbResp[3] = 0;
+    u8a_mbResp[2] = 0;  // reserved, does nothing
+    u8a_mbResp[3] = 0;  // reserved, does nothing
     
     u8a_mbResp[6] = u8a_mbReq[6]; // set device
     
@@ -46,7 +46,8 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
       u16_adjReqReg = u16_reqReg;
       u16_adjNumRegs = u16_numRegs;
     }
-    else if ((u16_reqReg > 9999) && (u16_reqReg < 20000)) {
+    else if ((u16_reqReg > 9999) && (u16_reqReg < 20000) && ((u8_mbReqFunc == 3) || (u8_mbReqFunc == 4))) {
+      
       b_reqRegManip = true;  // 10k request
       u16_adjReqReg = u16_reqReg - 10000;
       b_foundReg = findRegister(u16_adjReqReg, fltConvFlg, u8_mtrType);
@@ -95,7 +96,8 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
       u8_mbError = 0x02;
     }
     
-    if ((!(u8_mbReqFunc == 3) || (u8_mbReqFunc == 4))) {
+    //if ((!(u8_mbReqFunc == 3) || (u8_mbReqFunc == 4))) {
+    if (u8_mbReqFunc > 4) {
       u8_mbError = 0x01;
     }
     
@@ -112,12 +114,12 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
     }  // end if error
     else {  // no error yet, handle code
       switch (u8_mbReqFunc) {
-//          case 1:
-//            g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
-//            break;
-//          case 2:
-//            g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
-//            break;
+        case 1:
+          g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
+          break;
+        case 2:
+          g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
+          break;
         case 3:
           u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
           break;
@@ -139,9 +141,9 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
       switch (u8_mbResult) {  // why even bother with this switch?
         case 0:  // g_mm_node.ku8MBSuccess
           if (!b_reqRegManip) {  // no adjustments to data
-            if (b_byteSwap) {
+            if (b_byteSwap || (u8_mbReqFunc < 3)) {  // if byteswap or coil request
               // would like to use this method, but bytes need to be swapped MSB for network
-              g_mm_node.copyResponseBuffer((uint16_t*)(&u8a_mbResp[9]));
+              g_mm_node.copyResponseBuffer(&u8a_mbResp[9]);
             }
             else {
               uint16_t u16_tempReg;

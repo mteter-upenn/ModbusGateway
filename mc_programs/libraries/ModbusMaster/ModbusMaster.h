@@ -218,6 +218,7 @@ class ModbusMaster
     uint16_t getResponseBuffer(uint8_t);
     void     clearResponseBuffer();
 		bool     copyResponseBuffer(uint16_t *const u16p_dataDest);
+		bool     copyResponseBuffer(uint8_t *const u8p_dataDest);
     uint8_t  setTransmitBuffer(uint8_t, uint16_t);
     void     clearTransmitBuffer();
         
@@ -256,7 +257,8 @@ class ModbusMaster
     uint16_t  u16TransmitBufferLength;
     uint16_t* rxBuffer; // from Wire.h -- need to clean this up Rx
     uint16_t  _u16ResponseBufferIndex;
-    uint16_t  _u16ResponseBufferLength;
+    // uint16_t  _u16ResponseBufferLength;
+		uint8_t   m_u8_responseBytes;
     uint16_t  _u16MBResponseTimeout          = 2000; ///< Modbus timeout [milliseconds]  // MJT
 	
     // Modbus function codes for bit access
