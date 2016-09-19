@@ -115,10 +115,10 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
     else {  // no error yet, handle code
       switch (u8_mbReqFunc) {
         case 1:
-          g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
+          u8_mbResult = g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
           break;
         case 2:
-          g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
+          u8_mbResult = g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
           break;
         case 3:
           u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
