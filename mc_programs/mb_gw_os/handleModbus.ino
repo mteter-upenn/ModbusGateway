@@ -215,7 +215,13 @@ void handle_modbus(bool b_idleHttp) {
         u16_lenRead = ec_client.read(u8a_mbReq, gk_u16_mbArraySize);
         u32_mbReqStart = millis();
 
-        u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
+				// if client hasn't read 6 bytes, then there is a huge problem here
+				if (u16_lenRead < 6) {
+					u16_givenLen = 65535;
+				}
+				else {
+					u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
+				}
 
         if ((u16_lenRead > u16_givenLen) || (u16_givenLen > gk_u16_mbArraySize)) {
           ec_client.stop();               // grabbed too much, just exit without worrying.  It  shouldn't happen, any other 
@@ -231,6 +237,13 @@ void handle_modbus(bool b_idleHttp) {
             Ethernet52.cleanSockets(502);
             return;
           }
+
+					if (u16_lenRead < 6) {
+						u16_givenLen = 65535;
+					}
+					else {
+						u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
+					}
         }
         
         getModbus(u8a_mbReq, u16_lenRead, u8a_mbResp, u16_mbRespLen, false);
