@@ -58,6 +58,7 @@ typedef void *__builtin_va_list;
 #include "handleHTTP.ino"
 #include "handleModbus.ino"
 #include "handleRTC.ino"
+#include "handleServers.ino"
 #include "secondaryData.ino"
 #include "secondaryHTTP.ino"
 #include "secondaryModbus.ino"
