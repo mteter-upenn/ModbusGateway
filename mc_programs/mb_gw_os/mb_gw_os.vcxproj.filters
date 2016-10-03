@@ -25,6 +25,7 @@
     <None Include="secondaryModbus.ino" />
     <None Include="setConstants.ino" />
     <None Include="tertiaryHTTP.ino" />
+    <None Include="handleServers.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.mb_gw_os.vsarduino.h">

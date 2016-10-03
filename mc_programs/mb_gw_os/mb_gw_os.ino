@@ -111,6 +111,8 @@ uint32_t doneHttp, gotClient, doneFind, doneSend, time1, time2;
 // PROTOTYPES:
 // main
 void resetArd(void);
+// handleServers
+void handleServers();
 // handleHTTP
 void handle_http(bool b_idleModbus);
 // secondaryHTTP - GET and general functions
@@ -327,8 +329,10 @@ void setup() {
 
 
 void loop() { 
-  handle_modbus(true);
-  handle_http(true);
+  //handle_modbus(true);
+  //handle_http(true);
+  handleServers();
+
   if (g_b_recordData && g_b_rtcGood) {
     handle_data();
   }
