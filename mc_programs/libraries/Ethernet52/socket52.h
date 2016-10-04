@@ -21,6 +21,8 @@ uint8_t  socketListen(uint8_t s);
 uint16_t socketRemotePort(uint8_t s);
 // get remote IP
 void socketRemoteIP(uint8_t s, uint8_t remoteIP[4]);
+// get source port
+uint16_t socketSourcePort(uint8_t s);
 // Send data (TCP)
 uint16_t socketSend(uint8_t s, const uint8_t * buf, uint16_t len);
 // Receive data (TCP)

@@ -265,6 +265,17 @@ void socketRemoteIP(uint8_t s, uint8_t remoteIP[4]) {
 }
 
 
+// Get the source port of the socket
+// 
+uint16_t socketSourcePort(uint8_t s) {
+	uint16_t u16_sockPort;
+	
+	SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
+	u16_sockPort = W5200.readSnPORT(s);
+	SPI.endTransaction();
+	return u16_sockPort;
+}
+
 /*****************************************/
 /*    Socket Data Receive Functions      */
 /*****************************************/

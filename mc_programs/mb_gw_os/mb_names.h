@@ -25,6 +25,18 @@ enum class XmlFile {
   METER
 };
 
+
+enum SockFlag {
+  SockFlag_LISTEN = 0x00,
+  SockFlag_ESTABLISHED = 0x01,
+  SockFlag_MODBUS = 0x02,
+  SockFlag_HTTP = 0x04,
+  SockFlag_MB485 = 0x08,
+  SockFlag_MBTCP = 0x16,
+  SockFlag_SENT_MSG = 0x32
+
+};
+
 //enum class FloatConv {
 //  SKIP = -1,        //  -1
 //  FLOAT,            //   0

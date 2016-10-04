@@ -4,9 +4,34 @@
 
 // start by transforming 80 server, it will make it easier
 void handleServers() {
-  bool b_openSocks = true;  // assume there are open sockets - don't worry we'll check first to make sure
+  bool b_allFreeSocks = true;  // assume there are open sockets - don't worry we'll check first to make sure
+  bool b_485avail = true;  // can assume 485 is open at init
+  bool ba_clientSocksAvail[2] = { false, false };  // assume both socks used at init
+  
+  while (b_allFreeSocks) {
+    b_allFreeSocks = true;  // set true, if anything is active, set false to avoid escape
 
-  while (b_openSocks) {
+    for (int ii = 0; ii < 8; ++ii) {
+      if (g_u16a_socketFlags[ii] & SockFlag_ESTABLISHED) {  
+        b_allFreeSocks = false;  // this socket is being used!
+      }
+      else {// if we haven't started with this socket yet
+        uint8_t u8_sockStatus = socketStatus(ii);
+
+        if (!((u8_sockStatus == SnSR::CLOSED) || (u8_sockStatus == SnSR::LISTEN))) {  //
+          uint16_t u16_srcPort = socketSourcePort(ii);
+
+          b_allFreeSocks = false;  // this socket is being used!
+
+          g_eca_socks[ii] = 
+
+        }
+      }
+    }
+
+    if (b_allFreeSocks) {
+      break;
+    }
     // Loop through all sockets via a server class
     //   avoid sockets known to be currently open
     //   if find new socket, set client array
@@ -22,6 +47,7 @@ void handleServers() {
     //         reset timeout clock?
     //         if tcp, close socket used
     //         update flags to show closed client socket/closed 485
+    //         clean sockets
     //     elif not sent_msg
     //       determine protocol (tcp or 485)
     //       if protocol unavailable
@@ -34,6 +60,8 @@ void handleServers() {
     //
     //     if timeout
     //       close socket gracefully
+    //       set flags
+    //       clean sockets
     //   if port 80
     //     send to trimmed down version of handleHttp
     //       just need to respond to request

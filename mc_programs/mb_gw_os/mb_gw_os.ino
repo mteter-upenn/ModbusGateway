@@ -99,6 +99,10 @@ EthernetServer52 g_es_mbServ(502);  // serv_mb                           // star
 
 ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
 
+// server socket info
+uint32_t g_u32a_socketTimeoutStart[8] = { 0 };
+uint16_t g_u16a_socketFlags[8] = { 0 };
+EthernetClient52 g_eca_socks[8];
 
 // miscellaneous
 bool g_b_sdInit = false;  // sdInit                                   // set flag corresponding to sd card initializtion
@@ -336,6 +340,7 @@ void loop() {
   if (g_b_recordData && g_b_rtcGood) {
     handle_data();
   }
+
   if (g_b_useNtp && ((millis() - g_u32_rtcNtpLastReset) > gk_u32_rtcNtpResetDelay)) {
     // if enough time has elapsed and we want to use ntp
     time_t t_localTime(0);

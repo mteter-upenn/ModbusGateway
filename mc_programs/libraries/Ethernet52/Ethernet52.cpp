@@ -167,19 +167,19 @@ void EthernetClass52::cleanSockets(uint16_t port) {
 		}
 	}
 	
-	if (b_busySocks) {
+	if (b_busySocks) {  // if there all sockets under this port are busy (ESTABLISHED), then open emergency socket 
 		for (int ii = 0; ii < _u8MaxUsedSocks; ++ii) {
-			if (_server_port_mask[ii] == 0) {
+			if (_server_port_mask[ii] == 0) {  // if emergency socket
 				uint8_t u8_sockStat = socketStatus(ii);
 				
-				if (u8_sockStat == SnSR::CLOSED) {
+				if (u8_sockStat == SnSR::CLOSED) {  // if not currently in use, listen
 					socketBegin(SnMR::TCP, port, ii);
 					socketListen(ii);
 				}
 			}
 		}
 	}
-	else {  // close all emergency sockets on given port
+	else {  // close all emergency sockets on given port that are acting as servers (LISTEN)
 		for (int ii = 0; ii < _u8MaxUsedSocks; ++ii) {
 			if (_server_port_mask[ii] == 0 && _server_port[ii] == port) {
 				uint8_t u8_sockStat = socketStatus(ii);
