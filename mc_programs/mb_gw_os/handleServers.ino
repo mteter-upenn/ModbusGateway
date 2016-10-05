@@ -11,27 +11,70 @@ void handleServers() {
   while (b_allFreeSocks) {
     b_allFreeSocks = true;  // set true, if anything is active, set false to avoid escape
 
+    // loop through sockets to see if any new ones are available
+    //   this is a separate loop so that no sockets get caught hanging - might not actually need it, but it won't hurt
     for (int ii = 0; ii < 8; ++ii) {
       if (g_u16a_socketFlags[ii] & SockFlag_ESTABLISHED) {  
         b_allFreeSocks = false;  // this socket is being used!
       }
-      else {// if we haven't started with this socket yet
-        uint8_t u8_sockStatus = socketStatus(ii);
+      else { // if we haven't started with this socket yet
+        //uint8_t u8_sockStatus = socketStatus(ii);
+        uint8_t u8_sockStatus = g_eca_socks[ii].status();
 
         if (!((u8_sockStatus == SnSR::CLOSED) || (u8_sockStatus == SnSR::LISTEN))) {  //
-          uint16_t u16_srcPort = socketSourcePort(ii);
+          //uint16_t u16_srcPort = socketSourcePort(ii);
+          uint16_t u16_srcPort = g_eca_socks[ii].getSourcePort();
+          //Serial.print("not closed or listen but 0x"); Serial.println(u8_sockStatus, HEX);
 
-          b_allFreeSocks = false;  // this socket is being used!
-
-          g_eca_socks[ii] = 
-
+          if (u16_srcPort == 502) {
+            b_allFreeSocks = false;  // this socket is being used!
+            g_u16a_socketFlags[ii] = (SockFlag_ESTABLISHED | SockFlag_MODBUS);
+          }
+          else if (u16_srcPort == 80) {
+            b_allFreeSocks = false;  // this socket is being used!
+            g_u16a_socketFlags[ii] = (SockFlag_ESTABLISHED | SockFlag_HTTP);
+            //Serial.print("socket "); Serial.print(ii, DEC); Serial.println(" active on 80");
+          }
+          else {
+            // close socket!
+            g_eca_socks[ii].stop();
+            g_eca_socks[ii].setSocket(ii);
+            //socketDisconnect(ii);  // this does not check or force if actually closed
+          }
         }
       }
     }
 
-    if (b_allFreeSocks) {
+    if (b_allFreeSocks) {  // nothing being used
       break;
     }
+
+    for (int ii = 0; ii < 8; ++ii) {  // loop through sockets and handle them
+      if (g_u16a_socketFlags[ii] & SockFlag_ESTABLISHED) { // only look at sockets in use
+        if (g_u16a_socketFlags[ii] & SockFlag_MODBUS) {  // if port 502
+          if (g_u16a_socketFlags[ii] & SockFlag_SENT_MSG) {
+
+          }
+          else {  // have not relayed message to modbus device
+            if (!(g_u16a_socketFlags[ii] & SockFlag_READ_MSG)) {  // haven't read modbus request yet
+
+            }
+
+          }
+        }
+        else if (g_u16a_socketFlags[ii] & SockFlag_HTTP) {  // if port 80
+          handle_http(ii);
+
+          g_eca_socks[ii].stop();
+          g_eca_socks[ii].setSocket(ii);
+
+          Ethernet52.cleanSockets(80);  // makes sure desired sockets are listening
+          g_u16a_socketFlags[ii] = SockFlag_LISTEN;  // reset flag
+        }
+      }
+    }
+
+
     // Loop through all sockets via a server class
     //   avoid sockets known to be currently open
     //   if find new socket, set client array

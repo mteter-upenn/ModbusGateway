@@ -138,7 +138,9 @@
     <None Include="handleRTC.ino">
       <FileType>CppCode</FileType>
     </None>
-    <None Include="handleServers.ino" />
+    <None Include="handleServers.ino">
+      <FileType>CppCode</FileType>
+    </None>
     <None Include="mb_gw_os.ino">
       <FileType>CppCode</FileType>
     </None>

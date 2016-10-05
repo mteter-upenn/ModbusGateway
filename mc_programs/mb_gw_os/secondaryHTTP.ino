@@ -76,15 +76,17 @@ void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType
           break;
       }
 
-      if (en_fileType == FileType::GIF) {
-        strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
-      }
-      else {
-        strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
-      }
+      //if (en_fileType == FileType::GIF) {
+      //  strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
+      //}
+      //else {
+      strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
+      //}
       hdrLength = strlen(ca_streamBuf);
       sprintf(ca_streamBuf + hdrLength, "%lu\n\n", u32_fileSize);
 
+      //strcat_P(ca_streamBuf, PSTR("Connection: close\n\n"));
+      
       ec_client.write(ca_streamBuf);
     }
 

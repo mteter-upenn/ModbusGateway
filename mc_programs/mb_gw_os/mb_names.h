@@ -26,14 +26,16 @@ enum class XmlFile {
 };
 
 
-enum SockFlag {
-  SockFlag_LISTEN = 0x00,
-  SockFlag_ESTABLISHED = 0x01,
-  SockFlag_MODBUS = 0x02,
-  SockFlag_HTTP = 0x04,
-  SockFlag_MB485 = 0x08,
-  SockFlag_MBTCP = 0x16,
-  SockFlag_SENT_MSG = 0x32
+enum SockFlag {  // 16 bit flag
+  SockFlag_LISTEN =      0x0000,  // 0,    listen or closed - no communications
+  SockFlag_ESTABLISHED = 0x0001,  // 1,    comms with client - active
+  SockFlag_MODBUS =      0x0002,  // 2,    port 502
+  SockFlag_HTTP =        0x0004,  // 4,    port 80
+  SockFlag_MB485 =       0x0008,  // 8,    modbus device connected via 485 (local)
+  SockFlag_MBTCP =       0x0010,  // 16,   modbus device connected via ethernet (not local)
+  SockFlag_READ_MSG =    0x0020,  // 32,   initial message from client
+  SockFlag_SENT_MSG =    0x0040,  // 64,   relay message to modbus device
+  SockFlag_READ_MSG2 =   0x0080,  // 128,  return message from modbus device
 
 };
 

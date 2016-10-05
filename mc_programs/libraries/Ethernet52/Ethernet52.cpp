@@ -137,7 +137,7 @@ void EthernetClass52::begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_serv
 
 // make sure no sockets on port are closed
 // if all such sockets are busy, then open emergency socket (if available) to listen
-// if not, then make sure any non established emergency sockets are closed
+// if not, then make sure any non active (set to listen) emergency sockets are closed
 void EthernetClass52::cleanSockets(uint16_t port) {
 	bool b_busySocks = true;
 	
@@ -146,6 +146,7 @@ void EthernetClass52::cleanSockets(uint16_t port) {
 	for (int ii = 0; ii < _u8MaxUsedSocks; ++ii) {
 		if (_server_port_mask[ii] == port){
 			uint8_t u8_sockStat = socketStatus(ii);
+			// Serial.print("socket "); Serial.print(ii, DEC); Serial.print(" stat: 0x"); Serial.println(u8_sockStat, HEX);
 			
 			if (u8_sockStat == SnSR::CLOSED) {
 				socketBegin(SnMR::TCP, port, ii);

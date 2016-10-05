@@ -128,6 +128,16 @@ uint8_t EthernetClient52::connected() {
     (s == SnSR::CLOSE_WAIT && !available()));
 }
 
+bool EthernetClient52::setSocket(uint8_t u8_sock) {
+	if (u8_sock >= MAX_SOCK_NUM) {
+		return false;
+	}
+	else {
+		_sock = u8_sock;
+		return true;
+	}
+}
+
 uint8_t EthernetClient52::status() {
   if (_sock >= MAX_SOCK_NUM) return SnSR::CLOSED;
   return socketStatus(_sock);
@@ -146,13 +156,18 @@ bool EthernetClient52::operator==(const EthernetClient52& rhs) {
 #ifdef ACH_INSERTION
 // ACH - added
 void EthernetClient52::getRemoteIP(uint8_t remoteIP[4]) { // ACH
-	// W5200.readSnDIPR(_sock, remoteIP);
+	// if (_sock >= MAX_SOCK_NUM) return SnSR::CLOSED;
 	socketRemoteIP(_sock, remoteIP);
 	return; // remoteIP;
 }
  
 uint16_t EthernetClient52::getRemotePort() { // ACH
-	// return W5200.readSnDPORT(_sock);
+	if (_sock >= MAX_SOCK_NUM) return 0;
 	return socketRemotePort(_sock);
 }
 #endif
+
+uint16_t EthernetClient52::getSourcePort() { // ACH
+	if (_sock >= MAX_SOCK_NUM) return 0;
+	return socketSourcePort(_sock);
+}

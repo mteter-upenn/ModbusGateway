@@ -102,7 +102,7 @@ ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  //
 // server socket info
 uint32_t g_u32a_socketTimeoutStart[8] = { 0 };
 uint16_t g_u16a_socketFlags[8] = { 0 };
-EthernetClient52 g_eca_socks[8];
+EthernetClient52 g_eca_socks[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
 // miscellaneous
 bool g_b_sdInit = false;  // sdInit                                   // set flag corresponding to sd card initializtion
@@ -118,7 +118,7 @@ void resetArd(void);
 // handleServers
 void handleServers();
 // handleHTTP
-void handle_http(bool b_idleModbus);
+void handle_http(uint8_t u8_socket);
 // secondaryHTTP - GET and general functions
 //void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
 void send404(EthernetClient52 &ec_client);
