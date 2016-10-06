@@ -52,8 +52,11 @@ public:
 	bool remove(uint8_t u8_unqId);
 	
 	// set b_sentReq to true
-	void flagSentMsg(uint8_t u8_unqId);
-		
+	bool flagSentMsg(uint8_t u8_unqId);
+	
+	// get request
+	bool getMbReq(uint8_t u8_unqId, ModbusRequest *p_mbReq);
+	
 	// get next available request for given protocol
 	bool getNext485(ModbusRequest *p_mbReq);
 	bool getNextTcp(ModbusRequest *p_mbReq);

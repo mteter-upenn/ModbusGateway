@@ -123,13 +123,27 @@ bool ModbusStack::remove(uint8_t u8_unqId) {
 }
 
 
-void ModbusStack::flagSentMsg(uint8_t u8_unqId){
+bool ModbusStack::flagSentMsg(uint8_t u8_unqId){
 	for (int ii = 0; ii < m_u8_length; ++ii) {
 		if (m_mbStack[ii].u16_unqId == u8_unqId) {
 			m_mbStack[ii].b_sentReq = true;
-			return;
+			return true;
 		}
 	}
+	
+	return false;
+}
+
+
+bool ModbusStack::getMbReq(uint8_t u8_unqId, ModbusRequest *p_mbReq){
+	for (int ii = 0; ii < m_u8_length; ++ii) {
+		if (m_mbStack[ii].u16_unqId == u8_unqId) {
+			*p_mbReq = m_mbStack[ii];
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 

@@ -7,7 +7,8 @@ void handleServers() {
   bool b_allFreeSocks = true;  // assume there are open sockets - don't worry we'll check first to make sure
   bool b_485avail = true;  // can assume 485 is open at init
   bool ba_clientSocksAvail[2] = { false, false };  // assume both socks used at init
-  
+  ModbusStack mbStack;
+
   while (b_allFreeSocks) {
     b_allFreeSocks = true;  // set true, if anything is active, set false to avoid escape
 

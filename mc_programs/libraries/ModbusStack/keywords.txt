@@ -16,6 +16,7 @@ ModbusStack   	             KEYWORD1
 add                          KEYWORD2
 remove                       KEYWORD2
 flagSentMsg                  KEYWORD2
+getMbReq                     KEYWORD2
 getNext485                   KEYWORD2
 getNextTcp                   KEYWORD2
 clearAll                     KEYWORD2
