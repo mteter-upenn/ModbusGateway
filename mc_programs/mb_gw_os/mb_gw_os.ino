@@ -5,6 +5,7 @@
 
 
 #include "mb_names.h"
+#include "ModbusStack.h"
 #include <FloatConvEnum.h>
 #include <TimeLib.h>
 #include <SPI.h>

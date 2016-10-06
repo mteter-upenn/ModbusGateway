@@ -1,0 +1,32 @@
+#######################################
+# Syntax Coloring Map For ModbusStack
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ModbusStack   	             KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# ModbusStack
+add                          KEYWORD2
+remove                       KEYWORD2
+flagSentMsg                  KEYWORD2
+getNext485                   KEYWORD2
+getNextTcp                   KEYWORD2
+clearAll                     KEYWORD2
+getLength                    KEYWORD2
+
+# General Functions
+
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+#const public globals	        LITERAL1

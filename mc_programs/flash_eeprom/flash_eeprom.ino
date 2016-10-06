@@ -2,6 +2,7 @@
 
 
 
+#include <ModbusStack.h>
 #include <FloatConvEnum.h>
 #include <EEPROM.h>
 #include "mac.h"

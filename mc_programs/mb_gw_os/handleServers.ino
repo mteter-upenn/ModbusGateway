@@ -65,7 +65,7 @@ void handleServers() {
         else if (g_u16a_socketFlags[ii] & SockFlag_HTTP) {  // if port 80
           //THIS ALL NEEDS TO CHANGE TO HANDLE LIVEXML REQUESTS IF A MODBUS STACK IS GOING TO BE USED
           handle_http(ii);
-
+          
           g_eca_socks[ii].stop();
           g_eca_socks[ii].setSocket(ii);
 
