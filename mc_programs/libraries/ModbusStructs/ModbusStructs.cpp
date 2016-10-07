@@ -1,5 +1,5 @@
 /* _____PROJECT INCLUDES_____________________________________________________ */
-#include <FloatConvEnum.h>
+#include <ModbusStructs.h>
 
 /* _____PUBLIC FUNCTIONS_____________________________________________________ */
 

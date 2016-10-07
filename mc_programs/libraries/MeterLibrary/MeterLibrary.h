@@ -16,7 +16,7 @@
 /* _____PROJECT INCLUDES_____________________________________________________ */
 #include <EEPROM.h>
 
-#include <FloatConvEnum.h>
+#include <ModbusStructs.h>
 
 /* _____CLASS DEFINITIONS____________________________________________________ */
 

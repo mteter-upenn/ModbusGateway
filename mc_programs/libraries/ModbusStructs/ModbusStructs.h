@@ -1,11 +1,25 @@
-#ifndef FloatConvEnum_h
-#define FloatConvEnum_h
+#ifndef ModbusStructs_h
+#define ModbusStructs_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
 #else
 #include "WProgram.h"
 #endif
+
+
+struct ModbusRequest {
+	uint16_t  u16_unqId;
+	uint8_t   u8_tcp485Req;  // 128 if tcp, but not assigned a socket, otherwise the socket number (never 0), 0 is 485
+	uint8_t   u8_id;
+	uint8_t   u8_vid;
+	uint8_t   u8_func;
+	uint16_t  u16_start;
+	uint16_t  u16_length;
+	bool      b_adjReq;
+	bool      b_sentReq;
+	// uint8_t  u8_priority;  // try to use priority flags to show where new priorities begin
+};
 
 /**
 enum class for definitions of different data types meters can return

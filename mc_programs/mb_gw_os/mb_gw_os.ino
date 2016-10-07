@@ -6,7 +6,7 @@
 
 #include "mb_names.h"
 #include "ModbusStack.h"
-#include <FloatConvEnum.h>
+#include <ModbusStructs.h>
 #include <TimeLib.h>
 #include <SPI.h>
 #include <Ethernet52.h>

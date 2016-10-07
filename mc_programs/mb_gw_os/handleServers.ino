@@ -76,6 +76,46 @@ void handleServers() {
       }
     }
 
+    // loop through all available modbus requests
+    if (mbStack.getLength() > 0) {
+      uint8_t u8_stkInd;
+
+      if (b_485avail) {
+        u8_stkInd = mbStack.getNext485();
+        if (u8_stkInd != 255) {
+          // SEND REQUEST
+          mbStack[u8_stkInd].b_sentReq = true;
+          // START TIMER
+          b_485avail = false;
+        }
+        else {  // no 485 requests exist
+
+        }
+      }
+      else {
+        // CHECK IF DATA HAS BEEN RETURNED
+        
+        //b_485avail = true;
+      }
+
+      for (int ii = 0; ii < 2; ++ii) {
+        if (ba_clientSocksAvail[ii]) {  // if socket is available for use
+          u8_stkInd = mbStack.getNextTcp();
+          if (u8_stkInd != 255) {
+            // SEND REQUEST
+            mbStack[u8_stkInd].b_sentReq = true;
+            // START TIMER
+            ba_clientSocksAvail[ii] = false;
+          }
+        }
+        else {  // socket is in use
+          // CHECK IF DATA HAS BEEN RETURNED
+
+          //ba_clientSocksAvail[ii] = true;
+        }
+      }
+    }
+
 
     // Loop through all sockets via a server class
     //   avoid sockets known to be currently open

@@ -8,18 +8,7 @@
 #include "WProgram.h"
 #endif
 
-struct ModbusRequest {
-	uint16_t  u16_unqId;
-	bool      b_tcpReq;
-	uint8_t   u8_id;
-	uint8_t   u8_vid;
-	uint8_t   u8_func;
-	uint16_t  u16_start;
-	uint16_t  u16_length;
-	bool      b_adjReq;
-	bool      b_sentReq;
-	// uint8_t  u8_priority;  // try to use priority flags to show where new priorities begin
-};
+#include <ModbusStructs.h>
 	
 class ModbusStack {
 private:
@@ -44,7 +33,7 @@ public:
 	ModbusStack(): m_u8_length(0), m_u8_1end(0), m_u8_2end(0), m_u16_idGen(0) {}
 
 	// add struct to list with given values and priority
-	uint8_t add(bool b_tcpReq, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, uint16_t u16_start,
+	uint8_t add(uint8_t u8_tcp485Req, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, uint16_t u16_start,
 	         uint16_t u16_length, bool b_adjReq, uint8_t u8_priority);
 	// uint8_t add(uint8_t u8_vid, uint8_t *u8p_mbHdr, uint8_t u8_priority);
 	
@@ -58,8 +47,8 @@ public:
 	bool getMbReq(uint8_t u8_unqId, ModbusRequest *p_mbReq);
 	
 	// get next available request for given protocol
-	bool getNext485(ModbusRequest *p_mbReq);
-	bool getNextTcp(ModbusRequest *p_mbReq);
+	uint8_t getNext485();
+	uint8_t getNextTcp();
 	
 	// set all lengths to 0, thereby removing all requests, nothing else need to be done
 	void clearAll();
@@ -67,6 +56,13 @@ public:
 	// return total requests in stack
 	uint8_t getLength();
 	
+	// Overloaded index operator to allow getting and setting 
+	ModbusRequest operator[](int index) const {
+		return m_mbStack[index];
+	};
+	ModbusRequest& operator[](int index) {
+		return m_mbStack[index];
+	};
 };
 
 #endif
