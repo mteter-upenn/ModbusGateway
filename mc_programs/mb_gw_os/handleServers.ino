@@ -83,6 +83,7 @@ void handleServers() {
       if (b_485avail) {
         u8_stkInd = mbStack.getNext485();
         if (u8_stkInd != 255) {
+          g_modbusServer.sendSerial(mbStack[u8_stkInd]);
           // SEND REQUEST
           mbStack[u8_stkInd].b_sentReq = true;
           // START TIMER
@@ -93,8 +94,15 @@ void handleServers() {
         }
       }
       else {
+        // need ModbusRequest to set flags
         // CHECK IF DATA HAS BEEN RETURNED
-        
+        if (g_modbusServer.serialAvailable()) {
+
+        }
+        //else if (TIMEOUT) {
+
+        //}
+
         //b_485avail = true;
       }
 

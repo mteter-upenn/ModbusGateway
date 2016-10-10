@@ -1,6 +1,6 @@
 /* _____PROJECT INCLUDES_____________________________________________________ */
 #include "MeterLibrary.h"
-#include "ModbusMaster.h"
+// #include "ModbusMaster.h"
 
 /* _____GLOBAL VARIABLES_____________________________________________________ */
 
@@ -82,46 +82,46 @@ Convert full data request to float.
 
 u8a_data must be address where floats will start (no header spacing accounted for)
 */
-void MeterLibBlocks::convertToFloat(ModbusMaster &node, uint8_t *const u8kp_data) {
-	uint16_t u16_numReqVals;
-	// multiplier such that u16_regMult * (number of requested values) = (number of requested 
-	//     registers)
-	uint16_t u16_regMult;  
-	uint16_t * const u16kp_data = (uint16_t*)u8kp_data;
-	uint16_t u16_reg;
-	union cnvtUnion {
-		uint16_t u16[2];
-		float fl;
-	} int2flt;
+// void MeterLibBlocks::convertToFloat(ModbusMaster &node, uint8_t *const u8kp_data) {
+	// uint16_t u16_numReqVals;
+	// // multiplier such that u16_regMult * (number of requested values) = (number of requested 
+	// //     registers)
+	// uint16_t u16_regMult;  
+	// uint16_t * const u16kp_data = (uint16_t*)u8kp_data;
+	// uint16_t u16_reg;
+	// union cnvtUnion {
+		// uint16_t u16[2];
+		// float fl;
+	// } int2flt;
 
-	u16_regMult = FloatConvEnumNumRegs(m_reqRegDataType);
-	u16_numReqVals = m_u16_numRegs / u16_regMult;
+	// u16_regMult = FloatConvEnumNumRegs(m_reqRegDataType);
+	// u16_numReqVals = m_u16_numRegs / u16_regMult;
 	
-	for (int ii = 0, jj = 0; ii < u16_numReqVals; ++ii, jj += 2) {
-		u16_reg = m_u16_reqReg + ii * u16_regMult;
+	// for (int ii = 0, jj = 0; ii < u16_numReqVals; ++ii, jj += 2) {
+		// u16_reg = m_u16_reqReg + ii * u16_regMult;
 		
-		int2flt.fl = convertToFloat(node, u16_reg);
+		// int2flt.fl = convertToFloat(node, u16_reg);
 		
-		// words are in correct order, but the bytes in the words need to be swapped
-		u16kp_data[jj] = swapBytes(int2flt.u16[0]);
-		u16kp_data[jj + 1] = swapBytes(int2flt.u16[1]);
-	}
-}
+		// // words are in correct order, but the bytes in the words need to be swapped
+		// u16kp_data[jj] = swapBytes(int2flt.u16[0]);
+		// u16kp_data[jj + 1] = swapBytes(int2flt.u16[1]);
+	// }
+// }
 
 
-float MeterLibBlocks::convertToFloat(ModbusMaster &node, uint16_t u16_reg) {
-	uint8_t u8_regInd;
+// float MeterLibBlocks::convertToFloat(ModbusMaster &node, uint16_t u16_reg) {
+	// uint8_t u8_regInd;
 	
-	// check if register is within requested data range
-	if ((u16_reg >= m_u16_reqReg) && (u16_reg < (m_u16_reqReg + m_u16_numRegs))) {
-		u8_regInd = u16_reg - m_u16_reqReg;
-	}
-	else {
-		return 0.0f;
-	}
+	// // check if register is within requested data range
+	// if ((u16_reg >= m_u16_reqReg) && (u16_reg < (m_u16_reqReg + m_u16_numRegs))) {
+		// u8_regInd = u16_reg - m_u16_reqReg;
+	// }
+	// else {
+		// return 0.0f;
+	// }
 	
-	return g_convertToFloat(&(node._u16ResponseBuffer[u8_regInd]), m_reqRegDataType);
-}
+	// return g_convertToFloat(&(node._u16ResponseBuffer[u8_regInd]), m_reqRegDataType);
+// }
 
 
 // MeterLibGroups ##################################################################################

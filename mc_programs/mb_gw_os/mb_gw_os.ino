@@ -4,14 +4,16 @@
  */
 
 
+
 #include "mb_names.h"
 #include "ModbusStack.h"
-#include <ModbusStructs.h>
+#include <ModbusStructs.h>  // FloatConvEnum, ModbusRequest
+#include <ModbusServer.h>
 #include <TimeLib.h>
 #include <SPI.h>
 #include <Ethernet52.h>
 #include <EthernetUdp52.h>
-#include <ModbusMaster.h>
+//#include <ModbusMaster.h>  // REMOVE
 #include <EEPROM.h>
 #include <MeterLibrary.h>
 #include <SD.h>
@@ -98,7 +100,8 @@ EthernetServer52 g_es_webServ(80);  //serv_web                           // star
 
 EthernetServer52 g_es_mbServ(502);  // serv_mb                           // start server on modbus port
 
-ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
+//ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
+ModbusServer g_modbusServer(gk_u8_modbusSerialHardware, gk_u8_mb485Ctrl);
 
 // server socket info
 uint32_t g_u32a_socketTimeoutStart[8] = { 0 };
@@ -256,9 +259,11 @@ void setup() {
   g_es_mbServ.begin();
   g_es_mbServ.begin();
 
-  g_mm_node.begin(g_u32_baudrate);
-  g_mm_node.setTimeout(g_u16_timeout);
+  //g_mm_node.begin(g_u32_baudrate);
+  //g_mm_node.setTimeout(g_u16_timeout);
   //  g_mm_node.idle(*function_here);  // add function for idling during wait for modbus return message
+  g_modbusServer.begin(g_u32_baudrate);
+
 
   // start ntp or rtc
   time_t t_localTime(0);

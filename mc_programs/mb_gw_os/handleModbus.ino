@@ -12,6 +12,9 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
   uint8_t u8_mtrType(0);
   uint8_t u8_mtrId;
   
+
+  return 0xa0;
+
   if (u16_mbReqLen == 12) { // typical modbus/tcp message is 12 bytes long
     u8a_mbResp[0] = u8a_mbReq[0]; // copy first 2 bytes to outbound message
     u8a_mbResp[1] = u8a_mbReq[1];
@@ -26,14 +29,14 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
     // search for slave id in eeprom, if there check if ip exists
     // isMeterEth changes u8_mtrType and u8_mtrId
     if (isMeterEth(u8a_clientIp, u8_mtrVid, u8_mtrType, u8_mtrId)){  // isMeterEth set g_u8a_clientIP
-      g_mm_node.setSerialEthernet(false);  // <--false means ethernet
-      g_mm_node.setClientIP(u8a_clientIp);
+      //g_mm_node.setSerialEthernet(false);  // <--false means ethernet
+      //g_mm_node.setClientIP(u8a_clientIp);
     }
     else{
-      g_mm_node.setSerialEthernet(true);  // true means serial
+      //g_mm_node.setSerialEthernet(true);  // true means serial
     }
     
-    g_mm_node.setSlave(u8_mtrId);
+    //g_mm_node.setSlave(u8_mtrId);
     
     
     u16_reqReg = (u8a_mbReq[8] << 8) | (u8a_mbReq[9]);
@@ -115,16 +118,16 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
     else {  // no error yet, handle code
       switch (u8_mbReqFunc) {
         case 1:
-          u8_mbResult = g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
+          //u8_mbResult = g_mm_node.readCoils(u16_adjReqReg, u16_adjNumRegs);
           break;
         case 2:
-          u8_mbResult = g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
+          //u8_mbResult = g_mm_node.readDiscreteInputs(u16_adjReqReg, u16_adjNumRegs);
           break;
         case 3:
-          u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
+          //u8_mbResult = g_mm_node.readHoldingRegisters(u16_adjReqReg, u16_adjNumRegs);
           break;
         case 4:
-          u8_mbResult = g_mm_node.readInputRegisters(u16_adjReqReg, u16_adjNumRegs);
+          //u8_mbResult = g_mm_node.readInputRegisters(u16_adjReqReg, u16_adjNumRegs);
           break;
 //          case 5:
 //            u8_mbResult = g_mm_node.writeSingleCoil(u16_adjReqReg, u16_adjNumRegs);
@@ -143,12 +146,12 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
           if (!b_reqRegManip) {  // no adjustments to data
             if (b_byteSwap || (u8_mbReqFunc < 3)) {  // if byteswap or coil request
               // would like to use this method, but bytes need to be swapped MSB for network
-              g_mm_node.copyResponseBuffer(&u8a_mbResp[9]);
+              //g_mm_node.copyResponseBuffer(&u8a_mbResp[9]);
             }
             else {
               uint16_t u16_tempReg;
               for (int jj = 0, ii = 9; jj < u16_adjNumRegs; ++jj, ii += 2) {
-                u16_tempReg = g_mm_node.getResponseBuffer(jj);
+                //u16_tempReg = g_mm_node.getResponseBuffer(jj);
 
                 u8a_mbResp[ii] = highByte(u16_tempReg);
                 u8a_mbResp[ii + 1] = lowByte(u16_tempReg);
@@ -158,7 +161,7 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
           else { // 10k request
             // create MeterLibrary class which can take the meter type and register to convert and dump requested values
             MeterLibBlocks mtrBlks(u16_adjReqReg, u16_adjNumRegs, u8_mtrType);
-            mtrBlks.convertToFloat(g_mm_node, &u8a_mbResp[9]);
+            //mtrBlks.convertToFloat(g_mm_node, &u8a_mbResp[9]);
           }
           
     

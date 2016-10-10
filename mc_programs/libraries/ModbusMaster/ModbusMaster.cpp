@@ -224,14 +224,12 @@ void ModbusMaster::begin(uint16_t u16BaudRate)
   _u8TransmitBufferIndex = 0;
   u16TransmitBufferLength = 0;
   
-  if (_u8EnablePin != 255)
-  {
-	pinMode(_u8EnablePin, OUTPUT);  // MJT, LOW is Tx enabled
-	digitalWrite(_u8EnablePin, LOW); // MJT  was low
+  if (_u8EnablePin != 255) {
+		pinMode(_u8EnablePin, OUTPUT);  // MJT, LOW is Tx enabled
+		digitalWrite(_u8EnablePin, LOW); // MJT  was low
   }
   
-  switch(_u8SerialPort)
-  {
+  switch(_u8SerialPort) {
 #if defined(UBRR1H)
     case 1:
       MBSerial = &Serial1;
@@ -251,14 +249,14 @@ void ModbusMaster::begin(uint16_t u16BaudRate)
 #endif
 
 #if defined(CORE_TEENSY)
-	case 3:
-	  MBSerial = &Serial3;
-      break;
+		case 3:
+			MBSerial = &Serial3;
+			break;
     case 0:
     default:
-	  MBSerial = &Serial1; ///< Pointer to Serial class object
+			MBSerial = &Serial1; ///< Pointer to Serial class object
 #else
-	case 0:
+		case 0:
     default:
       MBSerial = &Serial;
 #endif

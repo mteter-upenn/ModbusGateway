@@ -27,7 +27,7 @@ gateway.  The meter library contains lists of registers and their data types,
 along with selected registers.
 */
 
-class ModbusMaster;
+// class ModbusMaster;
 
 class MeterLibBlocks {
 	private:
@@ -51,8 +51,8 @@ class MeterLibBlocks {
 		uint16_t getNumRegs();
 		uint16_t getReqReg();
 		
-		void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data);
-		float convertToFloat(ModbusMaster &node, uint16_t u16_reg);  // returns float
+		// void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data);
+		// float convertToFloat(ModbusMaster &node, uint16_t u16_reg);  // returns float
 		
 };
 

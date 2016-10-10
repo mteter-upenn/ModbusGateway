@@ -1,0 +1,26 @@
+#######################################
+# Syntax Coloring Map For ModbusServer
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ModbusServer   	             KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# ModbusServer
+
+
+# General Functions
+
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+#const public globals	        LITERAL1
