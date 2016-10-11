@@ -21,6 +21,16 @@ struct ModbusRequest {
 	// uint8_t  u8_priority;  // try to use priority flags to show where new priorities begin
 };
 
+/*
+ModbusRequest.u8_tcp485Req how bits are organized as flags
+7 6 5 4 3 2 1 0
+x x x x x x x o  - 0 is serial, 1 is tcp
+x x x x o o o x  - socket index (only used for tcp)
+x x x o x x x x  - data received from device and waiting in buffer
+x x o x x x x x  - timeout, data not received, buffer is empty
+o x x x x x x x  - tcp protocol with unknown (unassigned) socket
+x o x x x x x x  - RESERVED
+*/
 /**
 enum class for definitions of different data types meters can return
 */

@@ -57,12 +57,16 @@ public:
 	uint8_t getLength();
 	
 	// Overloaded index operator to allow getting and setting 
-	ModbusRequest operator[](int index) const {
-		return m_mbStack[index];
-	};
-	ModbusRequest& operator[](int index) {
-		return m_mbStack[index];
-	};
+	ModbusRequest operator[](int index) const; //{
+		// if (index > 127) {
+			// // throw error
+		// }
+		// return m_mbStack[index];
+	// };
+	
+	ModbusRequest& operator[](int index); //{
+		// return m_mbStack[index];
+	// };
 };
 
 #endif

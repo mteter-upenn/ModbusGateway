@@ -36,7 +36,7 @@ uint8_t ModbusStack::add(uint8_t u8_tcp485Req, uint8_t u8_id, uint8_t u8_vid, ui
 			break;
 	}
 	
-	m_mbStack[u8_ind].u16_unqId    = ++m_u16_idGen;
+	m_mbStack[u8_ind].u16_unqId    = (m_u16_idGen != 65535) ? ++m_u16_idGen : 1;
 	m_mbStack[u8_ind].u8_tcp485Req = u8_tcp485Req;
 	m_mbStack[u8_ind].u8_id        = u8_id;
 	m_mbStack[u8_ind].u8_vid       = u8_vid;
@@ -201,3 +201,46 @@ void ModbusStack::pullForward(uint8_t u8_ind) {
 		m_mbStack[jj - 1] = m_mbStack[jj];
 	}
 }
+
+
+ModbusRequest ModbusStack::operator[](int index) const {
+	if (index > 127 || index < 0) {
+		// throw error
+		ModbusRequest mb_err;
+		
+		mb_err.u16_unqId = 0;
+		mb_err.u8_tcp485Req = 128;  // 128 should mean nothing without bit 0 high
+		mb_err.u8_id = 0;
+		mb_err.u8_vid = 0;
+		mb_err.u8_func = 0;
+		mb_err.u16_start = 0;
+		mb_err.u16_length = 0;
+		mb_err.b_adjReq = false;
+		mb_err.b_sentReq = false;
+		
+		return mb_err;
+	}
+	return m_mbStack[index];
+};
+	
+	
+ModbusRequest& ModbusStack::operator[](int index) {
+	if (index > 127 || index < 0) {
+		// throw error
+		ModbusRequest mb_err;
+		
+		mb_err.u16_unqId = 0;
+		mb_err.u8_tcp485Req = 128;  // 128 should mean nothing without bit 0 high
+		mb_err.u8_id = 0;
+		mb_err.u8_vid = 0;
+		mb_err.u8_func = 0;
+		mb_err.u16_start = 0;
+		mb_err.u16_length = 0;
+		mb_err.b_adjReq = false;
+		mb_err.b_sentReq = false;
+		
+		return mb_err;
+	}
+	
+	return m_mbStack[index];
+};

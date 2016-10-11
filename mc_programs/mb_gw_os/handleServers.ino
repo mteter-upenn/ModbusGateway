@@ -82,7 +82,7 @@ void handleServers() {
 
       if (b_485avail) {
         u8_stkInd = mbStack.getNext485();
-        if (u8_stkInd != 255) {
+        if (u8_stkInd != 255) { // 255 is non stack
           g_modbusServer.sendSerial(mbStack[u8_stkInd]);
           // SEND REQUEST
           mbStack[u8_stkInd].b_sentReq = true;
