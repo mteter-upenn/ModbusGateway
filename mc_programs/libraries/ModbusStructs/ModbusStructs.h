@@ -28,8 +28,9 @@ x x x x x x x o  - 0 is serial, 1 is tcp
 x x x x o o o x  - socket index (only used for tcp)
 x x x o x x x x  - data received from device and waiting in buffer
 x x o x x x x x  - timeout, data not received, buffer is empty
-o x x x x x x x  - tcp protocol with unknown (unassigned) socket
-x o x x x x x x  - RESERVED
+x o x x x x x x  - sent modbus request
+o x x x x x x x  - RESERVED
+
 */
 /**
 enum class for definitions of different data types meters can return

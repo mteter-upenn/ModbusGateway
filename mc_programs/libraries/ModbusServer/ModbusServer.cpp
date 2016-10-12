@@ -46,7 +46,7 @@ void ModbusServer::begin(uint16_t u16_baudRate) {
 }
 
 
-bool ModbusServer::sendSerial(ModbusRequest mr_mbReq) {
+bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 	uint8_t  u8a_txBuffer[8];  // assume funcs 1 - 6
 	uint16_t u16_crc = 0xFFFF;
 	
@@ -71,7 +71,7 @@ bool ModbusServer::sendSerial(ModbusRequest mr_mbReq) {
 }
 
 
-bool ModbusServer::sendTcp(EthernetClient52 &ec_client, ModbusRequest mr_mbReq) {
+bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_mbReq) {
 	uint8_t  u8a_txBuffer[12] = {0};
 	uint8_t u8_sock = ec_client.getSocketNumber();
 	
@@ -101,13 +101,15 @@ int ModbusServer::tcpAvailable(EthernetClient52 &ec_client) {
 }
 
 
-uint8_t ModbusServer::recvSerial(ModbusRequest mr_mbReq, uint8_t *u8p_devResp) {
+uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint8_t *u8p_devResp) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
-	uint16_t u16_mbRxSize = 0;
+	uint16_t u16_mbRxSize = 6;
+	
+	memset(u8p_devResp, 0, 4);  // set first four bytes to 0, first 2 might get reassigned elsewhere
 	
 	while (!u8_mbStatus) {
 		while (m_MBSerial->available()) {  // make sure to get all available data before checking timeout
-			if (u16_mbRxSize > 255) {  // message too big
+			if (u16_mbRxSize > 255) {  // message too big, will run into problems if crc pushes past 255
 				u8_mbStatus = k_u8_MBIllegalDataValue;
 				flushSerialRx();
 				return u8_mbStatus;
@@ -116,8 +118,8 @@ uint8_t ModbusServer::recvSerial(ModbusRequest mr_mbReq, uint8_t *u8p_devResp) {
 			u8p_devResp[u16_mbRxSize++] = m_MBSerial->read();  // important bit here, storing data
 		}
 		
-		if (u16_mbRxSize > 3) {
-			uint16_t u16_givenSize = u8p_devResp[2] + 5;  // +5 accounts for header and crc
+		if (u16_mbRxSize > 9) {
+			uint16_t u16_givenSize = u8p_devResp[8] + 11;  // +11 accounts for tcp hdr, mb hdr, and crc
 			
 			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
 				// calculate CRC
@@ -132,17 +134,20 @@ uint8_t ModbusServer::recvSerial(ModbusRequest mr_mbReq, uint8_t *u8p_devResp) {
 					u8_mbStatus = k_u8_MBInvalidCRC;
 				}
 				// verify device id
-				else if (u8p_devResp[0] != mr_mbReq.u8_id) {
+				else if (u8p_devResp[6] != mr_mbReq.u8_id) {
 					u8_mbStatus = k_u8_MBInvalidSlaveID;
 				}
 				// verify function is same regardless of returned errors
-				else if ((u8p_devResp[1] & 0x7f) != mr_mbReq.u8_func) {
+				else if ((u8p_devResp[7] & 0x7f) != mr_mbReq.u8_func) {
 					u8_mbStatus = k_u8_MBInvalidFunction;
 				}
 				// check for returned errors
-				else if (bitRead(u8p_devResp[2], 7)) {
-					u8_mbStatus = u8p_devResp[2];
+				else if (bitRead(u8p_devResp[8], 7)) {
+					u8_mbStatus = u8p_devResp[8];
 				}
+				
+				u8p_devResp[4] = highByte(u16_mbRxSize - 8);  // -8 accounts for tcp hdr and crc
+				u8p_devResp[5] = lowByte(u16_mbRxSize - 8);
 				// can exit from loop now
 				break;
 			}
@@ -158,7 +163,7 @@ uint8_t ModbusServer::recvSerial(ModbusRequest mr_mbReq, uint8_t *u8p_devResp) {
 }
 
 
-uint8_t ModbusServer::recvTcp(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, 
+uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, 
                               uint8_t *u8p_devResp) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 0;
@@ -210,6 +215,26 @@ uint8_t ModbusServer::recvTcp(EthernetClient52 &ec_client, ModbusRequest mr_mbRe
 	}
 	
 	return u8_mbStatus;
+}
+
+
+void ModbusServer::sendResponse(EthernetClient52 ec_client, ModbusRequest mbReq) {
+	uint8_t u8a_respBuf[256] = {0};
+	uint8_t u8_mbStatus = 0;
+	
+	if (mbReq.u8_tcp485Req & 0x20) {  // protocol has timed out, no message from slave device
+		u8a_respBuf[5] = 3;
+		u8a_respBuf[6] = mbReq.u8_id;
+		u8a_respBuf[7] = mbReq.u8_func | 0x80;
+		u8a_respBuf[8] = k_u8_MBResponseTimedOut;
+		// u8a_mbResp[7] = (u8_mbReqFunc | 0x80); // return function  + 128
+	}
+	else if (mbReq.u8_tcp485Req & 0x01) {  // there is a good message over tcp
+		
+	}
+	else {  // there is a good message over serial
+		u8_mbStatus = recvSerialResponse(mbReq, u8a_respBuf);
+	}
 }
 
 

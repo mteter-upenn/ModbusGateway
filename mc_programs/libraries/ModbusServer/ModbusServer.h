@@ -39,14 +39,21 @@ public:
 	void begin();
 	void begin(uint16_t u16_baudRate);
 	
-	bool sendSerial(ModbusRequest mr_mbReq);
-	bool sendTcp(EthernetClient52 &ec_client, ModbusRequest mr_mbReq);
+	bool sendSerialRequest(ModbusRequest mr_mbReq);
+	bool sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_mbReq);
 	
 	int serialAvailable();
 	int tcpAvailable(EthernetClient52 &ec_client);
 	
-	uint8_t recvSerial(ModbusRequest mr_mbReq, uint8_t *u8p_devResp);
-	uint8_t recvTcp(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint8_t *u8p_devResp);
+	uint8_t recvSerialResponse(ModbusRequest mr_mbReq, uint8_t *u8p_devResp);
+	uint8_t recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint8_t *u8p_devResp);
+	
+	// ec_client is requestor
+
+	void sendResponse(EthernetClient52 ec_client, ModbusRequest mbReq);
+	
+	void parseRequest(EthernetClient52);
+	
 	
 	void setTimeout(uint32_t u32_timeout);
 	
