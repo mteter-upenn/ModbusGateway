@@ -284,8 +284,8 @@ class ModbusMaster
     // idle callback function; gets called during idle time between TX and RX
     void (*_idle)();
 		
-	public:  // not sure if this is necessary
-		friend class MeterLibBlocks;
+	// public:  // not sure if this is necessary
+		// friend class MeterLibBlocks;  // removed node from function calls
 };
 #endif
 

@@ -1,6 +1,6 @@
 
 #include "ModbusServer.h"
-
+#include "MeterLibrary.h"
 
 
 
@@ -101,9 +101,10 @@ int ModbusServer::tcpAvailable(EthernetClient52 &ec_client) {
 }
 
 
-uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint8_t *u8p_devResp) {
+uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numRegs) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 6;
+	uint8_t u8p_devResp[256] = {0};
 	
 	memset(u8p_devResp, 0, 4);  // set first four bytes to 0, first 2 might get reassigned elsewhere
 	
@@ -119,7 +120,19 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint8_t *u8p_de
 		}
 		
 		if (u16_mbRxSize > 9) {
-			uint16_t u16_givenSize = u8p_devResp[8] + 11;  // +11 accounts for tcp hdr, mb hdr, and crc
+			uint16_t u16_givenSize(0);
+			switch (mr_mbReq.u8_func) {
+				case 1:  // reads
+				case 2:
+				case 3:
+				case 4:
+					u16_givenSize = u8p_devResp[8] + 11;  // +11 accounts for tcp hdr, mb hdr, and crc
+					break;
+				case 5:  // writes
+				case 6:
+					u16_givenSize = 14;  // +14 accounts for tcp hdr, mb hdr, and crc
+					break;
+			}
 			
 			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
 				// calculate CRC
@@ -159,16 +172,21 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint8_t *u8p_de
 		}
 	}
 	
+	if (!u8_mbStatus) {  // if no errors, then move data to register format, otherwise return error
+		u8_numRegs = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
+	}
+	
 	return u8_mbStatus;
 }
 
 
 uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, 
-                              uint8_t *u8p_devResp) {
+                              uint16_t *u16p_regs, uint8_t u8_numRegs) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 0;
 	int16_t s16_lenRead;
 	uint16_t u16_bytesLeft;
+	uint8_t u8p_devResp[256] = {0};
 	
 	u16_bytesLeft = mr_mbReq.u16_length * 2 + 9; // +9 accounts for tcp header and mb header
 	
@@ -188,7 +206,19 @@ uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest
 		}
 		
 		if (u16_mbRxSize > 9) {
-			uint16_t u16_givenSize = u8p_devResp[8] + 9;  // +9 accounts for headers
+			uint16_t u16_givenSize(0);
+			switch (mr_mbReq.u8_func) {
+				case 1:  // reads
+				case 2:
+				case 3:
+				case 4:
+					u16_givenSize = u8p_devResp[8] + 9;  // +11 accounts for tcp hdr, mb hdr, and crc
+					break;
+				case 5:  // writes
+				case 6:
+					u16_givenSize = 12;  // +12 accounts for tcp hdr, mb hdr
+					break;
+			}
 			
 			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
 				// verify device id
@@ -214,26 +244,100 @@ uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest
 		}
 	}
 	
+	if (!u8_mbStatus) {  // if no errors, then move data to register format, otherwise return error
+		u8_numRegs = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
+	}
 	return u8_mbStatus;
 }
 
 
-void ModbusServer::sendResponse(EthernetClient52 ec_client, ModbusRequest mbReq) {
-	uint8_t u8a_respBuf[256] = {0};
-	uint8_t u8_mbStatus = 0;
+uint8_t ModbusServer::u8array2regs(uint8_t u8p_devResp[], uint16_t *u16p_regs, uint8_t u8_func){
+	uint8_t u8_numRegs = u8p_devResp[8] >> 1;
 	
-	if (mbReq.u8_tcp485Req & 0x20) {  // protocol has timed out, no message from slave device
+	switch (u8_func) {
+		case 1:
+		case 2:
+			for (int ii = 0; ii < u8_numRegs; ++ii) {
+				u16p_regs[ii] = word(u8p_devResp[2 * ii + 10], u8p_devResp[2 * ii + 9]);
+			}
+			
+			if (u8p_devResp[8] % 2) {
+				u16p_regs[u8_numRegs] = word(0, u8p_devResp[2 * u8_numRegs + 9]);
+				u8_numRegs++;
+			}
+			break;
+		case 3:
+		case 4:
+			for (int ii = 0; ii < u8_numRegs; ++ii) {
+				u16p_regs[ii] = word(u8p_devResp[2 * ii + 9], u8p_devResp[2 * ii + 10]);
+			}
+			break;
+		case 5:
+		case 6:
+			// NOT SURE ABOUT THIS AT ALL
+			u16p_regs[0] = word(u8p_devResp[10], u8p_devResp[11]);
+			u8_numRegs = 1;
+			break;
+	}
+	
+	return u8_numRegs;
+}
+
+
+void ModbusServer::sendResponse(EthernetClient52 ec_client, ModbusRequest mbReq) {
+	uint8_t u8a_respBuf[256] = {0};  // actual buffer used to respond
+	uint16_t u16a_interBuf[128] = {0};  // used for grabbing data in register format
+	uint8_t u8_mbStatus(0);
+	uint16_t u16_respLen(0);
+	uint8_t u8_numRegs(0);
+	
+	if (mbReq.u8_flags & 0x20) {  // protocol has timed out, no message from slave device
+		u8_mbStatus = k_u8_MBResponseTimedOut;
+	}
+	else if (mbReq.u8_flags & 0x01) {  // there is a good message over tcp
+		u8_mbStatus = recvTcpResponse(ec_client, mbReq, u16a_interBuf, u8_numRegs);
+	}
+	else {  // there is a good message over serial
+		u8_mbStatus = recvSerialResponse(mbReq, u16a_interBuf, u8_numRegs);
+	}
+	
+	if (!u8_mbStatus) {  // good data
+		if (mbReq.u8_flags & 0x80) {  // need to translate data via MeterLibrary
+			MeterLibBlocks mtrLibBlk(mbReq.u16_start, mbReq.u16_length, mbReq.u8_mtrType);
+				
+			// void convertToFloat(uint16_t u16p_regs[], uint8_t *const u8p_data);
+		}
+		else {  // raw data is acceptable to pass back
+			if (mbReq.u8_func < 5) {
+				u8a_respBuf[6] = mbReq.u8_id;
+				u8a_respBuf[7] = mbReq.u8_func;
+				
+			}
+			else {  // (mbReq.u8_func < 7)
+				u8a_respBuf[5] = 6;
+				u8a_respBuf[6] = mbReq.u8_id;
+				u8a_respBuf[7] = mbReq.u8_func;
+				u8a_respBuf[8] = highByte(mbReq.u16_start);
+				u8a_respBuf[9] = lowByte(mbReq.u16_start);
+				u8a_respBuf[10] = highByte(mbReq.u16_length);
+				u8a_respBuf[11] = lowByte(mbReq.u16_length);
+				
+				u16_respLen = 12;
+			}
+		}
+	}
+	else {  // error
 		u8a_respBuf[5] = 3;
 		u8a_respBuf[6] = mbReq.u8_id;
 		u8a_respBuf[7] = mbReq.u8_func | 0x80;
-		u8a_respBuf[8] = k_u8_MBResponseTimedOut;
-		// u8a_mbResp[7] = (u8_mbReqFunc | 0x80); // return function  + 128
-	}
-	else if (mbReq.u8_tcp485Req & 0x01) {  // there is a good message over tcp
+		u8a_respBuf[8] = u8_mbStatus;
 		
+		u16_respLen = 9;
 	}
-	else {  // there is a good message over serial
-		u8_mbStatus = recvSerialResponse(mbReq, u8a_respBuf);
+	
+	if (u16_respLen > 0) {
+		ec_client.write(u8a_respBuf, u16_respLen);
+		ec_client.flush();  // do anything?
 	}
 }
 

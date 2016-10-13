@@ -2,18 +2,18 @@
 // #include "Arduino.h"
 #include "ModbusStack.h"
 
-const ModbusRequest ModbusStack::mk_mrInvalid = {0, 128, 0, 0, 0, 0, 0, false, false};
-ModbusRequest ModbusStack::m_mrDummy = {0, 0, 0, 0, 0, 0, 0, false, false};
-const uint8_t mk_maxSize = MODBUSSTACK_MAXSIZE;
+const ModbusRequest ModbusStack::mk_mrInvalid = {0, 46, 0, 0, 0, 0, 0, 0}; // , false, false};
+ModbusRequest ModbusStack::m_mrDummy = {0, 0, 0, 0, 0, 0, 0, 0};  //, false, false};
+const uint8_t ModbusStack::k_u8_maxSize = MODBUSSTACK_MAXSIZE;
 
 
 
-uint8_t ModbusStack::add(uint8_t u8_tcp485Req, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, 
-												 uint16_t u16_start, uint16_t u16_length, bool b_adjReq, 
+uint8_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, 
+												 uint16_t u16_start, uint16_t u16_length, uint8_t u8_mtrType, // bool b_adjReq, 
 												 uint8_t u8_priority) {
 	uint8_t u8_ind;
 	
-	if (m_u8_length >= mk_maxSize) {  // stack already maxed out
+	if (m_u8_length >= k_u8_maxSize) {  // stack already maxed out
 		return 0;  // 0 is an invalid unique id
 	}
 	
@@ -45,13 +45,13 @@ uint8_t ModbusStack::add(uint8_t u8_tcp485Req, uint8_t u8_id, uint8_t u8_vid, ui
 	}
 	
 	m_mbStack[u8_ind].u16_unqId    = (m_u16_idGen != 65535) ? ++m_u16_idGen : 1;
-	m_mbStack[u8_ind].u8_tcp485Req = u8_tcp485Req;
+	m_mbStack[u8_ind].u8_flags     = u8_flags;
 	m_mbStack[u8_ind].u8_id        = u8_id;
 	m_mbStack[u8_ind].u8_vid       = u8_vid;
 	m_mbStack[u8_ind].u8_func      = u8_func;
 	m_mbStack[u8_ind].u16_start    = u16_start;
 	m_mbStack[u8_ind].u16_length   = u16_length;
-	m_mbStack[u8_ind].b_adjReq     = b_adjReq;
+	m_mbStack[u8_ind].u8_mtrType   = u8_mtrType;
 	// m_mbStack[u8_ind].b_sentReq    = false;	
 	
 	return m_mbStack[u8_ind].u16_unqId;
@@ -60,7 +60,7 @@ uint8_t ModbusStack::add(uint8_t u8_tcp485Req, uint8_t u8_id, uint8_t u8_vid, ui
 
 // uint8_t ModbusStack::add(uint8_t u8_vid, uint8_t *u8p_mbHdr, uint8_t u8_priority) {
 	// uint8_t u8_ind;
-	// uint8_t   u8_tcp485Req;
+	// uint8_t   u8_flags;
 	// uint8_t   u8_id;
 	// uint8_t   u8_func;
 	// uint16_t  u16_start;
@@ -99,7 +99,7 @@ uint8_t ModbusStack::add(uint8_t u8_tcp485Req, uint8_t u8_id, uint8_t u8_vid, ui
 	// u8_length
 	
 	// m_mbStack[u8_ind].u16_unqId  = ++m_u16_idGen;
-	// // m_mbStack[u8_ind].u8_tcp485Req   = u8_tcp485Req;
+	// // m_mbStack[u8_ind].u8_flags   = u8_flags;
 	// m_mbStack[u8_ind].u8_id      = u8_id;
 	// m_mbStack[u8_ind].u8_vid     = u8_vid;
 	// // m_mbStack[u8_ind].u8_func    = u8_func;
@@ -135,7 +135,7 @@ bool ModbusStack::flagSentMsg(uint8_t u8_unqId){
 	for (int ii = 0; ii < m_u8_length; ++ii) {
 		if (m_mbStack[ii].u16_unqId == u8_unqId) {
 			// m_mbStack[ii].b_sentReq = true;
-			m_mbStack[ii].u8_tcp485Req |= 0x40;  // mark sent flag
+			m_mbStack[ii].u8_flags |= 0x40;  // mark sent flag
 			return true;
 		}
 	}
@@ -158,8 +158,8 @@ bool ModbusStack::getMbReq(uint8_t u8_unqId, ModbusRequest *p_mbReq){
 
 uint8_t ModbusStack::getNext485() {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
-		// if (!(m_mbStack[ii].u8_tcp485Req & 0x01) && (!m_mbStack[ii].b_sentReq)) {
-		if (!(m_mbStack[ii].u8_tcp485Req & 0x01) && !(m_mbStack[ii].u8_tcp485Req & 0x40)) {
+		// if (!(m_mbStack[ii].u8_flags & 0x01) && (!m_mbStack[ii].b_sentReq)) {
+		if (!(m_mbStack[ii].u8_flags & 0x01) && !(m_mbStack[ii].u8_flags & 0x40)) {
 			return ii;
 		}
 	}
@@ -170,8 +170,8 @@ uint8_t ModbusStack::getNext485() {
 
 uint8_t ModbusStack::getNextTcp() {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
-		// if ((m_mbStack[ii].u8_tcp485Req & 0x01) && (!m_mbStack[ii].b_sentReq)) {
-		if ((m_mbStack[ii].u8_tcp485Req & 0x01) && !(m_mbStack[ii].u8_tcp485Req & 0x40)) {
+		// if ((m_mbStack[ii].u8_flags & 0x01) && (!m_mbStack[ii].b_sentReq)) {
+		if ((m_mbStack[ii].u8_flags & 0x01) && !(m_mbStack[ii].u8_flags & 0x40)) {
 			return ii;
 		}
 	}
@@ -182,8 +182,8 @@ uint8_t ModbusStack::getNextTcp() {
 
 uint8_t ModbusStack::getLive485() {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
-		// if (!(m_mbStack[ii].u8_tcp485Req & 0x01) && (m_mbStack[ii].b_sentReq)) {
-		if (!(m_mbStack[ii].u8_tcp485Req & 0x01) && (m_mbStack[ii].u8_tcp485Req & 0x40)) {
+		// if (!(m_mbStack[ii].u8_flags & 0x01) && (m_mbStack[ii].b_sentReq)) {
+		if (!(m_mbStack[ii].u8_flags & 0x01) && (m_mbStack[ii].u8_flags & 0x40)) {
 			return ii;
 		}
 	}
@@ -195,8 +195,8 @@ uint8_t ModbusStack::getLive485() {
 uint8_t ModbusStack::getLiveTcp(uint8_t u8_sock) {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
 		// if ((m_mbStack[ii].b_sentReq) && (getMrSocket(m_mbStack[ii]) == u8_sock) && 
-		if ((m_mbStack[ii].u8_tcp485Req & 0x40) && (getMrSocket(m_mbStack[ii]) == u8_sock) && 
-		    (m_mbStack[ii].u8_tcp485Req & 0x01)) {
+		if ((m_mbStack[ii].u8_flags & 0x40) && (getMrSocket(m_mbStack[ii]) == u8_sock) && 
+		    (m_mbStack[ii].u8_flags & 0x01)) {
 			return ii;
 		}
 	}
@@ -240,12 +240,12 @@ void ModbusStack::pullForward(uint8_t u8_ind) {
 
 
 uint8_t getMrSocket(ModbusRequest mbReq) {
-	return ((mbReq.u8_tcp485Req >> 1) & 0x07);
+	return ((mbReq.u8_flags >> 1) & 0x07);
 }
 
 
 ModbusRequest ModbusStack::operator[](int index) const {
-	if (index >= mk_maxSize || index < 0) {		
+	if (index >= k_u8_maxSize || index < 0) {		
 		return mk_mrInvalid;
 	}
 	return m_mbStack[index];
@@ -253,7 +253,7 @@ ModbusRequest ModbusStack::operator[](int index) const {
 	
 	
 ModbusRequest& ModbusStack::operator[](int index) {
-	if (index >= mk_maxSize || index < 0) {
+	if (index >= k_u8_maxSize || index < 0) {
 		// need to return something for the left side, probably a better way of handling this though
 		return m_mrDummy;  
 	}

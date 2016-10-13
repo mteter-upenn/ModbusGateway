@@ -53,6 +53,8 @@ class MeterLibBlocks {
 		
 		// void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data);
 		// float convertToFloat(ModbusMaster &node, uint16_t u16_reg);  // returns float
+		void convertToFloat(uint16_t u16p_regs[], uint8_t *const u8p_data);
+		float convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg);  // returns float
 		
 };
 

@@ -61,7 +61,7 @@ void handleServers() {
             // SET SOCKFLAGS
             // RESET TCP TIMER
           }
-          else if (mbStack[g_u8a_mbReqInd[ii]].u8_tcp485Req & 0x10) {  // if we have, then check for good message return
+          else if (mbStack[g_u8a_mbReqInd[ii]].u8_flags & 0x10) {  // if we have, then check for good message return
             // TRANSFER MESSAGE FROM PROTOCOL BUFFER TO CURRENT SOCKET OUTBOUND
             // SEND THIS MESSAGE THEN RESET TIMEOUT
             // CLOSE PROTOCOL USED TO TALK TO DEVICE
@@ -69,7 +69,7 @@ void handleServers() {
             // REMOVE FROM STACK
             // RESET SOCKFLAGS SO HAVEN'T READ MESSAGE
           }
-          else if (mbStack[g_u8a_mbReqInd[ii]].u8_tcp485Req & 0x20) {  // check for timeout
+          else if (mbStack[g_u8a_mbReqInd[ii]].u8_flags & 0x20) {  // check for timeout
             // SEND TIMEOUT MESSAGE TO REQUESTOR
             // RESET TCP TIMEOUT
             // CLOSE PROTOCOL USED TO TALK TO DEVICE (MIGHT BE DONE IN STACK LOOP)
@@ -105,18 +105,18 @@ void handleServers() {
       }
     }
 
-    // loop through all available modbus requests
+    // loop through available protocols and check against stack of requests
     if (mbStack.getLength() > 0) {
       uint8_t u8_stkInd;
 
       if (b_485avail) {
         u8_stkInd = mbStack.getNext485();
-        if (u8_stkInd < mbStack.mk_maxSize) { // 255 is none in stack
+        if (u8_stkInd < mbStack.k_u8_maxSize) { // 255 is none in stack
           g_modbusServer.sendSerialRequest(mbStack[u8_stkInd]);  // SEND REQUEST
           // START TIMER, timer in ModbusServer class
 
           //mbStack[u8_stkInd].b_sentReq = true;
-          mbStack[u8_stkInd].u8_tcp485Req |= 0x40;  // mark sent flag
+          mbStack[u8_stkInd].u8_flags |= 0x40;  // mark sent flag
 
           b_485avail = false;
         }
@@ -128,12 +128,12 @@ void handleServers() {
         // need ModbusRequest to set flags
         // CHECK IF DATA HAS BEEN RETURNED
         u8_stkInd = mbStack.getLive485();  // find index of request that is currently active on this protocol
-        if (u8_stkInd < mbStack.mk_maxSize) { // 255 is none in stack
+        if (u8_stkInd < mbStack.k_u8_maxSize) { // 255 is none in stack
           if (g_modbusServer.serialAvailable()) {
-            mbStack[u8_stkInd].u8_tcp485Req |= 0x10;  // mark received actual msg flag
+            mbStack[u8_stkInd].u8_flags |= 0x10;  // mark received actual msg flag
           }
           else if (g_modbusServer.serialTimedOut()) {
-            mbStack[u8_stkInd].u8_tcp485Req |= 0x20;  // mark device timed out
+            mbStack[u8_stkInd].u8_flags |= 0x20;  // mark device timed out
           }
         }
         else {  // serial active, but nothing in stack, set serial to open and pray
@@ -144,9 +144,9 @@ void handleServers() {
       for (int ii = 0; ii < 2; ++ii) {
         if (ba_clientSocksAvail[ii]) {  // if socket is available for use
           u8_stkInd = mbStack.getNextTcp();
-          if (u8_stkInd < mbStack.mk_maxSize) {
+          if (u8_stkInd < mbStack.k_u8_maxSize) {
             // SEND REQUEST
-            mbStack[u8_stkInd].b_sentReq = true;
+            mbStack[u8_stkInd].u8_flags |= 0x40;  // mark sent flag
             // START TIMER
             ba_clientSocksAvail[ii] = false;
           }

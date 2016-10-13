@@ -10,26 +10,27 @@
 
 struct ModbusRequest {
 	uint16_t  u16_unqId;
-	uint8_t   u8_tcp485Req;  // 128 if tcp, but not assigned a socket, otherwise the socket number (never 0), 0 is 485
+	uint8_t   u8_flags;
 	uint8_t   u8_id;
 	uint8_t   u8_vid;
 	uint8_t   u8_func;
 	uint16_t  u16_start;
 	uint16_t  u16_length;
-	bool      b_adjReq;
-	bool      b_sentReq;
+	uint8_t   u8_mtrType;  // 
+	// bool      b_adjReq;
+	// bool      b_sentReq;
 	// uint8_t  u8_priority;  // try to use priority flags to show where new priorities begin
 };
 
 /*
-ModbusRequest.u8_tcp485Req how bits are organized as flags
+ModbusRequest.u8_flags how bits are organized as flags
 7 6 5 4 3 2 1 0
 x x x x x x x o  - 0 is serial, 1 is tcp
 x x x x o o o x  - socket index (only used for tcp)
 x x x o x x x x  - data received from device and waiting in buffer
 x x o x x x x x  - timeout, data not received, buffer is empty
 x o x x x x x x  - sent modbus request
-o x x x x x x x  - RESERVED
+o x x x x x x x  - 0 is unadjusted data, 1 is adjusted
 
 */
 /**

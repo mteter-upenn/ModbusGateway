@@ -35,12 +35,16 @@ private:
 	
 	uint8_t getMrSocket(ModbusRequest mbReq);
 public:
-	// constructor
+	// constructor ###################################################################################
 	ModbusStack(): m_u8_length(0), m_u8_1end(0), m_u8_2end(0), m_u16_idGen(0) {}
-
+	
+	// public constants ##############################################################################
+	static const uint8_t k_u8_maxSize;
+	
+	// class functions ###############################################################################
 	// add struct to list with given values and priority
-	uint8_t add(uint8_t u8_tcp485Req, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, uint16_t u16_start,
-	         uint16_t u16_length, bool b_adjReq, uint8_t u8_priority);
+	uint8_t add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, uint16_t u16_start,
+	         uint16_t u16_length, uint8_t u8_mtrType, uint8_t u8_priority);
 	// uint8_t add(uint8_t u8_vid, uint8_t *u8p_mbHdr, uint8_t u8_priority);
 	
 	// remove struct with given unique id
@@ -66,11 +70,12 @@ public:
 	// return total requests in stack
 	uint8_t getLength();
 	
+	// overloads #####################################################################################
 	// Overloaded index operator to allow getting and setting 
 	ModbusRequest operator[](int index) const;
 	ModbusRequest& operator[](int index);
 
-	static const uint8_t mk_maxSize;
+	
 };
 
 #endif

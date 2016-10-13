@@ -31,6 +31,7 @@ private:
 	uint16_t crc16_update(uint16_t crc, uint8_t a);
 	void flushSerialRx();
 	void flushTcpRx(EthernetClient52 &ec_client);
+	uint8_t u8array2regs(uint8_t u8p_devResp[], uint16_t *u16p_regs, uint8_t u8_func);
 public:
 	ModbusServer(): m_u8_serialPort(3), m_u8_enablePin(255), m_u32_mbTimeout(1000) {}
 	ModbusServer(uint8_t u8_serialPort); // : m_u8_serialPort(u8_serialPort), m_u8_enablePin(255) {}
@@ -45,8 +46,8 @@ public:
 	int serialAvailable();
 	int tcpAvailable(EthernetClient52 &ec_client);
 	
-	uint8_t recvSerialResponse(ModbusRequest mr_mbReq, uint8_t *u8p_devResp);
-	uint8_t recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint8_t *u8p_devResp);
+	uint8_t recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numRegs);
+	uint8_t recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numRegs);
 	
 	// ec_client is requestor
 
