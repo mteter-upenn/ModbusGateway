@@ -36,25 +36,31 @@ private:
 	uint8_t getMrSocket(ModbusRequest mbReq);
 public:
 	// constructor ###################################################################################
-	ModbusStack(): m_u8_length(0), m_u8_1end(0), m_u8_2end(0), m_u16_idGen(0) {}
+	ModbusStack(): m_u8_length(0), m_u8_1end(0), m_u8_2end(0), m_u16_idGen(1) {}
 	
 	// public constants ##############################################################################
 	static const uint8_t k_u8_maxSize;
 	
 	// class functions ###############################################################################
 	// add struct to list with given values and priority
-	uint8_t add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, uint16_t u16_start,
+	uint16_t add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, uint16_t u16_start,
 	         uint16_t u16_length, uint8_t u8_mtrType, uint8_t u8_priority);
+  uint16_t add(const ModbusRequest mbReq, uint8_t u8_priority);
 	// uint8_t add(uint8_t u8_vid, uint8_t *u8p_mbHdr, uint8_t u8_priority);
 	
 	// remove struct with given unique id
-	bool remove(uint8_t u8_unqId);
+	bool removeByUnqId(uint16_t u16_unqId);
+	bool removeByInd(uint8_t u8_ind);
 	
 	// set b_sentReq to true
-	bool flagSentMsg(uint8_t u8_unqId);  // NECESSARY?
+	bool flagSentMsg(uint16_t u16_unqId);  // NECESSARY?
 	
 	// get request
-	bool getMbReq(uint8_t u8_unqId, ModbusRequest *p_mbReq);
+	bool getMbReqCopy(uint16_t u16_unqId, ModbusRequest &p_mbReq);
+	
+	// get request index by unique id, be aware that this is volatile
+	// could overload [] operator, but that would entail searches every call which could get very costly
+	uint8_t getReqInd(uint16_t u16_unqId);
 	
 	// get index of next available request for given protocol
 	uint8_t getNext485();

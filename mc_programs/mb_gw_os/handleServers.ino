@@ -9,6 +9,8 @@ void handleServers() {
   bool ba_clientSocksAvail[2] = { false, false };  // assume both socks used at init
   ModbusStack mbStack;
   const uint32_t k_u32_mbTcpTimeout(3000);              // timeout for device to hold on to tcp connection after modbus request
+  uint8_t u8a_mbSrtBytes[8][2];
+
 
   while (b_allFreeSocks) {
     b_allFreeSocks = true;  // set true, if anything is active, set false to avoid escape
@@ -28,6 +30,7 @@ void handleServers() {
           //uint16_t u16_srcPort = socketSourcePort(ii);
           uint16_t u16_srcPort = g_eca_socks[ii].getSourcePort();
           //Serial.print("not closed or listen but 0x"); Serial.println(u8_sockStatus, HEX);
+          g_u32a_socketTimeoutStart[ii] = millis();
 
           if (u16_srcPort == 502) {
             b_allFreeSocks = false;  // this socket is being used!
@@ -55,40 +58,136 @@ void handleServers() {
     for (int ii = 0; ii < 8; ++ii) {  // loop through sockets and handle them
       if (g_u16a_socketFlags[ii] & SockFlag_ESTABLISHED) { // only look at sockets in use
         if (g_u16a_socketFlags[ii] & SockFlag_MODBUS) {  // if port 502
+          uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
+
           if (!(g_u16a_socketFlags[ii] & SockFlag_READ_REQ)) {  // haven't read modbus request yet or added to stack
             // CHECK IF MESSAGE AVAILABLE TO READ
-            // READ, ADD TO STACK
-            // SET SOCKFLAGS
-            // RESET TCP TIMER
+            if (g_eca_socks[ii].available()) {
+              // READ, ADD TO STACK
+              ModbusRequest mbReq;
+              uint8_t u8_mbStatus = g_modbusServer.parseRequest(g_eca_socks[ii], mbReq, u8a_mbSrtBytes[ii], k_u32_mbTcpTimeout);
+              if (!u8_mbStatus) {  // no error in message
+                // ADD TO STACK
+                g_u16a_mbReqUnqId[ii] = mbStack.add(mbReq, 1);
+                //g_u8a_mbReqInd[ii] = ? ;
+                // SET SOCKFLAGS
+                if (mbReq.u8_flags & MRFLAG_isTcp) {
+                  g_u16a_socketFlags[ii] |= (SockFlag_MBTCP | SockFlag_READ_REQ);
+                }
+                else {
+                  g_u16a_socketFlags[ii] |= (SockFlag_MB485 | SockFlag_READ_REQ);
+                }
+                // SET TCP TIMER
+                g_u32a_socketTimeoutStart[ii] = millis();
+              }
+              else if (u8_mbStatus == g_modbusServer.k_u8_MBResponseTimedOut) {
+                g_eca_socks[ii].stop();
+                g_eca_socks[ii].setSocket(ii);
+
+                Ethernet52.cleanSockets(502);
+                g_u16a_socketFlags[ii] = SockFlag_LISTEN;
+                g_u16a_mbReqUnqId[ii] = 0;
+              }
+              else {  // invalid request
+                uint8_t u8a_respBuf[9] = { 0 };
+                u8a_respBuf[0] = u8a_mbSrtBytes[ii][0];
+                u8a_respBuf[1] = u8a_mbSrtBytes[ii][1];
+                u8a_respBuf[5] = 3;
+                u8a_respBuf[6] = mbReq.u8_vid;
+                u8a_respBuf[7] = mbReq.u8_func | 0x80;
+                u8a_respBuf[8] = u8_mbStatus;
+
+                g_eca_socks[ii].write(u8a_respBuf, 9);
+                g_eca_socks[ii].flush();  // do anything?
+
+                g_u32a_socketTimeoutStart[ii] = millis();
+              }
+            }
+            else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {
+              g_eca_socks[ii].stop();
+              g_eca_socks[ii].setSocket(ii);
+
+              Ethernet52.cleanSockets(502);
+              g_u16a_socketFlags[ii] = SockFlag_LISTEN;
+              g_u16a_mbReqUnqId[ii] = 0;
+            }
           }
-          else if (mbStack[g_u8a_mbReqInd[ii]].u8_flags & 0x10) {  // if we have, then check for good message return
+          
+          if (mbStack[u8_mbReqInd].u8_flags & (MRFLAG_goodData | MRFLAG_timeout)) {  // if we have, then check for good message return
             // TRANSFER MESSAGE FROM PROTOCOL BUFFER TO CURRENT SOCKET OUTBOUND
-            // SEND THIS MESSAGE THEN RESET TIMEOUT
+            g_modbusServer.sendResponse(g_eca_socks[ii], mbStack[u8_mbReqInd], u8a_mbSrtBytes[ii]);
+            // SEND THIS MESSAGE THEN RESET TCP TIMEOUT
+            g_u32a_socketTimeoutStart[ii] = millis();
             // CLOSE PROTOCOL USED TO TALK TO DEVICE
-            // CLEAN SOCKETS?
+            if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // tcp used
+              uint8_t u8_dumSck = (mbStack[u8_mbReqInd].u8_flags & MRFLAG_sckMask);
+
+              g_eca_socks[u8_dumSck].stop();
+              g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
+
+              ba_clientSocksAvail[u8_dumSck - 6] = true;
+            }
+            else {  // serial used
+              b_485avail = true;
+            }
+            // CLEAN SOCKETS? - main socket should just keep ticking, no reason to here
             // REMOVE FROM STACK
+            mbStack.removeByInd(u8_mbReqInd);
             // RESET SOCKFLAGS SO HAVEN'T READ MESSAGE
+            g_u16a_socketFlags[ii] &= ~(0x0038);  // should reset bits 3, 4, and 5, bet this doesn't work
+
+            //g_u8a_mbReqInd[ii] = 255;
+            g_u16a_mbReqUnqId[ii] = 0;
           }
-          else if (mbStack[g_u8a_mbReqInd[ii]].u8_flags & 0x20) {  // check for timeout
-            // SEND TIMEOUT MESSAGE TO REQUESTOR
-            // RESET TCP TIMEOUT
-            // CLOSE PROTOCOL USED TO TALK TO DEVICE (MIGHT BE DONE IN STACK LOOP)
-            // CLEAN SOCKETS?
-            // REMOVE FROM STACK
-            // RESET SOCKFLAGS
-          }
+          //else if (mbStack[g_u8a_mbReqInd[ii]].u8_flags & MRFLAG_timeout) {  // check for timeout
+          //  // SEND TIMEOUT MESSAGE TO REQUESTOR
+          //  g_modbusServer.sendResponse(g_eca_socks[ii], mbStack[g_u8a_mbReqInd[ii]]);
+          //  // RESET TCP TIMEOUT
+          //  // CLOSE PROTOCOL USED TO TALK TO DEVICE (MIGHT BE DONE IN STACK LOOP) nope
+          //  // CLEAN SOCKETS?
+          //  // REMOVE FROM STACK
+          //  // RESET SOCKFLAGS
+          //}
           else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // check for time out
             // IF STACK MEMBER PRESENT
+            if (u8_mbReqInd < mbStack.k_u8_maxSize) {
             //   CLOSE DEVICE SOCKET
+              mbStack[u8_mbReqInd].u8_flags |= MRFLAG_timeout;  // mark device timed out
             //   SEND TIMEOUT MESSAGE TO REQUESTOR
+              g_modbusServer.sendResponse(g_eca_socks[ii], mbStack[u8_mbReqInd], u8a_mbSrtBytes[ii]);
+
+              if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // tcp used
+                uint8_t u8_dumSck = (mbStack[u8_mbReqInd].u8_flags & MRFLAG_sckMask);
+
+                g_eca_socks[u8_dumSck].stop();
+                g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
+
+                ba_clientSocksAvail[u8_dumSck - 6] = true;
+              }
+              else {  // serial used
+                b_485avail = true;
+              }
+
+              mbStack.removeByInd(u8_mbReqInd);
+              //g_u8a_mbReqInd[ii] = 255;
+              g_u16a_mbReqUnqId[ii] = 0;
+
+
             //   CLOSE THIS SOCKET
             //   CLEAN SOCKETS?
             //   REMOVE FROM STACK
             //   RESET SOCKFLAGS
-            // ELSE
+            // ELSE - now new messages after previous request was handled
             //   CLOSE THIS SOCKET
             //   CLEAN SOCKETS?
             //   RESET SOCKFLAGS
+            }
+
+            g_eca_socks[ii].stop();
+            g_eca_socks[ii].setSocket(ii);
+
+            Ethernet52.cleanSockets(502);
+            g_u16a_socketFlags[ii] = SockFlag_LISTEN;
 
           }
         }
@@ -105,6 +204,8 @@ void handleServers() {
       }
     }
 
+
+
     // loop through available protocols and check against stack of requests
     if (mbStack.getLength() > 0) {
       uint8_t u8_stkInd;
@@ -116,7 +217,7 @@ void handleServers() {
           // START TIMER, timer in ModbusServer class
 
           //mbStack[u8_stkInd].b_sentReq = true;
-          mbStack[u8_stkInd].u8_flags |= 0x40;  // mark sent flag
+          mbStack[u8_stkInd].u8_flags |= MRFLAG_sentMsg;  // mark sent flag
 
           b_485avail = false;
         }
@@ -130,10 +231,10 @@ void handleServers() {
         u8_stkInd = mbStack.getLive485();  // find index of request that is currently active on this protocol
         if (u8_stkInd < mbStack.k_u8_maxSize) { // 255 is none in stack
           if (g_modbusServer.serialAvailable()) {
-            mbStack[u8_stkInd].u8_flags |= 0x10;  // mark received actual msg flag
+            mbStack[u8_stkInd].u8_flags |= MRFLAG_goodData;  // mark received actual msg flag
           }
           else if (g_modbusServer.serialTimedOut()) {
-            mbStack[u8_stkInd].u8_flags |= 0x20;  // mark device timed out
+            mbStack[u8_stkInd].u8_flags |= MRFLAG_timeout;  // mark device timed out
           }
         }
         else {  // serial active, but nothing in stack, set serial to open and pray
@@ -146,7 +247,7 @@ void handleServers() {
           u8_stkInd = mbStack.getNextTcp();
           if (u8_stkInd < mbStack.k_u8_maxSize) {
             // SEND REQUEST
-            mbStack[u8_stkInd].u8_flags |= 0x40;  // mark sent flag
+            mbStack[u8_stkInd].u8_flags |= MRFLAG_sentMsg;  // mark sent flag
             // START TIMER
             ba_clientSocksAvail[ii] = false;
           }

@@ -101,7 +101,7 @@ int ModbusServer::tcpAvailable(EthernetClient52 &ec_client) {
 }
 
 
-uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numRegs) {
+uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numBytes) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 6;
 	uint8_t u8p_devResp[256] = {0};
@@ -173,7 +173,7 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 	}
 	
 	if (!u8_mbStatus) {  // if no errors, then move data to register format, otherwise return error
-		u8_numRegs = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
+		u8_numBytes = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
 	}
 	
 	return u8_mbStatus;
@@ -181,7 +181,7 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 
 
 uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, 
-                              uint16_t *u16p_regs, uint8_t u8_numRegs) {
+                              uint16_t *u16p_regs, uint8_t u8_numBytes) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 0;
 	int16_t s16_lenRead;
@@ -245,14 +245,15 @@ uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest
 	}
 	
 	if (!u8_mbStatus) {  // if no errors, then move data to register format, otherwise return error
-		u8_numRegs = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
+		u8_numBytes = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
 	}
 	return u8_mbStatus;
 }
 
 
 uint8_t ModbusServer::u8array2regs(uint8_t u8p_devResp[], uint16_t *u16p_regs, uint8_t u8_func){
-	uint8_t u8_numRegs = u8p_devResp[8] >> 1;
+	uint8_t u8_numBytes = u8p_devResp[8];
+	uint8_t u8_numRegs = u8_numBytes >> 1;
 	
 	switch (u8_func) {
 		case 1:
@@ -280,42 +281,62 @@ uint8_t ModbusServer::u8array2regs(uint8_t u8p_devResp[], uint16_t *u16p_regs, u
 			break;
 	}
 	
-	return u8_numRegs;
+	return u8_numBytes;
 }
 
 
-void ModbusServer::sendResponse(EthernetClient52 ec_client, ModbusRequest mbReq) {
+void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest &mbReq, uint8_t u8a_strtBytes[2]) {
 	uint8_t u8a_respBuf[256] = {0};  // actual buffer used to respond
 	uint16_t u16a_interBuf[128] = {0};  // used for grabbing data in register format
 	uint8_t u8_mbStatus(0);
 	uint16_t u16_respLen(0);
-	uint8_t u8_numRegs(0);
+	uint8_t u8_numBytes(0);
 	
-	if (mbReq.u8_flags & 0x20) {  // protocol has timed out, no message from slave device
+	u8a_respBuf[0] = u8a_strtBytes[0];
+	u8a_respBuf[1] = u8a_strtBytes[1];
+	
+	if (mbReq.u8_flags & MRFLAG_timeout) {  // protocol has timed out, no message from slave device
 		u8_mbStatus = k_u8_MBResponseTimedOut;
 	}
-	else if (mbReq.u8_flags & 0x01) {  // there is a good message over tcp
-		u8_mbStatus = recvTcpResponse(ec_client, mbReq, u16a_interBuf, u8_numRegs);
+	else if (mbReq.u8_flags & MRFLAG_isTcp) {  // there is a good message over tcp
+		u8_mbStatus = recvTcpResponse(ec_client, mbReq, u16a_interBuf, u8_numBytes);
 	}
 	else {  // there is a good message over serial
-		u8_mbStatus = recvSerialResponse(mbReq, u16a_interBuf, u8_numRegs);
+		u8_mbStatus = recvSerialResponse(mbReq, u16a_interBuf, u8_numBytes);
 	}
 	
 	if (!u8_mbStatus) {  // good data
-		if (mbReq.u8_flags & 0x80) {  // need to translate data via MeterLibrary
+		if (mbReq.u8_flags & MRFLAG_adjReq) {  // need to translate data via MeterLibrary
 			MeterLibBlocks mtrLibBlk(mbReq.u16_start, mbReq.u16_length, mbReq.u8_mtrType);
-				
-			// void convertToFloat(uint16_t u16p_regs[], uint8_t *const u8p_data);
+			
+			u8a_respBuf[5] = 6;
+			u8a_respBuf[6] = mbReq.u8_vid;
+			u8a_respBuf[7] = mbReq.u8_func;
+			u8a_respBuf[8] = u8_numBytes;
+			mtrLibBlk.convertToFloat(u16a_interBuf, &u8a_respBuf[9]);
+			
+			u16_respLen = 9 + u8_numBytes;
 		}
 		else {  // raw data is acceptable to pass back
-			if (mbReq.u8_func < 5) {
-				u8a_respBuf[6] = mbReq.u8_id;
+			if (mbReq.u8_func < 5) {  // read function
+				u8a_respBuf[6] = mbReq.u8_vid;
 				u8a_respBuf[7] = mbReq.u8_func;
+				u8a_respBuf[8] = u8_numBytes;
 				
+				for (int ii = 0, jj = 9; ii < (u8_numBytes >> 1); ++ii, jj += 2) {
+					u8a_respBuf[jj]     = highByte(u16a_interBuf[ii]);
+					u8a_respBuf[jj + 1] = lowByte(u16a_interBuf[ii]);
+				}
+					
+				if (u8_numBytes % 2) { // if there are an odd number of bytes
+					u8a_respBuf[8 + u8_numBytes] = lowByte(u16a_interBuf[u8_numBytes >> 1]);
+				}
+				
+				u16_respLen = 9 + u8_numBytes;
 			}
 			else {  // (mbReq.u8_func < 7)
 				u8a_respBuf[5] = 6;
-				u8a_respBuf[6] = mbReq.u8_id;
+				u8a_respBuf[6] = mbReq.u8_vid;
 				u8a_respBuf[7] = mbReq.u8_func;
 				u8a_respBuf[8] = highByte(mbReq.u16_start);
 				u8a_respBuf[9] = lowByte(mbReq.u16_start);
@@ -328,7 +349,7 @@ void ModbusServer::sendResponse(EthernetClient52 ec_client, ModbusRequest mbReq)
 	}
 	else {  // error
 		u8a_respBuf[5] = 3;
-		u8a_respBuf[6] = mbReq.u8_id;
+		u8a_respBuf[6] = mbReq.u8_vid;
 		u8a_respBuf[7] = mbReq.u8_func | 0x80;
 		u8a_respBuf[8] = u8_mbStatus;
 		
@@ -339,6 +360,73 @@ void ModbusServer::sendResponse(EthernetClient52 ec_client, ModbusRequest mbReq)
 		ec_client.write(u8a_respBuf, u16_respLen);
 		ec_client.flush();  // do anything?
 	}
+}
+
+
+uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &mbReq, 
+                                   uint8_t u8a_strtBytes[2], const uint32_t k_u32_mbTcpTimeout) {
+	uint32_t u32_startTime = millis();
+	uint16_t u16_lenRead;
+	uint16_t u16_givenLen;
+	uint8_t u8a_mbReq[300];
+	uint8_t u8_mbStatus(0);
+	
+	while (true) {
+		if (ec_client.available()) {
+			u16_lenRead = ec_client.read(u8a_mbReq, 300);
+
+			// if client hasn't read 6 bytes, then there is a huge problem here
+			if (u16_lenRead < 6) {
+				u16_givenLen = 65535;
+			}
+			else {
+				u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
+			}
+
+			if ((u16_lenRead > u16_givenLen) || (u16_givenLen > 300)) {
+				// need to dump error and set ModbusRequest 
+				return k_u8_MBGatewayTargetFailed;   //   should not happen, modbus/tcp deals with pretty small stuff overall)
+			}
+
+			while (u16_lenRead < u16_givenLen) {  // make sure to grab the full packet
+				u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, 300 - u16_lenRead);
+
+				if ((millis() - u32_startTime) > k_u32_mbTcpTimeout) {  // 10 ms might be too quick, but not really sure
+					// set mbReq
+					return k_u8_MBResponseTimedOut;
+				}
+
+				if (u16_lenRead < 6) {
+					u16_givenLen = 65535;
+				}
+				else {
+					u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
+				}
+			}
+			
+			// SET MODBUSREQUEST VARIABLE
+			// uint16_t  u16_unqId;
+	// uint8_t   u8_flags;
+	// uint8_t   u8_id;
+	// uint8_t   u8_vid;
+	// uint8_t   u8_func;
+	// uint16_t  u16_start;
+	// uint16_t  u16_length;
+	// uint8_t   u8_mtrType;  /
+			mbReq.u8_vid = u8a_mbReq[6];
+			mbReq.u8_func = u8a_mbReq[7];
+			mbReq.u16_start = word(u8a_mbReq[8], u8a_mbReq[9]);
+			mbReq.u16_length = word(u8a_mbReq[10], u8a_mbReq[11]);
+			
+			// find actual id and type and set flags, set necessary errors
+		}
+		else if ((millis() - u32_startTime) > k_u32_mbTcpTimeout) {  // 10 ms might be too quick, but not really sure
+			// set mbReq
+			return k_u8_MBResponseTimedOut;
+		}
+	}
+	
+	
 }
 
 

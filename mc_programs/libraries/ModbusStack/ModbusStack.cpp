@@ -8,7 +8,7 @@ const uint8_t ModbusStack::k_u8_maxSize = MODBUSSTACK_MAXSIZE;
 
 
 
-uint8_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, 
+uint16_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, 
 												 uint16_t u16_start, uint16_t u16_length, uint8_t u8_mtrType, // bool b_adjReq, 
 												 uint8_t u8_priority) {
 	uint8_t u8_ind;
@@ -55,6 +55,12 @@ uint8_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_
 	// m_mbStack[u8_ind].b_sentReq    = false;	
 	
 	return m_mbStack[u8_ind].u16_unqId;
+}
+
+
+uint16_t ModbusStack::add(const ModbusRequest mbReq, uint8_t u8_priority) {
+	return add(mbReq.u8_flags, mbReq.u8_id, mbReq.u8_vid, mbReq.u8_func, mbReq.u16_start, 
+	           mbReq.u16_length, mbReq.u8_mtrType, u8_priority);
 }
 
 
@@ -112,28 +118,46 @@ uint8_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_
 // }
 
 
-bool ModbusStack::remove(uint8_t u8_unqId) {
+bool ModbusStack::removeByUnqId(uint16_t u16_unqId) {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
-		if (m_mbStack[ii].u16_unqId == u8_unqId) {
-			pullForward(ii);
+		if (m_mbStack[ii].u16_unqId == u16_unqId) {
+			// pullForward(ii);
 			
-			if ((ii < m_u8_1end) && (m_u8_1end > 0)) {
-				m_u8_1end--;
-			}
-			if ((ii < m_u8_2end) && (m_u8_2end > 0)) {
-				m_u8_2end--;
-			}
-			m_u8_length--;
-			return true;
+			// if ((ii < m_u8_1end) && (m_u8_1end > 0)) {
+				// m_u8_1end--;
+			// }
+			// if ((ii < m_u8_2end) && (m_u8_2end > 0)) {
+				// m_u8_2end--;
+			// }
+			// m_u8_length--;
+			// return true;
+			return removeByInd(ii);
 		}
 	}
 	return false;
 }
 
 
-bool ModbusStack::flagSentMsg(uint8_t u8_unqId){
+bool ModbusStack::removeByInd(uint8_t u8_ind) {
+	if (u8_ind < m_u8_length) {
+		pullForward(u8_ind);
+			
+		if ((u8_ind < m_u8_1end) && (m_u8_1end > 0)) {
+			m_u8_1end--;
+		}
+		if ((u8_ind < m_u8_2end) && (m_u8_2end > 0)) {
+			m_u8_2end--;
+		}
+		m_u8_length--;
+		return true;
+	}
+	return false;
+}
+
+
+bool ModbusStack::flagSentMsg(uint16_t u16_unqId){
 	for (int ii = 0; ii < m_u8_length; ++ii) {
-		if (m_mbStack[ii].u16_unqId == u8_unqId) {
+		if (m_mbStack[ii].u16_unqId == u16_unqId) {
 			// m_mbStack[ii].b_sentReq = true;
 			m_mbStack[ii].u8_flags |= 0x40;  // mark sent flag
 			return true;
@@ -144,10 +168,10 @@ bool ModbusStack::flagSentMsg(uint8_t u8_unqId){
 }
 
 
-bool ModbusStack::getMbReq(uint8_t u8_unqId, ModbusRequest *p_mbReq){
+bool ModbusStack::getMbReqCopy(uint16_t u16_unqId, ModbusRequest &p_mbReq){
 	for (int ii = 0; ii < m_u8_length; ++ii) {
-		if (m_mbStack[ii].u16_unqId == u8_unqId) {
-			*p_mbReq = m_mbStack[ii];
+		if (m_mbStack[ii].u16_unqId == u16_unqId) {
+			p_mbReq = m_mbStack[ii];
 			return true;
 		}
 	}
@@ -156,10 +180,23 @@ bool ModbusStack::getMbReq(uint8_t u8_unqId, ModbusRequest *p_mbReq){
 }
 
 
+uint8_t ModbusStack::getReqInd(uint16_t u16_unqId) {
+	if (u16_unqId != 0) {
+		for (int ii = 0; ii < m_u8_length; ++ii) {
+			if (m_mbStack[ii].u16_unqId == u16_unqId) {
+				return ii;
+			}
+		}
+	}
+	
+	return 255;
+}
+
+
 uint8_t ModbusStack::getNext485() {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
 		// if (!(m_mbStack[ii].u8_flags & 0x01) && (!m_mbStack[ii].b_sentReq)) {
-		if (!(m_mbStack[ii].u8_flags & 0x01) && !(m_mbStack[ii].u8_flags & 0x40)) {
+		if (!(m_mbStack[ii].u8_flags & MRFLAG_isTcp) && !(m_mbStack[ii].u8_flags & MRFLAG_sentMsg)) {
 			return ii;
 		}
 	}
@@ -171,7 +208,7 @@ uint8_t ModbusStack::getNext485() {
 uint8_t ModbusStack::getNextTcp() {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
 		// if ((m_mbStack[ii].u8_flags & 0x01) && (!m_mbStack[ii].b_sentReq)) {
-		if ((m_mbStack[ii].u8_flags & 0x01) && !(m_mbStack[ii].u8_flags & 0x40)) {
+		if ((m_mbStack[ii].u8_flags & MRFLAG_isTcp) && !(m_mbStack[ii].u8_flags & MRFLAG_sentMsg)) {
 			return ii;
 		}
 	}
@@ -183,7 +220,7 @@ uint8_t ModbusStack::getNextTcp() {
 uint8_t ModbusStack::getLive485() {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
 		// if (!(m_mbStack[ii].u8_flags & 0x01) && (m_mbStack[ii].b_sentReq)) {
-		if (!(m_mbStack[ii].u8_flags & 0x01) && (m_mbStack[ii].u8_flags & 0x40)) {
+		if (!(m_mbStack[ii].u8_flags & MRFLAG_isTcp) && (m_mbStack[ii].u8_flags & MRFLAG_sentMsg)) {
 			return ii;
 		}
 	}
@@ -195,8 +232,8 @@ uint8_t ModbusStack::getLive485() {
 uint8_t ModbusStack::getLiveTcp(uint8_t u8_sock) {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
 		// if ((m_mbStack[ii].b_sentReq) && (getMrSocket(m_mbStack[ii]) == u8_sock) && 
-		if ((m_mbStack[ii].u8_flags & 0x40) && (getMrSocket(m_mbStack[ii]) == u8_sock) && 
-		    (m_mbStack[ii].u8_flags & 0x01)) {
+		if ((m_mbStack[ii].u8_flags & MRFLAG_sentMsg) && (getMrSocket(m_mbStack[ii]) == u8_sock) && 
+		    (m_mbStack[ii].u8_flags & MRFLAG_isTcp)) {
 			return ii;
 		}
 	}
@@ -240,7 +277,7 @@ void ModbusStack::pullForward(uint8_t u8_ind) {
 
 
 uint8_t getMrSocket(ModbusRequest mbReq) {
-	return ((mbReq.u8_flags >> 1) & 0x07);
+	return (mbReq.u8_flags & MRFLAG_sckMask);
 }
 
 

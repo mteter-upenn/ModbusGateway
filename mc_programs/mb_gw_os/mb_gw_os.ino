@@ -106,7 +106,7 @@ ModbusServer g_modbusServer(gk_u8_modbusSerialHardware, gk_u8_mb485Ctrl);
 // server socket info
 uint32_t g_u32a_socketTimeoutStart[8] = { 0 };  // time to compare to timeout
 uint16_t g_u16a_socketFlags[8] = { 0 };  // flag names found in mb_names.h
-uint8_t  g_u8a_mbReqInd[8] = { 0 };  // index of modbus request in ModbusStack
+uint16_t  g_u16a_mbReqUnqId[8] = { 0 };  // unique id of modbus request in ModbusStack
 EthernetClient52 g_eca_socks[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
 // miscellaneous

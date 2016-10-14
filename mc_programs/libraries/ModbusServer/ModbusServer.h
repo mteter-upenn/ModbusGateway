@@ -46,14 +46,15 @@ public:
 	int serialAvailable();
 	int tcpAvailable(EthernetClient52 &ec_client);
 	
-	uint8_t recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numRegs);
-	uint8_t recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numRegs);
+	uint8_t recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numBytes);
+	uint8_t recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numBytes);
 	
 	// ec_client is requestor
 
-	void sendResponse(EthernetClient52 ec_client, ModbusRequest mbReq);
+	void sendResponse(EthernetClient52 &ec_client, const ModbusRequest &mbReq, uint8_t u8a_strtBytes[2]);
 	
-	void parseRequest(EthernetClient52);
+	uint8_t parseRequest(EthernetClient52 &ec_client, ModbusRequest &mbReq, 
+	                     uint8_t u8a_strtBytes[2], const uint32_t k_u32_mbTcpTimeout);
 	
 	
 	void setTimeout(uint32_t u32_timeout);

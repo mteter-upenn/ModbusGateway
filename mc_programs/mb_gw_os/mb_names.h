@@ -26,7 +26,7 @@ enum class XmlFile {
 };
 
 
-enum SockFlag {  // 16 bit flag
+enum SockFlag {  // 16 bit flag,  is this actually 32 bit?
   SockFlag_LISTEN =      0x0000,  // 0,    listen or closed - no communications
   SockFlag_ESTABLISHED = 0x0001,  // 1,    comms with client - active
   SockFlag_MODBUS =      0x0002,  // 2,    port 502
