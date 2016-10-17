@@ -19,17 +19,17 @@ Constructor.
 
 @ingroup setup
 */
-MeterLibBlocks::MeterLibBlocks(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType) {
+MeterLibBlocks::MeterLibBlocks(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // , uint16_t u16_numRegs
 	// address for meter register library, this will never change
 	m_u16_mtrListingStart = word(EEPROM.read(6), EEPROM.read(7));	
 		
-	changeInputs(u16_reqReg, u16_numRegs, u8_mtrType);
+	changeInputs(u16_reqReg, u8_mtrType);
 }
 
 
-int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint8_t u8_mtrType) {
+int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // , uint16_t u16_numRegs
 	m_u16_reqReg = u16_reqReg;
-	m_u16_numRegs = u16_numRegs;
+	// m_u16_numRegs = u16_numRegs;
 	
 	if ((u8_mtrType <= EEPROM.read(m_u16_mtrListingStart + 2)) || (u8_mtrType == 0)) {
 		m_u8_mtrType = u8_mtrType;
@@ -67,9 +67,9 @@ int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint16_t u16_numRegs, uint
 }
 
 
-uint16_t MeterLibBlocks::getNumRegs() {
-	return m_u16_numRegs;
-}
+// uint16_t MeterLibBlocks::getNumRegs() {
+	// return m_u16_numRegs;
+// }
 
 
 uint16_t MeterLibBlocks::getReqReg() {
@@ -82,7 +82,7 @@ Convert full data request to float.
 
 u8a_data must be address where floats will start (no header spacing accounted for)
 */
-void MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint8_t *const u8kp_data) {
+void MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint8_t *const u8kp_data, uint16_t u16_numRegs) {
 	uint16_t u16_numReqVals;
 	// multiplier such that u16_regMult * (number of requested values) = (number of requested 
 	//     registers)
@@ -95,12 +95,12 @@ void MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint8_t *const u8kp_da
 	} int2flt;
 
 	u16_regMult = FloatConvEnumNumRegs(m_reqRegDataType);
-	u16_numReqVals = m_u16_numRegs / u16_regMult;
+	u16_numReqVals = u16_numRegs / u16_regMult;
 	
 	for (int ii = 0, jj = 0; ii < u16_numReqVals; ++ii, jj += 2) {
 		u16_reg = m_u16_reqReg + ii * u16_regMult;
 		
-		int2flt.fl = convertToFloat(u16p_regs, u16_reg);
+		int2flt.fl = convertToFloat(u16p_regs, u16_reg, u16_numRegs);
 		
 		// words are in correct order, but the bytes in the words need to be swapped
 		u16kp_data[jj] = swapBytes(int2flt.u16[0]);
@@ -109,11 +109,11 @@ void MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint8_t *const u8kp_da
 }
 
 
-float MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg) {
+float MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg, uint16_t u16_numRegs) {
 	uint8_t u8_regInd;
 	
 	// check if register is within requested data range
-	if ((u16_reg >= m_u16_reqReg) && (u16_reg < (m_u16_reqReg + m_u16_numRegs))) {
+	if ((u16_reg >= m_u16_reqReg) && (u16_reg < (m_u16_reqReg + u16_numRegs))) {
 		u8_regInd = u16_reg - m_u16_reqReg;
 	}
 	else {
@@ -313,6 +313,93 @@ bool MeterLibGroups::groupLastFlags(int8_t *const s8kp_dataFlags) {
 		}
 	}
 	
+	return true;
+}
+
+
+// SlaveData Functions##############################################################################
+SlaveDataClass SlaveData;
+
+void SlaveDataClass::init() {
+	m_u16_slaveDataStart = word(EEPROM.read(4), EEPROM.read(5));
+	m_u8_numSlaves = EEPROM.read(m_u16_slaveDataStart);
+	
+	for (int ii = 0; ii < m_u8_numSlaves; ++ii) {
+    m_u8a_slaveIds[ii] = EEPROM.read(9 * ii + 8 + m_u16_slaveDataStart);
+    m_u8a_slaveVids[ii] = EEPROM.read(9 * ii + 9 + m_u16_slaveDataStart);
+
+    m_u8a_slaveIps[ii][0] = EEPROM.read(9 * ii + 4 + m_u16_slaveDataStart);
+    for (int jj = 1; jj < 4; ++jj){
+      m_u8a_slaveIps[ii][jj] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj + 4);
+      m_u8a_slaveTypes[ii][(jj - 1)] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj);
+    }
+  }
+}
+
+
+bool SlaveDataClass::getIndByVid(uint8_t u8_vid, uint8_t &u8_ind) {
+	for (int ii = 0; ii < m_u8_numSlaves; ++ii) {
+		if (m_u8a_slaveVids[ii] == u8_vid) {
+			u8_ind = ii;
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+
+bool SlaveDataClass::getFullTypeByInd(uint8_t u8_slvInd, uint8_t u8a_type[3]) {
+	if (!(u8_slvInd < m_u8_numSlaves)) {
+		return false;
+	}
+	memcpy(u8a_type, m_u8a_slaveTypes[u8_slvInd], 3);
+	return true;
+}
+
+
+bool SlaveDataClass::getRedTypeByInd(uint8_t u8_slvInd, uint8_t &u8_type) {
+	if (!(u8_slvInd < m_u8_numSlaves)) {
+		return false;
+	}
+	u8_type = m_u8a_slaveTypes[u8_slvInd][0];
+	return true;
+}
+
+
+bool SlaveDataClass::getIdByInd(uint8_t u8_slvInd, uint8_t &u8_id) {
+	if (!(u8_slvInd < m_u8_numSlaves)) {
+		return false;
+	}
+	u8_id = m_u8a_slaveIds[u8_slvInd];
+	return true;
+}
+
+
+bool SlaveDataClass::getVidByInd(uint8_t u8_slvInd, uint8_t &u8_vid) {
+	if (!(u8_slvInd < m_u8_numSlaves)) {
+		return false;
+	}
+	u8_vid = m_u8a_slaveVids[u8_slvInd];
+	return true;
+}
+
+
+bool SlaveDataClass::getIPByInd(uint8_t u8_slvInd, uint8_t u8a_ip[4]) {
+	if (!(u8_slvInd < m_u8_numSlaves)) {
+		return false;
+	}
+	memcpy(u8a_ip, m_u8a_slaveIps[u8_slvInd], 4);
+	return true;
+}
+
+
+bool SlaveDataClass::isSlaveTcpByInd(uint8_t u8_slvInd) {
+	for (int ii = 0; ii < 4; ++ii) {
+		if (m_u8a_slaveIps[u8_slvInd][ii] != 0) {
+			return false;
+		}
+	}
 	return true;
 }
 

@@ -6,16 +6,20 @@
 
 
 #include "mb_names.h"
-#include "ModbusStack.h"
 #include <ModbusStructs.h>  // FloatConvEnum, ModbusRequest
-#include <ModbusServer.h>
-#include <TimeLib.h>
+#include <EEPROM.h>
 #include <SPI.h>
+
+#include <MeterLibrary.h>
+#include "ModbusStack.h"
+#include <ModbusServer.h>
+
+#include <TimeLib.h>
+
 #include <Ethernet52.h>
 #include <EthernetUdp52.h>
 //#include <ModbusMaster.h>  // REMOVE
-#include <EEPROM.h>
-#include <MeterLibrary.h>
+
 #include <SD.h>
 
 #ifndef CORE_TEENSY
@@ -78,12 +82,15 @@ uint32_t g_u32_baudrate = 9600;                              // baud rate of 485
 uint16_t g_u16_timeout = 2000;                               // modbus timeout
 
 // slave info
-uint8_t g_u8_numSlaves;  // slaves                              // number of modbus slaves attached to gateway
+// REMOVE BELOW!
+uint8_t g_u8_numSlaves;  // REMOVE?                              // number of modbus slaves attached to gateway
 uint8_t g_u8a_slaveIds[20];  // slv_devs                                // array of modbus device ids (meters can share these!)
 uint8_t g_u8a_slaveVids[20];    // slv_vids                              // array of modbus virtual ids (these should be unique!) they can be the same as devs
 uint8_t g_u8a_slaveIps[20][4];  // slv_ips                              // array of slave ips
 uint8_t g_u8a_slaveTypes[20][3]; // slv_typs                              // array of slave meter types
+// REMOVE ABOVE!
 uint8_t g_u8a_selectedSlave = 1;      // selSlv                              // selected slave - used for webpage live data
+
 
 // rtc info
 bool g_b_rtcGood = false;  // bGoodRTC
@@ -259,6 +266,9 @@ void setup() {
   g_es_mbServ.begin();
   g_es_mbServ.begin();
   g_es_mbServ.begin();
+
+  // initialize SlaveData
+  SlaveData.init();
 
   //g_mm_node.begin(g_u32_baudrate);
   //g_mm_node.setTimeout(g_u16_timeout);

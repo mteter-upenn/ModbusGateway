@@ -74,20 +74,34 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_mbReq) {
 	uint8_t  u8a_txBuffer[12] = {0};
 	uint8_t u8_sock = ec_client.getSocketNumber();
+	uint8_t u8_slvInd;
+	uint8_t u8a_ip[4];
 	
-	flushTcpRx(ec_client);
+	if (SlaveData.getIndByVid(mr_mbReq.u8_vid, u8_slvInd)) {
+		SlaveData.getIPByInd(u8_slvInd, u8a_ip);
+	}
+	else {
+		return false;
+	}
+	// GET IP FROM mr_mbReq.u8_vid!!
+	// ec_client.connect(IP);
 	
-	u8a_txBuffer[5] = 6;
-	u8a_txBuffer[6] = mr_mbReq.u8_id;
-	u8a_txBuffer[7] = mr_mbReq.u8_func;
-	u8a_txBuffer[8] = highByte(mr_mbReq.u16_start);
-	u8a_txBuffer[9] = lowByte(mr_mbReq.u16_start);
-	u8a_txBuffer[10] = highByte(mr_mbReq.u16_length);
-	u8a_txBuffer[11] = lowByte(mr_mbReq.u16_length);
-	
-	ec_client.write(u8a_txBuffer, 12);
-	m_u32a_tcpTime[u8_sock] = millis();
-	return true;
+	if (ec_client.connect(u8a_ip, 502)) {
+		flushTcpRx(ec_client);
+		
+		u8a_txBuffer[5] = 6;
+		u8a_txBuffer[6] = mr_mbReq.u8_id;
+		u8a_txBuffer[7] = mr_mbReq.u8_func;
+		u8a_txBuffer[8] = highByte(mr_mbReq.u16_start);
+		u8a_txBuffer[9] = lowByte(mr_mbReq.u16_start);
+		u8a_txBuffer[10] = highByte(mr_mbReq.u16_length);
+		u8a_txBuffer[11] = lowByte(mr_mbReq.u16_length);
+		
+		ec_client.write(u8a_txBuffer, 12);
+		m_u32a_tcpTime[u8_sock] = millis();
+		return true;
+	}
+	return false;
 }
 
 
@@ -307,13 +321,13 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 	
 	if (!u8_mbStatus) {  // good data
 		if (mbReq.u8_flags & MRFLAG_adjReq) {  // need to translate data via MeterLibrary
-			MeterLibBlocks mtrLibBlk(mbReq.u16_start, mbReq.u16_length, mbReq.u8_mtrType);
+			MeterLibBlocks mtrLibBlk(mbReq.u16_start, mbReq.u8_mtrType);
 			
 			u8a_respBuf[5] = 6;
 			u8a_respBuf[6] = mbReq.u8_vid;
 			u8a_respBuf[7] = mbReq.u8_func;
 			u8a_respBuf[8] = u8_numBytes;
-			mtrLibBlk.convertToFloat(u16a_interBuf, &u8a_respBuf[9]);
+			mtrLibBlk.convertToFloat(u16a_interBuf, &u8a_respBuf[9], mbReq.u16_length);
 			
 			u16_respLen = 9 + u8_numBytes;
 		}
@@ -369,7 +383,8 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 	uint16_t u16_lenRead;
 	uint16_t u16_givenLen;
 	uint8_t u8a_mbReq[300];
-	uint8_t u8_mbStatus(0);
+	uint8_t u8_mbStatus(k_u8_MBSuccess);
+	uint8_t u8_slvInd;
 	
 	while (true) {
 		if (ec_client.available()) {
@@ -404,19 +419,64 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				}
 			}
 			
-			// SET MODBUSREQUEST VARIABLE
-			// uint16_t  u16_unqId;
-	// uint8_t   u8_flags;
-	// uint8_t   u8_id;
-	// uint8_t   u8_vid;
-	// uint8_t   u8_func;
-	// uint16_t  u16_start;
-	// uint16_t  u16_length;
-	// uint8_t   u8_mtrType;  /
+			// SET MODBUSREQUEST VARIABLE/
+			u8a_strtBytes[0] = u8a_mbReq[0];
+			u8a_strtBytes[1] = u8a_mbReq[1];
+			
 			mbReq.u8_vid = u8a_mbReq[6];
 			mbReq.u8_func = u8a_mbReq[7];
-			mbReq.u16_start = word(u8a_mbReq[8], u8a_mbReq[9]);
-			mbReq.u16_length = word(u8a_mbReq[10], u8a_mbReq[11]);
+			
+			if (mbReq.u8_func > 6) {  // check if function is valid
+				u8_mbStatus = k_u8_MBIllegalFunction;
+				break;
+			}
+			
+			if (SlaveData.getIndByVid(mbReq.u8_vid, u8_slvInd)) {  // if vid exists for slave
+				uint16_t u16_dumStrt = word(u8a_mbReq[8], u8a_mbReq[9]);
+				uint16_t u16_dumLgth = word(u8a_mbReq[10], u8a_mbReq[11]);
+				
+				SlaveData.getIdByInd(u8_slvInd, mbReq.u8_id);
+				SlaveData.getRedTypeByInd(u8_slvInd, mbReq.u8_mtrType);
+					
+				if (SlaveData.isSlaveTcpByInd(u8_slvInd)) {  // if slave is tcp
+					mbReq.u8_flags = MRFLAG_isTcp;
+				}
+				else {
+					mbReq.u8_flags = 0;
+				}
+
+				// ALL requests in 10k band returned as floats
+				if ((u16_dumStrt > 9999) && (u16_dumStrt < 20000) && ((mbReq.u8_func == 3) || (mbReq.u8_func == 4))) {
+					bool b_foundReg;
+					
+					if (0x01 & u16_dumLgth) {  // if odd number, can't return float which has even number of regs
+						u8_mbStatus = k_u8_MBIllegalDataAddress;
+						break;
+					}
+					
+					mbReq.u16_start = u16_dumStrt - 10000;
+					mbReq.u8_flags |= MRFLAG_adjReq;
+					
+					// GET ADJUSTED LENGTH - MAKE FUNCTION IN METERLIBBLK
+					// b_foundReg = mtrBlks.adjustLength(u16_dumLgth, mbReq.u16_length);
+					
+					if (!b_foundReg) {  // start register not listed in library
+						u8_mbStatus = k_u8_MBIllegalDataAddress;
+						break;
+					}
+				}
+				else {
+					mbReq.u16_start = word(u8a_mbReq[8], u8a_mbReq[9]);
+					mbReq.u16_length = word(u8a_mbReq[10], u8a_mbReq[11]);
+				}
+			}
+			else { // assume serial
+				mbReq.u8_id = mbReq.u8_vid;
+				mbReq.u8_mtrType = 0;
+				mbReq.u8_flags = 0;
+				mbReq.u16_start = word(u8a_mbReq[8], u8a_mbReq[9]);  // hopefully not greater than 10k, if so, just pass on, device will return error if necessary
+				mbReq.u16_length = word(u8a_mbReq[10], u8a_mbReq[11]);  // can't be adjusted
+			}
 			
 			// find actual id and type and set flags, set necessary errors
 		}
@@ -426,7 +486,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 		}
 	}
 	
-	
+	return u8_mbStatus;
 }
 
 

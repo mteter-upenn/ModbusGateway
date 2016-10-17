@@ -133,21 +133,11 @@ void handleServers() {
             // CLEAN SOCKETS? - main socket should just keep ticking, no reason to here
             // REMOVE FROM STACK
             mbStack.removeByInd(u8_mbReqInd);
+            g_u16a_mbReqUnqId[ii] = 0;
+
             // RESET SOCKFLAGS SO HAVEN'T READ MESSAGE
             g_u16a_socketFlags[ii] &= ~(0x0038);  // should reset bits 3, 4, and 5, bet this doesn't work
-
-            //g_u8a_mbReqInd[ii] = 255;
-            g_u16a_mbReqUnqId[ii] = 0;
           }
-          //else if (mbStack[g_u8a_mbReqInd[ii]].u8_flags & MRFLAG_timeout) {  // check for timeout
-          //  // SEND TIMEOUT MESSAGE TO REQUESTOR
-          //  g_modbusServer.sendResponse(g_eca_socks[ii], mbStack[g_u8a_mbReqInd[ii]]);
-          //  // RESET TCP TIMEOUT
-          //  // CLOSE PROTOCOL USED TO TALK TO DEVICE (MIGHT BE DONE IN STACK LOOP) nope
-          //  // CLEAN SOCKETS?
-          //  // REMOVE FROM STACK
-          //  // RESET SOCKFLAGS
-          //}
           else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // check for time out
             // IF STACK MEMBER PRESENT
             if (u8_mbReqInd < mbStack.k_u8_maxSize) {
@@ -156,20 +146,20 @@ void handleServers() {
             //   SEND TIMEOUT MESSAGE TO REQUESTOR
               g_modbusServer.sendResponse(g_eca_socks[ii], mbStack[u8_mbReqInd], u8a_mbSrtBytes[ii]);
 
-              if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // tcp used
-                uint8_t u8_dumSck = (mbStack[u8_mbReqInd].u8_flags & MRFLAG_sckMask);
+              if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_sentMsg) {  // only need to reset protocols if message has been sent
+                if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // tcp used
+                  uint8_t u8_dumSck = (mbStack[u8_mbReqInd].u8_flags & MRFLAG_sckMask);
 
-                g_eca_socks[u8_dumSck].stop();
-                g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
+                  g_eca_socks[u8_dumSck].stop();
+                  g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
 
-                ba_clientSocksAvail[u8_dumSck - 6] = true;
+                  ba_clientSocksAvail[u8_dumSck - 6] = true;
+                }
+                else {  // serial used
+                  b_485avail = true;
+                }
               }
-              else {  // serial used
-                b_485avail = true;
-              }
-
               mbStack.removeByInd(u8_mbReqInd);
-              //g_u8a_mbReqInd[ii] = 255;
               g_u16a_mbReqUnqId[ii] = 0;
 
 
@@ -178,11 +168,11 @@ void handleServers() {
             //   REMOVE FROM STACK
             //   RESET SOCKFLAGS
             // ELSE - now new messages after previous request was handled
+            
+            }
             //   CLOSE THIS SOCKET
             //   CLEAN SOCKETS?
             //   RESET SOCKFLAGS
-            }
-
             g_eca_socks[ii].stop();
             g_eca_socks[ii].setSocket(ii);
 

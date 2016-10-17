@@ -13,7 +13,7 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
   uint8_t u8_mtrId;
   
 
-  return 0xa0;
+  return 0x0a;
 
   if (u16_mbReqLen == 12) { // typical modbus/tcp message is 12 bytes long
     u8a_mbResp[0] = u8a_mbReq[0]; // copy first 2 bytes to outbound message
@@ -160,7 +160,7 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
           }
           else { // 10k request
             // create MeterLibrary class which can take the meter type and register to convert and dump requested values
-            MeterLibBlocks mtrBlks(u16_adjReqReg, u16_adjNumRegs, u8_mtrType);
+            MeterLibBlocks mtrBlks(u16_adjReqReg, u8_mtrType);
             //mtrBlks.convertToFloat(g_mm_node, &u8a_mbResp[9]);
           }
           
