@@ -81,7 +81,7 @@ public:
 	ModbusRequest operator[](int index) const;
 	ModbusRequest& operator[](int index);
 
-	
+	void printReqByInd(uint8_t u8_ind);
 };
 
 #endif

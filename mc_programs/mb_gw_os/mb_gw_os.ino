@@ -90,6 +90,7 @@ uint8_t g_u8a_slaveIps[20][4];  // slv_ips                              // array
 uint8_t g_u8a_slaveTypes[20][3]; // slv_typs                              // array of slave meter types
 // REMOVE ABOVE!
 uint8_t g_u8a_selectedSlave = 1;      // selSlv                              // selected slave - used for webpage live data
+//ModbusStack mbStack;
 
 
 // rtc info
@@ -211,6 +212,8 @@ void setup() {
   // take constants from eeprom into memory
   setConstants();
 
+  // initialize SlaveData
+  SlaveData.init();
   
 //  set serial1 pins high - needed for 485 shield to work
   switch (gk_u8_modbusSerialHardware) {
@@ -267,13 +270,14 @@ void setup() {
   g_es_mbServ.begin();
   g_es_mbServ.begin();
 
-  // initialize SlaveData
-  SlaveData.init();
+  
 
   //g_mm_node.begin(g_u32_baudrate);
   //g_mm_node.setTimeout(g_u16_timeout);
   //  g_mm_node.idle(*function_here);  // add function for idling during wait for modbus return message
   g_modbusServer.begin(g_u32_baudrate);
+  //g_modbusServer.setTimeout(g_u16_timeout);
+  g_modbusServer.setTimeout(500);
 
 
   // start ntp or rtc

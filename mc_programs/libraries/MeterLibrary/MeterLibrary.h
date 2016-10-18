@@ -35,7 +35,9 @@ class MeterLibBlocks {
 		// uint16_t m_u16_numRegs;
 		uint8_t m_u8_mtrType;
 		
-		uint16_t m_u16_mtrListingStart;
+		uint16_t m_u16_mtrTypeListingStart;
+		uint16_t m_u8_numTypes;
+		
 		uint16_t m_u16_mtrLibStart;
 		uint16_t m_u16_blkStrtInd;
 		uint8_t m_u8_numBlks;
@@ -56,6 +58,7 @@ class MeterLibBlocks {
 		void convertToFloat(uint16_t u16p_regs[], uint8_t *const u8p_data, uint16_t u16_numRegs);
 		float convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg, uint16_t u16_numRegs);  // returns float
 		
+		bool adjustLength(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth);
 };
 
 
@@ -65,7 +68,7 @@ class MeterLibGroups {
 		uint16_t m_u16_numRegs;
 		uint8_t m_u8_mtrType;
 		
-		uint16_t m_u16_mtrListingStart;
+		uint16_t m_u16_mtrTypeListingStart;
 		uint16_t m_u16_mtrLibStart;
 		uint16_t m_u16_grpStrtInd;
 		uint8_t m_u8_numGrps;
@@ -93,30 +96,42 @@ class MeterLibGroups {
 };
 
 
+struct SlaveDataStruct {
+	uint8_t u8_id;
+	uint8_t u8_vid;
+	uint8_t u8a_ip[4];
+	uint8_t u8a_type[3];
+};
+
 // class used to grab slave meta data (id, vid, ip, type) from eeprom
 class SlaveDataClass {
 	private:
 		uint16_t m_u16_slaveDataStart;
 		uint8_t m_u8_numSlaves;
 		
-		uint8_t m_u8a_slaveIds[20];      // array of modbus device ids (meters can share these!)
-		uint8_t m_u8a_slaveVids[20];     // array of modbus virtual ids (these should be unique!) they can be the same as devs
-		uint8_t m_u8a_slaveIps[20][4];   // array of slave ips
-		uint8_t m_u8a_slaveTypes[20][3]; // array of slave meter types
-
+		// uint8_t m_u8a_slaveIds[20];      // array of modbus device ids (meters can share these!)
+		// uint8_t m_u8a_slaveVids[20];     // array of modbus virtual ids (these should be unique!) they can be the same as devs
+		// uint8_t m_u8a_slaveIps[20][4];   // array of slave ips
+		// uint8_t m_u8a_slaveTypes[20][3]; // array of slave meter types
+		
+		SlaveDataStruct m_slaveList[20];
+		
+		static const SlaveDataStruct mk_sdInvalid;
 	public:
 		void init();
 		
 		// INDEX IS ZERO BASED!!!!
 		bool getIndByVid(uint8_t u8_vid, uint8_t &u8_ind);  // search for index with vid
 	
-		bool getFullTypeByInd(uint8_t u8_slvInd, uint8_t u8a_type[3]);
-		bool getRedTypeByInd(uint8_t u8_slvInd, uint8_t &u8_type);
-		bool getIdByInd(uint8_t u8_slvInd, uint8_t &u8_id);
-		bool getVidByInd(uint8_t u8_slvInd, uint8_t &u8_vid);
-		bool getIPByInd(uint8_t u8_slvInd, uint8_t u8a_ip[4]);
+		// bool getFullTypeByInd(uint8_t u8_slvInd, uint8_t u8a_type[3]);
+		// bool getRedTypeByInd(uint8_t u8_slvInd, uint8_t &u8_type);
+		// bool getIdByInd(uint8_t u8_slvInd, uint8_t &u8_id);
+		// bool getVidByInd(uint8_t u8_slvInd, uint8_t &u8_vid);
+		// bool getIPByInd(uint8_t u8_slvInd, uint8_t u8a_ip[4]);
 		
 		bool isSlaveTcpByInd(uint8_t u8_slvInd);
+		
+		SlaveDataStruct operator[](int index) const;
 };
 
 extern SlaveDataClass SlaveData;

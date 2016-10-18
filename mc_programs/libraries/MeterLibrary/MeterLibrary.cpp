@@ -21,8 +21,9 @@ Constructor.
 */
 MeterLibBlocks::MeterLibBlocks(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // , uint16_t u16_numRegs
 	// address for meter register library, this will never change
-	m_u16_mtrListingStart = word(EEPROM.read(6), EEPROM.read(7));	
-		
+	m_u16_mtrTypeListingStart = word(EEPROM.read(6), EEPROM.read(7));	
+	m_u8_numTypes = EEPROM.read(m_u16_mtrTypeListingStart + 2);
+	
 	changeInputs(u16_reqReg, u8_mtrType);
 }
 
@@ -31,7 +32,7 @@ int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // 
 	m_u16_reqReg = u16_reqReg;
 	// m_u16_numRegs = u16_numRegs;
 	
-	if ((u8_mtrType <= EEPROM.read(m_u16_mtrListingStart + 2)) || (u8_mtrType == 0)) {
+	if ((u8_mtrType <= m_u8_numTypes) || (u8_mtrType != 0)) {
 		m_u8_mtrType = u8_mtrType;
 	}
 	else {
@@ -40,8 +41,8 @@ int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // 
 		return 1;  // meter type not viable
 	}
 	
-	m_u16_mtrLibStart = word(EEPROM.read(m_u16_mtrListingStart + 4 * u8_mtrType - 1), 
-												EEPROM.read(m_u16_mtrListingStart + 4 * u8_mtrType));
+	m_u16_mtrLibStart = word(EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType - 1), 
+												EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType));
 	m_u16_blkStrtInd = word(EEPROM.read(m_u16_mtrLibStart), EEPROM.read(m_u16_mtrLibStart + 1));
 	m_u8_numBlks = EEPROM.read(m_u16_mtrLibStart + 2);
 	
@@ -124,6 +125,39 @@ float MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg, uin
 }
 
 
+bool MeterLibBlocks::adjustLength(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth) {
+	if ((m_u8_mtrType > m_u8_numTypes) || (m_u8_mtrType == 0)) {
+		return false;  // no type listed in eeprom- can't adjust length
+	}
+	
+	switch (m_reqRegDataType) {
+		case FloatConv::UINT16:  // u16
+		case FloatConv::INT16:  // s16
+			u16_adjLgth = u16_unadjLgth / 2;  // single register values
+			break;
+		case FloatConv::MOD20K:  // m20k
+		case FloatConv::MOD20K_WS:  // m20k
+			u16_adjLgth = u16_unadjLgth * 3 / 2;  // 3 register values
+			break;
+		case FloatConv::MOD30K:  // m30k
+		case FloatConv::MOD30K_WS:  // m30k
+		case FloatConv::UINT64:  // u64
+		case FloatConv::UINT64_WS:  // u64
+		case FloatConv::ENERGY:  // engy
+		case FloatConv::ENERGY_WS:  // engy
+		case FloatConv::DOUBLE:  // dbl
+		case FloatConv::DOUBLE_WS:  // dbl
+			u16_adjLgth = u16_unadjLgth * 2;  // 4 register values
+			break;
+		default:  // float, u32, s32, m10k, m1k
+			u16_adjLgth = u16_unadjLgth;  // 2 register values
+			break;              
+	}
+	
+	return true;
+}
+
+
 // MeterLibGroups ##################################################################################
 
 /**
@@ -133,13 +167,13 @@ Constructor.
 */
 MeterLibGroups::MeterLibGroups(uint8_t u8_mtrType) {
 	// address for meter register library, this will never change
-	m_u16_mtrListingStart = word(EEPROM.read(6), EEPROM.read(7));	
+	m_u16_mtrTypeListingStart = word(EEPROM.read(6), EEPROM.read(7));	
 		
 	setMeterType(u8_mtrType);
 }
 
 bool MeterLibGroups::setMeterType(uint8_t u8_mtrType) {
-	if ((u8_mtrType <= EEPROM.read(m_u16_mtrListingStart + 2)) || (u8_mtrType == 0)) {
+	if ((u8_mtrType <= EEPROM.read(m_u16_mtrTypeListingStart + 2)) || (u8_mtrType == 0)) {
 		m_u8_mtrType = u8_mtrType;
 	}
 	else {
@@ -148,8 +182,8 @@ bool MeterLibGroups::setMeterType(uint8_t u8_mtrType) {
 		return false;  // meter type not viable
 	}
 	
-	m_u16_mtrLibStart = word(EEPROM.read(m_u16_mtrListingStart + 4 * u8_mtrType - 1), 
-												EEPROM.read(m_u16_mtrListingStart + 4 * u8_mtrType));
+	m_u16_mtrLibStart = word(EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType - 1), 
+												EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType));
 	// assume group is 1:
 	m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
 	
@@ -319,19 +353,28 @@ bool MeterLibGroups::groupLastFlags(int8_t *const s8kp_dataFlags) {
 
 // SlaveData Functions##############################################################################
 SlaveDataClass SlaveData;
+const SlaveDataStruct SlaveDataClass::mk_sdInvalid = {0, 0, {0, 0, 0, 0}, {0, 0, 0}};
 
 void SlaveDataClass::init() {
 	m_u16_slaveDataStart = word(EEPROM.read(4), EEPROM.read(5));
 	m_u8_numSlaves = EEPROM.read(m_u16_slaveDataStart);
 	
 	for (int ii = 0; ii < m_u8_numSlaves; ++ii) {
-    m_u8a_slaveIds[ii] = EEPROM.read(9 * ii + 8 + m_u16_slaveDataStart);
-    m_u8a_slaveVids[ii] = EEPROM.read(9 * ii + 9 + m_u16_slaveDataStart);
+    // m_u8a_slaveIds[ii] = EEPROM.read(9 * ii + 8 + m_u16_slaveDataStart);
+    // m_u8a_slaveVids[ii] = EEPROM.read(9 * ii + 9 + m_u16_slaveDataStart);
 
-    m_u8a_slaveIps[ii][0] = EEPROM.read(9 * ii + 4 + m_u16_slaveDataStart);
+    // m_u8a_slaveIps[ii][0] = EEPROM.read(9 * ii + 4 + m_u16_slaveDataStart);
+		
+		m_slaveList[ii].u8_id = EEPROM.read(9 * ii + 8 + m_u16_slaveDataStart);
+		m_slaveList[ii].u8_vid = EEPROM.read(9 * ii + 9 + m_u16_slaveDataStart);
+
+    m_slaveList[ii].u8a_ip[0] = EEPROM.read(9 * ii + 4 + m_u16_slaveDataStart);
     for (int jj = 1; jj < 4; ++jj){
-      m_u8a_slaveIps[ii][jj] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj + 4);
-      m_u8a_slaveTypes[ii][(jj - 1)] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj);
+      // m_u8a_slaveIps[ii][jj] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj + 4);
+      // m_u8a_slaveTypes[ii][(jj - 1)] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj);
+			
+			m_slaveList[ii].u8a_ip[jj] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj + 4);
+      m_slaveList[ii].u8a_type[(jj - 1)] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj);
     }
   }
 }
@@ -339,7 +382,7 @@ void SlaveDataClass::init() {
 
 bool SlaveDataClass::getIndByVid(uint8_t u8_vid, uint8_t &u8_ind) {
 	for (int ii = 0; ii < m_u8_numSlaves; ++ii) {
-		if (m_u8a_slaveVids[ii] == u8_vid) {
+		if (m_slaveList[ii].u8_vid == u8_vid) {
 			u8_ind = ii;
 			return true;
 		}
@@ -349,60 +392,68 @@ bool SlaveDataClass::getIndByVid(uint8_t u8_vid, uint8_t &u8_ind) {
 }
 
 
-bool SlaveDataClass::getFullTypeByInd(uint8_t u8_slvInd, uint8_t u8a_type[3]) {
-	if (!(u8_slvInd < m_u8_numSlaves)) {
-		return false;
-	}
-	memcpy(u8a_type, m_u8a_slaveTypes[u8_slvInd], 3);
-	return true;
-}
+// bool SlaveDataClass::getFullTypeByInd(uint8_t u8_slvInd, uint8_t u8a_type[3]) {
+	// if (!(u8_slvInd < m_u8_numSlaves)) {
+		// return false;
+	// }
+	// memcpy(u8a_type, m_u8a_slaveTypes[u8_slvInd], 3);
+	// return true;
+// }
 
 
-bool SlaveDataClass::getRedTypeByInd(uint8_t u8_slvInd, uint8_t &u8_type) {
-	if (!(u8_slvInd < m_u8_numSlaves)) {
-		return false;
-	}
-	u8_type = m_u8a_slaveTypes[u8_slvInd][0];
-	return true;
-}
+// bool SlaveDataClass::getRedTypeByInd(uint8_t u8_slvInd, uint8_t &u8_type) {
+	// if (!(u8_slvInd < m_u8_numSlaves)) {
+		// return false;
+	// }
+	// u8_type = m_u8a_slaveTypes[u8_slvInd][0];
+	// return true;
+// }
 
 
-bool SlaveDataClass::getIdByInd(uint8_t u8_slvInd, uint8_t &u8_id) {
-	if (!(u8_slvInd < m_u8_numSlaves)) {
-		return false;
-	}
-	u8_id = m_u8a_slaveIds[u8_slvInd];
-	return true;
-}
+// bool SlaveDataClass::getIdByInd(uint8_t u8_slvInd, uint8_t &u8_id) {
+	// if (!(u8_slvInd < m_u8_numSlaves)) {
+		// return false;
+	// }
+	// u8_id = m_u8a_slaveIds[u8_slvInd];
+	// return true;
+// }
 
 
-bool SlaveDataClass::getVidByInd(uint8_t u8_slvInd, uint8_t &u8_vid) {
-	if (!(u8_slvInd < m_u8_numSlaves)) {
-		return false;
-	}
-	u8_vid = m_u8a_slaveVids[u8_slvInd];
-	return true;
-}
+// bool SlaveDataClass::getVidByInd(uint8_t u8_slvInd, uint8_t &u8_vid) {
+	// if (!(u8_slvInd < m_u8_numSlaves)) {
+		// return false;
+	// }
+	// u8_vid = m_u8a_slaveVids[u8_slvInd];
+	// return true;
+// }
 
 
-bool SlaveDataClass::getIPByInd(uint8_t u8_slvInd, uint8_t u8a_ip[4]) {
-	if (!(u8_slvInd < m_u8_numSlaves)) {
-		return false;
-	}
-	memcpy(u8a_ip, m_u8a_slaveIps[u8_slvInd], 4);
-	return true;
-}
+// bool SlaveDataClass::getIPByInd(uint8_t u8_slvInd, uint8_t u8a_ip[4]) {
+	// if (!(u8_slvInd < m_u8_numSlaves)) {
+		// return false;
+	// }
+	// memcpy(u8a_ip, m_u8a_slaveIps[u8_slvInd], 4);
+	// return true;
+// }
 
 
 bool SlaveDataClass::isSlaveTcpByInd(uint8_t u8_slvInd) {
 	for (int ii = 0; ii < 4; ++ii) {
-		if (m_u8a_slaveIps[u8_slvInd][ii] != 0) {
-			return false;
+		if (m_slaveList[u8_slvInd].u8a_ip[ii] != 0) {
+			return true;
 		}
 	}
-	return true;
+	return false;
 }
 
+
+SlaveDataStruct SlaveDataClass::operator[](int index) const {
+	if (!(index < m_u8_numSlaves)) {
+		return mk_sdInvalid;
+	}
+	
+	return m_slaveList[index];
+}
 
 // General Functions ###############################################################################
 

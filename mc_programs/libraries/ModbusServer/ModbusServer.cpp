@@ -51,7 +51,10 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 	uint16_t u16_crc = 0xFFFF;
 	
 	flushSerialRx();
-	
+	if (m_u8_enablePin != 255) {
+		digitalWrite(m_u8_enablePin, LOW); // MJT, set pin for transmission  was low
+	}
+			
 	u8a_txBuffer[0] = mr_mbReq.u8_id;
 	u8a_txBuffer[1] = mr_mbReq.u8_func;
 	u8a_txBuffer[2] = highByte(mr_mbReq.u16_start);
@@ -65,8 +68,20 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 	u8a_txBuffer[6] = lowByte(u16_crc);
 	u8a_txBuffer[7] = highByte(u16_crc);
 	
+	// Serial.println("outgoing: ");
+	// for (int ii = 0; ii < 8; ++ii) {
+		// Serial.print(u8a_txBuffer[ii], DEC); Serial.print(", ");
+	// }
+	// Serial.println();
+	
 	m_MBSerial->write(u8a_txBuffer, 8);
+	m_MBSerial->flush();
+	
 	m_u32_serialTime = millis();
+	
+	if (m_u8_enablePin != 255) {
+		digitalWrite(m_u8_enablePin, HIGH); // MJT, set pin for transmission  was low
+	}
 	return true;
 }
 
@@ -78,7 +93,8 @@ bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_
 	uint8_t u8a_ip[4];
 	
 	if (SlaveData.getIndByVid(mr_mbReq.u8_vid, u8_slvInd)) {
-		SlaveData.getIPByInd(u8_slvInd, u8a_ip);
+		// SlaveData.getIPByInd(u8_slvInd, u8a_ip);
+		memcpy(u8a_ip, SlaveData[u8_slvInd].u8a_ip, 4);
 	}
 	else {
 		return false;
@@ -115,7 +131,7 @@ int ModbusServer::tcpAvailable(EthernetClient52 &ec_client) {
 }
 
 
-uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numBytes) {
+uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t &u8_numBytes) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 6;
 	uint8_t u8p_devResp[256] = {0};
@@ -125,6 +141,10 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 	while (!u8_mbStatus) {
 		while (m_MBSerial->available()) {  // make sure to get all available data before checking timeout
 			if (u16_mbRxSize > 255) {  // message too big, will run into problems if crc pushes past 255
+				if (m_u8_enablePin != 255) {
+					digitalWrite(m_u8_enablePin, LOW); // MJT, set pin for transmission  was low
+				}
+	
 				u8_mbStatus = k_u8_MBIllegalDataValue;
 				flushSerialRx();
 				return u8_mbStatus;
@@ -150,8 +170,15 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 			
 			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
 				// calculate CRC
+				
+				// Serial.println("modbus response: ");
+				// for (int ii = 0; ii < u16_mbRxSize; ++ii) {
+					// Serial.print(u8p_devResp[ii], DEC); Serial.print(", ");
+				// }
+				// Serial.println();
+				
 				uint16_t u16_crc = 0xFFFF;
-				for (int ii = 0; ii < (u16_mbRxSize - 2); ++ii) {
+				for (int ii = 6; ii < (u16_mbRxSize - 2); ++ii) {
 					u16_crc = crc16_update(u16_crc, u8p_devResp[ii]);
 				}
 				
@@ -190,12 +217,16 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 		u8_numBytes = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
 	}
 	
+	if (m_u8_enablePin != 255) {
+		digitalWrite(m_u8_enablePin, LOW); // MJT, set pin for transmission  was low
+	}
+	
 	return u8_mbStatus;
 }
 
 
 uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, 
-                              uint16_t *u16p_regs, uint8_t u8_numBytes) {
+                              uint16_t *u16p_regs, uint8_t &u8_numBytes) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 0;
 	int16_t s16_lenRead;
@@ -258,7 +289,7 @@ uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest
 		}
 	}
 	
-	if (!u8_mbStatus) {  // if no errors, then move data to register format, otherwise return error
+	if (!u8_mbStatus) {  // 
 		u8_numBytes = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
 	}
 	return u8_mbStatus;
@@ -319,6 +350,8 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 		u8_mbStatus = recvSerialResponse(mbReq, u16a_interBuf, u8_numBytes);
 	}
 	
+	Serial.print("numBytes: "); Serial.println(u8_numBytes, DEC);
+	
 	if (!u8_mbStatus) {  // good data
 		if (mbReq.u8_flags & MRFLAG_adjReq) {  // need to translate data via MeterLibrary
 			MeterLibBlocks mtrLibBlk(mbReq.u16_start, mbReq.u8_mtrType);
@@ -333,6 +366,7 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 		}
 		else {  // raw data is acceptable to pass back
 			if (mbReq.u8_func < 5) {  // read function
+				u8a_respBuf[5] = u8_numBytes + 3;
 				u8a_respBuf[6] = mbReq.u8_vid;
 				u8a_respBuf[7] = mbReq.u8_func;
 				u8a_respBuf[8] = u8_numBytes;
@@ -371,6 +405,12 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 	}
 	
 	if (u16_respLen > 0) {
+		Serial.println("message to laptop: ");
+		for (int ii = 0; ii < u16_respLen; ++ii) {
+			Serial.print(u8a_respBuf[ii], DEC); Serial.print(", ");
+		}
+		Serial.println();
+		
 		ec_client.write(u8a_respBuf, u16_respLen);
 		ec_client.flush();  // do anything?
 	}
@@ -402,7 +442,15 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				// need to dump error and set ModbusRequest 
 				return k_u8_MBGatewayTargetFailed;   //   should not happen, modbus/tcp deals with pretty small stuff overall)
 			}
-
+			
+			// Serial.println("modbus message");
+			// for (int ii = 0; ii < u16_lenRead; ++ii) {
+				// Serial.print(u8a_mbReq[ii], DEC); Serial.print(", ");
+			// }
+			// Serial.println();
+			// Serial.print("given: "); Serial.println(u16_givenLen, DEC);
+			// Serial.print("lenRead: "); Serial.println(u16_lenRead, DEC);
+			
 			while (u16_lenRead < u16_givenLen) {  // make sure to grab the full packet
 				u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, 300 - u16_lenRead);
 
@@ -435,8 +483,11 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				uint16_t u16_dumStrt = word(u8a_mbReq[8], u8a_mbReq[9]);
 				uint16_t u16_dumLgth = word(u8a_mbReq[10], u8a_mbReq[11]);
 				
-				SlaveData.getIdByInd(u8_slvInd, mbReq.u8_id);
-				SlaveData.getRedTypeByInd(u8_slvInd, mbReq.u8_mtrType);
+				// SlaveData.getIdByInd(u8_slvInd, mbReq.u8_id);
+				// SlaveData.getRedTypeByInd(u8_slvInd, mbReq.u8_mtrType);
+				
+				mbReq.u8_id = SlaveData[u8_slvInd].u8_id;
+				mbReq.u8_mtrType = SlaveData[u8_slvInd].u8a_type[0];
 					
 				if (SlaveData.isSlaveTcpByInd(u8_slvInd)) {  // if slave is tcp
 					mbReq.u8_flags = MRFLAG_isTcp;
@@ -458,11 +509,11 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 					mbReq.u8_flags |= MRFLAG_adjReq;
 					
 					// GET ADJUSTED LENGTH - MAKE FUNCTION IN METERLIBBLK
-					// b_foundReg = mtrBlks.adjustLength(u16_dumLgth, mbReq.u16_length);
+					MeterLibBlocks mtrBlks(mbReq.u16_start, mbReq.u8_mtrType);
+					b_foundReg = mtrBlks.adjustLength(u16_dumLgth, mbReq.u16_length);
 					
 					if (!b_foundReg) {  // start register not listed in library
 						u8_mbStatus = k_u8_MBIllegalDataAddress;
-						break;
 					}
 				}
 				else {
@@ -477,7 +528,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				mbReq.u16_start = word(u8a_mbReq[8], u8a_mbReq[9]);  // hopefully not greater than 10k, if so, just pass on, device will return error if necessary
 				mbReq.u16_length = word(u8a_mbReq[10], u8a_mbReq[11]);  // can't be adjusted
 			}
-			
+			break;  // VERY IMPORTANT!
 			// find actual id and type and set flags, set necessary errors
 		}
 		else if ((millis() - u32_startTime) > k_u32_mbTcpTimeout) {  // 10 ms might be too quick, but not really sure

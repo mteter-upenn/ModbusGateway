@@ -5,7 +5,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   //  EEPROM.write(bt_strt + 1, 1);
   //  EEPROM.write(bt_strt + 2, 0);
 
-  EEPROM.write(reg_strt + 0, highByte(reg_strt));
+  EEPROM.write(reg_strt + 0, highByte(reg_strt));  // THIS IS USELESS
   EEPROM.write(reg_strt + 1, lowByte(reg_strt));  // address of meter addresses
   EEPROM.write(reg_strt + 2, 15);  // number of meters adjust when adding new meters AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 

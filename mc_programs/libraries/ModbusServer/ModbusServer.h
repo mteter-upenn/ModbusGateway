@@ -46,8 +46,8 @@ public:
 	int serialAvailable();
 	int tcpAvailable(EthernetClient52 &ec_client);
 	
-	uint8_t recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numBytes);
-	uint8_t recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t u8_numBytes);
+	uint8_t recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t &u8_numBytes);
+	uint8_t recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t &u8_numBytes);
 	
 	// ec_client is requestor
 
@@ -71,14 +71,14 @@ public:
 	static const uint8_t k_u8_MBSlaveDeviceBusy            = 0x06;
 	static const uint8_t k_u8_MBNegAcknowledge             = 0x07;
 	static const uint8_t k_u8_MBMemoryParityError          = 0x08;
-	static const uint8_t k_u8_MBGatewayPathUnavail         = 0x0a;
-	static const uint8_t k_u8_MBGatewayTargetFailed        = 0x0b;
+	static const uint8_t k_u8_MBGatewayPathUnavail         = 0x0a;  // 10
+	static const uint8_t k_u8_MBGatewayTargetFailed        = 0x0b;  // 11
 	
-	static const uint8_t k_u8_MBInvalidSlaveID             = 0xE0;
-	static const uint8_t k_u8_MBInvalidFunction            = 0xE1;  // returned function doesn't match
-	static const uint8_t k_u8_MBResponseTimedOut           = 0xE2;
-	static const uint8_t k_u8_MBInvalidCRC                 = 0xE3;
-	static const uint8_t k_u8_MBInvalidClient              = 0xE4;
+	static const uint8_t k_u8_MBInvalidSlaveID             = 0xE0;  // 224
+	static const uint8_t k_u8_MBInvalidFunction            = 0xE1;  // 225 - returned function doesn't match
+	static const uint8_t k_u8_MBResponseTimedOut           = 0xE2;  // 226
+	static const uint8_t k_u8_MBInvalidCRC                 = 0xE3;  // 227
+	static const uint8_t k_u8_MBInvalidClient              = 0xE4;  // 228
 };
 
 #endif
