@@ -125,7 +125,7 @@ float MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg, uin
 }
 
 
-bool MeterLibBlocks::adjustLength(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth) {
+bool MeterLibBlocks::adjFloatRegsToActualRegs(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth) {
 	if ((m_u8_mtrType > m_u8_numTypes) || (m_u8_mtrType == 0)) {
 		return false;  // no type listed in eeprom- can't adjust length
 	}
@@ -148,6 +148,39 @@ bool MeterLibBlocks::adjustLength(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth)
 		case FloatConv::DOUBLE:  // dbl
 		case FloatConv::DOUBLE_WS:  // dbl
 			u16_adjLgth = u16_unadjLgth * 2;  // 4 register values
+			break;
+		default:  // float, u32, s32, m10k, m1k
+			u16_adjLgth = u16_unadjLgth;  // 2 register values
+			break;              
+	}
+	
+	return true;
+}
+
+
+bool MeterLibBlocks::adjActualRegsToFloatRegs(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth) {
+	if ((m_u8_mtrType > m_u8_numTypes) || (m_u8_mtrType == 0)) {
+		return false;  // no type listed in eeprom- can't adjust length
+	}
+	
+	switch (m_reqRegDataType) {
+		case FloatConv::UINT16:  // u16
+		case FloatConv::INT16:  // s16
+			u16_adjLgth = u16_unadjLgth * 2;  // single register values
+			break;
+		case FloatConv::MOD20K:  // m20k
+		case FloatConv::MOD20K_WS:  // m20k
+			u16_adjLgth = u16_unadjLgth * 2 / 3;  // 3 register values
+			break;
+		case FloatConv::MOD30K:  // m30k
+		case FloatConv::MOD30K_WS:  // m30k
+		case FloatConv::UINT64:  // u64
+		case FloatConv::UINT64_WS:  // u64
+		case FloatConv::ENERGY:  // engy
+		case FloatConv::ENERGY_WS:  // engy
+		case FloatConv::DOUBLE:  // dbl
+		case FloatConv::DOUBLE_WS:  // dbl
+			u16_adjLgth = u16_unadjLgth / 2;  // 4 register values
 			break;
 		default:  // float, u32, s32, m10k, m1k
 			u16_adjLgth = u16_unadjLgth;  // 2 register values

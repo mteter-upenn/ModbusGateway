@@ -10,7 +10,7 @@
 
 #include <ModbusStructs.h>
 	
-#define MODBUSSTACK_MAXSIZE 128	
+#define MODBUSSTACK_MAXSIZE 14	// 6: max # of groups a meter has, 8: # of socks -> 6 + 8
 
 class ModbusStack {
 private:

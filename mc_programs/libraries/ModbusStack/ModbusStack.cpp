@@ -239,8 +239,8 @@ uint8_t ModbusStack::getLive485() {
 uint8_t ModbusStack::getLiveTcp(uint8_t u8_sock) {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
 		// if ((m_mbStack[ii].b_sentReq) && (getMrSocket(m_mbStack[ii]) == u8_sock) && 
-		if ((m_mbStack[ii].u8_flags & MRFLAG_sentMsg) && (getMrSocket(m_mbStack[ii]) == u8_sock) && 
-		    (m_mbStack[ii].u8_flags & MRFLAG_isTcp)) {
+		if ((m_mbStack[ii].u8_flags & MRFLAG_sentMsg) && (m_mbStack[ii].u8_flags & MRFLAG_isTcp) && 
+		    ((m_mbStack[ii].u8_flags & MRFLAG_sckMask) == u8_sock)) {
 			return ii;
 		}
 	}
@@ -283,7 +283,7 @@ void ModbusStack::pullForward(uint8_t u8_ind) {
 }
 
 
-uint8_t getMrSocket(ModbusRequest mbReq) {
+uint8_t ModbusStack::getMrSocket(ModbusRequest mbReq) {
 	return (mbReq.u8_flags & MRFLAG_sckMask);
 }
 

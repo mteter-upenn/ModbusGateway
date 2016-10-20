@@ -276,8 +276,8 @@ void setup() {
   //g_mm_node.setTimeout(g_u16_timeout);
   //  g_mm_node.idle(*function_here);  // add function for idling during wait for modbus return message
   g_modbusServer.begin(g_u32_baudrate);
-  //g_modbusServer.setTimeout(g_u16_timeout);
-  g_modbusServer.setTimeout(500);
+  g_modbusServer.setTimeout(g_u16_timeout);
+  //g_modbusServer.setTimeout(500);
 
 
   // start ntp or rtc

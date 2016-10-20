@@ -47,7 +47,7 @@ public:
 	int tcpAvailable(EthernetClient52 &ec_client);
 	
 	uint8_t recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t &u8_numBytes);
-	uint8_t recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t &u8_numBytes);
+	uint8_t recvTcpResponse(ModbusRequest mr_mbReq, uint16_t *u16p_regs, uint8_t &u8_numBytes);
 	
 	// ec_client is requestor
 

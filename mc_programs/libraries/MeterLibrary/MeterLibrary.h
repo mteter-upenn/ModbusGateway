@@ -58,7 +58,8 @@ class MeterLibBlocks {
 		void convertToFloat(uint16_t u16p_regs[], uint8_t *const u8p_data, uint16_t u16_numRegs);
 		float convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg, uint16_t u16_numRegs);  // returns float
 		
-		bool adjustLength(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth);
+		bool adjFloatRegsToActualRegs(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth);
+		bool adjActualRegsToFloatRegs(uint16_t u16_unadjLgth, uint16_t &u16_adjLgth);
 };
 
 

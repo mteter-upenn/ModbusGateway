@@ -50,6 +50,9 @@ void handleServers() {
             //socketDisconnect(ii);  // this does not check or force if actually closed
           }
         }
+        else if ((ii > 5) && (u8_sockStatus == SnSR::CLOSED)) {  // if emergency/client socket and closed
+          ba_clientSocksAvail[ii - 6] = true;  // make sure socket declared available for modbus-slave use
+        }
       }
     }
 
@@ -58,7 +61,8 @@ void handleServers() {
     }
 
     for (int ii = 0; ii < 8; ++ii) {  // loop through sockets and handle them
-      if (g_u16a_socketFlags[ii] & SockFlag_ESTABLISHED) { // only look at sockets in use
+      if ((g_u16a_socketFlags[ii] & SockFlag_ESTABLISHED) && !(g_u16a_socketFlags[ii] & 
+          SockFlag_CLIENT)) { // only look at sockets in use and aren't clients to slave devices
         if (g_eca_socks[ii].status() == SnSR::CLOSE_WAIT) { // other side closed socket
           uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
           if (u8_mbReqInd < mbStack.k_u8_maxSize) { 
@@ -92,7 +96,7 @@ void handleServers() {
 
           if (!(g_u16a_socketFlags[ii] & SockFlag_READ_REQ)) {  // haven't read modbus request yet or added to stack
             // CHECK IF MESSAGE AVAILABLE TO READ
-            Serial.println("socket open, check for data");
+            //Serial.print("socket open, check for data "); Serial.println(random(10), DEC);
 
             if (g_eca_socks[ii].available()) {
               Serial.println("available > 0");
@@ -104,8 +108,11 @@ void handleServers() {
                 g_u16a_mbReqUnqId[ii] = mbStack.add(mbReq, 1);
 
                 uint8_t u8_stkInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
-                Serial.print("added this to stack: "); Serial.println(g_u16a_mbReqUnqId[ii], DEC);
+                Serial.print("added this to "); Serial.print(mbStack.getLength(), DEC);
+                Serial.print(" long stack: "); Serial.println(g_u16a_mbReqUnqId[ii], DEC);
+
                 mbStack.printReqByInd(u8_stkInd);
+
 
                 //g_u8a_mbReqInd[ii] = ? ;
                 // SET SOCKFLAGS
@@ -206,14 +213,6 @@ void handleServers() {
               }
               mbStack.removeByInd(u8_mbReqInd);
               g_u16a_mbReqUnqId[ii] = 0;
-
-
-            //   CLOSE THIS SOCKET
-            //   CLEAN SOCKETS?
-            //   REMOVE FROM STACK
-            //   RESET SOCKFLAGS
-            // ELSE - now new messages after previous request was handled
-            
             }  // end if request in stack
             //   CLOSE THIS SOCKET
             //   CLEAN SOCKETS?
@@ -225,7 +224,7 @@ void handleServers() {
             g_u16a_socketFlags[ii] = SockFlag_LISTEN;
 
           }  // end if else tcp timeout
-        }
+        }  // end if port 502
         else if (g_u16a_socketFlags[ii] & SockFlag_HTTP) {  // if port 80
           //THIS ALL NEEDS TO CHANGE TO HANDLE LIVEXML REQUESTS IF A MODBUS STACK IS GOING TO BE USED
           handle_http(ii);
@@ -251,7 +250,7 @@ void handleServers() {
         u8_stkInd = mbStack.getNext485();
         if (u8_stkInd < mbStack.k_u8_maxSize) { // 255 is none in stack
 
-          Serial.println("found this in stack:");
+          Serial.println("found this serial req in stack:");
           mbStack.printReqByInd(u8_stkInd);
 
           g_modbusServer.sendSerialRequest(mbStack[u8_stkInd]);  // SEND REQUEST
@@ -264,19 +263,19 @@ void handleServers() {
         }
         else {  // no 485 requests exist
           // don't need to do anything
-          Serial.println("nothing in serial stack");
+          //Serial.println("nothing in serial stack");
         }
       }
-      else {
+      else {  // serial is flagged as active
         // need ModbusRequest to set flags
         // CHECK IF DATA HAS BEEN RETURNED
         u8_stkInd = mbStack.getLive485();  // find index of request that is currently active on this protocol
 
-        Serial.print("live stack index: "); Serial.println(u8_stkInd, DEC);
+        //Serial.print("live serial stack index: "); Serial.println(u8_stkInd, DEC);
 
         if (u8_stkInd < mbStack.k_u8_maxSize) { // 255 is none in stack
-          Serial.println("this request is live:");
-          mbStack.printReqByInd(u8_stkInd);
+          //Serial.println("this request is live:");
+          //mbStack.printReqByInd(u8_stkInd);
 
           if (g_modbusServer.serialAvailable()) {
             mbStack[u8_stkInd].u8_flags |= MRFLAG_goodData;  // mark received actual msg flag
@@ -293,20 +292,53 @@ void handleServers() {
       }  // end if/else serial
 
       // HAVE NOT COMPLETED CHECK FOR TCP REQUESTS
-      for (int ii = 0; ii < 2; ++ii) {
-        if (ba_clientSocksAvail[ii]) {  // if socket is available for use
+      for (int ii = 6; ii < 8; ++ii) {
+        if (ba_clientSocksAvail[ii - 6]) {  // if socket is available for use
           u8_stkInd = mbStack.getNextTcp();
           if (u8_stkInd < mbStack.k_u8_maxSize) {
+            Serial.print("found this tcp req in stack for socket "); Serial.println(ii, DEC);
+            mbStack.printReqByInd(u8_stkInd);
+
+            mbStack[u8_stkInd].u8_flags |= (MRFLAG_sentMsg | (ii & 0xff));  // mark sent flag
+            g_u16a_socketFlags[ii] = SockFlag_ESTABLISHED | SockFlag_CLIENT;
+            
+            
             // SEND REQUEST
-            mbStack[u8_stkInd].u8_flags |= MRFLAG_sentMsg;  // mark sent flag
+            g_modbusServer.sendTcpRequest(g_eca_socks[ii], mbStack[u8_stkInd]);
+
+            
+
             // START TIMER
-            ba_clientSocksAvail[ii] = false;
+            ba_clientSocksAvail[ii - 6] = false;
+          }
+          else {
+            //Serial.print("nothing in tcp stack for socket "); Serial.println(ii, DEC);
           }
         }
         else {  // socket is in use
           // CHECK IF DATA HAS BEEN RETURNED
+          u8_stkInd = mbStack.getLiveTcp(ii);  // aaarrghh on needing to add 6 for ii
+          if (u8_stkInd < mbStack.k_u8_maxSize) {
+            //Serial.print("live tcp stack index for socket "); Serial.print(ii, DEC);
+            //Serial.print(": ");  Serial.println(u8_stkInd, DEC);
 
-          //ba_clientSocksAvail[ii] = true;
+            if (g_modbusServer.tcpAvailable(g_eca_socks[ii])) {
+              mbStack[u8_stkInd].u8_flags |= MRFLAG_goodData;
+              Serial.print("good tcp data on socket "); Serial.println(ii, DEC);
+            }
+            else if (g_modbusServer.tcpTimedOut(g_eca_socks[ii])) {
+              mbStack[u8_stkInd].u8_flags |= MRFLAG_timeout;
+              Serial.print("modbus timeout on socket "); Serial.println(ii, DEC);
+            }
+          }
+          else {  // client active, but 
+            Serial.println("socket active, but nothing in stack");
+
+            g_eca_socks[ii].stop();
+            g_eca_socks[ii].setSocket(ii);
+
+            ba_clientSocksAvail[ii - 6] = true;
+          }
         }
       }
     }

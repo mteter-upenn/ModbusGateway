@@ -1,7 +1,7 @@
 
 #include "ModbusServer.h"
 #include "MeterLibrary.h"
-
+#include <IPAddress.h>
 
 
 ModbusServer::ModbusServer(uint8_t u8_serialPort) {
@@ -87,14 +87,18 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 
 
 bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_mbReq) {
-	uint8_t  u8a_txBuffer[12] = {0};
-	uint8_t u8_sock = ec_client.getSocketNumber();
+	uint8_t u8a_txBuffer[12] = {0};
+	uint8_t u8_sock = ec_client.getSocketNumber();  // or mr_mbReq.u8_flags & MRFLAG_sckMask
 	uint8_t u8_slvInd;
-	uint8_t u8a_ip[4];
+	// uint8_t u8a_ip[4];
+	IPAddress ipAddr;
 	
 	if (SlaveData.getIndByVid(mr_mbReq.u8_vid, u8_slvInd)) {
-		// SlaveData.getIPByInd(u8_slvInd, u8a_ip);
-		memcpy(u8a_ip, SlaveData[u8_slvInd].u8a_ip, 4);
+		// memcpy(u8a_ip, SlaveData[u8_slvInd].u8a_ip, 4);
+		for (int ii = 0; ii < 4; ++ii) {
+			ipAddr[ii] = SlaveData[u8_slvInd].u8a_ip[ii];
+		}
+		
 	}
 	else {
 		return false;
@@ -102,7 +106,8 @@ bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_
 	// GET IP FROM mr_mbReq.u8_vid!!
 	// ec_client.connect(IP);
 	
-	if (ec_client.connect(u8a_ip, 502)) {
+	// if (ec_client.connect(u8a_ip, 502)) {
+	if (ec_client.connect(ipAddr, 502)) {
 		flushTcpRx(ec_client);
 		
 		u8a_txBuffer[5] = 6;
@@ -115,6 +120,8 @@ bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_
 		
 		ec_client.write(u8a_txBuffer, 12);
 		m_u32a_tcpTime[u8_sock] = millis();
+		
+		Serial.println("sent modbus/tcp mesg");
 		return true;
 	}
 	return false;
@@ -225,18 +232,22 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 }
 
 
-uint8_t ModbusServer::recvTcpResponse(EthernetClient52 &ec_client, ModbusRequest mr_mbReq, 
+uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq, 
                               uint16_t *u16p_regs, uint8_t &u8_numBytes) {
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 0;
 	int16_t s16_lenRead;
 	uint16_t u16_bytesLeft;
 	uint8_t u8p_devResp[256] = {0};
+	EthernetClient52 ec_client(mr_mbReq.u8_flags & MRFLAG_sckMask);
+	
 	
 	u16_bytesLeft = mr_mbReq.u16_length * 2 + 9; // +9 accounts for tcp header and mb header
 	
 	while (!u8_mbStatus) {
 		while (ec_client.available()) {  // make sure to get all available data before checking timeout
+			Serial.print("recvTcpResponse, available: "); Serial.println(ec_client.available(), DEC);
+			
 			if (u16_mbRxSize > 255) {  // message too big
 				u8_mbStatus = k_u8_MBIllegalDataValue;
 				// flushTcpRx(ec_client);  // don't bother flushing tcp, simply close socket
@@ -344,7 +355,7 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 		u8_mbStatus = k_u8_MBResponseTimedOut;
 	}
 	else if (mbReq.u8_flags & MRFLAG_isTcp) {  // there is a good message over tcp
-		u8_mbStatus = recvTcpResponse(ec_client, mbReq, u16a_interBuf, u8_numBytes);
+		u8_mbStatus = recvTcpResponse(mbReq, u16a_interBuf, u8_numBytes);
 	}
 	else {  // there is a good message over serial
 		u8_mbStatus = recvSerialResponse(mbReq, u16a_interBuf, u8_numBytes);
@@ -354,12 +365,16 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 	
 	if (!u8_mbStatus) {  // good data
 		if (mbReq.u8_flags & MRFLAG_adjReq) {  // need to translate data via MeterLibrary
-			MeterLibBlocks mtrLibBlk(mbReq.u16_start, mbReq.u8_mtrType);
+			uint16_t u16_dumLgth;
 			
-			u8a_respBuf[5] = 6;
+			MeterLibBlocks mtrLibBlk(mbReq.u16_start, mbReq.u8_mtrType);
+			mtrLibBlk.adjActualRegsToFloatRegs(u8_numBytes / 2, u16_dumLgth);
+			
+			u8a_respBuf[5] = 3 + u16_dumLgth * 2;  // need to adjust this to fit new length
+			u8a_respBuf[8] = u16_dumLgth * 2;
 			u8a_respBuf[6] = mbReq.u8_vid;
 			u8a_respBuf[7] = mbReq.u8_func;
-			u8a_respBuf[8] = u8_numBytes;
+			
 			mtrLibBlk.convertToFloat(u16a_interBuf, &u8a_respBuf[9], mbReq.u16_length);
 			
 			u16_respLen = 9 + u8_numBytes;
@@ -497,7 +512,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				}
 
 				// ALL requests in 10k band returned as floats
-				if ((u16_dumStrt > 9999) && (u16_dumStrt < 20000) && ((mbReq.u8_func == 3) || (mbReq.u8_func == 4))) {
+				if ((u16_dumStrt > 49999) && ((mbReq.u8_func == 3) || (mbReq.u8_func == 4))) { //  && (u16_dumStrt < 20000)
 					bool b_foundReg;
 					
 					if (0x01 & u16_dumLgth) {  // if odd number, can't return float which has even number of regs
@@ -505,12 +520,12 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 						break;
 					}
 					
-					mbReq.u16_start = u16_dumStrt - 10000;
+					mbReq.u16_start = u16_dumStrt - 50000;
 					mbReq.u8_flags |= MRFLAG_adjReq;
 					
 					// GET ADJUSTED LENGTH - MAKE FUNCTION IN METERLIBBLK
 					MeterLibBlocks mtrBlks(mbReq.u16_start, mbReq.u8_mtrType);
-					b_foundReg = mtrBlks.adjustLength(u16_dumLgth, mbReq.u16_length);
+					b_foundReg = mtrBlks.adjFloatRegsToActualRegs(u16_dumLgth, mbReq.u16_length);  // float regs to actual regs
 					
 					if (!b_foundReg) {  // start register not listed in library
 						u8_mbStatus = k_u8_MBIllegalDataAddress;
