@@ -3,7 +3,6 @@
 	<head>
 	  <title>Meter Setup</title>
 	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
-	  <link rel="stylesheet" type="text/css" href="ep_style.css">  <!-- /ep_style.css -->
 	  <style>
 			form  { display: table;      }
 			p     { display: table-row;  }
@@ -12,6 +11,10 @@
 				display: table-cell; 
 				margin: 3px 7px 2px 7px;
 				width: 5em;
+				border: 1px solid black;
+			}
+			table td {
+				
 			}
 			input {
 				text-align: right;
@@ -28,8 +31,9 @@
 			}
 
 	  </style>
-	  
-	  <script>
+		
+		
+		<script>
 		var mtr_ip = [];
 		var mtr_id = [];
 		var mtr_vid = [];
@@ -87,9 +91,6 @@
 			input.style.cssText = "text-align: center;";
 			para.appendChild(input);
 			
-			var lbl = document.createElement("LABEL");
-			lbl.innerHTML = "test";
-			para.appendChild(lbl);
 			
 			container.appendChild(br);
 			
@@ -99,22 +100,57 @@
 			lbl.innerHTML = "";
 			//lbl.style.cssText = "width: 100px;";
 			para.appendChild(lbl);
+			
 			lbl = document.createElement("LABEL");
 			lbl.innerHTML = "IP (blank if serial)";
-			//lbl.style.cssText = "color: red;";
 			para.appendChild(lbl);
+			
 			lbl = document.createElement("LABEL");
 			lbl.innerHTML = "Actual ID";
 			para.appendChild(lbl);
+			
 			/*lbl = document.createElement("LABEL");
 			lbl.innerHTML = "Virtual ID";
 			para.appendChild(lbl);
+			
 			lbl = document.createElement("LABEL");
 			lbl.innerHTML = "Meter Type";
 			para.appendChild(lbl);*/
 			
 			for (var i = 0; i < (number + 1); i++){
-				insertMeterSetup(container, i, number);
+				//insertMeterSetup(container, i, number);
+				para = document.createElement("P");
+				container.appendChild(para);
+				
+				lbl = document.createElement("LABEL");
+				lbl.innerHTML = "box " + i;
+				para.appendChild(lbl);
+				
+				input = document.createElement("input");
+				input.type = "text";
+				input.name = "mip" + i;
+				input.id = "mip" + i;
+				input.className = "mip";
+				input.oninput = function(){checkIP(this);};
+				para.appendChild(input);
+				
+				
+				
+				input = document.createElement("input");
+				input.type = "text";
+				input.name = "vid" + i;
+				input.id = "vid" + i;
+				input.className= "vid";
+				input.oninput = function(){checkID(this);};
+				para.appendChild(input);
+				
+				lbl = document.createElement("LABEL");
+				lbl.innerHTML = "box " + i;
+				para.appendChild(lbl);
+				
+				lbl = document.createElement("LABEL");
+				lbl.innerHTML = "box " + i;
+				para.appendChild(lbl);
 			}
 		};
 		
@@ -303,7 +339,7 @@
 			mtr_typ.splice(0, mtr_typ.length);
 			addFields(0);
 			
-			nocache = "&nocache=" + Math.random() * 1000000;
+			/*nocache = "&nocache=" + Math.random() * 1000000;
 			var request = new XMLHttpRequest();
 			request.onreadystatechange = function(){
 				if (this.readyState == 4) {
@@ -353,7 +389,7 @@
 				}
 			}
 			request.open("GET", "mtrsetup.xml" + nocache, true);
-			request.send(null);
+			request.send(null);*/
 		};
 		
 		
@@ -464,76 +500,15 @@
 	<!-- <body onload="getMeterList()"> -->
 		<!-- Site navigation menu -->
 		<div id="main-wrapper">
-		    <nav>
-				<ul class="navbar">
-					<li><a href="/index.htm">Home</a></li>
-					<li><a href="/gensetup.htm">General Setup</a></li>
-					<li><a id="live" href="/mtrsetup.htm">Meter Setup</a></li>
-					<li><a href="/live.htm">Live Data</a></li>
-					<li><a href="/pastdown.htm">Download Data</a></li>
-					<li><a href="/pastview.htm">Graph Data</a></li>
-					<li><a href="/reset.htm">Reset</a></li>
-					
-					<a id="imglink" href="http://www.upenn.edu/">
-						<!-- /images/logo_let.gif -->
-						<img style="width:155px;height:43px;border:0;" src="images/logo_let.gif" alt="Upenn">
-					</a>
-				</ul>
-		    </nav>
-		    <article>
+			<article>
 			<!-- Main content -->
 				<br/>
 				<form id="container" method="post" onsubmit="return checkAndSubmit()">
-				
-					
-					
+	
 				</form>
-				
-				<!-- <table class="mtr_data">
-						<tr>
-							<th style="width:7em">Slaves</th> 
-							
-							<th>IP (blank if serial)</th>
-							<th>Actual Id</th>
-							<th>Virtual Id</th>
-							
-							<th>Meter Type</th>
-						</tr>
-						<tr class="typ">
-							<td>1</td>
-							
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
-						</tr>
-						
-						<tr class="alt">
-							<td>2</td>
-							
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
 
-						</tr>
-					</table> -->
 			</article>
-		
-			<!-- Footer -->
-			<footer>
-				<address>
-					Updated 3 February 2016 by <a href="mailto:mteter@upenn.edu?Subject=Modbus%20Gateway%20Webpage" target="_top">Matthew J. Teter</a>
-					</br>
-					<a href="http://www.facilities.upenn.edu/">University of Pennsylvania Facilities & Real Estate</a>
-					<br/>
-					3101 Walnut Street
-					<br/>
-					Philadelphia, PA 19104
-					<br/>
-					<a href="http://www.upenn.edu/computing/security/reporting_copyright.php">Copyright</a>
-				</address>
-		    </footer>
+
 		</div>
 	</body>
 </html>
