@@ -10,7 +10,6 @@
 
 			label, input, select, h2 { 
 				display: table-cell; 
-				margin: 3px 7px 2px 7px;
 				width: 5em;
 			}
 			input {
@@ -21,18 +20,20 @@
 				text-align: center;
 			}
 			select {
-				width: 10em;
+				width: 17em;
 			}
 			h2 {
-				/*display: table-cell;
-				margin: 3px 7px 2px 7px;
-				width: 5em;*/
 				text-decoration: underline;
 			}
 			.oddrow {
 				background-color: #C0D5FE;
-				
+				color: black;
 			}
+			.evenrow {
+				background-color: white;
+				color: black;
+			}
+			
 	  </style>
 	  
 	  <script>
@@ -84,7 +85,7 @@
 			input = document.createElement("input");
 			input.type = "submit";
 			input.value = "Apply Changes";
-			input.style.cssText = "text-align: center;";
+			input.style.cssText = "text-align: center;margin-bottom: 2px;";
 			para.appendChild(input);
 			
 			insertLabel("IP (blank if serial)", para);
@@ -129,12 +130,15 @@
 			var para = document.createElement("P");
 			container.appendChild(para);
 
-			insertLabel("Slave " + tagName, para);
-			
-			var classMod = "";
+			var classMod = " evenrow";
 			if (tagName % 2) {
 				classMod = " oddrow";
 			}
+			
+			var lbl = document.createElement("LABEL");
+			lbl.innerHTML = "Slave " + tagName;
+			lbl.className = classMod;
+			para.appendChild(lbl);
 			
 			// ip ----------------------------------------------------------------------------- -->			
 			insertTextInput("mip" + tagName, "mip" + classMod, function(){checkIP(this);}, para);
@@ -153,7 +157,6 @@
 			input.name = "mtr" + tagName;
 			input.id = "mtr" + tagName;
 			input.className = "meter" + classMod;
-			input.style.cssText = "width: 17em;";
 			if (tagName == number){
 				input.onchange = function(){addMeter(this);};
 			}
