@@ -3,7 +3,7 @@
 	<head>
 	  <title>Meter Setup</title>
 	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
-	  <link rel="stylesheet" type="text/css" href="ep_style.css">  <!-- /ep_style.css -->
+	  <link rel="stylesheet" type="text/css" href="/ep_style.css">  <!-- /ep_style.css -->
 	  <style>
 			form  { display: table;      }
 			p     { display: table-row;  }
@@ -17,6 +17,9 @@
 				text-align: right;
 				width: 10em;
 			}
+			label {
+				text-align: center;
+			}
 			select {
 				width: 10em;
 			}
@@ -26,7 +29,10 @@
 				width: 5em;*/
 				text-decoration: underline;
 			}
-
+			.oddrow {
+				background-color: #C0D5FE;
+				
+			}
 	  </style>
 	  
 	  <script>
@@ -51,7 +57,7 @@
 						"12.1.0"];
 		
 		function addFields(number){
-			<!-- var number = 4; -->
+			// var number = 4; -->
 			if (number > 20){
 				number = 20;
 			}
@@ -59,11 +65,11 @@
 			var container = document.getElementById("container");
 			var br = document.createElement("br");
 
-			<!-- // Clear previous contents of the container -->
+			// Clear previous contents of the container -->
 			while (container.hasChildNodes()) {
 					container.removeChild(container.lastChild);
 			}
-			<!-- // hidden input to handle number of meters -->
+			// hidden input to handle number of meters -->
 			var input = document.createElement("input");
 			input.type = "hidden";
 			input.id = "numMtrs";
@@ -71,15 +77,9 @@
 			input.value = number;
 			container.appendChild(input);
 			
-			<!-- // header -->
+			// header -->
 			var para = document.createElement("P");
 			container.appendChild(para);
-			
-			var hdr2 = document.createElement("H2");
-			hdr2.innerHTML = "Meter Setup";
-			
-			para.appendChild(hdr2);
-			
 			
 			input = document.createElement("input");
 			input.type = "submit";
@@ -87,31 +87,13 @@
 			input.style.cssText = "text-align: center;";
 			para.appendChild(input);
 			
-			var lbl = document.createElement("LABEL");
-			lbl.innerHTML = "test";
-			para.appendChild(lbl);
-			
-			container.appendChild(br);
-			
-			para = document.createElement("P");
-			container.appendChild(para);
-			var lbl = document.createElement("LABEL");
-			lbl.innerHTML = "";
-			//lbl.style.cssText = "width: 100px;";
-			para.appendChild(lbl);
-			lbl = document.createElement("LABEL");
-			lbl.innerHTML = "IP (blank if serial)";
-			//lbl.style.cssText = "color: red;";
-			para.appendChild(lbl);
-			lbl = document.createElement("LABEL");
-			lbl.innerHTML = "Actual ID";
-			para.appendChild(lbl);
-			/*lbl = document.createElement("LABEL");
-			lbl.innerHTML = "Virtual ID";
-			para.appendChild(lbl);
-			lbl = document.createElement("LABEL");
-			lbl.innerHTML = "Meter Type";
-			para.appendChild(lbl);*/
+			insertLabel("IP (blank if serial)", para);
+			insertLabel("", para);
+			insertLabel("Actual ID", para);
+			insertLabel("", para);
+			insertLabel("Virtual ID", para);
+			insertLabel("", para);
+			insertLabel("Meter Type", para);
 			
 			for (var i = 0; i < (number + 1); i++){
 				insertMeterSetup(container, i, number);
@@ -119,101 +101,59 @@
 		};
 		
 		
+		function insertLabel(text, para) {
+			var lbl = document.createElement("LABEL");
+			if (text.length == 0) {
+				lbl.innerHTML = "";
+				lbl.style.cssText = "width: 0em;";
+			}
+			else {
+				lbl.innerHTML = text;
+			}
+			para.appendChild(lbl);
+		}
+		
+		function insertTextInput(nameId, clssNme, func, para) {
+			var input = document.createElement("input");
+			input.type = "text";
+			input.name = nameId;
+			input.id = nameId;
+			input.className = clssNme;
+			input.oninput = func;
+			para.appendChild(input);
+		}
+		
+		
 		function insertMeterSetup(container, tagName, number){	
 			var br = document.createElement("br");
 			var para = document.createElement("P");
 			container.appendChild(para);
 
-			<!-- // ip ----------------------------------------------------------------------------------------------------- -->
-			var lbl = document.createElement("LABEL");
-			lbl.innerHTML = "Slave " + tagName;
-
-			para.appendChild(lbl);
+			insertLabel("Slave " + tagName, para);
 			
-			<!-- // Create an <input> element, set its type and name attributes -->
-			var input = document.createElement("input");
-			input.type = "text";
-			input.name = "mip" + tagName;
-			input.id = "mip" + tagName;
-			input.className = "mip";
-			input.oninput = function(){checkIP(this);};
+			var classMod = "";
+			if (tagName % 2) {
+				classMod = " oddrow";
+			}
 			
-			para.appendChild(input);
+			// ip ----------------------------------------------------------------------------- -->			
+			insertTextInput("mip" + tagName, "mip" + classMod, function(){checkIP(this);}, para);
+			insertLabel("", para);
 			
-			/*lbl = document.createElement("LABEL");
-			lbl.className = "mip_err";
-			lbl.id = "mip" + tagName + "_err";
-			lbl.style.cssText = "color: red;";
-
-			para.appendChild(lbl);*/
+			// modbus id ---------------------------------------------------------------------- -->			
+			insertTextInput("id" + tagName, "id" + classMod, function(){checkID(this);}, para);
+			insertLabel("", para);
 			
-			<!-- // modbus id ----------------------------------------------------------------------------------------------- -->
-			/*para = document.createElement("P");
-			container.appendChild(para);
+			// VIRTUAL modbus id -------------------------------------------------------------- -->			
+			insertTextInput("vid" + tagName, "vid" + classMod, function(){checkID(this);}, para);
+			insertLabel("", para);
 			
-			lbl = document.createElement("LABEL");
-			lbl.innerHTML = "Modbus Device ID: ";
-
-			para.appendChild(lbl);*/
-			
-			<!-- // Create an <input> element, set its type and name attributes -->
-			input = document.createElement("input");
-			input.type = "text";
-			input.name = "id" + tagName;
-			input.id = "id" + tagName;
-			input.className= "id";
-			input.oninput = function(){checkID(this);};
-			
-			para.appendChild(input);
-			
-			/*lbl = document.createElement("LABEL");
-			lbl.className = "id_err";
-			lbl.id = "id" + tagName + "_err";
-			lbl.style.cssText = "color: red;";
-
-			para.appendChild(lbl);*/
-			
-			<!-- // VIRTUAL modbus id ----------------------------------------------------------------------------------------------- -->
-			/*para = document.createElement("P");
-			container.appendChild(para);
-			
-			lbl = document.createElement("LABEL");
-			lbl.innerHTML = "Virtual Modbus Device ID: ";
-
-			para.appendChild(lbl);*/
-			
-			<!-- // Create an <input> element, set its type and name attributes -->
-			input = document.createElement("input");
-			input.type = "text";
-			input.name = "vid" + tagName;
-			input.id = "vid" + tagName;
-			input.className= "vid";
-			input.oninput = function(){checkID(this);};
-			
-			para.appendChild(input);
-			
-			/*lbl = document.createElement("LABEL");
-			lbl.className = "vid_err";
-			lbl.id = "vid" + tagName + "_err";
-			lbl.style.cssText = "color: red;";
-
-			para.appendChild(lbl);*/
-			
-			<!-- // meter type ----------------------------------------------------------------------------------------------- -->
-			/*para = document.createElement("P");
-			container.appendChild(para);
-			
-			lbl = document.createElement("LABEL");
-			lbl.innerHTML = "Meter Type: ";
-
-			para.appendChild(lbl);*/
-			
-			<!-- // Create an <input> element, set its type and name attributes -->
+			// meter type --------------------------------------------------------------------- -->			
 			input = document.createElement("select");
-			<!-- input.type = "text"; -->
 			input.name = "mtr" + tagName;
 			input.id = "mtr" + tagName;
-			input.className = "meter";
+			input.className = "meter" + classMod;
+			input.style.cssText = "width: 17em;";
 			if (tagName == number){
 				input.onchange = function(){addMeter(this);};
 			}
@@ -229,8 +169,6 @@
 				option.text = txtArray[j];
 				input.appendChild(option);
 			}
-
-			container.appendChild(br);
 		};
 		
 		
@@ -240,8 +178,8 @@
 			document.getElementById("numMtrs").value = meters;
 			
 			var container = document.getElementById("container");
-			<!-- //alert(container.length); -->
-			insertMeterSetup(container, meters, meters);  <!-- // container, block number, total number of blocks - 1 -->
+			//<!-- //alert(container.length); -->
+			insertMeterSetup(container, meters, meters);  //<!-- // container, block number, total number of blocks - 1 -->
 			
 			mtr_ip.push(document.getElementsByClassName("mip")[meters - 1].value);
 			mtr_id.push(document.getElementsByClassName("id")[meters - 1].value);
@@ -341,7 +279,7 @@
 									mtr_typ[i] = "";
 								}
 							}
-							<!-- // extract XML data from XML file (containing switch states and analog value)
+							//<!-- // extract XML data from XML file (containing switch states and analog value)
 							//document.getElementById("id0").value = this.responseXML.getElementsByTagName('id')[0].childNodes[0].nodeValue;
 							
 							//document.getElementById("mtr").value = this.responseXML.getElementsByTagName('mtr')[0].childNodes[0].nodeValue; -->
@@ -359,18 +297,17 @@
 		
 		function checkIP(in_box){
 			var ip_id = in_box.id;	
-			var ip_err_id = ip_id + "_err";
 			var ip_val = in_box.value;
 			var ip_arr = ip_val.split(".");
 			
 			var i;
 			
 			if (ip_val == ""){
-				document.getElementById(ip_err_id).innerHTML = "";
+				document.getElementById(ip_id).style.cssText = "color: black;";
 				return true;
 			}
 			else if (ip_arr.length != 4){
-				document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+				document.getElementById(ip_id).style.cssText = "color: red;";
 				return false;
 			}
 			else{
@@ -380,21 +317,21 @@
 					if (!isNaN(oct)){
 						if (oct.toString() == ip_arr[i]){
 							if ((parseInt(ip_arr[i]) > 255) || (parseInt(ip_arr[i]) < 0)){
-								document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+								document.getElementById(ip_id).style.cssText = "color: red;";
 								return false;
 							}
 						}
 						else{
-							document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+							document.getElementById(ip_id).style.cssText = "color: red;";
 							return false;
 						}
 					}
 					else{
-						document.getElementById(ip_err_id).innerHTML = "Invalid entry";
+						document.getElementById(ip_id).style.cssText = "color: red;";
 						return false;
 					}
 				}
-				document.getElementById(ip_err_id).innerHTML = "";
+				document.getElementById(ip_id).style.cssText = "color: black;";
 				return true;
 			}
 		};
@@ -402,9 +339,8 @@
 		
 		function checkID(inp_box){
 			var id_id = inp_box.id;	
-			var id_err_id = id_id + "_err";
 			if (inp_box.value == null || inp_box.value == '') {
-				document.getElementById(id_err_id).innerHTML = "Invalid entry";
+				document.getElementById(id_id).style.cssText = "color: red;";
 				return false;
 			}
 			else {
@@ -414,24 +350,24 @@
 			if (!isNaN(id_val)){
 				if (id_val.toString() == inp_box.value){
 					if ((id_val < 0) || (id_val > 255)){
-						document.getElementById(id_err_id).innerHTML = "Invalid entry";
+						document.getElementById(id_id).style.cssText = "color: red;";
 						return false;
 					}
 					else{
-						document.getElementById(id_err_id).innerHTML = "";
+						document.getElementById(id_id).style.cssText = "color: black;";
 						return true;
 					}
 				}
 				else{
-					document.getElementById(id_err_id).innerHTML = "Invalid entry";
+					document.getElementById(id_id).style.cssText = "color: red;";
 					return false;
 				}
 			}
 			else{
-				document.getElementById(id_err_id).innerHTML = "Invalid entry";
+				document.getElementById(id_id).style.cssText = "color: red;";
 				return false;
 			}
-			document.getElementById(id_err_id).innerHTML = "";
+			document.getElementById(id_id).style.cssText = "color: black;";
 			return true;
 		};
 		
@@ -464,7 +400,7 @@
 	<!-- <body onload="getMeterList()"> -->
 		<!-- Site navigation menu -->
 		<div id="main-wrapper">
-		    <nav>
+			<nav>
 				<ul class="navbar">
 					<li><a href="/index.htm">Home</a></li>
 					<li><a href="/gensetup.htm">General Setup</a></li>
@@ -476,48 +412,15 @@
 					
 					<a id="imglink" href="http://www.upenn.edu/">
 						<!-- /images/logo_let.gif -->
-						<img style="width:155px;height:43px;border:0;" src="images/logo_let.gif" alt="Upenn">
+						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
 					</a>
 				</ul>
-		    </nav>
-		    <article>
+			</nav>
+			<article>
 			<!-- Main content -->
 				<br/>
 				<form id="container" method="post" onsubmit="return checkAndSubmit()">
-				
-					
-					
 				</form>
-				
-				<!-- <table class="mtr_data">
-						<tr>
-							<th style="width:7em">Slaves</th> 
-							
-							<th>IP (blank if serial)</th>
-							<th>Actual Id</th>
-							<th>Virtual Id</th>
-							
-							<th>Meter Type</th>
-						</tr>
-						<tr class="typ">
-							<td>1</td>
-							
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
-						</tr>
-						
-						<tr class="alt">
-							<td>2</td>
-							
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
-
-						</tr>
-					</table> -->
 			</article>
 		
 			<!-- Footer -->
@@ -533,7 +436,7 @@
 					<br/>
 					<a href="http://www.upenn.edu/computing/security/reporting_copyright.php">Copyright</a>
 				</address>
-		    </footer>
+			</footer>
 		</div>
 	</body>
 </html>

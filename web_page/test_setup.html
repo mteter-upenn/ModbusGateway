@@ -13,9 +13,6 @@
 				width: 5em;
 				border: 1px solid black;
 			}
-			table td {
-				
-			}
 			input {
 				text-align: right;
 				width: 10em;
@@ -106,16 +103,31 @@
 			para.appendChild(lbl);
 			
 			lbl = document.createElement("LABEL");
+			lbl.innerHTML = "";
+			lbl.style.cssText = "width: 0em;";
+			para.appendChild(lbl);
+			
+			lbl = document.createElement("LABEL");
 			lbl.innerHTML = "Actual ID";
 			para.appendChild(lbl);
 			
-			/*lbl = document.createElement("LABEL");
+			lbl = document.createElement("LABEL");
+			lbl.innerHTML = "";
+			lbl.style.cssText = "width: 0em;";
+			para.appendChild(lbl);
+			
+			lbl = document.createElement("LABEL");
 			lbl.innerHTML = "Virtual ID";
 			para.appendChild(lbl);
 			
 			lbl = document.createElement("LABEL");
+			lbl.innerHTML = "";
+			lbl.style.cssText = "width: 0em;";
+			para.appendChild(lbl);
+			
+			lbl = document.createElement("LABEL");
 			lbl.innerHTML = "Meter Type";
-			para.appendChild(lbl);*/
+			para.appendChild(lbl);
 			
 			for (var i = 0; i < (number + 1); i++){
 				//insertMeterSetup(container, i, number);
@@ -134,7 +146,24 @@
 				input.oninput = function(){checkIP(this);};
 				para.appendChild(input);
 				
+				lbl = document.createElement("LABEL");
+				lbl.innerHTML = "";
+				lbl.style.cssText = "width: 0em;";
+				para.appendChild(lbl);
 				
+				input = document.createElement("input");
+				input.type = "text";
+				input.name = "id" + i;
+				input.id = "id" + i;
+				input.className= "id";
+				input.oninput = function(){checkID(this);};
+				para.appendChild(input);
+				
+				
+				lbl = document.createElement("LABEL");
+				lbl.innerHTML = "";
+				lbl.style.cssText = "width: 0em;";
+				para.appendChild(lbl);
 				
 				input = document.createElement("input");
 				input.type = "text";
@@ -145,12 +174,33 @@
 				para.appendChild(input);
 				
 				lbl = document.createElement("LABEL");
-				lbl.innerHTML = "box " + i;
+				lbl.innerHTML = "";
+				lbl.style.cssText = "width: 0em;";
 				para.appendChild(lbl);
 				
-				lbl = document.createElement("LABEL");
-				lbl.innerHTML = "box " + i;
-				para.appendChild(lbl);
+				
+				input = document.createElement("select");
+				//<!-- input.type = "text"; -->
+				input.name = "mtr" + i;
+				input.id = "mtr" + i;
+				input.className = "meter";
+				input.style.cssText = "width: 17em;";
+				if (i == number){
+					input.onchange = function(){addMeter(this);};
+				}
+				else{
+					input.onchange = function(){removeMeter(this);};
+				}
+				
+				para.appendChild(input);
+
+				for (var j = 0; j < txtArray.length; j++){
+					var option = document.createElement("option");
+					option.value = valArray[j];
+					option.text = txtArray[j];
+					input.appendChild(option);
+				}
+			
 			}
 		};
 		
