@@ -1,6 +1,10 @@
 
 /*
  Modbus gateway sketch
+
+ SET COMPILER VARIABLES IN DROP DOWN MENUS!!!!
+ CPU Speed: 144MHz Overclocked
+ Serial Buffer Size: Serial3 256 Bytes (or All 256 Bytes)
  */
 
 
