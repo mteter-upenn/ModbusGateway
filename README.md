@@ -9,7 +9,8 @@ This code is for a modbus gateway built with a [Teensy 3.2], W5200 ethernet chip
 * [Teensyduino] (version 1.30) - Teensy libraries, version if very important
 * [Visual Micro] (version 1609.10.0) - Visual Studio add on
 
-
+### Installation
+It is best to install Visual Studio first (be sure to include the C++ package).  Then the Arduino IDE and Teensyduino.  Finally, install Visual Micro.  Before starting up Visual Studio, there are some files that need to be changed.  Navigate to `C:\Program Files (x86)\Arduino\teensy\avr\` (or wherever the Arduino IDE is stored) and append `_old` to `boards.txt` and `platform.txt`.  Next, copy the `boards.txt` and `platform.txt` files from `repo_location\mc_programs\arduino_ide_setup`. Do the same for `serialX.c` files in  `C:\Program Files (x86)\Arduino\teensy\avr\cores\teensy3` and find the new files in `repo_location\mc_programs\arduino_ide_setup\Serial_files`.  These files give drop down options and tell the compiler all the necessary flags that go with those options.  If these files are not added before Visual Studio is started, then it will need to be resarted for those changes to take place.  These changes give the ability to quickly change the size of serial buffers.
 
 [Teensy 3.2]: https://www.pjrc.com/store/teensy32.html
 [Wiz820io]: http://www.wiznet.co.kr/product-item/wiz820io/
