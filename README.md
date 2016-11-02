@@ -1,6 +1,6 @@
 # Modbus Gateway
 
-This code is for a modbus gateway built with a [Teensy 3.2], W5200 ethernet chip (via [Wiz820io]) and a serial to 485 converter.  The gateway can be attached as a master to a 2-wire 485 circuit to as many slaves as the circuit can handle, as well as communicate to TCP slaves.  The gateway can store up to 20 different devices for standardization of holding register values and TCP slaves.  There are rudimentary modbus mappings for roughly 15 different electric meters and some [KEP] flow computer standards stored in the EEPROM.
+This code is for a modbus gateway built with a [Teensy 3.2][teensy 3.2], W5200 ethernet chip (via [Wiz820io][wiz820io]) and a serial to 485 converter.  The gateway can be attached as a master to a 2-wire 485 circuit to as many slaves as the circuit can handle, as well as communicate to TCP slaves.  The gateway can store up to 20 different devices for standardization of holding register values and TCP slaves.  There are rudimentary modbus mappings for roughly 15 different electric meters and some [KEP][kep] flow computer standards stored in the EEPROM.
 
 ## Table of Contents
 [Software](#software)  
@@ -10,10 +10,10 @@ This code is for a modbus gateway built with a [Teensy 3.2], W5200 ethernet chip
 
 
 ### Software
-* [Visual Studio] (version 14.0.25425.01) - Main editor used (Arduino IDE is perfectly acceptable)
-* [Arduino IDE] (version 1.6.11) - Visual studio requires arduino compiler, version is very important
-* [Teensyduino] (version 1.30) - Teensy libraries, version if very important
-* [Visual Micro] (version 1609.10.0) - Visual Studio add on
+* [Visual Studio][visual studio] (version 14.0.25425.01) - Main editor used (Arduino IDE is perfectly acceptable)
+* [Arduino IDE][arduino ide] (version 1.6.11) - Visual studio requires arduino compiler, version is very important
+* [Teensyduino][teensyduino] (version 1.30) - Teensy libraries, version if very important
+* [Visual Micro][visual micro] (version 1609.10.0) - Visual Studio add on
 
 ### Installation
 It is best to install Visual Studio first (be sure to include the C++ package).  Then the Arduino IDE and Teensyduino.  Finally, install Visual Micro.
