@@ -3,10 +3,10 @@
 This code is for a modbus gateway built with a [Teensy 3.2], W5200 ethernet chip (via [Wiz820io]) and a serial to 485 converter.  The gateway can be attached as a master to a 2-wire 485 circuit to as many slaves as the circuit can handle, as well as communicate to TCP slaves.  The gateway can store up to 20 different devices for standardization of holding register values and TCP slaves.  There are rudimentary modbus mappings for roughly 15 different electric meters and some [KEP] flow computer standards stored in the EEPROM.
 
 ## Table of Contents
-[Software](#Software)  
-[Installation](#Installation)  
-[Gateway Setup](#Gateway_Setup)  
-[New Modbus Mappings](#New_Modbus_Mappings)  
+[Software](#software)  
+[Installation](#installation)  
+[Gateway Setup](#gateway-setup)  
+[New Modbus Mappings](#new-modbus-mappings)  
 
 
 ### Software
@@ -29,10 +29,10 @@ We also need to make links to the libraries stored in the local repository.  In 
 
 ### New Modbus Mappings
 
-[Teensy 3.2]: https://www.pjrc.com/store/teensy32.html
-[Wiz820io]: http://www.wiznet.co.kr/product-item/wiz820io/
-[KEP]: http://www.kep.com/productPages/flow-instruments/flow-computer.html
-[Visual Studio]: https://www.visualstudio.com/downloads/
-[Arduino IDE]: https://www.arduino.cc/en/Main/Software
-[Teensyduino]: http://www.pjrc.com/teensy/td_download.html
-[Visual Micro]: http://www.visualmicro.com/page/Arduino-Visual-Studio-Downloads.aspx
+[teensy 3.2]: https://www.pjrc.com/store/teensy32.html
+[wiz820io]: http://www.wiznet.co.kr/product-item/wiz820io/
+[kep]: http://www.kep.com/productPages/flow-instruments/flow-computer.html
+[visual studio]: https://www.visualstudio.com/downloads/
+[arduino ide]: https://www.arduino.cc/en/Main/Software
+[teensyduino]: http://www.pjrc.com/teensy/td_download.html
+[visual micro]: http://www.visualmicro.com/page/Arduino-Visual-Studio-Downloads.aspx
