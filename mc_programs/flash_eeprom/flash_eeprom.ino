@@ -32,7 +32,7 @@ bool bQuit = false;
 // PROTOTYPES
 bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __FlashStringHelper *,
   const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
-
+//const __FlashStringHelper *
 
 void setup() {
   uint16_t ip_strt, nm_strt, reg_strt, mtr_strt;
@@ -224,40 +224,68 @@ void loop() {
     if (!bQuit) {
       // all meter information
       for (i = 0; i < numMtrs; i++) {
+        bool b_slaveDataGood = false;
+        char ca_slvType[50];
+        char ca_slvIp[50];
+        char ca_slvId[50];
+        char ca_slvVid[50];
+        char ca_checkQues[300] = "Is this the correct information for the meter? (y/n)\nType: ";
+
         Serial.print(F("Meta data for meter "));
         Serial.print(i + 1, DEC);
         Serial.print(F(" of "));
         Serial.println(numMtrs, DEC);
+         
+        while (!b_slaveDataGood) {
+          // meter type
+          term_func(F("Please insert meter type (X.X.X)."), mtrtypFunc, F(""),
+            F("Please insert meter type (X.X.X)."), ca_slvType, "12.1.0", false, 0, false);
+          //storeIP(inpt, mtr_strt + 9 * (i + 1) - 8, 3);
+          strcat(ca_checkQues, ca_slvType);
+          
 
-        // meter type
-        term_func(F("Please insert meter type (X.X.X)."), mtrtypFunc, F("Ok."),
-          F("Please insert meter type (X.X.X)."), inpt, "12.1.0", true, 0, false);
-        storeIP(inpt, mtr_strt + 9 * (i + 1) - 8, 3);
+          // 485 or mb/tcp
+          bResponse = term_func(F("Is this meter connected via IP? (y/n)"), verFunc, F("This meter is connected via IP."),
+            F("This meter is connected via serial comms."), inpt, "n", false, 0, true);  // nothing to store here
 
-        // 485 or mb/tcp
-        bResponse = term_func(F("Is this meter connected via IP? (y/n)"), verFunc, F("This meter is connected via IP."),
-          F("This meter is connected via serial comms."), inpt, "n", true, 0, true);  // nothing to store here
+          if (bResponse) {
+            // modbus ip
+            term_func(F("Please insert the meter's IP."), ipFunc, F(""),
+              F("Please insert the meter's IP."), ca_slvIp, "0.0.0.0", false, 0, false);
+            strcat(ca_checkQues, "\nIP: ");
+            strcat(ca_checkQues, ca_slvIp);
+          }
+          else {
+            // default ip of 0.0.0.0
+            strcpy_P(ca_slvIp, PSTR("0.0.0.0"));
+            strcat(ca_checkQues, "\nConnected via 485");
+          }
+          //storeIP(inpt, mtr_strt + 9 * (i + 1) - 5, 4);
 
-        if (bResponse) {
-          // modbus ip
-          term_func(F("Please insert the meter's IP."), ipFunc, F("Ok."),
-            F("Please insert the meter's IP."), inpt, "0.0.0.0", true, 0, false);
+          // actual modbus id
+          term_func(F("Please insert actual Modbus id. (0-247)"), mbidFunc, F(""),
+            F("Please insert actual Modbus id. (0-247)"), ca_slvId, "1", false, 0, false);
+          //storeByte(inpt, mtr_strt + 9 * (i + 1) - 1);
+          strcat(ca_checkQues, "\nActual Id: ");
+          strcat(ca_checkQues, ca_slvId);
+
+          // virtual modbus id
+          term_func(F("Please insert virtual Modbus id. (0-247)"), mbidFunc, F(""),
+            F("Please insert virtual Modbus id. (0-247)"), ca_slvVid, "1", false, 0, false);
+          //storeByte(inpt, mtr_strt + 9 * (i + 1));
+          strcat(ca_checkQues, "\nVirtual Id: ");
+          strcat(ca_checkQues, ca_slvVid);
+
+
+          b_slaveDataGood = term_func(F(ca_checkQues), verFunc, F("Great!"),
+            F("Please reenter slave data."), inpt, "n", false, 0, true);  // nothing to store here
         }
-        else {
-          // default ip of 0.0.0.0
-          strcpy_P(inpt, PSTR("0.0.0.0"));
-        }
-        storeIP(inpt, mtr_strt + 9 * (i + 1) - 5, 4);
 
-        // actual modbus id
-        term_func(F("Please insert actual Modbus id. (0-247)"), mbidFunc, F("Ok."),
-          F("Please insert actual Modbus id. (0-247)"), inpt, "1", true, 0, false);
-        storeByte(inpt, mtr_strt + 9 * (i + 1) - 1);
-
-        // virtual modbus id
-        term_func(F("Please insert virtual Modbus id. (0-247)"), mbidFunc, F("Ok."),
-          F("Please insert virtual Modbus id. (0-247)"), inpt, "1", true, 0, false);
-        storeByte(inpt, mtr_strt + 9 * (i + 1));
+        // once broken free from loop, store all the given data
+        storeIP(ca_slvType, mtr_strt + 9 * (i + 1) - 8, 3);
+        storeIP(ca_slvIp, mtr_strt + 9 * (i + 1) - 5, 4);
+        storeByte(ca_slvId, mtr_strt + 9 * (i + 1) - 1);
+        storeByte(ca_slvVid, mtr_strt + 9 * (i + 1));
       }
     }
   }

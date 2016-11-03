@@ -172,7 +172,8 @@ The address of the map is determined by counting the bytes used in the previous 
 |  32  |   Apparent Energy, Total    |                                |
 
 #### Meter Types
-Those that start with a 0 are not currently stored in the EEPROM.
+Those that start with a 0 are not currently stored in the EEPROM.  
+
 | Meter                               | Type      |
 | ----------------------------------- | --------- |
 |  Eaton IQ DP 4000                   |  0.1.1    |

@@ -1,7 +1,7 @@
 
-bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const __FlashStringHelper *posStr, 
+bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const __FlashStringHelper *posStr,
   const __FlashStringHelper *negStr, char *input, const char *defaultInput, bool verify, uint8_t repeatMsg, bool negExit) {
-
+  //const __FlashStringHelper
   if (bQuit) {
     return false;
   }
@@ -96,7 +96,7 @@ bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const 
                   break;
                 }
               }
-              Serial.println("exit here");
+              //Serial.println("exit here");
               Serial.println(negStr);
               return false;
             }
