@@ -103,7 +103,7 @@ The functions are all called in  `writeLibrary.ino`.  The total number of maps i
 | 2    | Map number    |
 | 3    | Modbus function (3 or 4)     |
 
-REDO THIS IN THE CODE: The address of the map is determined by counting the bytes in the map (a pain in the ass) and subtracting
+The address of the map is determined by counting the bytes used in the previous map and starting where it left off.
 
 ### Appendix
 #### FloatConv Enum Class
@@ -174,13 +174,12 @@ REDO THIS IN THE CODE: The address of the map is determined by counting the byte
 #### Meter Types
 Those that start with a 0 are not currently stored in the EEPROM.
 | Meter                               | Type      |
-|-------------------------------------|-----------|
+| ----------------------------------- | --------- |
 |  Eaton IQ DP 4000                   |  0.1.1    |
 |  Eaton PXM 2260                     |  15.1.0   |
 |  Eaton IQ 200                       |  0.1.3    |
 |  Eaton IQ 300                       |  0.1.4    |
 |  Eaton Power Xpert 4000             |  1.1.0    |
-|--Eaton-PXM-2000---------------------|--x.x.x----|
 |  Emon Dmon 3400                     |  2.1.0    |
 |  GE EPM 3720                        |  3.1.0    |
 |  GE EPM 5100                        |  0.2.1    |
@@ -210,6 +209,7 @@ Those that start with a 0 are not currently stored in the EEPROM.
 |  SquareD PM 870                     |  10.7.0   |
 |  Chilled Water KEP                  |  11.1.0   |
 |  Steam KEP                          |  12.1.0   |
+
 [teensy 3.2]: https://www.pjrc.com/store/teensy32.html
 [wiz820io]: http://www.wiznet.co.kr/product-item/wiz820io/
 [kep]: http://www.kep.com/productPages/flow-instruments/flow-computer.html

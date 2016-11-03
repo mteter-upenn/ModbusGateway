@@ -1,4 +1,4 @@
-void meter6(uint16_t mtr_start){
+uint16_t meter6(uint16_t mtr_start){
   uint16_t blk_strt;
   uint8_t blk_num;
   int grp_strt;
@@ -125,6 +125,6 @@ void meter6(uint16_t mtr_start){
   Serial.print(F(" to "));
   Serial.println(grp_strt, DEC);  // +55
 
-  // EEPROM.write(++grp_strt, );
+  return ++grp_strt;
 }
 

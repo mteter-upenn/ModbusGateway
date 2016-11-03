@@ -1,4 +1,4 @@
-void meter3(uint16_t mtr_start){
+uint16_t meter3(uint16_t mtr_start){
   uint16_t blk_strt;
   uint8_t blk_num;
   uint16_t grp_strt;
@@ -101,4 +101,7 @@ void meter3(uint16_t mtr_start){
   
   Serial.print(F(" to "));
   Serial.println(grp_strt, DEC);
+
+  return ++grp_strt;
+
 }

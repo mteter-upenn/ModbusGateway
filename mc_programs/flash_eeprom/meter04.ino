@@ -1,4 +1,4 @@
-void meter4(uint16_t mtr_start){
+uint16_t meter4(uint16_t mtr_start){
   uint16_t blk_strt;
   uint8_t blk_num;
   uint16_t grp_strt;
@@ -14,6 +14,8 @@ void meter4(uint16_t mtr_start){
   // used to be , now it's 
   grp_strt = blk_strt + (blk_num * 5);
   
+
+  return ++grp_strt;
   //EEPROM.write(mtr_start, highByte(blk_strt));
   //EEPROM.write(mtr_start + 1, lowByte(blk_strt));
   //EEPROM.write(mtr_start + 2, blk_num);  // number of blocks;
