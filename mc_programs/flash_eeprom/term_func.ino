@@ -6,7 +6,7 @@ bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const 
     return false;
   }
   else {
-    uint32_t oldTime, curTime;
+    uint32_t oldTime(0), curTime(0);
     bool bReady = false;
     bool funcReady = false;
     uint8_t i = 0;

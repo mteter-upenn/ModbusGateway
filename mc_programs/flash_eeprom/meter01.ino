@@ -19,11 +19,11 @@ void meter1(uint16_t mtr_start){
 
   
   EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
-  EEPROM.write(mtr_start + 4, highByte(grp_strt));
+  EEPROM.write(mtr_start + 4, highByte(grp_strt));  // group 1 start
   EEPROM.write(mtr_start + 5, lowByte(grp_strt));
-  EEPROM.write(mtr_start + 6, highByte(grp_strt + 40));
+  EEPROM.write(mtr_start + 6, highByte(grp_strt + 40));  // group 2 start
   EEPROM.write(mtr_start + 7, lowByte(grp_strt + 40));
-  EEPROM.write(mtr_start + 8, highByte(grp_strt + 51));
+  EEPROM.write(mtr_start + 8, highByte(grp_strt + 51));  // group 3 start
   EEPROM.write(mtr_start + 9, lowByte(grp_strt + 51));
 
 
@@ -39,7 +39,7 @@ void meter1(uint16_t mtr_start){
   EEPROM.write(blk_strt + 6, lowByte(4650));
   EEPROM.write(blk_strt + 7, highByte(4704));
   EEPROM.write(blk_strt + 8, lowByte(4704));
-  EEPROM.write(blk_strt + 9, FloatConv2Int8(FloatConv::FLOAT_WS));
+  EEPROM.write(blk_strt + 9, FloatConv2Uint8(FloatConv::FLOAT_WS));
   
   // Block #3 - [4818, 4832, 128]
   EEPROM.write(blk_strt + 10, highByte(4818));

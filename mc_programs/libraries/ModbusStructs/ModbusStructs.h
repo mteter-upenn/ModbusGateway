@@ -74,6 +74,7 @@ enum class FloatConv {
 
 uint16_t FloatConvEnumNumRegs(FloatConv dataType);
 int8_t FloatConv2Int8(FloatConv dataType);
+uint8_t FloatConv2Uint8(FloatConv dataType);
 FloatConv Int8_2_FloatConv(int8_t s8_dataType);
 
 #endif

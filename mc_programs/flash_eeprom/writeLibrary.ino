@@ -25,7 +25,10 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   //EEPROM.write(++grp_strt, lowByte());   // starting register
   //EEPROM.write(++grp_strt, );              // skip bytes to data types
 
-
+  // MAKE IT SO INDEXING INCREMENTS INSTEAD OF DECREMENT
+  // AS LONG AS THE STARTING POINT IS MORE THAN THE FOLLOWING INDEXING, IT SHOULD BE OK 
+  // TAKE NUMBER of MAPS (15) *4 to get length
+  // can then return next open eeprom address in each function.
   // eaton power xpert 4000    #1
   indMtrStrt -= 83;
   meter1(indMtrStrt);

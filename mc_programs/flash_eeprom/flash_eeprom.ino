@@ -1,7 +1,7 @@
 
 
 
-
+#include <ModbusStructs.h>
 #include <ModbusStack.h>
 #include <MeterLibrary.h>
 #include <EEPROM.h>
