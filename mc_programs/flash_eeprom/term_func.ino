@@ -139,14 +139,13 @@ bool checkQuit(char *cp_input) {
 
 // b_verify funcs *****************************************************************************************************
 bool verFunc(char *cp_input) {  // checks yes/no
-  char c = cp_input[0];
+  char c_firstChar = cp_input[0];
   Serial.print(F("Input: "));
-  if ((c == 'y') || (c == 'Y')) {
-    Serial.println(cp_input[0]);
+  Serial.println(c_firstChar);
+  if ((c_firstChar == 'y') || (c_firstChar == 'Y')) {
     return true;
   }
   else {
-    Serial.println(cp_input[0]);
     return false;
   }
 }
@@ -179,16 +178,16 @@ bool menuFunc(char *cp_input) {
 }
 
 bool nmFunc(char *cp_input) {  // checks name
-  uint8_t i;
+  uint8_t ii;
 
   cp_input[30] = 0;  // this would put a 0 in the 31st slot, giving a name length of 30
 
-  for (i = 0; i < 30; i++) {
-    if (cp_input[i] == 0) {  // end of string, don't need to check anything else
+  for (ii = 0; ii < 30; ++ii) {
+    if (cp_input[ii] == 0) {  // end of string, don't need to check anything else
       break;
     }
-    if (!isalnum(cp_input[i])) {
-      switch (cp_input[i]) {
+    if (!isalnum(cp_input[ii])) {
+      switch (cp_input[ii]) {
       case ' ':
       case '_':
       case '-':
@@ -201,11 +200,11 @@ bool nmFunc(char *cp_input) {  // checks name
   }
 
   Serial.print(F("Input: "));
-  for (i = 0; i < 30; i++) {
-    if (cp_input[i] == 0) {
+  for (ii = 0; ii < 30; ++ii) {
+    if (cp_input[ii] == 0) {
       break;
     }
-    Serial.print(cp_input[i]);
+    Serial.print(cp_input[ii]);
   }
   Serial.println();
 
@@ -213,57 +212,57 @@ bool nmFunc(char *cp_input) {  // checks name
 }
 
 bool macFunc(char *cp_input) {  // checks mac
-  uint16_t k = 0;
-  uint32_t u32dum = 0;
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
 
-  while (cp_input[k] != 0) {
-    u32dum = u32dum * 10 + (cp_input[k] - '0');
-    k++;
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
   }
 
-  if (u32dum > 65535) {
+  if (u32_dum > 65535) {
     return false;
   }
 
   Serial.print(F("Input: 50:45:4E:4E:"));
-  if (highByte(u32dum) < 16) {
+  if (highByte(u32_dum) < 16) {
     Serial.print('0');
   }
-  Serial.print(highByte(u32dum), HEX);
+  Serial.print(highByte(u32_dum), HEX);
   Serial.print(":");
-  if (lowByte(u32dum) < 16) {
+  if (lowByte(u32_dum) < 16) {
     Serial.print('0');
   }
-  Serial.println(lowByte(u32dum), HEX);
+  Serial.println(lowByte(u32_dum), HEX);
 
   return true;
 }
 
 bool ipFunc(char *cp_input) {  // check an ip
-  uint16_t u16dum = 0;
-  uint16_t j, k;
+  uint16_t u16_dum = 0;
+  uint16_t jj, kk;
 
-  k = 0;
-  for (j = 0; j < 4; j++) {
-    u16dum = 0;
+  kk = 0;
+  for (jj = 0; jj < 4; ++jj) {
+    u16_dum = 0;
 
-    while ((cp_input[k] != '.') && (cp_input[k] != 0)) {
-      u16dum = u16dum * 10 + (cp_input[k] - '0');
-      k++;
+    while ((cp_input[kk] != '.') && (cp_input[kk] != 0)) {
+      u16_dum = u16_dum * 10 + (cp_input[kk] - '0');
+      ++kk;
     }
 
-    if (u16dum > 255) {
+    if (u16_dum > 255) {
       return false;
     }
-    k++;
+    ++kk;
   }
 
   Serial.print(F("Input: "));
-  for (j = 0; j < 30; j++) {
-    if (cp_input[j] == 0) {
+  for (jj = 0; jj < 30; ++jj) {
+    if (cp_input[jj] == 0) {
       break;
     }
-    Serial.print(cp_input[j]);
+    Serial.print(cp_input[jj]);
   }
   Serial.println();
 
@@ -271,15 +270,15 @@ bool ipFunc(char *cp_input) {  // check an ip
 }
 
 bool brFunc(char *cp_input) {  // checks baud rate
-  uint16_t k = 0;
-  uint32_t u32dum = 0;
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
 
-  while (cp_input[k] != 0) {
-    u32dum = u32dum * 10 + (cp_input[k] - '0');
-    k++;
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
   }
   
-  switch (u32dum) {
+  switch (u32_dum) {
     case 300:
     case 1200:
     case 2400:
@@ -291,7 +290,7 @@ bool brFunc(char *cp_input) {  // checks baud rate
     case 57600:
     case 115200:
       Serial.print(F("Input: "));
-      Serial.println(u32dum, DEC);
+      Serial.println(u32_dum, DEC);
       return true;
       break;
     default:
@@ -301,46 +300,46 @@ bool brFunc(char *cp_input) {  // checks baud rate
 }
 
 bool toFunc(char *cp_input) {  // checks modbus timeout
-  uint16_t k = 0;
-  uint32_t u32dum = 0;
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
 
-  while (cp_input[k] != 0) {
-    u32dum = u32dum * 10 + (cp_input[k] - '0');
-    k++;
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
   }
 
-  if (u32dum > 30000) {
+  if (u32_dum > 30000) {
     return false;
   }
   
   Serial.print(F("Input: "));
-  Serial.println(u32dum, DEC);
+  Serial.println(u32_dum, DEC);
   return true;
 }
 
 bool mtrnumFunc(char *cp_input) {  // checks number of meters to record/store in gateway
-  uint16_t k = 0;
-  uint32_t u32dum = 0;
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
 
-  while (cp_input[k] != 0) {
-    u32dum = u32dum * 10 + (cp_input[k] - '0');
-    k++;
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
   }
 
-  if (u32dum > 20) {
+  if (u32_dum > 20) {
     return false;
   }
 
   Serial.print(F("Input: "));
-  Serial.println(u32dum, DEC);
+  Serial.println(u32_dum, DEC);
   return true;
 }
 
 bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
-  uint16_t u16dum = 0;
-  uint16_t i, j, k;
-  uint8_t mtrTyp[3];
-  uint8_t mtrLib[34][3] = { {0, 1, 1},  // 1
+  uint16_t u16_dum = 0;
+  uint16_t ii, jj, kk;
+  uint8_t u8a_mtrTyp[3];
+  uint8_t u8a_mtrLib[34][3] = { {0, 1, 1},  // 1
                             {15, 1, 0},
                             {0, 1, 3},
                             {0, 1, 4},
@@ -374,7 +373,7 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
                             {10, 7, 0},
                             {11, 1, 0},
                             {12, 1, 0} };
-  char *mtrNames[] = {"Eaton IQ DP 4000",
+  char *cpa_mtrNames[] = {"Eaton IQ DP 4000",
     "Eaton PXM 2260",
     "Eaton IQ 200",
     "Eaton IQ 300",
@@ -409,33 +408,33 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
     "Chilled Water KEP",
     "Steam KEP"};
 
-  k = 0;
-  for (j = 0; j < 3; j++) {
-    u16dum = 0;
+  kk = 0;
+  for (jj = 0; jj < 3; ++jj) {
+    u16_dum = 0;
 
-    while ((cp_input[k] != '.') && (cp_input[k] != 0)) {
-      u16dum = u16dum * 10 + (cp_input[k] - '0');
-      k++;
+    while ((cp_input[kk] != '.') && (cp_input[kk] != 0)) {
+      u16_dum = u16_dum * 10 + (cp_input[kk] - '0');
+      ++kk;
     }
-    k++;
-    mtrTyp[j] = u16dum;
+    ++kk;
+    u8a_mtrTyp[jj] = u16_dum;
   }
 
-  for (j = 0; j < 34; j++) {
-    for (k = 0; k < 3; k++) {
-      if (mtrTyp[k] == mtrLib[j][k]) {
-        if (k == 2) {
+  for (jj = 0; jj < 34; ++jj) {
+    for (kk = 0; kk < 3; ++kk) {
+      if (u8a_mtrTyp[kk] == u8a_mtrLib[jj][kk]) {
+        if (kk == 2) {
           Serial.print(F("Input: "));
 
-          for (i = 0; i < 30; i++) {
-            if (cp_input[i] == 0) {
+          for (ii = 0; ii < 30; ++ii) {
+            if (cp_input[ii] == 0) {
               break;
             }
-            Serial.print(cp_input[i]);
+            Serial.print(cp_input[ii]);
           }
 
           Serial.print(", ");
-          Serial.println(mtrNames[j]);
+          Serial.println(cpa_mtrNames[jj]);
           return true;
         }
       }
@@ -446,153 +445,151 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
   }
 
   Serial.println(F("Meter options:"));
-  for (i = 0; i < 34; i++) {
-    Serial.print(mtrNames[i]);
+  for (ii = 0; ii < 34; ++ii) {
+    Serial.print(cpa_mtrNames[ii]);
     Serial.print(", ");
-    Serial.print(mtrLib[i][0], DEC);
+    Serial.print(u8a_mtrLib[ii][0], DEC);
     Serial.print(".");
-    Serial.print(mtrLib[i][1], DEC);
+    Serial.print(u8a_mtrLib[ii][1], DEC);
     Serial.print(".");
-    Serial.println(mtrLib[i][2], DEC);
+    Serial.println(u8a_mtrLib[ii][2], DEC);
   }
   return false;
 }
 
 bool mbidFunc(char *cp_input) {  // checks valid modbus device id
-  uint16_t k = 0;
-  uint32_t u32dum = 0;
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
 
-  while (cp_input[k] != 0) {
-    u32dum = u32dum * 10 + (cp_input[k] - '0');
-    k++;
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
   }
 
-  if (u32dum > 247) {
+  if (u32_dum > 247) {
     return false;
   }
 
   Serial.print(F("Input: "));
-  Serial.println(u32dum, DEC);
+  Serial.println(u32_dum, DEC);
   return true;
 }
 
 
 // storage functions *******************************************************************************************************
-void storeName(char *cp_input, uint16_t regStrt) {
+void storeName(char *cp_input, uint16_t u16_regStrt) {
   if (b_quit) {
     return;
   }
   else {
-    uint8_t i;
+    for (int ii = 0; ii < 30; ++ii) {
+      EEPROM.write(u16_regStrt + ii, cp_input[ii]);
 
-    for (i = 0; i < 30; i++) {
-      EEPROM.write(regStrt + i, cp_input[i]);
-
-      if (cp_input[i] == 0) {
+      if (cp_input[ii] == 0) {
         break;
       }
     }
   }
 }
 
-void storeIP(char *cp_input, uint16_t regStrt, uint8_t elmts) {
+void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts) {
   if (b_quit) {
     return;
   }
   else {
-    uint16_t j, k;
-    uint8_t u8dum;
+    uint16_t jj, kk;
+    uint8_t u8_dum;
 
-    k = 0;
-    for (j = 0; j < elmts; j++) {
-      u8dum = 0;
+    kk = 0;
+    for (jj = 0; jj < u8_elmts; ++jj) {
+      u8_dum = 0;
 
-      while ((cp_input[k] != '.') && (cp_input[k] != 0)) {
-        u8dum = u8dum * 10 + (cp_input[k] - '0');
-        k++;
+      while ((cp_input[kk] != '.') && (cp_input[kk] != 0)) {
+        u8_dum = u8_dum * 10 + (cp_input[kk] - '0');
+        ++kk;
       }
 
-      k++;
-      EEPROM.write(regStrt + j, u8dum);
+      ++kk;
+      EEPROM.write(u16_regStrt + jj, u8_dum);
     }
   }
 }
 
-bool storeBool(char *cp_input, uint16_t regStrt) {
+bool storeBool(char *cp_input, uint16_t u16_regStrt) {
   if (b_quit) {
     return false;
   }
   else {
     if (cp_input[0] == 'y' || cp_input[0] == 'Y') {
-      EEPROM.write(regStrt, true);
+      EEPROM.write(u16_regStrt, true);
 
       return true;
     }
     else {
-      EEPROM.write(regStrt, false);
+      EEPROM.write(u16_regStrt, false);
 
       return false;
     }
   }
 }
 
-uint8_t storeByte(char *cp_input, uint16_t regStrt) {
+uint8_t storeByte(char *cp_input, uint16_t u16_regStrt) {
   
   if (b_quit) {
     return 0;
   }
   else {
-    uint16_t k = 0;
-    uint8_t u8dum = 0;
+    uint16_t kk = 0;
+    uint8_t u8_dum = 0;
 
-    while (cp_input[k] != 0) {
-      u8dum = u8dum * 10 + (cp_input[k] - '0');
-      k++;
+    while (cp_input[kk] != 0) {
+      u8_dum = u8_dum * 10 + (cp_input[kk] - '0');
+      ++kk;
     }
 
-    EEPROM.write(regStrt, u8dum);
+    EEPROM.write(u16_regStrt, u8_dum);
 
-    return u8dum;
+    return u8_dum;
   }
 }
 
-uint16_t storeInt(char *cp_input, uint16_t regStrt) {
+uint16_t storeInt(char *cp_input, uint16_t u16_regStrt) {
   if (b_quit) {
     return 0;
   }
   else {
-    uint16_t k = 0;
-    uint16_t u16dum = 0;
+    uint16_t kk = 0;
+    uint16_t u16_dum = 0;
 
-    while (cp_input[k] != 0) {
-      u16dum = u16dum * 10 + (cp_input[k] - '0');
-      k++;
+    while (cp_input[kk] != 0) {
+      u16_dum = u16_dum * 10 + (cp_input[kk] - '0');
+      ++kk;
     }
 
-    EEPROM.write(regStrt, highByte(u16dum));
-    EEPROM.write(regStrt + 1, lowByte(u16dum));
+    EEPROM.write(u16_regStrt, highByte(u16_dum));
+    EEPROM.write(u16_regStrt + 1, lowByte(u16_dum));
 
-    return u16dum;
+    return u16_dum;
   }
 }
 
-uint32_t storeMedInt(char *cp_input, uint16_t regStrt) {
+uint32_t storeMedInt(char *cp_input, uint16_t u16_regStrt) {
   if (b_quit) {
     return 0;
   }
   else {
-    uint16_t k = 0;
-    uint32_t u32dum = 0;
+    uint16_t kk = 0;
+    uint32_t u32_dum = 0;
 
-    while (cp_input[k] != 0) {
-      u32dum = u32dum * 10 + (cp_input[k] - '0');
-      k++;
+    while (cp_input[kk] != 0) {
+      u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+     ++kk;
     }
 
-    EEPROM.write(regStrt, ((u32dum >> 16) & 0xFF));
-    EEPROM.write(regStrt + 1, ((u32dum >> 8) & 0xFF));
-    EEPROM.write(regStrt + 2, (u32dum & 0xFF));
+    EEPROM.write(u16_regStrt, ((u32_dum >> 16) & 0xFF));
+    EEPROM.write(u16_regStrt + 1, ((u32_dum >> 8) & 0xFF));
+    EEPROM.write(u16_regStrt + 2, (u32_dum & 0xFF));
 
-    return u32dum;
+    return u32_dum;
   }
 }

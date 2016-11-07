@@ -1,83 +1,83 @@
-uint16_t meter4(uint16_t mtr_start){
-  uint16_t blk_strt;
-  uint8_t blk_num;
-  uint16_t grp_strt;
-  uint8_t grp_num;
+uint16_t meter4(uint16_t u16_mapStart){
+  uint16_t u16_blkStart;
+  uint8_t u8_numBlks;
+  uint16_t u16_grpStart;
+  uint8_t u8_numGrps;
   //uint16_t i;
 
   // ge pqm
   // 384
   
-  blk_num = 52;
-  grp_num = 0;
-  blk_strt = mtr_start + 4 + grp_num * 2;
+  u8_numBlks = 52;
+  u8_numGrps = 0;
+  u16_blkStart = u16_mapStart + 4 + u8_numGrps * 2;
   // used to be , now it's 
-  grp_strt = blk_strt + (blk_num * 5);
+  u16_grpStart = u16_blkStart + (u8_numBlks * 5);
   
 
-  return ++grp_strt;
-  //EEPROM.write(mtr_start, highByte(blk_strt));
-  //EEPROM.write(mtr_start + 1, lowByte(blk_strt));
-  //EEPROM.write(mtr_start + 2, blk_num);  // number of blocks;
+  return ++u16_grpStart;
+  //EEPROM.write(u16_mapStart, highByte(u16_blkStart));
+  //EEPROM.write(u16_mapStart + 1, lowByte(u16_blkStart));
+  //EEPROM.write(u16_mapStart + 2, u8_numBlks);  // number of blocks;
 
-  //EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
-  //EEPROM.write(mtr_start + 4, highByte(grp_strt));
-  //EEPROM.write(mtr_start + 5, lowByte(grp_strt));
+  //EEPROM.write(u16_mapStart + 3, u8_numGrps);  // number of blocks;
+  //EEPROM.write(u16_mapStart + 4, highByte(u16_grpStart));
+  //EEPROM.write(u16_mapStart + 5, lowByte(u16_grpStart));
 
 //  // Block #1 - [, , ]
-//  EEPROM.write(blk_strt, highByte());
-//  EEPROM.write(blk_strt + 1, lowByte());
-//  EEPROM.write(blk_strt + 2, highByte());
-//  EEPROM.write(blk_strt + 3, lowByte());
-//  EEPROM.write(blk_strt + 4, );
+//  EEPROM.write(u16_blkStart, highByte());
+//  EEPROM.write(u16_blkStart + 1, lowByte());
+//  EEPROM.write(u16_blkStart + 2, highByte());
+//  EEPROM.write(u16_blkStart + 3, lowByte());
+//  EEPROM.write(u16_blkStart + 4, );
 //
 //  // Block #2 - [, , ]
-//  EEPROM.write(blk_strt + 5, highByte());
-//  EEPROM.write(blk_strt + 6, lowByte());
-//  EEPROM.write(blk_strt + 7, highByte());
-//  EEPROM.write(blk_strt + 8, lowByte());
-//  EEPROM.write(blk_strt + 9, );
+//  EEPROM.write(u16_blkStart + 5, highByte());
+//  EEPROM.write(u16_blkStart + 6, lowByte());
+//  EEPROM.write(u16_blkStart + 7, highByte());
+//  EEPROM.write(u16_blkStart + 8, lowByte());
+//  EEPROM.write(u16_blkStart + 9, );
 //  
 //  // Block #3 - [, , ]
-//  EEPROM.write(blk_strt + 10, highByte());
-//  EEPROM.write(blk_strt + 11, lowByte());
-//  EEPROM.write(blk_strt + 12, highByte());
-//  EEPROM.write(blk_strt + 13, lowByte());
-//  EEPROM.write(blk_strt + 14, );
+//  EEPROM.write(u16_blkStart + 10, highByte());
+//  EEPROM.write(u16_blkStart + 11, lowByte());
+//  EEPROM.write(u16_blkStart + 12, highByte());
+//  EEPROM.write(u16_blkStart + 13, lowByte());
+//  EEPROM.write(u16_blkStart + 14, );
 //
 //  // Block #4 - [, , ]
-//  EEPROM.write(blk_strt + 15, highByte());
-//  EEPROM.write(blk_strt + 16, lowByte());
-//  EEPROM.write(blk_strt + 17, highByte());
-//  EEPROM.write(blk_strt + 18, lowByte());
-//  EEPROM.write(blk_strt + 19, );
+//  EEPROM.write(u16_blkStart + 15, highByte());
+//  EEPROM.write(u16_blkStart + 16, lowByte());
+//  EEPROM.write(u16_blkStart + 17, highByte());
+//  EEPROM.write(u16_blkStart + 18, lowByte());
+//  EEPROM.write(u16_blkStart + 19, );
 //
 //  // Block #5 - [, , ]
-//  EEPROM.write(blk_strt + 20, highByte());
-//  EEPROM.write(blk_strt + 21, lowByte());
-//  EEPROM.write(blk_strt + 22, highByte());
-//  EEPROM.write(blk_strt + 23, lowByte());
-//  EEPROM.write(blk_strt + 24, );
+//  EEPROM.write(u16_blkStart + 20, highByte());
+//  EEPROM.write(u16_blkStart + 21, lowByte());
+//  EEPROM.write(u16_blkStart + 22, highByte());
+//  EEPROM.write(u16_blkStart + 23, lowByte());
+//  EEPROM.write(u16_blkStart + 24, );
 //  
 //  // Block #6 - [, , ]
-//  EEPROM.write(blk_strt + 25, highByte());
-//  EEPROM.write(blk_strt + 26, lowByte());
-//  EEPROM.write(blk_strt + 27, highByte());
-//  EEPROM.write(blk_strt + 28, lowByte());
-//  EEPROM.write(blk_strt + 29, );
+//  EEPROM.write(u16_blkStart + 25, highByte());
+//  EEPROM.write(u16_blkStart + 26, lowByte());
+//  EEPROM.write(u16_blkStart + 27, highByte());
+//  EEPROM.write(u16_blkStart + 28, lowByte());
+//  EEPROM.write(u16_blkStart + 29, );
 //
 //  // Block #7 - [, , ]
-//  EEPROM.write(blk_strt + 30, highByte());
-//  EEPROM.write(blk_strt + 31, lowByte());
-//  EEPROM.write(blk_strt + 32, highByte());
-//  EEPROM.write(blk_strt + 33, lowByte());
-//  EEPROM.write(blk_strt + 34, );
+//  EEPROM.write(u16_blkStart + 30, highByte());
+//  EEPROM.write(u16_blkStart + 31, lowByte());
+//  EEPROM.write(u16_blkStart + 32, highByte());
+//  EEPROM.write(u16_blkStart + 33, lowByte());
+//  EEPROM.write(u16_blkStart + 34, );
 //
 //  // Group #
-//  EEPROM.write(grp_strt + , );
-//  EEPROM.write(grp_strt + , highByte());
-//  EEPROM.write(grp_strt + , lowByte());
-//  EEPROM.write(grp_strt + , );
-//  EEPROM.write(grp_strt + , );
+//  EEPROM.write(u16_grpStart + , );
+//  EEPROM.write(u16_grpStart + , highByte());
+//  EEPROM.write(u16_grpStart + , lowByte());
+//  EEPROM.write(u16_grpStart + , );
+//  EEPROM.write(u16_grpStart + , );
 
 }

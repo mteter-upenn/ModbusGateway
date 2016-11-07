@@ -1,93 +1,93 @@
-void read_eeprom(char cMenu) {
-  uint16_t i, j; //  , j;
-  uint16_t nm_strt, ip_strt, mtr_strt, reg_strt;
-  uint32_t baudrate;
-  uint16_t timeout;
-  uint8_t mtrs, libs;
+void read_eeprom(char c_menuChar) {
+  uint16_t ii, jj; //  , j;
+  uint16_t u16_nmStrt, u16_ipStrt, u16_slvStrt, u16_mapStrt;
+  uint32_t u32_baudrate;
+  uint16_t u16_timeout;
+  uint8_t u8_numSlvs, u8_numMaps;
   //char inpt[50];
 
-  nm_strt = word(EEPROM.read(0), EEPROM.read(1));
-  ip_strt = word(EEPROM.read(2), EEPROM.read(3));
-  mtr_strt = word(EEPROM.read(4), EEPROM.read(5));
-  reg_strt = word(EEPROM.read(6), EEPROM.read(7));
+  u16_nmStrt = word(EEPROM.read(0), EEPROM.read(1));
+  u16_ipStrt = word(EEPROM.read(2), EEPROM.read(3));
+  u16_slvStrt = word(EEPROM.read(4), EEPROM.read(5));
+  u16_mapStrt = word(EEPROM.read(6), EEPROM.read(7));
 
   Serial.println();
-  if (cMenu == 'a') {
-    Serial.print(F("nm_strt: "));
-    Serial.println(nm_strt);
+  if (c_menuChar == 'a') {
+    Serial.print(F("u16_nmStrt: "));
+    Serial.println(u16_nmStrt);
 
-    Serial.print(F("ip_strt: "));
-    Serial.println(ip_strt);
+    Serial.print(F("u16_ipStrt: "));
+    Serial.println(u16_ipStrt);
 
-    Serial.print(F("mtr_strt: "));
-    Serial.println(mtr_strt);
+    Serial.print(F("u16_slvStrt: "));
+    Serial.println(u16_slvStrt);
 
-    Serial.print(F("reg_strt: "));
-    Serial.println(reg_strt);
+    Serial.print(F("u16_mapStrt: "));
+    Serial.println(u16_mapStrt);
     Serial.println();
   }
 
-  if (cMenu == 'n' || cMenu == 'a') {
+  if (c_menuChar == 'n' || c_menuChar == 'a') {
     // Name:
     Serial.print(F("Name: "));
-    for (i = nm_strt; i < nm_strt + 31; i++) {
-      char c = EEPROM.read(i);
+    for (ii = u16_nmStrt; ii < u16_nmStrt + 31; ++ii) {
+      char c_dum = EEPROM.read(ii);
 
-      if (c == 0) {
+      if (c_dum == 0) {
         Serial.println();
         break;
       }
       else {
-        Serial.print(c);
+        Serial.print(c_dum);
       }
     }
   }
 
-  if (cMenu == 'i' || cMenu == 'a') {
+  if (c_menuChar == 'i' || c_menuChar == 'a') {
     // IP info
     Serial.print(F("MAC: "));
-    if (EEPROM.read(ip_strt) < 16) {
+    if (EEPROM.read(u16_ipStrt) < 16) {
       Serial.print('0');
     }
-    Serial.print(EEPROM.read(ip_strt), HEX);
-    for (i = 1; i < 6; i++) {
+    Serial.print(EEPROM.read(u16_ipStrt), HEX);
+    for (ii = 1; ii < 6; ++ii) {
       Serial.print(":");
-      if (EEPROM.read(ip_strt + i) < 16) {
+      if (EEPROM.read(u16_ipStrt + ii) < 16) {
         Serial.print('0');
       }
-      Serial.print(EEPROM.read(ip_strt + i), HEX);
+      Serial.print(EEPROM.read(u16_ipStrt + ii), HEX);
     }
     Serial.println();
 
     Serial.print(F("IP: "));
-    Serial.print(EEPROM.read(ip_strt + 6), DEC);
-    for (i = 1; i < 4; i++) {
+    Serial.print(EEPROM.read(u16_ipStrt + 6), DEC);
+    for (ii = 1; ii < 4; ++ii) {
       Serial.print(".");
-      Serial.print(EEPROM.read(ip_strt + 6 + i), DEC);
+      Serial.print(EEPROM.read(u16_ipStrt + 6 + ii), DEC);
     }
     Serial.println();
 
     Serial.print(F("Subnet Mask: "));
-    Serial.print(EEPROM.read(ip_strt + 10), DEC);
-    for (i = 1; i < 4; i++) {
+    Serial.print(EEPROM.read(u16_ipStrt + 10), DEC);
+    for (ii = 1; ii < 4; ++ii) {
       Serial.print(".");
-      Serial.print(EEPROM.read(ip_strt + 10 + i), DEC);
+      Serial.print(EEPROM.read(u16_ipStrt + 10 + ii), DEC);
     }
     Serial.println();
 
     Serial.print(F("Default Gateway: "));
-    Serial.print(EEPROM.read(ip_strt + 14), DEC);
-    for (i = 1; i < 4; i++) {
+    Serial.print(EEPROM.read(u16_ipStrt + 14), DEC);
+    for (ii = 1; ii < 4; ++ii) {
       Serial.print(".");
-      Serial.print(EEPROM.read(ip_strt + 14 + i), DEC);
+      Serial.print(EEPROM.read(u16_ipStrt + 14 + ii), DEC);
     }
     Serial.println();
   }
 
-  if (cMenu == 't' || cMenu == 'a') {
+  if (c_menuChar == 't' || c_menuChar == 'a') {
     // NTP server
     Serial.print(F("Use NTP Server?: "));
-    if (EEPROM.read(ip_strt + 18)) {
+    if (EEPROM.read(u16_ipStrt + 18)) {
       Serial.println(F("yes"));
     }
     else {
@@ -95,32 +95,32 @@ void read_eeprom(char cMenu) {
     }
 
     Serial.print(F("NTP Server IP: "));
-    Serial.print(EEPROM.read(ip_strt + 19), DEC);
-    for (i = 1; i < 4; i++) {
+    Serial.print(EEPROM.read(u16_ipStrt + 19), DEC);
+    for (ii = 1; ii < 4; ++ii) {
       Serial.print(".");
-      Serial.print(EEPROM.read(ip_strt + 19 + i), DEC);
+      Serial.print(EEPROM.read(u16_ipStrt + 19 + ii), DEC);
     }
     Serial.println('\n');
   }
 
-  if (cMenu == 's' || cMenu == 'a') {
+  if (c_menuChar == 's' || c_menuChar == 'a') {
     // 485/modbus stuff
 
     Serial.print(F("Baud rate: "));
-    baudrate = EEPROM.read(ip_strt + 23);
-    baudrate = (uint32_t)((baudrate << 16) | (EEPROM.read(ip_strt + 24) << 8) | (EEPROM.read(ip_strt + 25)));
-    Serial.println(baudrate, DEC);
+    u32_baudrate = EEPROM.read(u16_ipStrt + 23);
+    u32_baudrate = (uint32_t)((u32_baudrate << 16) | (EEPROM.read(u16_ipStrt + 24) << 8) | (EEPROM.read(u16_ipStrt + 25)));
+    Serial.println(u32_baudrate, DEC);
 
-    Serial.print(F("Modbus timeout: "));
-    timeout = word(EEPROM.read(ip_strt + 26), EEPROM.read(ip_strt + 27));
-    Serial.println(timeout, DEC);
+    Serial.print(F("Modbus u16_timeout: "));
+    u16_timeout = word(EEPROM.read(u16_ipStrt + 26), EEPROM.read(u16_ipStrt + 27));
+    Serial.println(u16_timeout, DEC);
     Serial.println();
   }
 
-  if (cMenu == 'r' || cMenu == 'a') {
+  if (c_menuChar == 'r' || c_menuChar == 'a') {
     // record stuff
     Serial.print(F("Record Data?: "));
-    if (EEPROM.read(nm_strt + 31)) {
+    if (EEPROM.read(u16_nmStrt + 31)) {
       Serial.println(F("yes"));
     }
     else {
@@ -128,7 +128,7 @@ void read_eeprom(char cMenu) {
     }
 
     Serial.print("Max number of meters to record: ");
-    Serial.println(EEPROM.read(nm_strt + 32), DEC);
+    Serial.println(EEPROM.read(u16_nmStrt + 32), DEC);
     Serial.println();
   }
   
@@ -136,7 +136,7 @@ void read_eeprom(char cMenu) {
   //// Scroll?
   //term_func(F("Continue? (Y)"), verFunc, F(""), F("Continue? (Y)"), inpt, "n", false, 0, false);
 
-  if (cMenu == 'm' || cMenu == 'a') {
+  if (c_menuChar == 'm' || c_menuChar == 'a') {
     // Meter Versions
 
     Serial.println(F("Meter library table:"));
@@ -185,44 +185,44 @@ void read_eeprom(char cMenu) {
 
     // meters listed to this gateway
     Serial.print(F("Meters listed in this gateway: "));
-    mtrs = EEPROM.read(mtr_strt);
-    if (mtrs > 20) {
-      mtrs = 0;
+    u8_numSlvs = EEPROM.read(u16_slvStrt);
+    if (u8_numSlvs > 20) {
+      u8_numSlvs = 0;
     }
-    Serial.println(mtrs, DEC);
+    Serial.println(u8_numSlvs, DEC);
     Serial.println();
 
-    for (j = 0; j < mtrs; j++) {
+    for (jj = 0; jj < u8_numSlvs; ++jj) {
       // Meter type
       Serial.print(F("Meter type: "));
-      Serial.print(EEPROM.read(mtr_strt + j * 9 + 1), DEC);
-      for (i = 1; i < 3; i++) {
+      Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 1), DEC);
+      for (ii = 1; ii < 3; ++ii) {
         Serial.print(".");
-        Serial.print(EEPROM.read(mtr_strt + j * 9 + 1 + i), DEC);
+        Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 1 + ii), DEC);
       }
       Serial.println();
 
       // Meter IP
-      if (EEPROM.read(mtr_strt + j * 9 + 4) == 0) {
+      if (EEPROM.read(u16_slvStrt + jj * 9 + 4) == 0) {
         Serial.println(F("Meter is connected via 485"));
       }
       else {
         Serial.print(F("Meter IP: "));
-        Serial.print(EEPROM.read(mtr_strt + j * 9 + 4), DEC);
-        for (i = 1; i < 4; i++) {
+        Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 4), DEC);
+        for (ii = 1; ii < 4; ++ii) {
           Serial.print(".");
-          Serial.print(EEPROM.read(mtr_strt + j * 9 + 4 + i), DEC);
+          Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 4 + ii), DEC);
         }
         Serial.println();
       }
 
       // Meter actual modbus id
       Serial.print(F("Actual Modbus ID: "));
-      Serial.println(EEPROM.read(mtr_strt + j * 9 + 8), DEC);
+      Serial.println(EEPROM.read(u16_slvStrt + jj * 9 + 8), DEC);
 
       // Meter virt ID
       Serial.print(F("Virtual Modbus ID: "));
-      Serial.println(EEPROM.read(mtr_strt + j * 9 + 9), DEC);
+      Serial.println(EEPROM.read(u16_slvStrt + jj * 9 + 9), DEC);
 
       Serial.println();
     }
@@ -235,22 +235,22 @@ void read_eeprom(char cMenu) {
     
   }
 
-  if (cMenu == 'l' || cMenu == 'a') {
+  if (c_menuChar == 'l' || c_menuChar == 'a') {
     // register library
     Serial.print(F("Number of libraries: "));
-    libs = EEPROM.read(reg_strt + 2);
-    Serial.println(libs, DEC);
+    u8_numMaps = EEPROM.read(u16_mapStrt + 2);
+    Serial.println(u8_numMaps, DEC);
     Serial.println();
 
-    for (i = 0; i < libs; i++) {
+    for (ii = 0; ii < u8_numMaps; ++ii) {
       Serial.print(F("Library number: "));
-      Serial.println(EEPROM.read(reg_strt + 5 + i * 4), DEC);
+      Serial.println(EEPROM.read(u16_mapStrt + 5 + ii * 4), DEC);
 
       Serial.print(F("Modbus function: "));
-      Serial.println(EEPROM.read(reg_strt + 6 + i * 4), DEC);
+      Serial.println(EEPROM.read(u16_mapStrt + 6 + ii * 4), DEC);
 
       Serial.print(F("Library index: "));
-      Serial.println(word(EEPROM.read(reg_strt + 3 + i * 4), EEPROM.read(reg_strt + 4 + i * 4)));
+      Serial.println(word(EEPROM.read(u16_mapStrt + 3 + ii * 4), EEPROM.read(u16_mapStrt + 4 + ii * 4)));
       Serial.println();
     }
   }

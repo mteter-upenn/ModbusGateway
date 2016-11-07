@@ -1,4 +1,4 @@
-uint16_t writeBlocks(uint16_t reg_strt) {
+uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   //uint16_t indMtrStrt;
   const uint8_t k_u8_numMaps(15);
   uint16_t u16_mapStart;
@@ -6,9 +6,9 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   //  EEPROM.write(bt_strt + 1, 1);
   //  EEPROM.write(bt_strt + 2, 0);
 
-  EEPROM.write(reg_strt + 0, highByte(reg_strt));  // THIS IS USELESS
-  EEPROM.write(reg_strt + 1, lowByte(reg_strt));  // address of meter addresses
-  EEPROM.write(reg_strt + 2, k_u8_numMaps);  // number of meters adjust when adding new meters AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  EEPROM.write(u16_mapIndStrt + 0, highByte(u16_mapIndStrt));  // THIS IS USELESS
+  EEPROM.write(u16_mapIndStrt + 1, lowByte(u16_mapIndStrt));  // address of meter addresses
+  EEPROM.write(u16_mapIndStrt + 2, k_u8_numMaps);  // number of meters adjust when adding new meters AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 
 
@@ -33,142 +33,142 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   // eaton power xpert 4000    #1
   //indMtrStrt -= 83;
   //meter1(indMtrStrt);
-  u16_mapStart = reg_strt + 3 + k_u8_numMaps * 4;
-  EEPROM.write(reg_strt + 3, highByte(u16_mapStart));  // 117 -> 146
-  EEPROM.write(reg_strt + 4, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 5, 1);  // meter number
-  EEPROM.write(reg_strt + 6, 3);  // function
+  u16_mapStart = u16_mapIndStrt + 3 + k_u8_numMaps * 4;
+  EEPROM.write(u16_mapIndStrt + 3, highByte(u16_mapStart));  // 117 -> 146
+  EEPROM.write(u16_mapIndStrt + 4, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 5, 1);  // meter number
+  EEPROM.write(u16_mapIndStrt + 6, 3);  // function
   u16_mapStart = meter1(u16_mapStart);
 
 // emon dmon    #2
   //indMtrStrt -= 61;
   //meter2(indMtrStrt);
-  EEPROM.write(reg_strt + 7, highByte(u16_mapStart));  // 95 -> 150
-  EEPROM.write(reg_strt + 8, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 9, 2);  // meter number
-  EEPROM.write(reg_strt + 10, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 7, highByte(u16_mapStart));  // 95 -> 150
+  EEPROM.write(u16_mapIndStrt + 8, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 9, 2);  // meter number
+  EEPROM.write(u16_mapIndStrt + 10, 3);  // function
   u16_mapStart = meter2(u16_mapStart);
 
 // ge epm 3720    #3
   //indMtrStrt -= 65;
   //meter3(indMtrStrt);
-  EEPROM.write(reg_strt + 11, highByte(u16_mapStart));  // 101 -> 150
-  EEPROM.write(reg_strt + 12, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 13, 3);  // meter number
-  EEPROM.write(reg_strt + 14, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 11, highByte(u16_mapStart));  // 101 -> 150
+  EEPROM.write(u16_mapIndStrt + 12, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 13, 3);  // meter number
+  EEPROM.write(u16_mapIndStrt + 14, 3);  // function
   u16_mapStart = meter3(u16_mapStart);
 
   // ge pqm    #4
   //indMtrStrt -= 0;
   //meter4(0);
-  EEPROM.write(reg_strt + 15, highByte(0));  // assume 400
-  EEPROM.write(reg_strt + 16, lowByte(0));
-  EEPROM.write(reg_strt + 17, 4);  // meter number
-  EEPROM.write(reg_strt + 18, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 15, highByte(0));  // assume 400
+  EEPROM.write(u16_mapIndStrt + 16, lowByte(0));
+  EEPROM.write(u16_mapIndStrt + 17, 4);  // meter number
+  EEPROM.write(u16_mapIndStrt + 18, 3);  // function
   //u16_mapStart = meter4(u16_mapStart);
 
 
   // siemens 9330, 9350, 9360    #5
   //indMtrStrt -= 71;
   //meter5(indMtrStrt);
-  EEPROM.write(reg_strt + 19, highByte(u16_mapStart));  // 103 -> 150
-  EEPROM.write(reg_strt + 20, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 21, 5);  // meter number
-  EEPROM.write(reg_strt + 22, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 19, highByte(u16_mapStart));  // 103 -> 150
+  EEPROM.write(u16_mapIndStrt + 20, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 21, 5);  // meter number
+  EEPROM.write(u16_mapIndStrt + 22, 3);  // function
   u16_mapStart = meter5(u16_mapStart);
 
 // siemens 9510, 9610    #6
   //indMtrStrt -= 84;
   //meter6(indMtrStrt);
-  EEPROM.write(reg_strt + 23, highByte(u16_mapStart));  // 126 -> 175
-  EEPROM.write(reg_strt + 24, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 25, 6);  // meter number
-  EEPROM.write(reg_strt + 26, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 23, highByte(u16_mapStart));  // 126 -> 175
+  EEPROM.write(u16_mapIndStrt + 24, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 25, 6);  // meter number
+  EEPROM.write(u16_mapIndStrt + 26, 3);  // function
   u16_mapStart = meter6(u16_mapStart);
 
 // squareD cm2350   #7
   //indMtrStrt -= 96;
   //meter7(indMtrStrt);
-  EEPROM.write(reg_strt + 27, highByte(u16_mapStart));  // 126 -> 175
-  EEPROM.write(reg_strt + 28, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 29, 7);  // meter number
-  EEPROM.write(reg_strt + 30, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 27, highByte(u16_mapStart));  // 126 -> 175
+  EEPROM.write(u16_mapIndStrt + 28, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 29, 7);  // meter number
+  EEPROM.write(u16_mapIndStrt + 30, 3);  // function
   u16_mapStart = meter7(u16_mapStart);
 
 // squareD pm710   #8
   //indMtrStrt -= 65;
   //meter8(indMtrStrt);
-  EEPROM.write(reg_strt + 31, highByte(u16_mapStart));  // 97 -> 150
-  EEPROM.write(reg_strt + 32, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 33, 8);  // meter number
-  EEPROM.write(reg_strt + 34, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 31, highByte(u16_mapStart));  // 97 -> 150
+  EEPROM.write(u16_mapIndStrt + 32, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 33, 8);  // meter number
+  EEPROM.write(u16_mapIndStrt + 34, 3);  // function
   u16_mapStart = meter8(u16_mapStart);
 
 // squareD micrologic a, p, h trip units    #9
   //indMtrStrt -= 86;
   //meter9(indMtrStrt);
-  EEPROM.write(reg_strt + 35, highByte(u16_mapStart));  // 116 -> 150
-  EEPROM.write(reg_strt + 36, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 37, 9);  // meter number
-  EEPROM.write(reg_strt + 38, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 35, highByte(u16_mapStart));  // 116 -> 150
+  EEPROM.write(u16_mapIndStrt + 36, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 37, 9);  // meter number
+  EEPROM.write(u16_mapIndStrt + 38, 3);  // function
   u16_mapStart = meter9(u16_mapStart);
 
 // squareD cm3350, cm4000 series, pm800 series    #10
   //indMtrStrt -= 82;
   //meter10(indMtrStrt);
-  EEPROM.write(reg_strt + 39, highByte(u16_mapStart));  // 111 -> 150
-  EEPROM.write(reg_strt + 40, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 41, 10);  // meter number
-  EEPROM.write(reg_strt + 42, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 39, highByte(u16_mapStart));  // 111 -> 150
+  EEPROM.write(u16_mapIndStrt + 40, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 41, 10);  // meter number
+  EEPROM.write(u16_mapIndStrt + 42, 3);  // function
   u16_mapStart = meter10(u16_mapStart);
 
 // Chilled water KEP    #11
   //indMtrStrt -= 54;
   //meter11(indMtrStrt);
-  EEPROM.write(reg_strt + 43, highByte(u16_mapStart));
-  EEPROM.write(reg_strt + 44, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 45, 11);  // meter number
-  EEPROM.write(reg_strt + 46, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 43, highByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 44, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 45, 11);  // meter number
+  EEPROM.write(u16_mapIndStrt + 46, 3);  // function
   u16_mapStart = meter11(u16_mapStart);
 
 // Steam KEP    #12
   //indMtrStrt -= 55;
   //meter12(indMtrStrt);
-  EEPROM.write(reg_strt + 47, highByte(u16_mapStart));  // 69 -> 100
-  EEPROM.write(reg_strt + 48, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 49, 12);  // meter number
-  EEPROM.write(reg_strt + 50, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 47, highByte(u16_mapStart));  // 69 -> 100
+  EEPROM.write(u16_mapIndStrt + 48, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 49, 12);  // meter number
+  EEPROM.write(u16_mapIndStrt + 50, 3);  // function
   u16_mapStart = meter12(u16_mapStart);
 
 // SquareD PM210  13
   //indMtrStrt -= 65;
   //meter13(indMtrStrt);
-  EEPROM.write(reg_strt + 51, highByte(u16_mapStart));  // 97 -> 150
-  EEPROM.write(reg_strt + 52, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 53, 13);  // meter number
-  EEPROM.write(reg_strt + 54, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 51, highByte(u16_mapStart));  // 97 -> 150
+  EEPROM.write(u16_mapIndStrt + 52, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 53, 13);  // meter number
+  EEPROM.write(u16_mapIndStrt + 54, 3);  // function
   u16_mapStart = meter13(u16_mapStart);
 
 // Siemens Pac4200/3200 14
   //indMtrStrt -= 95;
   //meter14(indMtrStrt);
-  EEPROM.write(reg_strt + 55, highByte(u16_mapStart));  //  -> 150
-  EEPROM.write(reg_strt + 56, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 57, 14);  // meter number
-  EEPROM.write(reg_strt + 58, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 55, highByte(u16_mapStart));  //  -> 150
+  EEPROM.write(u16_mapIndStrt + 56, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 57, 14);  // meter number
+  EEPROM.write(u16_mapIndStrt + 58, 3);  // function
   u16_mapStart = meter14(u16_mapStart);
 
 // Eaton Series PXM 2000 15
   //indMtrStrt -= 94;
   //meter15(indMtrStrt);
-  EEPROM.write(reg_strt + 59, highByte(u16_mapStart));  //  -> 150
-  EEPROM.write(reg_strt + 60, lowByte(u16_mapStart));
-  EEPROM.write(reg_strt + 61, 15);  // meter number
-  EEPROM.write(reg_strt + 62, 3);  // function
+  EEPROM.write(u16_mapIndStrt + 59, highByte(u16_mapStart));  //  -> 150
+  EEPROM.write(u16_mapIndStrt + 60, lowByte(u16_mapStart));
+  EEPROM.write(u16_mapIndStrt + 61, 15);  // meter number
+  EEPROM.write(u16_mapIndStrt + 62, 3);  // function
   u16_mapStart = meter15(u16_mapStart);
 
   Serial.print("Meter register library starts at: ");
-  Serial.println(reg_strt + 3 + k_u8_numMaps * 4);
+  Serial.println(u16_mapIndStrt + 3 + k_u8_numMaps * 4);
 
   return (u16_mapStart);  // returns end of map libraries
 
