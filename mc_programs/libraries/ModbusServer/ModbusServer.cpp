@@ -421,6 +421,24 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 	
 	if (u16_respLen > 0) {
 		Serial.println("message to laptop: ");
+		// for debugging
+		// u8a_respBuf[0] = 0;
+		// u8a_respBuf[1] = 0;
+		// u8a_respBuf[2] = 0;
+		// u8a_respBuf[3] = 0;
+		// u8a_respBuf[4] = 0;
+		// u8a_respBuf[5] = 7;
+		
+		// u8a_respBuf[6] = 101;
+		// u8a_respBuf[7] = 3;
+		// u8a_respBuf[8] = 4;
+		// u8a_respBuf[9] = 3;
+		// u8a_respBuf[10] = 190;
+		// u8a_respBuf[11] = 14;
+		// u8a_respBuf[12] = 208;
+		
+		// u16_respLen = 13;
+		// end debugging
 		for (int ii = 0; ii < u16_respLen; ++ii) {
 			Serial.print(u8a_respBuf[ii], DEC); Serial.print(", ");
 		}
@@ -428,6 +446,7 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 		
 		ec_client.write(u8a_respBuf, u16_respLen);
 		ec_client.flush();  // do anything?
+		
 	}
 }
 

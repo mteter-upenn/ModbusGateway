@@ -64,6 +64,8 @@ void handleServers() {
       if ((g_u16a_socketFlags[ii] & SockFlag_ESTABLISHED) && !(g_u16a_socketFlags[ii] & 
           SockFlag_CLIENT)) { // only look at sockets in use and aren't clients to slave devices
         if (g_eca_socks[ii].status() == SnSR::CLOSE_WAIT) { // other side closed socket
+          Serial.println("requestor closed connection");
+
           uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
           if (u8_mbReqInd < mbStack.k_u8_maxSize) { 
             if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // tcp used
@@ -249,15 +251,13 @@ void handleServers() {
       if (b_485avail) {
         u8_stkInd = mbStack.getNext485();
         if (u8_stkInd < mbStack.k_u8_maxSize) { // 255 is none in stack
+          mbStack[u8_stkInd].u8_flags |= MRFLAG_sentMsg;  // mark sent flag
 
           Serial.println("found this serial req in stack:");
           mbStack.printReqByInd(u8_stkInd);
 
           g_modbusServer.sendSerialRequest(mbStack[u8_stkInd]);  // SEND REQUEST
           // START TIMER, timer in ModbusServer class
-
-          //mbStack[u8_stkInd].b_sentReq = true;
-          mbStack[u8_stkInd].u8_flags |= MRFLAG_sentMsg;  // mark sent flag
 
           b_485avail = false;
         }
@@ -296,17 +296,14 @@ void handleServers() {
         if (ba_clientSocksAvail[ii - 6]) {  // if socket is available for use
           u8_stkInd = mbStack.getNextTcp();
           if (u8_stkInd < mbStack.k_u8_maxSize) {
-            Serial.print("found this tcp req in stack for socket "); Serial.println(ii, DEC);
-            mbStack.printReqByInd(u8_stkInd);
-
             mbStack[u8_stkInd].u8_flags |= (MRFLAG_sentMsg | (ii & 0xff));  // mark sent flag
             g_u16a_socketFlags[ii] = SockFlag_ESTABLISHED | SockFlag_CLIENT;
-            
+
+            Serial.print("found this tcp req in stack for socket "); Serial.println(ii, DEC);
+            mbStack.printReqByInd(u8_stkInd);
             
             // SEND REQUEST
             g_modbusServer.sendTcpRequest(g_eca_socks[ii], mbStack[u8_stkInd]);
-
-            
 
             // START TIMER
             ba_clientSocksAvail[ii - 6] = false;
