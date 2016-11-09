@@ -154,6 +154,9 @@ void read_eeprom(char c_menuChar) {
     Serial.println(F("|  GE EPM 5100                        |  0.2.1    |"));
     Serial.println(F("|  GE PQM                             |  4.1.0    |"));
     Serial.println(F("|-------------------------------------|-----------|"));
+    Serial.println(F("|  Schneider PM5300                   |  16.1.0   |"));
+    Serial.println(F("|  Schneider PM8000                   |  17.1.0   |"));
+    Serial.println(F("|-------------------------------------|-----------|"));
     Serial.println(F("|  Siemens 9200                       |  0.3.1    |"));
     Serial.println(F("|  Siemens 9330                       |  5.1.0    |"));
     Serial.println(F("|  Siemens 9340                       |  10.8.0   |"));

@@ -55,9 +55,10 @@ enum class FloatConv {
   MOD10K,           //   6
   MOD20K,           //   7
   MOD30K,           //   8
-  UINT64,           //   9
-  ENERGY,           //  10
-  DOUBLE,           //  11
+	INT64,            //   9
+  UINT64,           //  10
+  ENERGY,           //  11
+  DOUBLE,           //  12
   FLOAT_WS = 64,    //  64
 	//UINT16_WS,
 	//INT16_WS,
@@ -67,9 +68,10 @@ enum class FloatConv {
   MOD10K_WS,        //  70
   MOD20K_WS,        //  71
   MOD30K_WS,        //  72
-  UINT64_WS,        //  73
-  ENERGY_WS,        //  74
-  DOUBLE_WS,        //  75
+	INT64_WS,         //  73
+  UINT64_WS,        //  74
+  ENERGY_WS,        //  75
+  DOUBLE_WS,        //  76
 };
 
 uint16_t FloatConvEnumNumRegs(FloatConv dataType);

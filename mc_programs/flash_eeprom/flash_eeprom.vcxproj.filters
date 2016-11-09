@@ -34,6 +34,8 @@
     <None Include="read_eeprom.ino" />
     <None Include="term_func.ino" />
     <None Include="writeLibrary.ino" />
+    <None Include="meter16.ino" />
+    <None Include="meter17.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.flash_eeprom.vsarduino.h">

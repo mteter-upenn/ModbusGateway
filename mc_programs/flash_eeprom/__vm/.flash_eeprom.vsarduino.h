@@ -69,6 +69,8 @@ typedef void *__builtin_va_list;
 #include "meter13.ino"
 #include "meter14.ino"
 #include "meter15.ino"
+#include "meter16.ino"
+#include "meter17.ino"
 #include "read_eeprom.ino"
 #include "term_func.ino"
 #include "writeLibrary.ino"

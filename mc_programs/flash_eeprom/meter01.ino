@@ -64,7 +64,7 @@ uint16_t meter1(uint16_t u16_mapStart){
   EEPROM.write(++u16_grpStart, lowByte(4610));   // starting register
   EEPROM.write(++u16_grpStart, 38);              // skip bytes to data types
   // value types
-  EEPROM.write(++u16_grpStart, 1);
+  EEPROM.write(++u16_grpStart, 1);  // 4611
   EEPROM.write(++u16_grpStart, 2);
   EEPROM.write(++u16_grpStart, 3);
   EEPROM.write(++u16_grpStart, int8_t(-4));
@@ -96,7 +96,7 @@ uint16_t meter1(uint16_t u16_mapStart){
   EEPROM.write(++u16_grpStart, int8_t(-6));
   EEPROM.write(++u16_grpStart, 26);
   EEPROM.write(++u16_grpStart, 27);
-  EEPROM.write(++u16_grpStart, 28);
+  EEPROM.write(++u16_grpStart, 28);  // 4695
   // datatypes
   EEPROM.write(++u16_grpStart, FloatConv2Int8(FloatConv::FLOAT_WS));
   EEPROM.write(++u16_grpStart, 255);

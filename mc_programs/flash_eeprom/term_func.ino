@@ -348,7 +348,9 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
                             {3, 1, 0},
                             {0, 2, 1},
                             {4, 1, 0},
-                            {0, 3, 1},  // 10
+                            {16, 1, 0},  // 10
+                            {17, 1, 0},
+                            {0, 3, 1},
                             {5, 1, 0},
                             {10, 8, 0},
                             {5, 2, 0},
@@ -356,9 +358,9 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
                             {6, 1, 0},
                             {6, 2, 0},
                             {5, 4, 0},
-                            {14, 1, 0},
+                            {14, 1, 0},  // 20
                             {14, 2, 0},
-                            {7, 1, 0},  // 20
+                            {7, 1, 0},
                             {13, 1, 0},
                             {8, 1, 0},
                             {9, 1, 0},
@@ -366,9 +368,9 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
                             {9, 3, 0},
                             {10, 1, 0},
                             {10, 2, 0},
-                            {10, 3, 0},
+                            {10, 3, 0},  // 30
                             {10, 4, 0},
-                            {10, 5, 0},  // 30
+                            {10, 5, 0},
                             {10, 6, 0},
                             {10, 7, 0},
                             {11, 1, 0},
@@ -382,7 +384,9 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
     "GE EPM 3720",
     "GE EPM 5100",
     "GE PQM",
-    "Siemens 9200",  // 10
+    "Schneider PM5300",  // 10
+    "Schneider PM8000",
+    "Siemens 9200",
     "Siemens 9330",
     "Siemens 9340",
     "Siemens 9350",
@@ -390,21 +394,21 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
     "Siemens 9510",
     "Siemens 9610",
     "Siemens 9700",
-    "Siemens Sentron PAC 4200",
+    "Siemens Sentron PAC 4200",  // 20
     "Siemens Sentron PAC 3200",
-    "SquareD CM 2350",  // 20
-    "SquareD PM 210",
-    "SquareD PM 710",
+    "SquareD CM2350",
+    "SquareD PM210",
+    "SquareD PM710",
     "SquareD Micrologic A Trip Unit",
     "SquareD Micrologic P Trip Unit",
     "SquareD Micrologic H Trip Unit",
-    "SquareD CM 3350",
-    "SquareD CM 4000",
-    "SquareD CM 4250",
-    "SquareD PM 800",
-    "SquareD PM 820",  // 30
-    "SquareD PM 850",
-    "SquareD PM 870",
+    "SquareD CM3350",
+    "SquareD CM4000",
+    "SquareD CM4250",  // 30
+    "SquareD PM800",
+    "SquareD PM820",
+    "SquareD PM850",
+    "SquareD PM870",
     "Chilled Water KEP",
     "Steam KEP"};
 

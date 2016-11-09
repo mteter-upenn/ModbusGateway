@@ -119,9 +119,10 @@ The address of the map is determined by counting the bytes used in the previous 
 | MOD10K    |   6   |
 | MOD20K    |   7   |
 | MOD30K    |   8   |
-| UINT64    |   9   |
-| ENERGY    |  10   |
-| DOUBLE    |  11   |
+| INT64     |   9   |
+| UINT64    |  10   |
+| ENERGY    |  11   |
+| DOUBLE    |  12   |
 | FLOAT_WS  |  64   |
 | UINT16_WS | none  |
 | INT16_WS  | none  |
@@ -131,9 +132,10 @@ The address of the map is determined by counting the bytes used in the previous 
 | MOD10K_WS |  70   |
 | MOD20K_WS |  71   |
 | MOD30K_WS |  72   |
-| UINT64_WS |  73   |
-| ENERGY_WS |  74   |
-| DOUBLE_WS |  75   |
+| INT64_WS  |  73   |
+| UINT64_WS |  74   |
+| ENERGY_WS |  75   |
+| DOUBLE_WS |  76   |
   
 #### Desired Meter Values
 | ID:  | Collection types (elec):    | Collection types (stm/chw):    |
@@ -185,6 +187,8 @@ Those that start with a 0 are not currently stored in the EEPROM.
 |  GE EPM 3720                        |  3.1.0    |
 |  GE EPM 5100                        |  0.2.1    |
 |  GE PQM                             |  4.1.0    |
+|  Schneider PM5300                   |  16.1.0   |
+|  Schneider PM8000                   |  17.1.0   |
 |  Siemens 9200                       |  0.3.1    |
 |  Siemens 9330                       |  5.1.0    |
 |  Siemens 9340                       |  10.8.0   |
