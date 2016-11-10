@@ -1,6 +1,6 @@
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   //uint16_t indMtrStrt;
-  const uint8_t k_u8_numMaps(17);
+  const uint8_t k_u8_numMaps(16);
   uint16_t u16_mapStart;
   //  EEPROM.write(bt_strt, 2);  // current meter type  default is 2.1.0
   //  EEPROM.write(bt_strt + 1, 1);
@@ -175,11 +175,11 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   u16_mapStart = meter16(u16_mapStart);
 
   // Schneider PM8000 17
-  EEPROM.write(u16_mapIndStrt + 67, highByte(u16_mapStart));  //  -> 150
-  EEPROM.write(u16_mapIndStrt + 68, lowByte(u16_mapStart));
-  EEPROM.write(u16_mapIndStrt + 69, 17);  // meter number
-  EEPROM.write(u16_mapIndStrt + 70, 3);  // function
-  u16_mapStart = meter17(u16_mapStart);
+  //EEPROM.write(u16_mapIndStrt + 67, highByte(u16_mapStart));  //  -> 150
+  //EEPROM.write(u16_mapIndStrt + 68, lowByte(u16_mapStart));
+  //EEPROM.write(u16_mapIndStrt + 69, 17);  // meter number
+  //EEPROM.write(u16_mapIndStrt + 70, 3);  // function
+  //u16_mapStart = meter17(u16_mapStart);
 
 
   Serial.print("Meter register library starts at: ");

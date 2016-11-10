@@ -339,7 +339,8 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
   uint16_t u16_dum = 0;
   uint16_t ii, jj, kk;
   uint8_t u8a_mtrTyp[3];
-  uint8_t u8a_mtrLib[34][3] = { {0, 1, 1},  // 1
+  const uint8_t k_u8_numMtrs(36);
+  uint8_t u8a_mtrLib[k_u8_numMtrs][3] = { {0, 1, 1},  // 1
                             {15, 1, 0},
                             {0, 1, 3},
                             {0, 1, 4},
@@ -424,7 +425,7 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
     u8a_mtrTyp[jj] = u16_dum;
   }
 
-  for (jj = 0; jj < 34; ++jj) {
+  for (jj = 0; jj < k_u8_numMtrs; ++jj) {
     for (kk = 0; kk < 3; ++kk) {
       if (u8a_mtrTyp[kk] == u8a_mtrLib[jj][kk]) {
         if (kk == 2) {
@@ -449,7 +450,7 @@ bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
   }
 
   Serial.println(F("Meter options:"));
-  for (ii = 0; ii < 34; ++ii) {
+  for (ii = 0; ii < k_u8_numMtrs; ++ii) {
     Serial.print(cpa_mtrNames[ii]);
     Serial.print(", ");
     Serial.print(u8a_mtrLib[ii][0], DEC);

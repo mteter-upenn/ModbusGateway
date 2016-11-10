@@ -377,7 +377,7 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 			
 			mtrLibBlk.convertToFloat(u16a_interBuf, &u8a_respBuf[9], mbReq.u16_length);
 			
-			u16_respLen = 9 + u8_numBytes;
+			u16_respLen = 9 + u16_dumLgth * 2;
 		}
 		else {  // raw data is acceptable to pass back
 			if (mbReq.u8_func < 5) {  // read function

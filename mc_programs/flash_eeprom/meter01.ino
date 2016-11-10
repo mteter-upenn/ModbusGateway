@@ -73,7 +73,7 @@ uint16_t meter1(uint16_t u16_mapStart){
   EEPROM.write(++u16_grpStart, 11);
   EEPROM.write(++u16_grpStart, 12);
   EEPROM.write(++u16_grpStart, 13);
-  EEPROM.write(++u16_grpStart, 6);
+  EEPROM.write(++u16_grpStart, 6);//10
   EEPROM.write(++u16_grpStart, 7);
   EEPROM.write(++u16_grpStart, 8);
   EEPROM.write(++u16_grpStart, 9);
@@ -83,7 +83,7 @@ uint16_t meter1(uint16_t u16_mapStart){
   EEPROM.write(++u16_grpStart, 25);
   EEPROM.write(++u16_grpStart, int8_t(-2));
   EEPROM.write(++u16_grpStart, 29);
-  EEPROM.write(++u16_grpStart, int8_t(-6));
+  EEPROM.write(++u16_grpStart, int8_t(-6));//20
   EEPROM.write(++u16_grpStart, 14);
   EEPROM.write(++u16_grpStart, 15);
   EEPROM.write(++u16_grpStart, 16);
@@ -93,7 +93,7 @@ uint16_t meter1(uint16_t u16_mapStart){
   EEPROM.write(++u16_grpStart, 22);
   EEPROM.write(++u16_grpStart, 23);
   EEPROM.write(++u16_grpStart, 24);
-  EEPROM.write(++u16_grpStart, int8_t(-6));
+  EEPROM.write(++u16_grpStart, int8_t(-6));//30
   EEPROM.write(++u16_grpStart, 26);
   EEPROM.write(++u16_grpStart, 27);
   EEPROM.write(++u16_grpStart, 28);  // 4695

@@ -21,10 +21,10 @@ uint16_t meter16(uint16_t u16_mapStart) {
   EEPROM.write(u16_mapStart + 3, u8_numGrps);  // number of blocks;
   EEPROM.write(u16_mapStart + 4, highByte(u16_grpStart));
   EEPROM.write(u16_mapStart + 5, lowByte(u16_grpStart));
-  EEPROM.write(u16_mapStart + 6, highByte(u16_grpStart + ));
-  EEPROM.write(u16_mapStart + 7, lowByte(u16_grpStart + ));
-  EEPROM.write(u16_mapStart + 8, highByte(u16_grpStart + ));
-  EEPROM.write(u16_mapStart + 9, lowByte(u16_grpStart + ));
+  EEPROM.write(u16_mapStart + 6, highByte(u16_grpStart + 39));
+  EEPROM.write(u16_mapStart + 7, lowByte(u16_grpStart + 39));
+  EEPROM.write(u16_mapStart + 8, highByte(u16_grpStart + 51));
+  EEPROM.write(u16_mapStart + 9, lowByte(u16_grpStart + 51));
 
   // Block #1 - [1, 201, 128]
   EEPROM.write(u16_blkStart, highByte(2999));
@@ -73,50 +73,54 @@ uint16_t meter16(uint16_t u16_mapStart) {
 
   // New Group #1, +0
   EEPROM.write(u16_grpStart, 28);                 // number of values
-  EEPROM.write(++u16_grpStart, );              // number of registers
-  EEPROM.write(++u16_grpStart, highByte());  // starting register
-  EEPROM.write(++u16_grpStart, lowByte(1));   // starting register
-  EEPROM.write(++u16_grpStart, );              // skip bytes to data types
+  EEPROM.write(++u16_grpStart, 86);              // number of registers
+  EEPROM.write(++u16_grpStart, highByte(2999));  // starting register
+  EEPROM.write(++u16_grpStart, lowByte(2999));   // starting register
+  EEPROM.write(++u16_grpStart, 37);              // skip bytes to data types
                                                  // value types
-  EEPROM.write(++u16_grpStart, 6);
-  EEPROM.write(++u16_grpStart, 7);
-  EEPROM.write(++u16_grpStart, 8);
-  EEPROM.write(++u16_grpStart, 10);
-  EEPROM.write(++u16_grpStart, 11);
-  EEPROM.write(++u16_grpStart, 12);
   EEPROM.write(++u16_grpStart, 1);
   EEPROM.write(++u16_grpStart, 2);
   EEPROM.write(++u16_grpStart, 3);
-  EEPROM.write(++u16_grpStart, 22);
-  EEPROM.write(++u16_grpStart, 23);
-  EEPROM.write(++u16_grpStart, 24);
+  EEPROM.write(++u16_grpStart, int8_t(-4));
+  EEPROM.write(++u16_grpStart, 4);
+  EEPROM.write(++u16_grpStart, int8_t(-8));//10
+  EEPROM.write(++u16_grpStart, 10);
+  EEPROM.write(++u16_grpStart, 11);
+  EEPROM.write(++u16_grpStart, 12);
+  EEPROM.write(++u16_grpStart, 13);
+  EEPROM.write(++u16_grpStart, 6);
+  EEPROM.write(++u16_grpStart, 7);
+  EEPROM.write(++u16_grpStart, 8);
+  EEPROM.write(++u16_grpStart, int8_t(-2));
+  EEPROM.write(++u16_grpStart, 9);
+  EEPROM.write(++u16_grpStart, int8_t(-16));//20
   EEPROM.write(++u16_grpStart, 14);
   EEPROM.write(++u16_grpStart, 15);
   EEPROM.write(++u16_grpStart, 16);
+  EEPROM.write(++u16_grpStart, 17);
   EEPROM.write(++u16_grpStart, 18);
   EEPROM.write(++u16_grpStart, 19);
   EEPROM.write(++u16_grpStart, 20);
+  EEPROM.write(++u16_grpStart, 21);
+  EEPROM.write(++u16_grpStart, 22);
+  EEPROM.write(++u16_grpStart, 23);//30
+  EEPROM.write(++u16_grpStart, 24);
+  EEPROM.write(++u16_grpStart, 25);
   EEPROM.write(++u16_grpStart, 26);
   EEPROM.write(++u16_grpStart, 27);
   EEPROM.write(++u16_grpStart, 28);
-  EEPROM.write(++u16_grpStart, int8_t(-14));
-  EEPROM.write(++u16_grpStart, 9);
-  EEPROM.write(++u16_grpStart, 13);
-  EEPROM.write(++u16_grpStart, 4);
-  EEPROM.write(++u16_grpStart, 25);
-  EEPROM.write(++u16_grpStart, 17);
-  EEPROM.write(++u16_grpStart, 21);
   EEPROM.write(++u16_grpStart, 29);
+  
   // datatypes
-  EEPROM.write(++u16_grpStart, FloatConv2Int8(FloatConv::FLOAT_WS));
+  EEPROM.write(++u16_grpStart, FloatConv2Int8(FloatConv::FLOAT_WS));//37
   EEPROM.write(++u16_grpStart, 255);
 
 
   // New Group #2, +36
   EEPROM.write(++u16_grpStart, 3);               // number of values
   EEPROM.write(++u16_grpStart, 36);              // number of registers
-  EEPROM.write(++u16_grpStart, highByte(801));  // starting register
-  EEPROM.write(++u16_grpStart, lowByte(801));   // starting register
+  EEPROM.write(++u16_grpStart, highByte(3211));  // starting register
+  EEPROM.write(++u16_grpStart, lowByte(3211));   // starting register
   EEPROM.write(++u16_grpStart, 10);              // skip bytes to data types
                                                  // value types
   EEPROM.write(++u16_grpStart, 30);
@@ -125,7 +129,7 @@ uint16_t meter16(uint16_t u16_mapStart) {
   EEPROM.write(++u16_grpStart, int8_t(-12));
   EEPROM.write(++u16_grpStart, 32);
   // datatypes
-  EEPROM.write(++u16_grpStart, FloatConv2Int8(FloatConv::DOUBLE_WS));
+  EEPROM.write(++u16_grpStart, FloatConv2Int8(FloatConv::INT64_WS));
   EEPROM.write(++u16_grpStart, 255);
 
 

@@ -13,6 +13,8 @@ uint16_t FloatConvEnumNumRegs(FloatConv dataType) {
 		case FloatConv::MOD20K_WS:
 			// return (m_u16_numRegs / 3);
 			return 3;
+		case FloatConv::INT64:
+		case FloatConv::INT64_WS:
 		case FloatConv::UINT64:
 		case FloatConv::UINT64_WS:
 		case FloatConv::MOD30K:
@@ -51,12 +53,14 @@ int8_t FloatConv2Int8(FloatConv dataType){
 			return 7;
 		case FloatConv::MOD30K:
 			return 8;
-		case FloatConv::UINT64:
+		case FloatConv::INT64:
 			return 9;
-		case FloatConv::ENERGY:
+		case FloatConv::UINT64:
 			return 10;
-		case FloatConv::DOUBLE:
+		case FloatConv::ENERGY:
 			return 11;
+		case FloatConv::DOUBLE:
+			return 12;
 		case FloatConv::FLOAT_WS:
 			return 64;
 		case FloatConv::UINT32_WS:
@@ -71,12 +75,14 @@ int8_t FloatConv2Int8(FloatConv dataType){
 			return 71;
 		case FloatConv::MOD30K_WS:
 			return 72;
-		case FloatConv::UINT64_WS:
+		case FloatConv::INT64_WS:
 			return 73;
-		case FloatConv::ENERGY_WS:
+		case FloatConv::UINT64_WS:
 			return 74;
-		case FloatConv::DOUBLE_WS:
+		case FloatConv::ENERGY_WS:
 			return 75;
+		case FloatConv::DOUBLE_WS:
+			return 76;
 		default:
 			return 0;
 	}
@@ -105,12 +111,14 @@ uint8_t FloatConv2Uint8(FloatConv dataType) {
 			return 7;
 		case FloatConv::MOD30K:
 			return 8;
-		case FloatConv::UINT64:
+		case FloatConv::INT64:
 			return 9;
-		case FloatConv::ENERGY:
+		case FloatConv::UINT64:
 			return 10;
-		case FloatConv::DOUBLE:
+		case FloatConv::ENERGY:
 			return 11;
+		case FloatConv::DOUBLE:
+			return 12;
 		case FloatConv::FLOAT_WS:
 			return 64;
 		case FloatConv::UINT32_WS:
@@ -125,12 +133,14 @@ uint8_t FloatConv2Uint8(FloatConv dataType) {
 			return 71;
 		case FloatConv::MOD30K_WS:
 			return 72;
-		case FloatConv::UINT64_WS:
+		case FloatConv::INT64_WS:
 			return 73;
-		case FloatConv::ENERGY_WS:
+		case FloatConv::UINT64_WS:
 			return 74;
-		case FloatConv::DOUBLE_WS:
+		case FloatConv::ENERGY_WS:
 			return 75;
+		case FloatConv::DOUBLE_WS:
+			return 76;
 		default:
 			return 0;
 	}
@@ -160,10 +170,12 @@ FloatConv Int8_2_FloatConv(int8_t s8_dataType){
 		case 8:
 			return FloatConv::MOD30K;
 		case 9:
-			return FloatConv::UINT64;
+			return FloatConv::INT64;
 		case 10:
-			return FloatConv::ENERGY;
+			return FloatConv::UINT64;
 		case 11:
+			return FloatConv::ENERGY;
+		case 12:
 			return FloatConv::DOUBLE;
 		case 64:
 			return FloatConv::FLOAT_WS;
@@ -180,10 +192,12 @@ FloatConv Int8_2_FloatConv(int8_t s8_dataType){
 		case 72:
 			return FloatConv::MOD30K_WS;
 		case 73:
-			return FloatConv::UINT64_WS;
+			return FloatConv::INT64_WS;
 		case 74:
-			return FloatConv::ENERGY_WS;
+			return FloatConv::UINT64_WS;
 		case 75:
+			return FloatConv::ENERGY_WS;
+		case 76:
 			return FloatConv::DOUBLE_WS;
 		default:
 			return FloatConv::FLOAT;

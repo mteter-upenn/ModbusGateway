@@ -97,6 +97,8 @@ void MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint8_t *const u8kp_da
 
 	u16_regMult = FloatConvEnumNumRegs(m_reqRegDataType);
 	u16_numReqVals = u16_numRegs / u16_regMult;
+	// Serial.print(u16_numReqVals, DEC); Serial.print(", "); Serial.print(u16_numRegs, DEC); Serial.print(", ");
+	// Serial.println(u16_regMult);
 	
 	for (int ii = 0, jj = 0; ii < u16_numReqVals; ++ii, jj += 2) {
 		u16_reg = m_u16_reqReg + ii * u16_regMult;
@@ -141,6 +143,8 @@ bool MeterLibBlocks::adjFloatRegsToActualRegs(uint16_t u16_unadjLgth, uint16_t &
 			break;
 		case FloatConv::MOD30K:  // m30k
 		case FloatConv::MOD30K_WS:  // m30k
+		case FloatConv::INT64:  // s64
+		case FloatConv::INT64_WS:  // s64
 		case FloatConv::UINT64:  // u64
 		case FloatConv::UINT64_WS:  // u64
 		case FloatConv::ENERGY:  // engy
@@ -174,6 +178,8 @@ bool MeterLibBlocks::adjActualRegsToFloatRegs(uint16_t u16_unadjLgth, uint16_t &
 			break;
 		case FloatConv::MOD30K:  // m30k
 		case FloatConv::MOD30K_WS:  // m30k
+		case FloatConv::INT64:  // s64
+		case FloatConv::INT64_WS:  // s64
 		case FloatConv::UINT64:  // u64
 		case FloatConv::UINT64_WS:  // u64
 		case FloatConv::ENERGY:  // engy
@@ -673,6 +679,56 @@ float g_convertToFloat(const uint16_t *const k_u16kp_reg, FloatConv regDataType)
 				f_regVal *= (-1);
 			}
 			return f_regVal;
+			break;
+		}
+		case FloatConv::INT64: // u64 to float
+		case FloatConv::INT64_WS: { // u64 to float
+			// union cnvtUnion {
+				// uint16_t u16[2];
+				// int32_t s32;
+			// } int2s32;
+			
+			// if (regDataType == FloatConv::INT32_WS) {
+				// int2s32.u16[1] = k_u16kp_reg[0];
+				// int2s32.u16[0] = k_u16kp_reg[1];
+			// }
+			// else{  // no ws, no adjustments needed
+				// int2s32.u16[0] = k_u16kp_reg[0];
+				// int2s32.u16[1] = k_u16kp_reg[1];
+			// }
+			// return float(int2s32.s32);
+			// break;
+		
+			// float f_regVal;
+			
+			union cnvtUnion {
+				uint16_t u16[4];
+				int64_t s64;
+			} int2s64;
+			
+			if (regDataType == FloatConv::INT64_WS) {
+				int2s64.u16[3] = k_u16kp_reg[0];
+				int2s64.u16[2] = k_u16kp_reg[1];
+				int2s64.u16[1] = k_u16kp_reg[2];
+				int2s64.u16[0] = k_u16kp_reg[3];
+				// f_regVal = float(k_u16kp_reg[3]);
+				// f_regVal += float(k_u16kp_reg[2]) * pow(2.0, 16.0);
+				// f_regVal += float(k_u16kp_reg[1]) * pow(2.0, 32.0);
+				// f_regVal += float(k_u16kp_reg[0]) * pow(2.0, 48.0);
+			}
+			else{  // no ws, no adjustments needed
+				int2s64.u16[0] = k_u16kp_reg[0];
+				int2s64.u16[1] = k_u16kp_reg[1];
+				int2s64.u16[2] = k_u16kp_reg[2];
+				int2s64.u16[3] = k_u16kp_reg[3];
+				// f_regVal = float(k_u16kp_reg[0]);
+				// f_regVal += float(k_u16kp_reg[1]) * pow(2.0, 16.0);
+				// f_regVal += float(k_u16kp_reg[2]) * pow(2.0, 32.0);
+				// f_regVal += float(k_u16kp_reg[3]) * pow(2.0, 48.0);
+			}
+			
+			return float(int2s64.s64);
+			// return f_regVal;
 			break;
 		}
 		case FloatConv::UINT64: // u64 to float

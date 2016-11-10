@@ -59,6 +59,7 @@ enum class FloatConv {
   UINT64,           //  10
   ENERGY,           //  11
   DOUBLE,           //  12
+	
   FLOAT_WS = 64,    //  64
 	//UINT16_WS,
 	//INT16_WS,
