@@ -1,3 +1,63 @@
+int16_t readHttp(uint8_t u8_socket, char ca_httpReq[gk_u16_requestLineSize]) {
+  char ca_httpFirstLine[gk_u16_requestLineSize] = { 0 };
+  //char ca_httpFullReq[gk_u16_requestBuffSize] = { 0 };
+
+  uint16_t u16_lenRead;
+  uint32_t u32_msgRecvTime;
+
+  u16_lenRead = g_eca_socks[u8_socket].read((uint8_t*)ca_httpFirstLine, gk_u16_requestLineSize - 1);
+
+  u32_msgRecvTime = millis();
+  while (u16_lenRead < gk_u16_requestLineSize - 1) {  // make sure enough is read
+    uint32_t k_u32_mesgTimeout(50);
+
+    u16_lenRead += g_eca_socks[u8_socket].read((uint8_t*)ca_httpFirstLine + u16_lenRead, gk_u16_requestLineSize - u16_lenRead - 1);
+
+    if ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout) {  // stop trying to read message after 50 ms - assume it's never coming
+      //g_eca_socks[u8_socket].stop();
+      //Ethernet52.cleanSockets(80);
+      return 0;
+    }
+  }
+  ca_httpFirstLine[gk_u16_requestLineSize - 1] = 0;
+
+  if (strncmp(ca_httpFirstLine, "GET", 3) == 0) {
+    for (int ii = 4; ii < gk_u16_requestLineSize; ++ii) {
+      if (ca_httpFirstLine[ii] == 32) {
+        ca_httpFirstLine[ii] = 0;
+        break;
+      }
+      else if (ca_httpFirstLine[ii] == 0) {
+        break;
+      }
+    }
+    strcpy(ca_httpReq, ca_httpFirstLine + 4);  // account for "GET "
+    return SockFlag_GET;
+  }
+  else if (strncmp(ca_httpFirstLine, "POST", 4) == 0) {
+    if (strstr(ca_httpFirstLine, "setup.htm")) {
+      // write to eeprom
+      getPostSetupData(g_eca_socks[u8_socket]);  // reads and stores POST data to EEPROM
+    }
+
+    
+    for (int ii = 5; ii < gk_u16_requestLineSize; ++ii) {
+      if (ca_httpFirstLine[ii] == 32) {
+        ca_httpFirstLine[ii] = 0;
+        break;
+      }
+      else if (ca_httpFirstLine[ii] == 0) {
+        break;
+      }
+    }
+    strcpy(ca_httpReq, ca_httpFirstLine + 5);
+    return SockFlag_POST;
+  }
+  
+}
+
+
+
 void handle_http(uint8_t u8_socket) {
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
@@ -14,7 +74,7 @@ void handle_http(uint8_t u8_socket) {
       uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
       char *cp_meterInd;                                     // index of 'METER' in GET request
       char ca_firstLine[gk_u16_requestLineSize] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
-      char ca_remHeader[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
+      //char ca_remHeader[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
 
       if (g_eca_socks[u8_socket].available()) {   // client data available to read
         char *cp_dumPtr;
@@ -41,7 +101,7 @@ void handle_http(uint8_t u8_socket) {
 #endif
 
         ca_firstLine[gk_u16_requestLineSize - 1] = 0;  // this will replace a character, though I don't think it is important
-        ca_remHeader[gk_u16_requestBuffSize - 1] = 0;
+        //ca_remHeader[gk_u16_requestBuffSize - 1] = 0;
 
         //Serial.println(ca_firstLine);
 
@@ -261,19 +321,18 @@ void handle_http(uint8_t u8_socket) {
 // POST http
         else if (strstr(ca_firstLine, "POST") != nullptr) {
           if (strstr(ca_firstLine, "setup.htm")) {
-            digitalWrite(gk_s16_epWriteLed, HIGH);
-            getPostSetupData(g_eca_socks[u8_socket], ca_remHeader);  // reads and stores POST data to EEPROM
-            digitalWrite(gk_s16_epWriteLed, LOW);
+            getPostSetupData(g_eca_socks[u8_socket]);  // reads and stores POST data to EEPROM
 
+            // no reason for this since files are rewritten on boot
             // rewrite xml files
-            digitalWrite(gk_s16_sdWriteLed, HIGH);
-            if (strncmp(ca_firstLine, "POST /mtrsetup.htm", 18)) {
-              writeMtrSetupFile();
-            }
-            else if (strncmp(ca_firstLine, "POST /gensetup.htm", 18)) {
-              writeGenSetupFile();
-            }
-            digitalWrite(gk_s16_sdWriteLed, LOW);
+            //digitalWrite(gk_s16_sdWriteLed, HIGH);
+            //if (strncmp(ca_firstLine, "POST /mtrsetup.htm", 18)) {
+            //  writeMtrSetupFile();
+            //}
+            //else if (strncmp(ca_firstLine, "POST /gensetup.htm", 18)) {
+            //  writeGenSetupFile();
+            //}
+            //digitalWrite(gk_s16_sdWriteLed, LOW);
 
             sendPostResp(g_eca_socks[u8_socket]);
          

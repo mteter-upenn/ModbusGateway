@@ -154,7 +154,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
 }
 
 
-void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr) {
+void getPostSetupData(EthernetClient52 &ec_client) {
   char *cp_paramStart, *cp_paramEnd, *cp_argStart, *cp_argEnd;        // pointers used for setting barriers around values and identifiers
   char *cp_iterPtr;                                        // dummy pointer for loops
   uint8_t u8_dum, u8_mtrInd;
@@ -165,7 +165,9 @@ void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr) {
   uint16_t u16_postLen;                                    // length of message given in header
   uint16_t u16_totLenRead;                                     // length of message actually in headHttp
   char *cp_postMsgPtr;                                   // pointer to beginning of message
+  char cp_httpHdr[gk_u16_requestBuffSize] = { 0 };
 
+  cp_httpHdr[gk_u16_requestBuffSize - 1] = 0;
   cp_postMsgPtr = preprocPost(ec_client, cp_httpHdr, u16_postLen);     // get length of post message and place pointer at its start
 
   u16_totLenRead = strlen(cp_httpHdr) - (cp_postMsgPtr - cp_httpHdr);

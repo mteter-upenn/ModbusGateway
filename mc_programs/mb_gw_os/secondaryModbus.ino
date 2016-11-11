@@ -31,28 +31,28 @@ bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meter
 
 // checks if meter is connected via 485 (false) or ethernet (true)
 // also assigns the meter type
-bool isMeterEth(uint8_t u8a_clientIp[4], uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId) {
-  uint8_t u8_numMeters;
-
-  u8_numMeters = EEPROM.read(g_u16_mtrBlkStart);
-  
-  for(int ii = 0; ii < u8_numMeters; ++ii){
-    if (u8_virtId == g_u8a_slaveVids[ii]){
-      u8_trueId = g_u8a_slaveIds[ii];
-      if (EEPROM.read(ii * 9 + 4 + g_u16_mtrBlkStart) == 0){
-        u8_meterType = EEPROM.read(ii * 9 + 1 + g_u16_mtrBlkStart);
-        return false;  // no ip addr associated with meter
-      }
-      else{
-        for (int jj = 0; jj < 4; ++jj){
-          u8a_clientIp[jj] = EEPROM.read(ii * 9 + jj + 4 + g_u16_mtrBlkStart);
-        }
-        u8_meterType = EEPROM.read(ii * 9 + 1 + g_u16_mtrBlkStart);
-        return true;  // found ip address associated with meter
-      }
-    }
-  }
-  u8_meterType = 0;  // meters without mapped registers are type 0
-  return false;  
-}
+//bool isMeterEth(uint8_t u8a_clientIp[4], uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId) {
+//  uint8_t u8_numMeters;
+//
+//  u8_numMeters = EEPROM.read(g_u16_mtrBlkStart);
+//  
+//  for(int ii = 0; ii < u8_numMeters; ++ii){
+//    if (u8_virtId == g_u8a_slaveVids[ii]){
+//      u8_trueId = g_u8a_slaveIds[ii];
+//      if (EEPROM.read(ii * 9 + 4 + g_u16_mtrBlkStart) == 0){
+//        u8_meterType = EEPROM.read(ii * 9 + 1 + g_u16_mtrBlkStart);
+//        return false;  // no ip addr associated with meter
+//      }
+//      else{
+//        for (int jj = 0; jj < 4; ++jj){
+//          u8a_clientIp[jj] = EEPROM.read(ii * 9 + jj + 4 + g_u16_mtrBlkStart);
+//        }
+//        u8_meterType = EEPROM.read(ii * 9 + 1 + g_u16_mtrBlkStart);
+//        return true;  // found ip address associated with meter
+//      }
+//    }
+//  }
+//  u8_meterType = 0;  // meters without mapped registers are type 0
+//  return false;  
+//}
 

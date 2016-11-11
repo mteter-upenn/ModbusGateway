@@ -34,9 +34,9 @@ enum SockFlag {  // 16 bit flag,  is this actually 32 bit?
   SockFlag_MB485 =       0x0008,  // 8,    modbus device connected via 485 (local)
   SockFlag_MBTCP =       0x0010,  // 16,   modbus device connected via ethernet (not local)
   SockFlag_READ_REQ =    0x0020,  // 32,   initial message from client
-  SockFlag_CLIENT =      0x0040   // 64,   high if gateway acting as client to tcp slave
-  //SockFlag_SENT_MSG =    0x0040,  // 64,   relay message to modbus device
-  //SockFlag_READ_MSG2 =   0x0080,  // 128,  return message from modbus device
+  SockFlag_CLIENT =      0x0040,  // 64,   high if gateway acting as client to tcp slave
+  SockFlag_GET =         0x0080,  // 128,  GET http request 
+  SockFlag_POST =        0x0100,  // 256,  POST http request
 
 };
 

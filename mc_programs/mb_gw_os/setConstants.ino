@@ -59,6 +59,8 @@ void setConstants() {
 void writeGenSetupFile(){
   File webFile;
 
+  digitalWrite(gk_s16_sdWriteLed, HIGH);
+
   SD.remove("gensetup.xml");
   webFile = SD.open("gensetup.xml", FILE_WRITE);
   
@@ -151,11 +153,14 @@ void writeGenSetupFile(){
   webFile.print(F("</to>"));
   webFile.flush();
   webFile.close();
+  digitalWrite(gk_s16_sdWriteLed, LOW);
 }
 
 
 void writeMtrSetupFile(){
   File webFile;
+
+  digitalWrite(gk_s16_sdWriteLed, HIGH);
 
   SD.remove("mtrsetup.xml");
   webFile = SD.open("mtrsetup.xml", FILE_WRITE);
@@ -195,5 +200,7 @@ void writeMtrSetupFile(){
   
   webFile.flush();
   webFile.close();
+
+  digitalWrite(gk_s16_sdWriteLed, LOW);
 }
 

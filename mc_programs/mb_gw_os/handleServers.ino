@@ -10,7 +10,12 @@ void handleServers() {
   ModbusStack mbStack;
   const uint32_t k_u32_mbTcpTimeout(3000);              // timeout for device to hold on to tcp connection after modbus request
   uint8_t u8a_mbSrtBytes[8][2];
-
+  char ca_httpRequest[4][gk_u16_requestLineSize] = { {0},{ 0 },{ 0 },{ 0 } };
+  
+  const int k_i_maxNumElecVals(32);
+  const int k_i_maxNumStmChwVals(10);
+  float fa_liveXmlData[4][32];
+  int8_t s8a_dataFlags[k_i_maxNumElecVals];
 
   while (!b_allFreeSocks) {
     b_allFreeSocks = true;  // set true, if anything is active, set false to avoid escape

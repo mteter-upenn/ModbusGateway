@@ -149,13 +149,13 @@ void liveXML(EthernetClient52 &ec_client);
 // tertiaryHTTP - POST related functions
 void sendPostResp(EthernetClient52 &ec_client);
 char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_postLen);
-void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr);
+void getPostSetupData(EthernetClient52 &ec_client);
 // handleModbus
 uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen, bool b_byteSwap);
 void handle_modbus(bool b_idleHttp);
 // secondaryModbus
 bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meterType);
-bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId);
+//bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId);
 // setConstants
 void setConstants(void);
 void writeGenSetupFile(void);

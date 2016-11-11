@@ -28,13 +28,13 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
     u8_mtrId = u8a_mbReq[6];  // let id given by incoming packet be default, it will change if it matches with something on the list in isMeterEth
     // search for slave id in eeprom, if there check if ip exists
     // isMeterEth changes u8_mtrType and u8_mtrId
-    if (isMeterEth(u8a_clientIp, u8_mtrVid, u8_mtrType, u8_mtrId)){  // isMeterEth set g_u8a_clientIP
-      //g_mm_node.setSerialEthernet(false);  // <--false means ethernet
-      //g_mm_node.setClientIP(u8a_clientIp);
-    }
-    else{
-      //g_mm_node.setSerialEthernet(true);  // true means serial
-    }
+    //if (isMeterEth(u8a_clientIp, u8_mtrVid, u8_mtrType, u8_mtrId)){  // isMeterEth set g_u8a_clientIP
+    //  //g_mm_node.setSerialEthernet(false);  // <--false means ethernet
+    //  //g_mm_node.setClientIP(u8a_clientIp);
+    //}
+    //else{
+    //  //g_mm_node.setSerialEthernet(true);  // true means serial
+    //}
     
     //g_mm_node.setSlave(u8_mtrId);
     
