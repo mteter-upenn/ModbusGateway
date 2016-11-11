@@ -57,11 +57,11 @@ void handle_http(uint8_t u8_socket) {
               sendWebFile(g_eca_socks[u8_socket], "/images/logo_let.gif", FileType::GIF);  // only gif available
 
               // assuming gif is last request and reset is required, reset
-              if (g_b_reset) {
-                g_eca_socks[u8_socket].stop();
-                resetArd();  // this will restart the gateway
-                return;  // this should never fire
-              }
+              //if (g_b_reset) {
+              //  g_eca_socks[u8_socket].stop();
+              //  resetArd();  // this will restart the gateway
+              //  return;  // this should never fire
+              //}
               break;
             }
 // html requests
@@ -131,13 +131,13 @@ void handle_http(uint8_t u8_socket) {
               else if (strncmp(ca_firstLine, "GET /reset.htm", 14) == 0) {
                 sendWebFile(g_eca_socks[u8_socket], "/reset.htm", FileType::HTML);
               }
-              else if (strncmp(ca_firstLine, "GET /redirect.htm", 17) == 0) {
-                sendWebFile(g_eca_socks[u8_socket], "/rdct1.htm", FileType::HTML);
-                sendIP(g_eca_socks[u8_socket]);
-                sendWebFile(g_eca_socks[u8_socket], "/rdct2.htm", FileType::NONE);
+              //else if (strncmp(ca_firstLine, "GET /redirect.htm", 17) == 0) {
+              //  sendWebFile(g_eca_socks[u8_socket], "/rdct1.htm", FileType::HTML);
+              //  sendIP(g_eca_socks[u8_socket]);
+              //  sendWebFile(g_eca_socks[u8_socket], "/rdct2.htm", FileType::NONE);
 
-                g_b_reset = true;  // must wait for css and gif requests before restarting
-              }
+              //  //g_b_reset = true;  // must wait for css and gif requests before restarting
+              //}
               else {
                 sendWebFile(g_eca_socks[u8_socket], "/nopage.htm", FileType::HTML);
               }
@@ -178,6 +178,14 @@ void handle_http(uint8_t u8_socket) {
               else if (strncmp(ca_firstLine, "GET /info.xml", 13) == 0) {
                 sendWebFile(g_eca_socks[u8_socket], "/mtrsetup.xml", FileType::XML);
                 sendXmlEnd(g_eca_socks[u8_socket], XmlFile::INFO);
+              }
+              else if (strncmp(ca_firstLine, "GET /restart.xml", 13) == 0) {
+                sendWebFile(g_eca_socks[u8_socket], "/gensetup.xml", FileType::XML);
+                sendXmlEnd(g_eca_socks[u8_socket], XmlFile::GENERAL);
+
+                g_eca_socks[u8_socket].stop();
+                resetArd();  // this will restart the gateway
+                return;  // this should never fire
               }
               else {  // could not find xml file
                 send404(g_eca_socks[u8_socket]);  // handles http in function

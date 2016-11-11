@@ -3,7 +3,61 @@
 	<head>
 	  <title>Reset Gateway</title>
 	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
-	  <link rel="stylesheet" type="text/css" href="/ep_style.css">
+	  <link rel="stylesheet" type="text/css" href="ep_style.css">
+		
+		<script>
+			var tickDown;
+			var xmlHome = "";
+			
+			function startTimer() {
+				tickDown = setInterval(function(){tickP()}, 1000);
+				setTimeout(function(){redirect()}, 5000);
+			}
+			
+			function goHome(newHome){
+				tickDown = setInterval(function(){tickP()}, 1000);
+				setTimeout(function(){redirect(newHome)}, 5000);
+				
+			};
+			
+			function tickP() {
+				var t = parseInt(document.getElementById("rdct").innerHTML);
+				document.getElementById("rdct").innerHTML = t - 1;
+			};
+			
+			function redirect() {
+				clearInterval(tickDown);
+				if (xmlHome === "") {
+					document.getElementById("subP").innerHTML = "Restart request sent.  No new ip returned by gateway.";
+				}
+				else {
+					window.location=xmlHome;
+				}
+			};
+			
+			function getIPandRestart() {
+				var container = document.getElementById("subP");
+				container.innerHTML = "Restart request sent.  Returning to home in <span id='rdct'>5</span>s"
+
+				document.getElementById("restartB").style.display = 'none';
+								
+				startTimer();
+				
+				nocache = "&nocache=" + Math.random() * 1000000;
+				var request = new XMLHttpRequest();
+				request.onreadystatechange = function(){
+					if (this.readyState == 4) {
+						if (this.status == 200) {
+							if (this.responseXML != null) {
+								xmlHome = "http://" + this.responseXML.getElementsByTagName('ip')[0].childNodes[0].nodeValue;
+							}
+						}
+					}
+				}
+				request.open("GET", "restart.xml" + nocache, true);
+				request.send(null);
+			};
+		</script>
 	</head>
 
 	<body>
@@ -20,16 +74,21 @@
 					<li><a id="live" href="/reset.htm">Reset</a></li>
 					
 					<a id="imglink" href="http://www.upenn.edu/">
-						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
+						<img style="width:155px;height:43px;border:0;" src="images/logo_let.gif" alt="Upenn">
 					</a>
 				</ul>
 		    </nav>
 		    <article>
 			<!-- Main content -->
 				<br/><br/>
-				<p style="text-align:center;font-size:1.5em;">
-					<a href="/redirect.htm" >Restart gateway</a>
-				</p>
+				<div id="mainP" style="text-align:center;">
+					<p id="subP" style="font-size:1.5em;">
+						Any changes have been submitted, a restart is required for them to take effect.
+					</p>
+
+					<button id="restartB" onclick="getIPandRestart()">Restart Gateway</button>
+
+				</div>
 			</article>
 
 			<footer>

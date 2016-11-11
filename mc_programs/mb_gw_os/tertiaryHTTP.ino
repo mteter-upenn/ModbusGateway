@@ -9,7 +9,7 @@
 void sendPostResp(EthernetClient52 &ec_client) {
   char ca_postResp[67]; // = "HTTP/1.1 303 See Other\nLocation: http://";
 
-  strcpy_P(ca_postResp, PSTR("HTTP/1.1 303 See Other\nLocation: /redirect.htm\nConnection: close\n\n"));
+  strcpy_P(ca_postResp, PSTR("HTTP/1.1 303 See Other\nLocation: /reset.htm\nConnection: close\n\n"));
   ec_client.write(ca_postResp);
 
   ec_client.flush();

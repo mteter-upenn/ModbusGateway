@@ -68,7 +68,7 @@ uint8_t g_u8a_mac[8] = {0};                      // enter mac, will need some so
 IPAddress g_ip_ip(0, 0, 0, 0);                       // this value will be overwritten by ip stored in eeprom
 IPAddress g_ip_subnet(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
 IPAddress g_ip_gateway(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
-bool g_b_reset = false;                                    // bReset
+//bool g_b_reset = false;                                    // bReset
 
 bool g_b_useNtp = false;                                 // bNTPserv turns ntp on/off (overwritten by eeprom)
 IPAddress g_ip_ntpIp(0, 0, 0, 0);                      // this value will be overwritten by ip stored in eeprom
