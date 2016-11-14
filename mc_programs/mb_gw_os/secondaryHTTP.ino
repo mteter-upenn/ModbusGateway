@@ -121,7 +121,7 @@ void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileTyp
 }
 
 
-void sendDownLinks(EthernetClient52 &ec_client, char *const cp_firstLine) {
+void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLine) {
   uint16_t u16_dirNameLen;
   const uint16_t k_u16_truncReqLineSz = gk_u16_requestLineSize - 4;
   char ca_dirName[k_u16_truncReqLineSz];
@@ -130,7 +130,7 @@ void sendDownLinks(EthernetClient52 &ec_client, char *const cp_firstLine) {
   // GET /pastdown.htm/PASTDATA/2016/07   or
   // GET /pastdown.htm
 
-  strcpy(ca_dirName, cp_firstLine + 4);
+  strcpy(ca_dirName, k_ckp_firstLine + 4);
 
   // cut down httpReq  (subtract out " HTTP/1.1...")
   for (int ii = 0; ii < k_u16_truncReqLineSz; ++ii) {
@@ -227,9 +227,9 @@ void sendXmlEnd(EthernetClient52 &ec_client, XmlFile en_xmlType) {
 
   switch (en_xmlType) {
     case XmlFile::INFO:  // info.xml needs to know which slave to look at
-      strcat_P(ca_buffer, PSTR("<selMtr>"));  // 8
-      sprintf(ca_buffer + 8, "%u", g_u8a_selectedSlave);
-      strcat_P(ca_buffer, PSTR("</selMtr>"));  // 9
+      //strcat_P(ca_buffer, PSTR("<selMtr>"));  // 8
+      //sprintf(ca_buffer + 8, "%u", g_u8a_selectedSlave);
+      //strcat_P(ca_buffer, PSTR("</selMtr>"));  // 9
       // fall-through
     case XmlFile::METER:  // mtrsetup.xml
       strcat_P(ca_buffer, PSTR("</meterList>"));
@@ -280,7 +280,7 @@ void sendIP(EthernetClient52 &ec_client) {
 }
 
 
-void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter data
+void liveXML(EthernetClient52 &ec_client, uint8_t u8a_selectedSlave) {  // sends xml file of live meter data
   const int k_i_maxNumElecVals(32);
   const int k_i_maxNumStmChwVals(10);
   const uint16_t k_u16_minRemBytes(50);
@@ -297,7 +297,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
 
   strcpy_P(ca_respXml, PSTR("HTTP/1.1 200 OK\nContent-Type: text/xml\nConnnection: close\n\n"));  // create http response
 
-  u8_mtrType = g_u8a_slaveTypes[(g_u8a_selectedSlave - 1)][0];
+  u8_mtrType = g_u8a_slaveTypes[(u8a_selectedSlave - 1)][0];
 
   if ((u8_mtrType > EEPROM.read(g_u16_regBlkStart + 2)) || (u8_mtrType == 0)){  // check if meter higher than number of meter registers listed
     strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
@@ -306,7 +306,7 @@ void liveXML(EthernetClient52 &ec_client) {  // sends xml file of live meter dat
     ec_client.flush();
     return;  // no registers in eeprom
   }
-  u8_mbVid = g_u8a_slaveVids[(g_u8a_selectedSlave - 1)];  // getModbus accounts for vids
+  u8_mbVid = g_u8a_slaveVids[(u8a_selectedSlave - 1)];  // getModbus accounts for vids
 
   u8_mtrMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType + 2);
 

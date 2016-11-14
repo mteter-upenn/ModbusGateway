@@ -93,7 +93,7 @@ uint8_t g_u8a_slaveVids[20];    // slv_vids                              // arra
 uint8_t g_u8a_slaveIps[20][4];  // slv_ips                              // array of slave ips
 uint8_t g_u8a_slaveTypes[20][3]; // slv_typs                              // array of slave meter types
 // REMOVE ABOVE!
-uint8_t g_u8a_selectedSlave = 1;      // selSlv                              // selected slave - used for webpage live data
+//uint8_t g_u8a_selectedSlave = 1;      // selSlv                              // selected slave - used for webpage live data
 //ModbusStack mbStack;
 
 
@@ -135,17 +135,18 @@ void resetArd(void);
 // handleServers
 void handleServers();
 // handleHTTP
-void handle_http(uint8_t u8_socket);
+int16_t readHttp(uint8_t u8_socket, char ca_httpReq[gk_u16_requestLineSize]);
+void respondhttp(uint8_t u8_socket, int16_t s16_sockFlag, const char ca_httpReq[gk_u16_requestLineSize]);
 // secondaryHTTP - GET and general functions
 //void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
 void send404(EthernetClient52 &ec_client);
 void sendBadSD(EthernetClient52 &ec_client);
 //void sendGifHdr(EthernetClient52 &ec_client);
 void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType en_fileType = FileType::NONE);
-void sendDownLinks(EthernetClient52 &ec_client, char *const cp_firstLine);
+void sendDownLinks(EthernetClient52 &ec_client, const char *const cp_firstLine);
 void sendXmlEnd(EthernetClient52 &ec_client, XmlFile en_xmlType);
 void sendIP(EthernetClient52 &ec_client);
-void liveXML(EthernetClient52 &ec_client);
+void liveXML(EthernetClient52 &ec_client, uint8_t u8a_selectedSlave);
 // tertiaryHTTP - POST related functions
 void sendPostResp(EthernetClient52 &ec_client);
 char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_postLen);

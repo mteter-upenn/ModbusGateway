@@ -45,6 +45,11 @@
 	  <script>
 		var selSlv = 0;
 		
+		function isNumeric(num) {
+			return !isNan(num);
+		}
+		
+		
 		function getDisplayInfo(){
 			var txtArray = ["",
 							"Eaton IQ DP 4000", "Eaton PXM 2260", "Eaton IQ 200", "Eaton IQ 300", "Eaton Power Xpert 4000",
@@ -72,8 +77,28 @@
 					if (this.status == 200) {
 						if (this.responseXML != null) {
 							var xmlDoc = this.responseXML;
+					
+							var pageUrl = window.location.href;
+							var urlIndex = pageUrl.indexOf("METER=");
 							
-							selSlv = parseInt(xmlDoc.getElementsByTagName('selMtr')[0].childNodes[0].nodeValue) - 1;
+							if (urlIndex < 0) {
+								selSlv = 0;
+							}
+							else {
+								urlIndex += 6;
+								var urlIndexStop = urlIndex + 3;
+								
+								for (; urlIndex < urlIndexStop; ++urlIndex) {
+									if (isNumeric(pageUrl[urlIndex])) {
+										selSlv = selSlv * 10 + parseInt(pageUrl[urlIndex]));
+									}
+									else {
+										break;
+									}
+								}
+							}
+							
+							//selSlv = parseInt(xmlDoc.getElementsByTagName('selMtr')[0].childNodes[0].nodeValue) - 1;
 							var totSlvs = xmlDoc.getElementsByTagName('meter').length;
 							
 							var input = document.getElementById('slave');
