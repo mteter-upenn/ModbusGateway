@@ -117,7 +117,8 @@ ModbusServer g_modbusServer(gk_u8_modbusSerialHardware, gk_u8_mb485Ctrl);
 
 // server socket info
 uint32_t g_u32a_socketTimeoutStart[8] = { 0 };  // time to compare to timeout
-uint16_t g_u16a_socketFlags[8] = { 0 };  // flag names found in mb_names.h
+SockFlag g_u16a_socketFlags[8] = { SockFlag_LISTEN, SockFlag_LISTEN, SockFlag_LISTEN, SockFlag_LISTEN,
+                                  SockFlag_LISTEN, SockFlag_LISTEN, SockFlag_LISTEN, SockFlag_LISTEN };  // flag names found in mb_names.h
 uint16_t  g_u16a_mbReqUnqId[8] = { 0 };  // unique id of modbus request in ModbusStack
 EthernetClient52 g_eca_socks[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
@@ -135,8 +136,8 @@ void resetArd(void);
 // handleServers
 void handleServers();
 // handleHTTP
-int16_t readHttp(uint8_t u8_socket, char ca_httpReq[gk_u16_requestLineSize]);
-void respondhttp(uint8_t u8_socket, int16_t s16_sockFlag, const char ca_httpReq[gk_u16_requestLineSize]);
+SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv);
+bool respondhttp(const uint8_t u8_socket, const uint16_t u16_sockFlag, const FileReq u16_fileReq, const uint8_t u8_selSlv);
 // secondaryHTTP - GET and general functions
 //void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
 void send404(EthernetClient52 &ec_client);

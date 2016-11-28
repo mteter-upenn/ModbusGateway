@@ -193,7 +193,7 @@ void handleServers() {
             g_u16a_mbReqUnqId[ii] = 0;
 
             // RESET SOCKFLAGS SO HAVEN'T READ MESSAGE
-            g_u16a_socketFlags[ii] &= ~(0x0038);  // should reset bits 3, 4, and 5, bet this doesn't work
+            g_u16a_socketFlags[ii] &= ~(SockFlag_MB485 | SockFlag_MBTCP | SockFlag_READ_REQ | SockFlag_CLIENT);  // should reset bits 3, 4, and 5, bet this doesn't work
           }  // end if good message or mb timeout
           else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // check for time out
 
@@ -234,7 +234,8 @@ void handleServers() {
         }  // end if port 502
         else if (g_u16a_socketFlags[ii] & SockFlag_HTTP) {  // if port 80
           //THIS ALL NEEDS TO CHANGE TO HANDLE LIVEXML REQUESTS IF A MODBUS STACK IS GOING TO BE USED
-          handle_http(ii);
+          //g_u16a_socketFlags[ii] |= readHttp(ii, );
+          //handle_http(ii);
           
           g_eca_socks[ii].stop();
           g_eca_socks[ii].setSocket(ii);

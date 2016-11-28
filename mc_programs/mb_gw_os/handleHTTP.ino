@@ -1,4 +1,5 @@
-int16_t readHttp(uint8_t u8_socket, char ca_httpReq[gk_u16_requestLineSize]) {
+SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv) {
+  //char ca_httpReq[gk_u16_requestLineSize] = { 0 };
   char ca_httpFirstLine[gk_u16_requestLineSize] = { 0 };
   //char ca_httpFullReq[gk_u16_requestBuffSize] = { 0 };
 
@@ -16,12 +17,13 @@ int16_t readHttp(uint8_t u8_socket, char ca_httpReq[gk_u16_requestLineSize]) {
     if ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout) {  // stop trying to read message after 50 ms - assume it's never coming
       //g_eca_socks[u8_socket].stop();
       //Ethernet52.cleanSockets(80);
-      return 0;
+      return SockFlag_LISTEN;
     }
   }
   ca_httpFirstLine[gk_u16_requestLineSize - 1] = 0;
 
   if (strncmp(ca_httpFirstLine, "GET", 3) == 0) {
+    // make sure string has zero at end for searches
     for (int ii = 4; ii < gk_u16_requestLineSize; ++ii) {
       if (ca_httpFirstLine[ii] == 32) {
         ca_httpFirstLine[ii] = 0;
@@ -31,16 +33,145 @@ int16_t readHttp(uint8_t u8_socket, char ca_httpReq[gk_u16_requestLineSize]) {
         break;
       }
     }
-    strcpy(ca_httpReq, ca_httpFirstLine + 4);  // account for "GET "
+
+    if (strstr(ca_httpFirstLine, ".css") != nullptr) {
+      s16_fileType = FileType::CSS;
+      u16_fileReq = FileReq_EPSTYLE;
+    }
+    else if (strstr(ca_httpFirstLine, ".gif") != nullptr) {  // will need to expand if more pictures are desired
+      s16_fileType = FileType::GIF;
+      u16_fileReq = FileReq_LOGO_LET;
+    }
+    else if ((strstr(ca_httpFirstLine, ".htm") != nullptr) || (strncmp(ca_httpFirstLine, "/", 1) == 0)) { // if html or index request
+      s16_fileType = FileType::HTML;
+      if ((strncmp(ca_httpFirstLine, "/", 1) == 0) || (strncmp(ca_httpFirstLine, "/index.htm", 10) == 0)) {
+        u16_fileReq = FileReq_INDEX;
+      }
+      else if (strncmp(ca_httpFirstLine, "/gensetup.htm", 13) == 0) {
+        u16_fileReq = FileReq_GENSETUP;
+      }
+      else if (strncmp(ca_httpFirstLine, "/mtrsetup.htm", 13) == 0) {
+        u16_fileReq = FileReq_MTRSETUP;
+      }
+      else if (strstr(ca_httpFirstLine, "live.htm") != nullptr) {
+        uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
+        char *cp_meterInd;                                     // index of 'METER' in GET request
+
+        u8_selSlv = 0;  // u8_selSlv is 1-based: 0 indicates error
+        cp_meterInd = strstr(ca_httpFirstLine, "METER=");
+
+        if (cp_meterInd != nullptr) {
+          char *cp_dumPtr;
+          cp_meterInd += 6;  // move pointer to end of phrase 'METER='
+          cp_dumPtr = cp_meterInd + 3;
+
+          for (; cp_meterInd < cp_dumPtr; ++cp_meterInd) {
+            if (isdigit(*cp_meterInd)) {
+              u8_selSlv = u8_selSlv * 10 + ((*cp_meterInd) - '0');
+            }
+            else {
+              break;
+            }
+          }
+
+          if (u8_selSlv > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
+            u8_selSlv = 1;
+          }
+        }
+        else {
+          u8_selSlv = 1;
+        }
+
+        u8_meterType = g_u8a_slaveTypes[(u8_selSlv - 1)][0];  // turn meter from slave index to meter type X.x.x
+
+        if (u8_meterType == 11) {
+          u16_fileReq = FileReq_CLIVE;
+        }
+        else if (u8_meterType == 12) {
+          u16_fileReq = FileReq_SLIVE;        // steam
+        }
+        else {
+          u16_fileReq = FileReq_ELIVE;        // electric 
+        }
+      }
+      else if (strncmp(ca_httpFirstLine, "/pastdown.htm", 13) == 0) {
+        u16_fileReq = FileReq_PASTDOWN;
+      }
+      else if (strncmp(ca_httpFirstLine, "/pastview.htm", 13) == 0) {  // need to flesh out ideas for this (mimic pastdown?)
+                                                                 // graph data?
+        u16_fileReq = FileReq_PASTVIEW;
+      }
+      else if (strncmp(ca_httpFirstLine, "/reset.htm", 10) == 0) {
+        u16_fileReq = FileReq_RESET;
+      }
+      else {
+        u16_fileReq = FileReq_NOPAGE;
+      }
+    }
+    else if (strstr(ca_httpFirstLine, ".xml") != nullptr) {
+      s16_fileType = FileType::XML;
+      if (strncmp(ca_httpFirstLine, "/gensetup.xml", 13) == 0) {
+        u16_fileReq = FileReq_GENSETUP;
+      }
+      else if (strncmp(ca_httpFirstLine, "/mtrsetup.xml", 13) == 0) {
+        u16_fileReq = FileReq_MTRSETUP;
+      }
+      else if (strncmp(ca_httpFirstLine, "/data.xml", 9) == 0) {
+        uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
+        char *cp_meterInd;                                     // index of 'METER' in GET request
+
+        u8_selSlv = 0;  // u8_selSlv is 1-based: 0 indicates error
+        cp_meterInd = strstr(ca_httpFirstLine, "METER=");
+
+        if (cp_meterInd != nullptr) {
+          char *cp_dumPtr;
+          cp_meterInd += 6;  // move pointer to end of phrase
+          cp_dumPtr = cp_meterInd + 3;
+
+          for (; cp_meterInd < cp_dumPtr; ++cp_meterInd) {
+            if (isdigit(*cp_meterInd)) {
+              u8_selSlv = u8_selSlv * 10 + ((*cp_meterInd) - '0');
+            }
+            else {
+              break;
+            }
+          }
+
+          if (u8_selSlv > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
+            u8_selSlv = 1;
+          }
+        }
+
+        u16_fileReq = FileReq_DATA;
+      }
+      else if (strncmp(ca_httpFirstLine, "/info.xml", 9) == 0) {
+        u16_fileReq = FileReq_INFO;
+      }
+      else if (strncmp(ca_httpFirstLine, "/restart.xml", 12) == 0) {
+        u16_fileReq = FileReq_RESTART;
+      }
+      else {  // could not find xml file
+        u16_fileReq = FileReq_404;
+      }
+    }
+    else if (strstr(ca_httpFirstLine, ".TXT") != nullptr) {
+      s16_fileType = FileType::TXT;
+      u16_fileReq = FileReq_404;
+    }
+    else if (strstr(ca_httpFirstLine, ".CSV") != nullptr) {
+      s16_fileType = FileType::CSV;
+      u16_fileReq = FileReq_404;
+    }
+    // not htm, css, or xml
+    else {
+      s16_fileType = FileType::NONE;
+      u16_fileReq = FileReq_404;
+    }
+
+    //strcpy(ca_httpReq, ca_httpFirstLine + 4);  // account for "GET "
     return SockFlag_GET;
   }
   else if (strncmp(ca_httpFirstLine, "POST", 4) == 0) {
-    if (strstr(ca_httpFirstLine, "setup.htm")) {
-      // write to eeprom
-      getPostSetupData(g_eca_socks[u8_socket]);  // reads and stores POST data to EEPROM
-    }
-
-    
     for (int ii = 5; ii < gk_u16_requestLineSize; ++ii) {
       if (ca_httpFirstLine[ii] == 32) {
         ca_httpFirstLine[ii] = 0;
@@ -50,7 +181,24 @@ int16_t readHttp(uint8_t u8_socket, char ca_httpReq[gk_u16_requestLineSize]) {
         break;
       }
     }
-    strcpy(ca_httpReq, ca_httpFirstLine + 5);
+
+    if (strncmp(ca_httpFirstLine, "/gensetup.xml", 13) == 0) {
+      s16_fileType = FileType::XML;
+      u16_fileReq = FileReq_GENSETUP;
+    }
+    else if (strncmp(ca_httpFirstLine, "/mtrsetup.xml", 13) == 0) {
+      s16_fileType = FileType::XML;
+      u16_fileReq = FileReq_MTRSETUP;
+    }
+    else {
+      s16_fileType = FileType::NONE;
+      u16_fileReq = FileReq_404;
+    }
+
+    //if (strstr(ca_httpReq, "setup.htm")) {
+    //  
+    //}
+    //strcpy(ca_httpReq, ca_httpFirstLine + 5);
     return SockFlag_POST;
   }
   
@@ -58,7 +206,7 @@ int16_t readHttp(uint8_t u8_socket, char ca_httpReq[gk_u16_requestLineSize]) {
 
 
 
-bool respondhttp(uint8_t u8_socket, int16_t s16_sockFlag, const char ca_httpReq[gk_u16_requestLineSize]) {
+bool respondhttp(const uint8_t u8_socket, const uint16_t u16_sockFlag, const FileReq u16_fileReq, const uint8_t u8_selSlv) {
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
   //uint32_t totBytes = 0;
@@ -71,8 +219,8 @@ bool respondhttp(uint8_t u8_socket, int16_t s16_sockFlag, const char ca_httpReq[
     gotClient = millis();
 #endif
     //while (g_eca_socks[u8_socket].connected()) {
-      uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
-      char *cp_meterInd;                                     // index of 'METER' in GET request
+      //uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
+      //char *cp_meterInd;                                     // index of 'METER' in GET request
       //char ca_firstLine[gk_u16_requestLineSize] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
       //char ca_remHeader[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
 
@@ -105,7 +253,7 @@ bool respondhttp(uint8_t u8_socket, int16_t s16_sockFlag, const char ca_httpReq[
 
         //Serial.println(ca_firstLine);
 
-        if (s16_sockFlag | SockFlag_GET) {
+        if (u16_sockFlag | SockFlag_GET) {
 #if DISP_TIMING_DEBUG == 1
           doneHttp = millis();
 #endif
@@ -328,7 +476,7 @@ bool respondhttp(uint8_t u8_socket, int16_t s16_sockFlag, const char ca_httpReq[
           }
         }
 // POST http
-        else if (s16_sockFlag | SockFlag_POST) {
+        else if (u16_sockFlag | SockFlag_POST) {
           if (strstr(ca_httpReq, "setup.htm")) {
             getPostSetupData(g_eca_socks[u8_socket]);  // reads and stores POST data to EEPROM
 
