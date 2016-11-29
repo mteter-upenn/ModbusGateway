@@ -30,16 +30,16 @@ inline SockFlag operator| (SockFlag a, SockFlag b) {
   return static_cast<SockFlag>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-inline SockFlag operator|= (SockFlag a, SockFlag b) {
-  return static_cast<SockFlag>(static_cast<int>(a) | static_cast<int>(b));
+inline SockFlag& operator|= (SockFlag& a, SockFlag b) {
+  return a = static_cast<SockFlag>(static_cast<int>(a) | static_cast<int>(b));
 }
 
 inline SockFlag operator& (SockFlag a, SockFlag b) {
-  return static_cast<SockFlag>(static_cast<int>(a) | static_cast<int>(b));
+  return static_cast<SockFlag>(static_cast<int>(a) & static_cast<int>(b));
 }
 
-inline SockFlag operator&= (SockFlag a, SockFlag b) {
-  return static_cast<SockFlag>(static_cast<int>(a) | static_cast<int>(b));
+inline SockFlag& operator&= (SockFlag& a, SockFlag b) {
+  return a = static_cast<SockFlag>(static_cast<int>(a) & static_cast<int>(b));
 }
 
 inline SockFlag operator~ (SockFlag a) {

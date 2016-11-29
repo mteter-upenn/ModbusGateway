@@ -10,7 +10,7 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
   bool b_reqRegManip(false);
   FloatConv fltConvFlg(FloatConv::FLOAT);
   uint8_t u8_mtrType(0);
-  uint8_t u8_mtrId;
+  //uint8_t u8_mtrId;
   
 
   return 0x0a;
@@ -23,9 +23,9 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
     
     u8a_mbResp[6] = u8a_mbReq[6]; // set device
     
-    uint8_t u8_mtrVid = u8a_mbReq[6];
-    uint8_t u8a_clientIp[4];
-    u8_mtrId = u8a_mbReq[6];  // let id given by incoming packet be default, it will change if it matches with something on the list in isMeterEth
+    //uint8_t u8_mtrVid = u8a_mbReq[6];
+    //uint8_t u8a_clientIp[4];
+    //u8_mtrId = u8a_mbReq[6];  // let id given by incoming packet be default, it will change if it matches with something on the list in isMeterEth
     // search for slave id in eeprom, if there check if ip exists
     // isMeterEth changes u8_mtrType and u8_mtrId
     //if (isMeterEth(u8a_clientIp, u8_mtrVid, u8_mtrType, u8_mtrId)){  // isMeterEth set g_u8a_clientIP

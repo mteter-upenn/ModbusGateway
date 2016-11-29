@@ -13,6 +13,37 @@
 //  }
 //}
 
+// converts first line of http request to the file requested- overwrites char array, BE CAREFUL
+void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]) {
+  uint16_t u16_strStart(0);
+  char ca_dummy[gk_u16_requestLineSize];
+
+  for (int ii = 0; ii < gk_u16_requestLineSize; ++ii) {
+    if (ca_fileReq[ii] == 32) {
+      u16_strStart = ii + 1;
+      break;
+    }
+  }
+
+  Serial.println(ca_fileReq);
+  Serial.print("start: "); Serial.print(u16_strStart, DEC); Serial.print(", end: ");
+
+  for (int ii = u16_strStart; ii < gk_u16_requestLineSize; ++ii) {
+    if (ca_fileReq[ii] == 32) {
+      ca_fileReq[ii] = 0;
+      Serial.println(ii, DEC);
+      break;
+    }
+    else if (ca_fileReq[ii] == 0) {
+      break;
+    }
+  }
+  
+  strcpy(ca_dummy, ca_fileReq + u16_strStart);
+  strcpy(ca_fileReq, ca_dummy);
+  return;
+}
+
 
 void send404(EthernetClient52 &ec_client){
   char ca_resp404[44];
@@ -130,10 +161,10 @@ void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLin
   // GET /pastdown.htm/PASTDATA/2016/07   or
   // GET /pastdown.htm
 
-  strcpy(ca_dirName, k_ckp_firstLine + 4);
+  strcpy(ca_dirName, k_ckp_firstLine);  // +4 removed ("GET ")
 
   // cut down httpReq  (subtract out " HTTP/1.1...")
-  for (int ii = 0; ii < k_u16_truncReqLineSz; ++ii) {
+  /*for (int ii = 0; ii < k_u16_truncReqLineSz; ++ii) {
     if (ca_dirName[ii] == 32) {
       ca_dirName[ii] = 0;
       break;
@@ -141,7 +172,7 @@ void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLin
     else if (ca_dirName[ii] == 0) {
       break;
     }
-  }
+  }*/
   
   if (strstr(ca_dirName, "PASTDATA") == nullptr) {  // can't find PASTDATA
     // add /PASTDATA, don't want to look in higher folders than this

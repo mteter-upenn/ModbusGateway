@@ -10,16 +10,19 @@ void handleServers() {
   ModbusStack mbStack;
   const uint32_t k_u32_mbTcpTimeout(3000);              // timeout for device to hold on to tcp connection after modbus request
   uint8_t u8a_mbSrtBytes[8][2];
-  char ca_httpRequest[4][gk_u16_requestLineSize] = { {0},{ 0 },{ 0 },{ 0 } };
+  char ca_fileReq[8][gk_u16_requestLineSize] = { {0}, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 } };
   
-  const int k_i_maxNumElecVals(32);
-  const int k_i_maxNumStmChwVals(10);
-  float fa_liveXmlData[4][32];
-  int8_t s8a_dataFlags[k_i_maxNumElecVals];
+  //const int k_i_maxNumElecVals(32);
+  //const int k_i_maxNumStmChwVals(10);
+  //float fa_liveXmlData[9][k_i_maxNumElecVals];  // 
+  //int8_t s8a_dataFlags[9][k_i_maxNumElecVals];
+  FileType s16_fileTypes[8];
+  FileReq u16_fileReqs[8];
+  uint8_t u8_selSlvs[8];
+
 
   while (!b_allFreeSocks) {
     b_allFreeSocks = true;  // set true, if anything is active, set false to avoid escape
-
     // loop through sockets to see if any new ones are available
     //   this is a separate loop so that no sockets get caught hanging - might not actually need it, but it won't hurt
     for (int ii = 0; ii < 8; ++ii) {
@@ -46,6 +49,7 @@ void handleServers() {
           else if (u16_srcPort == 80) {
             b_allFreeSocks = false;  // this socket is being used!
             g_u16a_socketFlags[ii] = (SockFlag_ESTABLISHED | SockFlag_HTTP);
+            Serial.print("flag: "); Serial.println((int)g_u16a_socketFlags[ii], DEC);
             //Serial.print("socket "); Serial.print(ii, DEC); Serial.println(" active on 80");
           }
           else {
@@ -235,7 +239,13 @@ void handleServers() {
         else if (g_u16a_socketFlags[ii] & SockFlag_HTTP) {  // if port 80
           //THIS ALL NEEDS TO CHANGE TO HANDLE LIVEXML REQUESTS IF A MODBUS STACK IS GOING TO BE USED
           //g_u16a_socketFlags[ii] |= readHttp(ii, );
-          //handle_http(ii);
+          g_u16a_socketFlags[ii] |= readHttp(ii, u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii]);
+
+          Serial.println(ca_fileReq[ii]);
+          Serial.print("flags: "); Serial.print((int)g_u16a_socketFlags[ii], DEC); Serial.print(", file type: ");
+          Serial.print((int16_t)s16_fileTypes[ii], DEC); Serial.print(", file request: "); Serial.println((int)u16_fileReqs[ii], DEC);
+
+          respondHttp(ii, g_u16a_socketFlags[ii], u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii]);
           
           g_eca_socks[ii].stop();
           g_eca_socks[ii].setSocket(ii);
