@@ -1,30 +1,33 @@
 SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv, 
                   char ca_fileReq[gk_u16_requestLineSize]) {
-  //char ca_httpReq[gk_u16_requestLineSize] = { 0 };
+  char ca_httpReqDummy[gk_u16_requestLineSize] = { 0 };
   //char ca_httpFirstLine[gk_u16_requestLineSize] = { 0 };
   //char ca_httpFullReq[gk_u16_requestBuffSize] = { 0 };
 
-  uint16_t u16_lenRead;
+  uint16_t u16_lenRead(0);
   uint32_t u32_msgRecvTime;
 
-  u16_lenRead = g_eca_socks[u8_socket].read((uint8_t*)ca_fileReq, gk_u16_requestLineSize - 1);
+  if (g_eca_socks[u8_socket].available()) {
+    u16_lenRead = g_eca_socks[u8_socket].read((uint8_t*)ca_fileReq, gk_u16_requestLineSize - 1);
+  }
 
-  Serial.println("before while");
   u32_msgRecvTime = millis();
-  while (u16_lenRead < gk_u16_requestLineSize - 1) {  // make sure enough is read
-    uint32_t k_u32_mesgTimeout(50);
+  uint32_t k_u32_mesgTimeout(50);
+  while (u16_lenRead < (gk_u16_requestLineSize - 1)) {  // make sure enough is read
+    if (g_eca_socks[u8_socket].available()) {
+      u16_lenRead += g_eca_socks[u8_socket].read((uint8_t*)ca_fileReq + u16_lenRead, gk_u16_requestLineSize - u16_lenRead - 1);
+    }
 
-    u16_lenRead += g_eca_socks[u8_socket].read((uint8_t*)ca_fileReq + u16_lenRead, gk_u16_requestLineSize - u16_lenRead - 1);
-
-    if ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout) {  // stop trying to read message after 50 ms - assume it's never coming
+    if ((u16_lenRead < (gk_u16_requestLineSize - 1)) && ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout)) {  // stop trying to read message after 50 ms - assume it's never coming
       //g_eca_socks[u8_socket].stop();
       //Ethernet52.cleanSockets(80);
       return SockFlag_LISTEN;
     }
   }
   ca_fileReq[gk_u16_requestLineSize - 1] = 0;
-  Serial.println("after while");
-  Serial.println(ca_fileReq);
+
+  strcpy(ca_httpReqDummy, ca_fileReq);
+
   if (strncmp(ca_fileReq, "GET", 3) == 0) {
     // make sure string has zero at end for searches
     //for (int ii = 4; ii < gk_u16_requestLineSize; ++ii) {
@@ -38,6 +41,9 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
     //}
     convertToFileName(ca_fileReq);
 
+    Serial.print("GET: ");  Serial.println(ca_fileReq);
+    //Serial.println(ca_httpReqDummy);
+
     if (strstr(ca_fileReq, ".css") != nullptr) {
       s16_fileType = FileType::CSS;
       u16_fileReq = FileReq_EPSTYLE;
@@ -48,7 +54,11 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
     }
     else if ((strstr(ca_fileReq, ".htm") != nullptr) || (strcmp(ca_fileReq, "/") == 0)) { // if html or index request
       s16_fileType = FileType::HTML;
-      if ((strcmp(ca_fileReq, "/") == 0) || (strcmp(ca_fileReq, "/index.htm") == 0)) {
+      if (strcmp(ca_fileReq, "/") == 0) {
+        u16_fileReq = FileReq_INDEX;
+        strcpy(ca_fileReq, "/index.htm");
+      }
+      else if (strcmp(ca_fileReq, "/index.htm") == 0) {
         u16_fileReq = FileReq_INDEX;
       }
       else if (strcmp(ca_fileReq, "/gensetup.htm") == 0) {
@@ -62,9 +72,10 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
         char *cp_meterInd;                                     // index of 'METER' in GET request
 
         u8_selSlv = 0;  // u8_selSlv is 1-based: 0 indicates error
-        cp_meterInd = strstr(ca_fileReq, "METER=");
+        cp_meterInd = strstr(ca_httpReqDummy, "METER=");  // the other string strips everything else off
 
         if (cp_meterInd != nullptr) {
+          Serial.println("found METER=");
           char *cp_dumPtr;
           cp_meterInd += 6;  // move pointer to end of phrase 'METER='
           cp_dumPtr = cp_meterInd + 3;
@@ -83,22 +94,27 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
           }
         }
         else {
+          Serial.println("did not find METER=");
           u8_selSlv = 1;
         }
 
         u8_meterType = g_u8a_slaveTypes[(u8_selSlv - 1)][0];  // turn meter from slave index to meter type X.x.x
 
-        if (u8_meterType == 11) {
+        switch (u8_meterType) {
+        case 11:
           u16_fileReq = FileReq_CLIVE;
-        }
-        else if (u8_meterType == 12) {
+          strcpy(ca_fileReq, "/clive.htm");
+          break;
+        case 12:
           u16_fileReq = FileReq_SLIVE;        // steam
-        }
-        else {
+          strcpy(ca_fileReq, "/slive.htm");
+          break;
+        default:
           u16_fileReq = FileReq_ELIVE;        // electric 
+          strcpy(ca_fileReq, "/elive.htm");
         }
       }
-      else if (strcmp(ca_fileReq, "/pastdown.htm") == 0) {
+      else if (strstr(ca_fileReq, "/pastdown.htm") != nullptr) {  // strstr since there will be more afterwards
         u16_fileReq = FileReq_PASTDOWN;
       }
       else if (strcmp(ca_fileReq, "/pastview.htm") == 0) {  // need to flesh out ideas for this (mimic pastdown?)
@@ -110,6 +126,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
       }
       else {
         u16_fileReq = FileReq_NOPAGE;
+        strcpy(ca_fileReq, "/nopage.htm");
       }
     }
     else if (strstr(ca_fileReq, ".xml") != nullptr) {
@@ -125,7 +142,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
         char *cp_meterInd;                                     // index of 'METER' in GET request
 
         u8_selSlv = 0;  // u8_selSlv is 1-based: 0 indicates error
-        cp_meterInd = strstr(ca_fileReq, "METER=");
+        cp_meterInd = strstr(ca_httpReqDummy, "METER=");
 
         if (cp_meterInd != nullptr) {
           char *cp_dumPtr;
@@ -150,9 +167,11 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
       }
       else if (strcmp(ca_fileReq, "/info.xml") == 0) {
         u16_fileReq = FileReq_INFO;
+        strcpy(ca_fileReq, "/mtrsetup.xml");
       }
       else if (strcmp(ca_fileReq, "/restart.xml") == 0) {
         u16_fileReq = FileReq_RESTART;
+        strcpy(ca_fileReq, "/gensetup.xml");
       }
       else {  // could not find xml file
         u16_fileReq = FileReq_404;
@@ -185,15 +204,15 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
     //    break;
     //  }
     //}
-
     convertToFileName(ca_fileReq);
+    Serial.print("POST: "); Serial.println(ca_fileReq);
 
     if (strcmp(ca_fileReq, "/gensetup.htm") == 0) {
-      s16_fileType = FileType::XML;
+      s16_fileType = FileType::HTML;
       u16_fileReq = FileReq_GENSETUP;
     }
     else if (strcmp(ca_fileReq, "/mtrsetup.htm") == 0) {
-      s16_fileType = FileType::XML;
+      s16_fileType = FileType::HTML;
       u16_fileReq = FileReq_MTRSETUP;
     }
     else {
@@ -212,24 +231,24 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
 
 
 
-bool respondHttp(const uint8_t u8_socket, const uint16_t u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType, 
+bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType, 
                  const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize]) {
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
   //uint32_t totBytes = 0;
 #endif
 
-  if (u16_sockFlag | SockFlag_GET) {
+  if (u16_sockFlag & SockFlag_GET) {
     if (g_b_sdInit) {
       switch (s16_fileType) {
       case FileType::XML:
         switch (u16_fileReq) {
         case FileReq_GENSETUP:
-          sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML);
+          sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
           sendXmlEnd(g_eca_socks[u8_socket], XmlFile::GENERAL);
           break;
         case FileReq_MTRSETUP:
-          sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML);
+          sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
           sendXmlEnd(g_eca_socks[u8_socket], XmlFile::METER);
           break;
         case FileReq_DATA:
@@ -239,11 +258,11 @@ bool respondHttp(const uint8_t u8_socket, const uint16_t u16_sockFlag, const Fil
           // return false;  // return false so it knows nothing has been sent back yet
           break;
         case FileReq_INFO:
-          sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML);
+          sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
           sendXmlEnd(g_eca_socks[u8_socket], XmlFile::INFO);
           break;
         case FileReq_RESTART:
-          sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML);
+          sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
           sendXmlEnd(g_eca_socks[u8_socket], XmlFile::GENERAL);
 
           g_eca_socks[u8_socket].stop();  // gently close socket for client
@@ -257,6 +276,9 @@ bool respondHttp(const uint8_t u8_socket, const uint16_t u16_sockFlag, const Fil
       case (FileType::TXT):
       case (FileType::CSV):
         sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::NONE);
+        break;
+      case (FileType::NONE):
+        send404(g_eca_socks[u8_socket]);
         break;
       default:  // html, css, gif
         switch (u16_fileReq) {
@@ -274,9 +296,9 @@ bool respondHttp(const uint8_t u8_socket, const uint16_t u16_sockFlag, const Fil
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, s16_fileType);
           break;
         case (FileReq_PASTDOWN):
-          sendWebFile(g_eca_socks[u8_socket], "/pstdown1.htm", FileType::HTML);
+          sendWebFile(g_eca_socks[u8_socket], "/pstdown1.htm", FileType::HTML, false);
           sendDownLinks(g_eca_socks[u8_socket], ca_fileReq);
-          sendWebFile(g_eca_socks[u8_socket], "/pstdown2.htm", FileType::NONE);
+          sendWebFile(g_eca_socks[u8_socket], "/pstdown2.htm", FileType::NONE, false);
           break;
         default:
           if (s16_fileType == FileType::HTML) {  // html page requested that it can't find
@@ -295,13 +317,16 @@ bool respondHttp(const uint8_t u8_socket, const uint16_t u16_sockFlag, const Fil
     }
   }
   // POST http
-  else if (u16_sockFlag | SockFlag_POST) {
+  else if (u16_sockFlag & SockFlag_POST) {
     //if (strstr(ca_httpReq, "setup.htm")) {
     switch (u16_fileReq) {
     case (FileReq_GENSETUP):
     case (FileReq_MTRSETUP):
+      Serial.println("post");
       getPostSetupData(g_eca_socks[u8_socket]);  // reads and stores POST data to EEPROM
+      Serial.println("get data");
       sendPostResp(g_eca_socks[u8_socket]);
+      Serial.println("send resp");
       break;
     default:
       send404(g_eca_socks[u8_socket]);

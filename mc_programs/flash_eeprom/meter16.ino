@@ -29,8 +29,8 @@ uint16_t meter16(uint16_t u16_mapStart) {
   // Block #1 - [1, 201, 128]
   EEPROM.write(u16_blkStart, highByte(2999));
   EEPROM.write(u16_blkStart + 1, lowByte(2999));
-  EEPROM.write(u16_blkStart + 2, highByte(3009));
-  EEPROM.write(u16_blkStart + 3, lowByte(3009));
+  EEPROM.write(u16_blkStart + 2, highByte(3109));
+  EEPROM.write(u16_blkStart + 3, lowByte(3109));
   EEPROM.write(u16_blkStart + 4, FloatConv2Int8(FloatConv::FLOAT_WS));
 
   // Block #2 - [203, 237, (3 | 128]

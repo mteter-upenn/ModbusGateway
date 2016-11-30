@@ -45,6 +45,7 @@ int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // 
 												EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType));
 	m_u16_blkStrtInd = word(EEPROM.read(m_u16_mtrLibStart), EEPROM.read(m_u16_mtrLibStart + 1));
 	m_u8_numBlks = EEPROM.read(m_u16_mtrLibStart + 2);
+	m_reqRegDataType = FloatConv::FLOAT;
 	
 	for (int ii = 0; ii < m_u8_numBlks; ++ii) {
 		uint16_t u16_blkFirstReg;
@@ -58,7 +59,11 @@ int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // 
 		if ((m_u16_reqReg >= u16_blkFirstReg) && (m_u16_reqReg <= u16_blkLastReg)) {
 			m_reqRegDataType = Int8_2_FloatConv(static_cast<int8_t>(EEPROM.read(((5 * ii) + 
 				                   m_u16_blkStrtInd + 4))));
-
+			// Serial.print("meter type: "); Serial.print(u8_mtrType, DEC); 
+			// Serial.print(", block number "); Serial.print(ii + 1, DEC); Serial.print(" of ");
+			// Serial.print(m_u8_numBlks, DEC); Serial.print(" goes from reg "); Serial.print(u16_blkFirstReg, DEC);
+			// Serial.print(" to "); Serial.print(u16_blkLastReg, DEC); Serial.print(" with data type ");
+			// Serial.println((int)m_reqRegDataType, DEC);
 			return 0;
 		} 
 	} // end for
@@ -526,7 +531,7 @@ float g_convertToFloat(const uint16_t *const k_u16kp_reg, FloatConv regDataType)
     // uint16_t u16[4];
   // }  dblC;
 // #endif
-	// Serial.println(static_cast<int8_t>(regDataType), DEC);
+	// Serial.print("data type: "); Serial.println(static_cast<int8_t>(regDataType), DEC);
 	
 	switch (regDataType) {
 		case FloatConv::FLOAT:  // float

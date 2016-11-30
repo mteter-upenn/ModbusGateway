@@ -49,7 +49,6 @@ void handleServers() {
           else if (u16_srcPort == 80) {
             b_allFreeSocks = false;  // this socket is being used!
             g_u16a_socketFlags[ii] = (SockFlag_ESTABLISHED | SockFlag_HTTP);
-            Serial.print("flag: "); Serial.println((int)g_u16a_socketFlags[ii], DEC);
             //Serial.print("socket "); Serial.print(ii, DEC); Serial.println(" active on 80");
           }
           else {
@@ -239,12 +238,13 @@ void handleServers() {
         else if (g_u16a_socketFlags[ii] & SockFlag_HTTP) {  // if port 80
           //THIS ALL NEEDS TO CHANGE TO HANDLE LIVEXML REQUESTS IF A MODBUS STACK IS GOING TO BE USED
           //g_u16a_socketFlags[ii] |= readHttp(ii, );
+          // if haven't read yet
+          // if available
           g_u16a_socketFlags[ii] |= readHttp(ii, u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii]);
 
-          Serial.println(ca_fileReq[ii]);
-          Serial.print("flags: "); Serial.print((int)g_u16a_socketFlags[ii], DEC); Serial.print(", file type: ");
-          Serial.print((int16_t)s16_fileTypes[ii], DEC); Serial.print(", file request: "); Serial.println((int)u16_fileReqs[ii], DEC);
-
+          // set flags here?
+          Serial.print("flags: "); Serial.println(g_u16a_socketFlags[ii], HEX);
+          // if have read
           respondHttp(ii, g_u16a_socketFlags[ii], u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii]);
           
           g_eca_socks[ii].stop();

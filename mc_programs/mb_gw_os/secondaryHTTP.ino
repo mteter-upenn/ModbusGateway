@@ -25,20 +25,21 @@ void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]) {
     }
   }
 
-  Serial.println(ca_fileReq);
-  Serial.print("start: "); Serial.print(u16_strStart, DEC); Serial.print(", end: ");
 
   for (int ii = u16_strStart; ii < gk_u16_requestLineSize; ++ii) {
-    if (ca_fileReq[ii] == 32) {
+    switch (ca_fileReq[ii]) {
+    case 32:  // space
+    case 38:  // &
       ca_fileReq[ii] = 0;
-      Serial.println(ii, DEC);
+      goto exitConvertForLoop;
       break;
-    }
-    else if (ca_fileReq[ii] == 0) {
+    case 0:  // null char, string is done
+      goto exitConvertForLoop;
       break;
     }
   }
-  
+exitConvertForLoop:
+
   strcpy(ca_dummy, ca_fileReq + u16_strStart);
   strcpy(ca_fileReq, ca_dummy);
   return;
@@ -74,7 +75,7 @@ void sendBadSD(EthernetClient52 &ec_client){
 }
 
 
-void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileType en_fileType) {
+void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileType en_fileType, bool b_addFileLength = true) {
   File streamFile = SD.open(k_cp_fileName);
 
   if (streamFile) {
@@ -107,14 +108,15 @@ void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileTyp
           break;
       }
 
-      //if (en_fileType == FileType::GIF) {
-      //  strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
-      //}
-      //else {
-      strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
-      //}
-      hdrLength = strlen(ca_streamBuf);
-      sprintf(ca_streamBuf + hdrLength, "%lu\n\n", u32_fileSize);
+      if (b_addFileLength) {  // xml files have extra bits tacked on 
+        strcat_P(ca_streamBuf, PSTR("Connection: close\nContent - Length: "));
+        hdrLength = strlen(ca_streamBuf);
+        sprintf(ca_streamBuf + hdrLength, "%lu\n\n", u32_fileSize);
+      }
+      else {
+        strcat_P(ca_streamBuf, PSTR("Connection: close\n\n"));
+      }
+      
 
       //strcat_P(ca_streamBuf, PSTR("Connection: close\n\n"));
       

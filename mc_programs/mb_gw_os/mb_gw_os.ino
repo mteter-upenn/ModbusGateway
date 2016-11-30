@@ -137,14 +137,14 @@ void resetArd(void);
 void handleServers();
 // handleHTTP
 SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv, char ca_fileReq[gk_u16_requestLineSize]);
-bool respondHttp(const uint8_t u8_socket, const uint16_t u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType,  const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize]);
+bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType,  const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize]);
 // secondaryHTTP - GET and general functions
 //void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
 void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]);
 void send404(EthernetClient52 &ec_client);
 void sendBadSD(EthernetClient52 &ec_client);
 //void sendGifHdr(EthernetClient52 &ec_client);
-void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType en_fileType = FileType::NONE);
+void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType en_fileType = FileType::NONE, bool b_addFileLength = true);
 void sendDownLinks(EthernetClient52 &ec_client, const char *const cp_firstLine);
 void sendXmlEnd(EthernetClient52 &ec_client, XmlFile en_xmlType);
 void sendIP(EthernetClient52 &ec_client);

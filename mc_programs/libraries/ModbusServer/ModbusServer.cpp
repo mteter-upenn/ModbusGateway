@@ -246,7 +246,7 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 	
 	while (!u8_mbStatus) {
 		while (ec_client.available()) {  // make sure to get all available data before checking timeout
-			Serial.print("recvTcpResponse, available: "); Serial.println(ec_client.available(), DEC);
+			// Serial.print("recvTcpResponse, available: "); Serial.println(ec_client.available(), DEC);
 			
 			if (u16_mbRxSize > 255) {  // message too big
 				u8_mbStatus = k_u8_MBIllegalDataValue;
@@ -277,6 +277,12 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 			}
 			
 			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
+				// Serial.print("tcp resp from slave: ");
+				// for (int ii = 0; ii < u16_mbRxSize; ++ii) {
+					// Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
+				// }
+				// Serial.println();
+				
 				// verify device id
 				if (u8p_devResp[6] != mr_mbReq.u8_id) {
 					u8_mbStatus = k_u8_MBInvalidSlaveID;
@@ -302,6 +308,11 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 	
 	if (!u8_mbStatus) {  // 
 		u8_numBytes = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
+		// Serial.print("regs from slave: ");
+		// for (int ii = 0; ii < u8_numBytes / 2; ++ii) {
+			// Serial.print(u16p_regs[ii], DEC); Serial.print(" ");
+		// }
+		// Serial.println();
 	}
 	return u8_mbStatus;
 }
@@ -371,9 +382,9 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 			mtrLibBlk.adjActualRegsToFloatRegs(u8_numBytes / 2, u16_dumLgth);
 			
 			u8a_respBuf[5] = 3 + u16_dumLgth * 2;  // need to adjust this to fit new length
-			u8a_respBuf[8] = u16_dumLgth * 2;
 			u8a_respBuf[6] = mbReq.u8_vid;
 			u8a_respBuf[7] = mbReq.u8_func;
+			u8a_respBuf[8] = u16_dumLgth * 2;
 			
 			mtrLibBlk.convertToFloat(u16a_interBuf, &u8a_respBuf[9], mbReq.u16_length);
 			
