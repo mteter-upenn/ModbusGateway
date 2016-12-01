@@ -99,8 +99,10 @@
 									selSlv -= 1;
 								}
 								
-								//selSlv = parseInt(xmlDoc.getElementsByTagName('selMtr')[0].childNodes[0].nodeValue) - 1;
 								var totSlvs = xmlDoc.getElementsByTagName('meter').length;
+								if ((selSlv >= totSlvs) || (selSlv < 0)) {
+									selSlv = 0;
+								}
 								
 								var input = document.getElementById('slave');
 								
@@ -114,17 +116,24 @@
 								input.selectedIndex = selSlv;
 								
 								if (xmlDoc.getElementsByTagName("mip")[selSlv].childNodes.length > 0){
-									document.getElementById("slvIP").innerHTML = xmlDoc.getElementsByTagName("mip")[selSlv].childNodes[0].nodeValue;
+									document.getElementById("slvIP").innerHTML = "IP: " + xmlDoc.getElementsByTagName("mip")[selSlv].childNodes[0].nodeValue;
 								}
 								else{
-									document.getElementById("slvIP").innerHTML = "485 Network";
+									document.getElementById("slvIP").innerHTML = "Serial Comms";
 								}
 								
 								if (xmlDoc.getElementsByTagName("dev")[selSlv].childNodes.length > 0){
-									document.getElementById("slvID").innerHTML = xmlDoc.getElementsByTagName("dev")[selSlv].childNodes[0].nodeValue;
+									document.getElementById("slvID").innerHTML = "Modbus ID: " + xmlDoc.getElementsByTagName("dev")[selSlv].childNodes[0].nodeValue;
 								}
 								else{
 									document.getElementById("slvID").innerHTML = "Modbus ID: ";
+								}
+								
+								if (xmlDoc.getElementsByTagName("vid")[selSlv].childNodes.length > 0){
+									document.getElementById("slvVID").innerHTML = "Modbus Virtual ID: " + xmlDoc.getElementsByTagName("vid")[selSlv].childNodes[0].nodeValue;
+								}
+								else{
+									document.getElementById("slvVID").innerHTML = "Modbus Virtual ID: ";
 								}
 								
 								if (xmlDoc.getElementsByTagName("type")[selSlv].childNodes.length > 0){
@@ -132,7 +141,7 @@
 									
 									for (var j = 0; j < txtArray.length; j++){
 										if (valArray[j] == mtrTyp){
-											document.getElementById("slvTyp").innerHTML = txtArray[j];
+											document.getElementById("slvTyp").innerHTML = "Meter Type: " + txtArray[j];
 											break;
 										}
 									}
@@ -229,14 +238,15 @@
 				<br/>
 				<form method="get">
 					<!-- <input type="submit" value="Go to Meter:"> -->
-					<label for="slave">Go to Meter: </label>
+					<label for="slave">Go to Slave: </label>
 					<select id="slave" onchange="this.form.submit()" name="METER"></select>
 				</form>
 				
 				<br>
-				<p>Current Meter:<br/>
+				<p>Current Slave:<br/>
 					<span id="slvIP">IP: </span><br/>
 					<span id="slvID">Modbus ID: </span><br/>
+					<span id="slvVID">Modbus Virtual ID: </span><br/>
 					<span id="slvTyp">Meter Type: </span>
 				</p>
 				
@@ -281,17 +291,17 @@
 						<td class="pres"></td>
 					</tr>
 					<tr class="alt">
-						<td>Heat Total (kBtu)</td>
+						<td>Heat Grand Total (kBtu)</td>
 						
 						<td class="engy"></td>
 					</tr>
 					<tr class="typ">
-						<td>Mass Total (lbs)</td>
+						<td>Mass Grand Total (lbs)</td>
 
 						<td class="engy"></td>
 					</tr>
 					<tr class="alt">
-						<td>Volume Total (cf)</td>
+						<td>Volume Grand Total (cf)</td>
 						
 						<td class="engy"></td>
 					</tr>

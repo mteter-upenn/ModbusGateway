@@ -78,7 +78,7 @@ uint16_t meter11(uint16_t u16_mapStart){
   EEPROM.write(++u16_grpStart, 4);
   EEPROM.write(++u16_grpStart, 5);
   EEPROM.write(++u16_grpStart, 6);
-  EEPROM.write(++u16_grpStart, int8_t(-8));
+  EEPROM.write(++u16_grpStart, int8_t(-16));
   EEPROM.write(++u16_grpStart, 8);
   EEPROM.write(++u16_grpStart, 9);
   EEPROM.write(++u16_grpStart, int8_t(-2));

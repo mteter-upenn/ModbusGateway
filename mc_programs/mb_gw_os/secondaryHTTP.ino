@@ -75,7 +75,7 @@ void sendBadSD(EthernetClient52 &ec_client){
 }
 
 
-void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileType en_fileType, bool b_addFileLength = true) {
+void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileType en_fileType, bool b_addFileLength) {
   File streamFile = SD.open(k_cp_fileName);
 
   if (streamFile) {
@@ -101,8 +101,8 @@ void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileTyp
         case FileType::XML:  // xml
           strcat_P(ca_streamBuf, PSTR("text/xml\n"));
           break;
-        case FileType::CSV:  // csv
-
+        case FileType::CSV:  // csv - note, csvs for download are treated as NONE
+          strcat_P(ca_streamBuf, PSTR("text/csv\n"));
           break;
         default:
           break;
@@ -259,15 +259,15 @@ void sendXmlEnd(EthernetClient52 &ec_client, XmlFile en_xmlType) {
   ca_buffer[0] = 0;
 
   switch (en_xmlType) {
-    case XmlFile::INFO:  // info.xml needs to know which slave to look at
-      //strcat_P(ca_buffer, PSTR("<selMtr>"));  // 8
-      //sprintf(ca_buffer + 8, "%u", g_u8a_selectedSlave);
-      //strcat_P(ca_buffer, PSTR("</selMtr>"));  // 9
-      // fall-through
-    case XmlFile::METER:  // mtrsetup.xml
-      strcat_P(ca_buffer, PSTR("</meterList>"));
-      ec_client.write(ca_buffer);
-      break;
+    //case XmlFile::INFO:  // info.xml needs to know which slave to look at
+    //  //strcat_P(ca_buffer, PSTR("<selMtr>"));  // 8
+    //  //sprintf(ca_buffer + 8, "%u", g_u8a_selectedSlave);
+    //  //strcat_P(ca_buffer, PSTR("</selMtr>"));  // 9
+    //  // fall-through
+    //case XmlFile::METER:  // mtrsetup.xml
+    //  strcat_P(ca_buffer, PSTR("</meterList>"));
+    //  ec_client.write(ca_buffer);
+    //  break;
     case XmlFile::GENERAL: // gensetup.xml
       if (g_b_rtcGood) {
         time_t t = now();

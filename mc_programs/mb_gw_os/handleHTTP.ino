@@ -249,7 +249,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           break;
         case FileReq_MTRSETUP:
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
-          sendXmlEnd(g_eca_socks[u8_socket], XmlFile::METER);
+          //sendXmlEnd(g_eca_socks[u8_socket], XmlFile::METER);
           break;
         case FileReq_DATA:
           // LIVE XML - NEED MODBUS HANDLING HERE
@@ -259,7 +259,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           break;
         case FileReq_INFO:
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
-          sendXmlEnd(g_eca_socks[u8_socket], XmlFile::INFO);
+          //sendXmlEnd(g_eca_socks[u8_socket], XmlFile::INFO);
           break;
         case FileReq_RESTART:
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);

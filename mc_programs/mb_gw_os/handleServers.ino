@@ -112,7 +112,7 @@ void handleServers() {
               Serial.println("available > 0");
               // READ, ADD TO STACK
               ModbusRequest mbReq;
-              uint8_t u8_mbStatus = g_modbusServer.parseRequest(g_eca_socks[ii], mbReq, u8a_mbSrtBytes[ii], k_u32_mbTcpTimeout);
+              uint8_t u8_mbStatus = g_modbusServer.parseRequest(g_eca_socks[ii], mbReq, u8a_mbSrtBytes[ii]);
               if (!u8_mbStatus) {  // no error in message
                 // ADD TO STACK
                 g_u16a_mbReqUnqId[ii] = mbStack.add(mbReq, 1);
@@ -133,7 +133,7 @@ void handleServers() {
                   g_u16a_socketFlags[ii] |= (SockFlag_MB485 | SockFlag_READ_REQ);
                 }
                 // SET TCP TIMER
-                g_u32a_socketTimeoutStart[ii] = millis();
+                g_u32a_socketTimeoutStart[ii] = millis();  // this is reset for activity
               }
               else if (u8_mbStatus == g_modbusServer.k_u8_MBResponseTimedOut) {
                 Serial.print("error: "); Serial.println(u8_mbStatus, DEC);
@@ -143,6 +143,7 @@ void handleServers() {
                 Ethernet52.cleanSockets(502);
                 g_u16a_socketFlags[ii] = SockFlag_LISTEN;
                 g_u16a_mbReqUnqId[ii] = 0;
+                continue;
               }
               else {  // invalid request
                 uint8_t u8a_respBuf[9] = { 0 };
@@ -171,7 +172,7 @@ void handleServers() {
               continue;
             }
           }
-          
+          // don't use else- otherwise will need to wait for next loop to check everything
           if (mbStack[u8_mbReqInd].u8_flags & (MRFLAG_goodData | MRFLAG_timeout)) {  // if we have, then check for good message return
             // TRANSFER MESSAGE FROM PROTOCOL BUFFER TO CURRENT SOCKET OUTBOUND
             Serial.println("sending response...");
@@ -232,7 +233,7 @@ void handleServers() {
 
             Ethernet52.cleanSockets(502);
             g_u16a_socketFlags[ii] = SockFlag_LISTEN;
-
+            continue;
           }  // end if else tcp timeout
         }  // end if port 502
         else if (g_u16a_socketFlags[ii] & SockFlag_HTTP) {  // if port 80
@@ -240,18 +241,71 @@ void handleServers() {
           //g_u16a_socketFlags[ii] |= readHttp(ii, );
           // if haven't read yet
           // if available
-          g_u16a_socketFlags[ii] |= readHttp(ii, u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii]);
+          if (!(g_u16a_socketFlags[ii] & SockFlag_READ_REQ)) {  // haven't read request yet
+            if (g_eca_socks[ii].available()) {
+              s16_fileTypes[ii] = FileType::NONE;
+              u16_fileReqs[ii] = FileReq_404;
+              u8_selSlvs[ii] = 0;
 
-          // set flags here?
-          Serial.print("flags: "); Serial.println(g_u16a_socketFlags[ii], HEX);
-          // if have read
-          respondHttp(ii, g_u16a_socketFlags[ii], u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii]);
+              g_u16a_socketFlags[ii] |= readHttp(ii, u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii]);
+              g_u16a_socketFlags[ii] |= SockFlag_READ_REQ;
+              g_u32a_socketTimeoutStart[ii] = millis();
+            }
+            else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // nothing every available
+              Serial.println("tcp timeout");
+
+              g_eca_socks[ii].stop();
+              g_eca_socks[ii].setSocket(ii);
+
+              Ethernet52.cleanSockets(80);
+              g_u16a_socketFlags[ii] = SockFlag_LISTEN;
+              continue;  // move on to next socket
+            }
+          }
           
-          g_eca_socks[ii].stop();
-          g_eca_socks[ii].setSocket(ii);
+          if (g_u16a_socketFlags[ii] & SockFlag_READ_REQ) {
+            if (respondHttp(ii, g_u16a_socketFlags[ii], u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii])) {
+              // good
+              g_eca_socks[ii].stop();
+              g_eca_socks[ii].setSocket(ii);
 
-          Ethernet52.cleanSockets(80);  // makes sure desired sockets are listening
-          g_u16a_socketFlags[ii] = SockFlag_LISTEN;  // reset flag
+              Ethernet52.cleanSockets(80);  // makes sure desired sockets are listening
+              g_u16a_socketFlags[ii] = SockFlag_LISTEN;  // reset flag
+              continue;
+            }
+            else {  // need to keep loop running for whatever reason (like waiting for live MB data)
+              // need to do anything here?
+            }
+          }
+          if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // tcp timeout
+            // MUST TAKE CARE OF ANYTHING ADDED TO THE MODBUS STACK HERE!!!!!!!!!!
+            uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
+            if (u8_mbReqInd < mbStack.k_u8_maxSize) {
+              if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_sentMsg) {  // only need to reset protocols if message has been sent
+                if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // tcp used
+                  uint8_t u8_dumSck = (mbStack[u8_mbReqInd].u8_flags & MRFLAG_sckMask);
+
+                  g_eca_socks[u8_dumSck].stop();
+                  g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
+
+                  ba_clientSocksAvail[u8_dumSck - 6] = true;
+                }
+                else {  // serial used
+                  b_485avail = true;
+                }
+              }
+              mbStack.removeByInd(u8_mbReqInd);
+              g_u16a_mbReqUnqId[ii] = 0;
+            }  // end if request in stack
+
+
+            g_eca_socks[ii].stop();
+            g_eca_socks[ii].setSocket(ii);
+
+            Ethernet52.cleanSockets(80);  // makes sure desired sockets are listening
+            g_u16a_socketFlags[ii] = SockFlag_LISTEN;  // reset flag
+            continue;
+          }
         }
       }
     }  // end for loop through sockets

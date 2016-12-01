@@ -54,7 +54,7 @@ public:
 	void sendResponse(EthernetClient52 &ec_client, const ModbusRequest &mbReq, uint8_t u8a_strtBytes[2]);
 	
 	uint8_t parseRequest(EthernetClient52 &ec_client, ModbusRequest &mbReq, 
-	                     uint8_t u8a_strtBytes[2], const uint32_t k_u32_mbTcpTimeout);
+	                     uint8_t u8a_strtBytes[2]);
 	
 	
 	void setTimeout(uint32_t u32_timeout);

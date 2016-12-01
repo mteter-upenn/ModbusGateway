@@ -5,7 +5,7 @@
 
 
 ModbusServer::ModbusServer(uint8_t u8_serialPort) {
-	ModbusServer(u8_serialPort, 255);
+	ModbusServer(u8_serialPort, 255);  // call next constructor
 }
 
 ModbusServer::ModbusServer(uint8_t u8_serialPort, uint8_t u8_enablePin) {
@@ -463,17 +463,19 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 
 
 uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &mbReq, 
-                                   uint8_t u8a_strtBytes[2], const uint32_t k_u32_mbTcpTimeout) {
+                                   uint8_t u8a_strtBytes[2]) {
 	uint32_t u32_startTime = millis();
 	uint16_t u16_lenRead;
 	uint16_t u16_givenLen;
-	uint8_t u8a_mbReq[300];
+	const uint32_t k_u32_mbRecvMsgTimeout(50);  // timeout for reading incoming request
+	const uint16_t k_u16_mbMsgMaxLen(300);
+	uint8_t u8a_mbReq[k_u16_mbMsgMaxLen];
 	uint8_t u8_mbStatus(k_u8_MBSuccess);
 	uint8_t u8_slvInd;
 	
 	while (true) {
 		if (ec_client.available()) {
-			u16_lenRead = ec_client.read(u8a_mbReq, 300);
+			u16_lenRead = ec_client.read(u8a_mbReq, k_u16_mbMsgMaxLen);
 
 			// if client hasn't read 6 bytes, then there is a huge problem here
 			if (u16_lenRead < 6) {
@@ -483,7 +485,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
 			}
 
-			if ((u16_lenRead > u16_givenLen) || (u16_givenLen > 300)) {
+			if ((u16_lenRead > u16_givenLen) || (u16_givenLen > k_u16_mbMsgMaxLen)) {
 				// need to dump error and set ModbusRequest 
 				return k_u8_MBGatewayTargetFailed;   //   should not happen, modbus/tcp deals with pretty small stuff overall)
 			}
@@ -497,9 +499,9 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 			// Serial.print("lenRead: "); Serial.println(u16_lenRead, DEC);
 			
 			while (u16_lenRead < u16_givenLen) {  // make sure to grab the full packet
-				u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, 300 - u16_lenRead);
+				u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, k_u16_mbMsgMaxLen - u16_lenRead);
 
-				if ((millis() - u32_startTime) > k_u32_mbTcpTimeout) {  // 10 ms might be too quick, but not really sure
+				if ((millis() - u32_startTime) > k_u32_mbRecvMsgTimeout) {  // 10 ms might be too quick, but not really sure
 					// set mbReq
 					return k_u8_MBResponseTimedOut;
 				}
@@ -576,7 +578,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 			break;  // VERY IMPORTANT!
 			// find actual id and type and set flags, set necessary errors
 		}
-		else if ((millis() - u32_startTime) > k_u32_mbTcpTimeout) {  // 10 ms might be too quick, but not really sure
+		else if ((millis() - u32_startTime) > k_u32_mbRecvMsgTimeout) {  // 10 ms might be too quick, but not really sure
 			// set mbReq
 			return k_u8_MBResponseTimedOut;
 		}

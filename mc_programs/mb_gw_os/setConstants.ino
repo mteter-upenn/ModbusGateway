@@ -196,7 +196,7 @@ void writeMtrSetupFile(){
     webFile.print(F("</type></meter>"));
   }
 
-//  webFile.print(F("</meterList>"));
+  webFile.print(F("</meterList>"));
   
   webFile.flush();
   webFile.close();
