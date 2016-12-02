@@ -48,6 +48,9 @@
 			function isNumeric(num) {
 				return !isNaN(num);
 			}
+			function wSpc(length) {
+				return Array(length + 1).join(String.fromCharCode(160));
+			}
 			
 			function getDisplayInfo(){
 				var txtArray = ["",
@@ -68,7 +71,7 @@
 								"11.1.0", "12.1.0"];
 							
 				nocache = "&nocache=" + Math.random() * 1000000;
-
+		
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function(){
 					
@@ -95,7 +98,7 @@
 											break;
 										}
 									}
-									selSlv -= 1;
+									//selSlv -= 1;
 								}
 								
 								var totSlvs = xmlDoc.getElementsByTagName('meter').length;
@@ -105,10 +108,10 @@
 								
 								var input = document.getElementById('slave');
 								
-								for (var i = 1; i < (totSlvs + 1); i++){
+								for (var ii = 0; ii < totSlvs; ++ii){
 									var option = document.createElement("option");
-									option.value = i;
-									option.text = i;
+									option.value = ii;
+									option.text = ii;
 									input.appendChild(option);
 								}
 								
@@ -159,7 +162,7 @@
 			}
 			
 			function getMeterData(){	
-				nocache = "?METER=" + (selSlv + 1) + "&nocache=" + Math.random() * 1000000;
+				nocache = "?METER=" + selSlv + "&nocache=" + Math.random() * 1000000;
 				
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function(){
@@ -239,7 +242,12 @@
 				<form method="get">
 					<!-- <input type="submit" value="Go to Meter:"> -->
 					<label for="slave">Go to Slave: </label>
-					<select id="slave" onchange="this.form.submit()" name="METER"></select>
+					<select id="slave" onchange="this.form.submit()" name="METER" style="font-family: monospace;">
+						<!-- <option selected disabled>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IP&nbsp;|&nbsp;Modbus Id&nbsp;|&nbsp;Modbus vId&nbsp;|&nbsp;Meter&nbsp;</option> -->
+						<!-- <option>&nbsp;255.255.255.255&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;255&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;128&nbsp;|&nbsp;SquareD Micrologic A Trip Unit</option> -->
+						<!-- <option>&nbsp;&nbsp;&nbsp;&nbsp;10.166.7.201&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;25&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Eaton PXM 2260</option> -->
+						<!-- <option>&nbsp;&nbsp;&nbsp;&nbsp;Serial Comms&nbsp;|&nbsp;255&nbsp;|&nbsp;255&nbsp;|&nbsp;SquareD Micrologic A Trip Unit</option> -->
+					</select>
 				</form>
 				
 				<br>

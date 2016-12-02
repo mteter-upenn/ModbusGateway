@@ -71,7 +71,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
         uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
         char *cp_meterInd;                                     // index of 'METER' in GET request
 
-        u8_selSlv = 0;  // u8_selSlv is 1-based: 0 indicates error
+        u8_selSlv = 0;
         cp_meterInd = strstr(ca_httpReqDummy, "METER=");  // the other string strips everything else off
 
         if (cp_meterInd != nullptr) {
@@ -90,15 +90,15 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
           }
 
           if (u8_selSlv > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
-            u8_selSlv = 1;
+            u8_selSlv = 0;
           }
         }
         else {
           Serial.println("did not find METER=");
-          u8_selSlv = 1;
+          u8_selSlv = 0;
         }
 
-        u8_meterType = g_u8a_slaveTypes[(u8_selSlv - 1)][0];  // turn meter from slave index to meter type X.x.x
+        u8_meterType = g_u8a_slaveTypes[u8_selSlv][0];  // turn meter from slave index to meter type X.x.x
 
         switch (u8_meterType) {
         case 11:
@@ -141,7 +141,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
         //uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
         char *cp_meterInd;                                     // index of 'METER' in GET request
 
-        u8_selSlv = 0;  // u8_selSlv is 1-based: 0 indicates error
+        u8_selSlv = 0;
         cp_meterInd = strstr(ca_httpReqDummy, "METER=");
 
         if (cp_meterInd != nullptr) {
@@ -158,8 +158,8 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
             }
           }
 
-          if (u8_selSlv > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
-            u8_selSlv = 1;
+          if (u8_selSlv > g_u8_numSlaves) {  // if greater than number of meters listed
+            u8_selSlv = 0;
           }
         }
 
@@ -232,7 +232,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
 
 
 bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType, 
-                 const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize]) {
+                 const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize], ModbusStack &mbStack) {
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
   //uint32_t totBytes = 0;
@@ -253,7 +253,8 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           break;
         case FileReq_DATA:
           // LIVE XML - NEED MODBUS HANDLING HERE
-          send404(g_eca_socks[u8_socket]);
+
+          MeterLibGroups mtrGrp();
 
           // return false;  // return false so it knows nothing has been sent back yet
           break;

@@ -87,7 +87,7 @@ uint16_t g_u16_timeout = 2000;                               // modbus timeout
 
 // slave info
 // REMOVE BELOW!
-uint8_t g_u8_numSlaves;  // REMOVE?                              // number of modbus slaves attached to gateway
+uint8_t g_u8_numSlaves;                                // number of modbus slaves attached to gateway
 uint8_t g_u8a_slaveIds[20];  // slv_devs                                // array of modbus device ids (meters can share these!)
 uint8_t g_u8a_slaveVids[20];    // slv_vids                              // array of modbus virtual ids (these should be unique!) they can be the same as devs
 uint8_t g_u8a_slaveIps[20][4];  // slv_ips                              // array of slave ips
@@ -137,7 +137,7 @@ void resetArd(void);
 void handleServers();
 // handleHTTP
 SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv, char ca_fileReq[gk_u16_requestLineSize]);
-bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType,  const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize]);
+bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType,  const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize], ModbusStack &mbStack);
 // secondaryHTTP - GET and general functions
 //void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
 void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]);

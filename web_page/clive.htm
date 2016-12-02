@@ -96,7 +96,7 @@
 											break;
 										}
 									}
-									selSlv -= 1;
+									//selSlv -= 1;
 								}
 								
 								var totSlvs = xmlDoc.getElementsByTagName('meter').length;
@@ -106,10 +106,10 @@
 								
 								var input = document.getElementById('slave');
 								
-								for (var i = 1; i < (totSlvs + 1); i++){
+								for (var ii = 0; ii < totSlvs; ++ii){
 									var option = document.createElement("option");
-									option.value = i;
-									option.text = i;
+									option.value = ii;
+									option.text = ii;
 									input.appendChild(option);
 								}
 								
@@ -159,7 +159,7 @@
 			}
 			
 			function getMeterData(){	
-				nocache = "?METER=" + (selSlv + 1) + "&nocache=" + Math.random() * 1000000;
+				nocache = "?METER=" + selSlv + "&nocache=" + Math.random() * 1000000;
 				
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function(){

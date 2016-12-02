@@ -264,7 +264,7 @@ void handleServers() {
           }
           
           if (g_u16a_socketFlags[ii] & SockFlag_READ_REQ) {
-            if (respondHttp(ii, g_u16a_socketFlags[ii], u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii])) {
+            if (respondHttp(ii, g_u16a_socketFlags[ii], u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii], mbStack)) {
               // good
               g_eca_socks[ii].stop();
               g_eca_socks[ii].setSocket(ii);
