@@ -351,12 +351,47 @@ uint8_t ModbusServer::u8array2regs(uint8_t u8p_devResp[], uint16_t *u16p_regs, u
 	return u8_numBytes;
 }
 
-
-void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest &mbReq, uint8_t u8a_strtBytes[2]) {
+void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest &mbReq,const uint8_t u8a_strtBytes[2]) {
 	uint8_t u8a_respBuf[256] = {0};  // actual buffer used to respond
+	uint16_t u16_respLen(0);
+	returnResponse(mbReq, u8a_strtBytes, u8a_respBuf, u16_respLen);
+	
+	if (u16_respLen > 0) {
+		Serial.println("message to laptop: ");
+		// for debugging
+		// u8a_respBuf[0] = 0;
+		// u8a_respBuf[1] = 0;
+		// u8a_respBuf[2] = 0;
+		// u8a_respBuf[3] = 0;
+		// u8a_respBuf[4] = 0;
+		// u8a_respBuf[5] = 7;
+		
+		// u8a_respBuf[6] = 101;
+		// u8a_respBuf[7] = 3;
+		// u8a_respBuf[8] = 4;
+		// u8a_respBuf[9] = 3;
+		// u8a_respBuf[10] = 190;
+		// u8a_respBuf[11] = 14;
+		// u8a_respBuf[12] = 208;
+		
+		// u16_respLen = 13;
+		// end debugging
+		for (int ii = 0; ii < u16_respLen; ++ii) {
+			Serial.print(u8a_respBuf[ii], DEC); Serial.print(", ");
+		}
+		Serial.println();
+		
+		ec_client.write(u8a_respBuf, u16_respLen);
+		ec_client.flush();  // do anything?
+		
+	}
+}
+
+uint8_t ModbusServer::returnResponse(const ModbusRequest &mbReq, const uint8_t u8a_strtBytes[2], uint8_t u8a_respBuf[256], uint16_t &u16_respLen) {
+	// uint8_t u8a_respBuf[256] = {0};  // actual buffer used to respond
 	uint16_t u16a_interBuf[128] = {0};  // used for grabbing data in register format
 	uint8_t u8_mbStatus(0);
-	uint16_t u16_respLen(0);
+	// uint16_t u16_respLen(0);
 	uint8_t u8_numBytes(0);
 	
 	u8a_respBuf[0] = u8a_strtBytes[0];
@@ -430,35 +465,7 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 		u16_respLen = 9;
 	}
 	
-	if (u16_respLen > 0) {
-		Serial.println("message to laptop: ");
-		// for debugging
-		// u8a_respBuf[0] = 0;
-		// u8a_respBuf[1] = 0;
-		// u8a_respBuf[2] = 0;
-		// u8a_respBuf[3] = 0;
-		// u8a_respBuf[4] = 0;
-		// u8a_respBuf[5] = 7;
-		
-		// u8a_respBuf[6] = 101;
-		// u8a_respBuf[7] = 3;
-		// u8a_respBuf[8] = 4;
-		// u8a_respBuf[9] = 3;
-		// u8a_respBuf[10] = 190;
-		// u8a_respBuf[11] = 14;
-		// u8a_respBuf[12] = 208;
-		
-		// u16_respLen = 13;
-		// end debugging
-		for (int ii = 0; ii < u16_respLen; ++ii) {
-			Serial.print(u8a_respBuf[ii], DEC); Serial.print(", ");
-		}
-		Serial.println();
-		
-		ec_client.write(u8a_respBuf, u16_respLen);
-		ec_client.flush();  // do anything?
-		
-	}
+	return u8_mbStatus;
 }
 
 

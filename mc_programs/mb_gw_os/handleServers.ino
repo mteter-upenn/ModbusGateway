@@ -5,21 +5,20 @@
 // start by transforming 80 server, it will make it easier
 void handleServers() {
   bool b_allFreeSocks = false;  // assume there are used sockets - don't worry we'll check first to make sure
-  bool b_485avail = true;  // can assume 485 is open at init
-  bool ba_clientSocksAvail[2] = { false, false };  // assume both socks used at init
+  //bool b_485avail = true;  // can assume 485 is open at init
+  //bool ba_clientSocksAvail[2] = { false, false };  // assume both socks used at init
   ModbusStack mbStack;
   const uint32_t k_u32_mbTcpTimeout(3000);              // timeout for device to hold on to tcp connection after modbus request
   uint8_t u8a_mbSrtBytes[8][2];
   char ca_fileReq[8][gk_u16_requestLineSize] = { {0}, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 } };
   
-  //const int k_i_maxNumElecVals(32);
-  //const int k_i_maxNumStmChwVals(10);
-  //float fa_liveXmlData[9][k_i_maxNumElecVals];  // 
-  //int8_t s8a_dataFlags[9][k_i_maxNumElecVals];
+  
+  float fa_liveXmlData[9][gk_i_maxNumElecVals];  // 
+  int8_t s8a_dataFlags[9][gk_i_maxNumElecVals];
   FileType s16_fileTypes[8];
   FileReq u16_fileReqs[8];
   uint8_t u8_selSlvs[8];
-
+  uint8_t u8_curGrp[8] = { 0 };
 
   while (!b_allFreeSocks) {
     b_allFreeSocks = true;  // set true, if anything is active, set false to avoid escape
@@ -59,7 +58,7 @@ void handleServers() {
           }
         }
         else if ((ii > 5) && (u8_sockStatus == SnSR::CLOSED)) {  // if emergency/client socket and closed
-          ba_clientSocksAvail[ii - 6] = true;  // make sure socket declared available for modbus-slave use
+          g_ba_clientSocksAvail[ii - 6] = true;  // make sure socket declared available for modbus-slave use
         }
       }
     }
@@ -82,10 +81,10 @@ void handleServers() {
               g_eca_socks[u8_dumSck].stop();
               g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
 
-              ba_clientSocksAvail[u8_dumSck - 6] = true;
+              g_ba_clientSocksAvail[u8_dumSck - 6] = true;
             }
             else {  // serial used
-              b_485avail = true;
+              g_b_485avail = true;
             }
             // CLEAN SOCKETS? - main socket should just keep ticking, no reason to here
             // REMOVE FROM STACK
@@ -186,10 +185,10 @@ void handleServers() {
               g_eca_socks[u8_dumSck].stop();
               g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
 
-              ba_clientSocksAvail[u8_dumSck - 6] = true;
+              g_ba_clientSocksAvail[u8_dumSck - 6] = true;
             }
             else {  // serial used
-              b_485avail = true;
+              g_b_485avail = true;
             }
             // CLEAN SOCKETS? - main socket should just keep ticking, no reason to here
             // REMOVE FROM STACK
@@ -216,10 +215,10 @@ void handleServers() {
                   g_eca_socks[u8_dumSck].stop();
                   g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
 
-                  ba_clientSocksAvail[u8_dumSck - 6] = true;
+                  g_ba_clientSocksAvail[u8_dumSck - 6] = true;
                 }
                 else {  // serial used
-                  b_485avail = true;
+                  g_b_485avail = true;
                 }
               }
               mbStack.removeByInd(u8_mbReqInd);
@@ -264,7 +263,7 @@ void handleServers() {
           }
           
           if (g_u16a_socketFlags[ii] & SockFlag_READ_REQ) {
-            if (respondHttp(ii, g_u16a_socketFlags[ii], u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii], mbStack)) {
+            if (respondHttp(ii, g_u16a_socketFlags[ii], u16_fileReqs[ii], s16_fileTypes[ii], u8_selSlvs[ii], ca_fileReq[ii], mbStack, u8_curGrp[ii], fa_liveXmlData[ii], s8a_dataFlags[ii])) {
               // good
               g_eca_socks[ii].stop();
               g_eca_socks[ii].setSocket(ii);
@@ -288,10 +287,10 @@ void handleServers() {
                   g_eca_socks[u8_dumSck].stop();
                   g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
 
-                  ba_clientSocksAvail[u8_dumSck - 6] = true;
+                  g_ba_clientSocksAvail[u8_dumSck - 6] = true;
                 }
                 else {  // serial used
-                  b_485avail = true;
+                  g_b_485avail = true;
                 }
               }
               mbStack.removeByInd(u8_mbReqInd);
@@ -318,7 +317,7 @@ void handleServers() {
     if (mbStack.getLength() > 0) {
       uint8_t u8_stkInd;
 
-      if (b_485avail) {
+      if (g_b_485avail) {
         u8_stkInd = mbStack.getNext485();
         if (u8_stkInd < mbStack.k_u8_maxSize) { // 255 is none in stack
           mbStack[u8_stkInd].u8_flags |= MRFLAG_sentMsg;  // mark sent flag
@@ -329,7 +328,7 @@ void handleServers() {
           g_modbusServer.sendSerialRequest(mbStack[u8_stkInd]);  // SEND REQUEST
           // START TIMER, timer in ModbusServer class
 
-          b_485avail = false;
+          g_b_485avail = false;
         }
         else {  // no 485 requests exist
           // don't need to do anything
@@ -357,13 +356,13 @@ void handleServers() {
           }
         }
         else {  // serial active, but nothing in stack, set serial to open and pray
-          b_485avail = true;
+          g_b_485avail = true;
         }
       }  // end if/else serial
 
       // HAVE NOT COMPLETED CHECK FOR TCP REQUESTS
       for (int ii = 6; ii < 8; ++ii) {
-        if (ba_clientSocksAvail[ii - 6]) {  // if socket is available for use
+        if (g_ba_clientSocksAvail[ii - 6]) {  // if socket is available for use
           u8_stkInd = mbStack.getNextTcp();
           if (u8_stkInd < mbStack.k_u8_maxSize) {
             mbStack[u8_stkInd].u8_flags |= (MRFLAG_sentMsg | (ii & 0xff));  // mark sent flag
@@ -376,7 +375,7 @@ void handleServers() {
             g_modbusServer.sendTcpRequest(g_eca_socks[ii], mbStack[u8_stkInd]);
 
             // START TIMER
-            ba_clientSocksAvail[ii - 6] = false;
+            g_ba_clientSocksAvail[ii - 6] = false;
           }
           else {
             //Serial.print("nothing in tcp stack for socket "); Serial.println(ii, DEC);
@@ -404,7 +403,7 @@ void handleServers() {
             g_eca_socks[ii].stop();
             g_eca_socks[ii].setSocket(ii);
 
-            ba_clientSocksAvail[ii - 6] = true;
+            g_ba_clientSocksAvail[ii - 6] = true;
           }
         }
       }

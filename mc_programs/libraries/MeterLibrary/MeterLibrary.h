@@ -67,13 +67,14 @@ class MeterLibGroups {
 	private:
 		uint16_t m_u16_reqReg;
 		uint16_t m_u16_numRegs;
-		uint8_t m_u8_mtrType;
+		uint8_t m_u8_mtrType;  // THIS IS 1 BASED!
+		uint8_t m_u8_func;
 		
 		uint16_t m_u16_mtrTypeListingStart;
 		uint16_t m_u16_mtrLibStart;
 		uint16_t m_u16_grpStrtInd;
 		uint8_t m_u8_numGrps;
-		uint8_t m_u8_curGrp;
+		uint8_t m_u8_curGrp;  // THIS IS 1 BASED!
 		uint8_t m_u8_numGrpVals;
 		uint16_t m_u16_grpDataTypeInd;
 
@@ -90,6 +91,8 @@ class MeterLibGroups {
 		uint16_t getReqReg();
 		uint8_t getCurGrp();
 		uint8_t getNumGrps();
+		
+		ModbusRequest getGroupRequest(bool b_serialComm, uint8_t u8_mbId, uint8_t mbVid);
 		
 		bool groupToFloat(const uint8_t *const u8p_data, float *const fp_retData, int8_t *const s8kp_dataFlags);
 		bool groupMbErr(int8_t *const s8kp_dataFlags);

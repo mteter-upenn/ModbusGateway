@@ -13,6 +13,16 @@
 //  }
 //}
 
+bool isSerial(uint8_t u8_selSlv) {
+  for (int ii = 0; ii < 4; ++ii) {
+    if (g_u8a_slaveIps[u8_selSlv][ii] != 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 // converts first line of http request to the file requested- overwrites char array, BE CAREFUL
 void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]) {
   uint16_t u16_strStart(0);
@@ -30,6 +40,7 @@ void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]) {
     switch (ca_fileReq[ii]) {
     case 32:  // space
     case 38:  // &
+    case 63:
       ca_fileReq[ii] = 0;
       goto exitConvertForLoop;
       break;
@@ -313,82 +324,82 @@ void sendIP(EthernetClient52 &ec_client) {
 }
 
 
-void liveXML(EthernetClient52 &ec_client, uint8_t u8a_selectedSlave) {  // sends xml file of live meter data
-  const int k_i_maxNumElecVals(32);
-  const int k_i_maxNumStmChwVals(10);
+void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]) {  // sends xml file of live meter data
+  //const int k_i_maxNumElecVals(32);
+  //const int k_i_maxNumStmChwVals(10);
   const uint16_t k_u16_minRemBytes(50);
-  float fa_data[k_i_maxNumElecVals];  // 32 is max number of value types that can be sent
-  int8_t s8a_dataFlags[k_i_maxNumElecVals];
-  uint8_t u8a_mbReq[12];  // can make this smaller 
-  uint8_t u8a_mbResp[gk_u16_mbArraySize];
-  uint16_t u16_reqLen(12), u16_respLen(0);
-  uint16_t u16_numGrps;
-  uint16_t u16_reqReg, u16_numRegs;
-  uint8_t u8_mtrType, u8_mbVid, u8_mtrMbFunc;
-  uint8_t u8_mbReqStat;
+  //float fa_data[k_i_maxNumElecVals];  // 32 is max number of value types that can be sent
+  //int8_t s8a_dataFlags[k_i_maxNumElecVals];
+  //uint8_t u8a_mbReq[12];  // can make this smaller 
+  //uint8_t u8a_mbResp[gk_u16_mbArraySize];
+  //uint16_t u16_reqLen(12), u16_respLen(0);
+  //uint16_t u16_numGrps;
+  //uint16_t u16_reqReg, u16_numRegs;
+  //uint8_t u8_mtrType, u8_mbVid, u8_mtrMbFunc;
+  //uint8_t u8_mbReqStat;
   char ca_respXml[gk_u16_respBuffSize] = {0};  // 68
 
-  strcpy_P(ca_respXml, PSTR("HTTP/1.1 200 OK\nContent-Type: text/xml\nConnnection: close\n\n"));  // create http response
+  //strcpy_P(ca_respXml, PSTR("HTTP/1.1 200 OK\nContent-Type: text/xml\nConnnection: close\n\n"));  // create http response
 
-  u8_mtrType = g_u8a_slaveTypes[(u8a_selectedSlave - 1)][0];
+  //u8_mtrType = g_u8a_slaveTypes[(u8a_selectedSlave - 1)][0];
 
-  if ((u8_mtrType > EEPROM.read(g_u16_regBlkStart + 2)) || (u8_mtrType == 0)){  // check if meter higher than number of meter registers listed
-    strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
-    ec_client.write(ca_respXml);
+  //if ((u8_mtrType > EEPROM.read(g_u16_regBlkStart + 2)) || (u8_mtrType == 0)){  // check if meter higher than number of meter registers listed
+  //  strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
+  //  ec_client.write(ca_respXml);
 
-    ec_client.flush();
-    return;  // no registers in eeprom
-  }
-  u8_mbVid = g_u8a_slaveVids[(u8a_selectedSlave - 1)];  // getModbus accounts for vids
+  //  ec_client.flush();
+  //  return;  // no registers in eeprom
+  //}
+  //u8_mbVid = g_u8a_slaveVids[(u8a_selectedSlave - 1)];  // getModbus accounts for vids
 
-  u8_mtrMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType + 2);
+  //u8_mtrMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_mtrType + 2);
 
-  MeterLibGroups mtrGrps(u8_mtrType);
-  u16_numGrps = mtrGrps.getNumGrps();
+  //MeterLibGroups mtrGrps(u8_mtrType);
+  //u16_numGrps = mtrGrps.getNumGrps();
 
-  memset(u8a_mbReq, 0, 5);
-  u8a_mbReq[5] = 6;     // length of modbus half
-  u8a_mbReq[6] = u8_mbVid;   // device id
-  u8a_mbReq[7] = u8_mtrMbFunc;  // modbus function
-  
+  //memset(u8a_mbReq, 0, 5);
+  //u8a_mbReq[5] = 6;     // length of modbus half
+  //u8a_mbReq[6] = u8_mbVid;   // device id
+  //u8a_mbReq[7] = u8_mtrMbFunc;  // modbus function
+  //
 
-  for (int ii = 1; ii < u16_numGrps; ++ii){  // the last group is filled with those data requests that cannot be filled
-    mtrGrps.setGroup(ii);
-    u16_reqReg = mtrGrps.getReqReg();
-    u16_numRegs = mtrGrps.getNumRegs();
+  //for (int ii = 1; ii < u16_numGrps; ++ii){  // the last group is filled with those data requests that cannot be filled
+  //  mtrGrps.setGroup(ii);
+  //  u16_reqReg = mtrGrps.getReqReg();
+  //  u16_numRegs = mtrGrps.getNumRegs();
 
-    u8a_mbReq[8] = highByte(u16_reqReg);
-    u8a_mbReq[9] = lowByte(u16_reqReg);
-    u8a_mbReq[10] = highByte(u16_numRegs);  // assume no length higher than 255
-    u8a_mbReq[11] = lowByte(u16_numRegs);  // ask for float conversion = 2*num for registers
+  //  u8a_mbReq[8] = highByte(u16_reqReg);
+  //  u8a_mbReq[9] = lowByte(u16_reqReg);
+  //  u8a_mbReq[10] = highByte(u16_numRegs);  // assume no length higher than 255
+  //  u8a_mbReq[11] = lowByte(u16_numRegs);  // ask for float conversion = 2*num for registers
 
-    delay(5); // ensure long enough delay between polls
-    u8_mbReqStat = getModbus(u8a_mbReq, u16_reqLen, u8a_mbResp, u16_respLen, true);  // getModbus uses MB/TCP as inputs and outputs
+  //  delay(5); // ensure long enough delay between polls
+  //  u8_mbReqStat = getModbus(u8a_mbReq, u16_reqLen, u8a_mbResp, u16_respLen, true);  // getModbus uses MB/TCP as inputs and outputs
 
-    if (u8_mbReqStat == 0) {
-      mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
-    }  // end if
-    else {
-      if (ii == 1){ // if first message and error, just dump failures
-        strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
-        ec_client.write(ca_respXml);
-        ec_client.flush();
-        return;  // if modbus timeout error on first loop, kill further data requests
-      }
-      mtrGrps.groupMbErr(s8a_dataFlags);
-    } // end if
-  }  // end for
+  //  if (u8_mbReqStat == 0) {
+  //    mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
+  //  }  // end if
+  //  else {
+  //    if (ii == 1){ // if first message and error, just dump failures
+  //      strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>false</has_data></inputs>"));
+  //      ec_client.write(ca_respXml);
+  //      ec_client.flush();
+  //      return;  // if modbus timeout error on first loop, kill further data requests
+  //    }
+  //    mtrGrps.groupMbErr(s8a_dataFlags);
+  //  } // end if
+  //}  // end for
 
-  // last group full of duds (if any) ********************************************************************
-  mtrGrps.setGroup(u16_numGrps);
-  mtrGrps.groupLastFlags(s8a_dataFlags);
-  // end handling of last group **************************************************************************
+  //// last group full of duds (if any) ********************************************************************
+  //mtrGrps.setGroup(u16_numGrps);
+  //mtrGrps.groupLastFlags(s8a_dataFlags);
+  //// end handling of last group **************************************************************************
 
   // add to xml string, indicate that data is contained
   strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>true</has_data>"));
 
-  if ((u8_mtrType == 11) || (u8_mtrType == 12)){
-    for (int ii = 0; ii < k_i_maxNumStmChwVals; ++ii) { 
+  if ((g_u8a_slaveTypes[u8_selSlv][0] == 11) || (g_u8a_slaveTypes[u8_selSlv][0] == 12)){
+    for (int ii = 0; ii < gk_i_maxNumStmChwVals; ++ii) { 
       if (ii < 3) strcat_P(ca_respXml, PSTR("<flow>"));
       else if (ii < 4) strcat_P(ca_respXml, PSTR("<tmp1>"));
       else if (ii < 5) strcat_P(ca_respXml, PSTR("<tmp2>"));
@@ -419,13 +430,13 @@ void liveXML(EthernetClient52 &ec_client, uint8_t u8a_selectedSlave) {  // sends
       else strcat_P(ca_respXml, PSTR("</engy>"));
 
       if ((gk_u16_respBuffSize - strlen(ca_respXml)) < k_u16_minRemBytes) {
-        ec_client.write(ca_respXml);  // write line of xml response every other time (stacks 2 together)
+        g_eca_socks[u8_socket].write(ca_respXml);  // write line of xml response every other time (stacks 2 together)
         ca_respXml[0] = 0;  // reset respXml to 0 length so strcat starts at beginning
       }
     }
   }
   else {  // electric meter
-    for (int ii = 0; ii < k_i_maxNumElecVals; ++ii) {
+    for (int ii = 0; ii < gk_i_maxNumElecVals; ++ii) {
       if (ii < 5){strcat_P(ca_respXml, PSTR("<curr>"));}
       else if (ii < 9){strcat_P(ca_respXml, PSTR("<v_LN>"));}
       else if (ii < 13){strcat_P(ca_respXml, PSTR("<v_LL>"));}
@@ -462,16 +473,16 @@ void liveXML(EthernetClient52 &ec_client, uint8_t u8a_selectedSlave) {  // sends
 
 
       if ((gk_u16_respBuffSize - strlen(ca_respXml)) < k_u16_minRemBytes) {
-        ec_client.write(ca_respXml);  // write line of xml response
+        g_eca_socks[u8_socket].write(ca_respXml);  // write line of xml response
         ca_respXml[0] = 0;  // reset respXml to 0 length
       }
     }
   }
 
   strcat_P(ca_respXml, PSTR("</inputs>"));
-  ec_client.write(ca_respXml);
+  g_eca_socks[u8_socket].write(ca_respXml);
   
-  ec_client.flush();
+  g_eca_socks[u8_socket].flush();
 }
 
 

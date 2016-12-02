@@ -17,8 +17,8 @@ enum SockFlag: uint16_t {  // 16 bit flag,  is this actually 32 bit?
   SockFlag_ESTABLISHED = 0x0001,  // 1,    comms with client - active
   SockFlag_MODBUS =      0x0002,  // 2,    port 502
   SockFlag_HTTP =        0x0004,  // 4,    port 80
-  SockFlag_MB485 =       0x0008,  // 8,    modbus device connected via 485 (local)
-  SockFlag_MBTCP =       0x0010,  // 16,   modbus device connected via ethernet (not local)
+  SockFlag_MB485 =       0x0008,  // 8,    modbus device connected via 485 (local)  (UNUSED?)
+  SockFlag_MBTCP =       0x0010,  // 16,   modbus device connected via ethernet (not local)  (UNUSED?)
   SockFlag_READ_REQ =    0x0020,  // 32,   initial message from client
   SockFlag_CLIENT =      0x0040,  // 64,   high if gateway acting as client to tcp slave
   SockFlag_GET =         0x0080,  // 128,  GET http request 

@@ -216,12 +216,12 @@ MeterLibGroups::MeterLibGroups(uint8_t u8_mtrType) {
 	setMeterType(u8_mtrType);
 }
 
-bool MeterLibGroups::setMeterType(uint8_t u8_mtrType) {
-	if ((u8_mtrType <= EEPROM.read(m_u16_mtrTypeListingStart + 2)) || (u8_mtrType == 0)) {
+bool MeterLibGroups::setMeterType(uint8_t u8_mtrType) {  // 1 based
+	if ((u8_mtrType <= EEPROM.read(m_u16_mtrTypeListingStart + 2)) && (u8_mtrType > 1)) {
 		m_u8_mtrType = u8_mtrType;
 	}
 	else {
-		m_u8_mtrType = 0;
+		m_u8_mtrType = 1;
 		m_u16_reqReg = 0xFFFF;
 		return false;  // meter type not viable
 	}
@@ -231,12 +231,14 @@ bool MeterLibGroups::setMeterType(uint8_t u8_mtrType) {
 	// assume group is 1:
 	m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
 	
+	m_u8_func = EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType + 2);
+	
 	return setGroup(1);
 }
 
 
 
-bool MeterLibGroups::setGroup(uint8_t u8_grpInd) {
+bool MeterLibGroups::setGroup(uint8_t u8_grpInd) {  // u8_grpInd is 1 based!!
 	if (m_u8_mtrType != 0) {
 		if (u8_grpInd <= m_u8_numGrps) {
 			m_u8_curGrp = u8_grpInd;
@@ -279,6 +281,35 @@ uint8_t MeterLibGroups::getCurGrp() {
 uint8_t MeterLibGroups::getNumGrps() {
 	return m_u8_numGrps;
 }
+
+
+ModbusRequest MeterLibGroups::getGroupRequest(bool b_serialComm, uint8_t u8_mbId, uint8_t u8_mbVid) {
+	ModbusRequest mbReq;
+	
+	mbReq.u8_flags = MRFLAG_adjReq;
+	if (!b_serialComm) {
+		mbReq.u8_flags |= MRFLAG_isTcp;
+	}
+	mbReq.u8_id = u8_mbId;
+	mbReq.u8_vid = u8_mbVid;
+	mbReq.u8_func = m_u8_func;
+	mbReq.u16_start = m_u16_reqReg;
+	mbReq.u16_length = m_u16_numRegs;
+	mbReq.u8_mtrType = m_u8_mtrType;
+	
+	
+	return mbReq;
+	// uint16_t  u16_unqId;  // manipulated by stack
+	// uint8_t   u8_flags;  // don't know if serial or tcp from group
+	// uint8_t   u8_id;  // don't know from group
+	// uint8_t   u8_vid;  // don't know from group
+	// uint8_t   u8_func;
+	// uint16_t  u16_start;
+	// uint16_t  u16_length;
+	// uint8_t   u8_mtrType;  // 
+	
+}
+
 
 bool MeterLibGroups::groupToFloat(const uint8_t *const k_u8kp_data, float *const fkp_retData, 
 	int8_t *const s8kp_dataFlags) {

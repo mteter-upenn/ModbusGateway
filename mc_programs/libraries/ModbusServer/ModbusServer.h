@@ -51,7 +51,8 @@ public:
 	
 	// ec_client is requestor
 
-	void sendResponse(EthernetClient52 &ec_client, const ModbusRequest &mbReq, uint8_t u8a_strtBytes[2]);
+	void sendResponse(EthernetClient52 &ec_client, const ModbusRequest &mbReq,const uint8_t u8a_strtBytes[2]);
+	uint8_t returnResponse(const ModbusRequest &mbReq,const uint8_t u8a_strtBytes[2], uint8_t u8a_respBuf[256], uint16_t &u16_respLen);
 	
 	uint8_t parseRequest(EthernetClient52 &ec_client, ModbusRequest &mbReq, 
 	                     uint8_t u8a_strtBytes[2]);

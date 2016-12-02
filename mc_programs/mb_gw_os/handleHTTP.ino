@@ -232,7 +232,8 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
 
 
 bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType, 
-                 const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize], ModbusStack &mbStack) {
+                 const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize], ModbusStack &mbStack, 
+                 uint8_t &u8_curGrp, float fa_liveXmlData[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]) {
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
   //uint32_t totBytes = 0;
@@ -251,13 +252,83 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
           //sendXmlEnd(g_eca_socks[u8_socket], XmlFile::METER);
           break;
-        case FileReq_DATA:
+        case FileReq_DATA: {
           // LIVE XML - NEED MODBUS HANDLING HERE
+          Serial.println("in data");
+          MeterLibGroups mtrGrp(g_u8a_slaveTypes[u8_selSlv][0]);
 
-          MeterLibGroups mtrGrp();
+          if (u8_curGrp == 0) { // first time, must add to stack
+            ModbusRequest mbReq;
+            u8_curGrp = 1;
+            mtrGrp.setGroup(u8_curGrp);
 
+            mbReq = mtrGrp.getGroupRequest(isSerial(u8_selSlv), g_u8a_slaveIds[u8_selSlv], g_u8a_slaveVids[u8_selSlv]);
+            g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
+            Serial.print("unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);
+            //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
+            g_u32a_socketTimeoutStart[u8_socket] = millis();  // this is reset for activity
+            return false;
+          }
+          else {
+            uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[u8_socket]);
+            if (mbStack[u8_mbReqInd].u8_flags & (MRFLAG_goodData | MRFLAG_timeout)) {
+              uint8_t u8a_respBuf[256] = { 0 };
+              uint16_t u16_respLen(0);
+              uint8_t u8a_dummyArr[2] = { 0 };
+              uint8_t u8_mbStatus;
+
+              u8_mbStatus = g_modbusServer.returnResponse(mbStack[u8_mbReqInd], u8a_dummyArr, u8a_respBuf, u16_respLen);
+
+              if (!u8_mbStatus) {
+                mtrGrp.groupToFloat(&u8a_respBuf[9], fa_liveXmlData, s8a_dataFlags);
+              }
+              else {
+                mtrGrp.groupMbErr(s8a_dataFlags);
+              }
+              g_u32a_socketTimeoutStart[u8_socket] = millis();
+
+              if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // tcp used
+                uint8_t u8_dumSck = (mbStack[u8_mbReqInd].u8_flags & MRFLAG_sckMask);
+
+                g_eca_socks[u8_dumSck].stop();
+                g_eca_socks[u8_dumSck].setSocket(u8_dumSck);
+
+                g_ba_clientSocksAvail[u8_dumSck - 6] = true;
+              }
+              else {  // serial used
+                g_b_485avail = true;
+              }
+              mbStack.removeByInd(u8_mbReqInd);
+              g_u16a_mbReqUnqId[u8_socket] = 0;
+
+              // go to next group
+              ModbusRequest mbReq;
+              u8_curGrp++;
+              if (u8_curGrp < mtrGrp.getNumGrps()) {
+                mtrGrp.setGroup(u8_curGrp);
+
+                mbReq = mtrGrp.getGroupRequest(isSerial(u8_selSlv), g_u8a_slaveIds[u8_selSlv], g_u8a_slaveVids[u8_selSlv]);
+                g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
+                                                                       //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
+                g_u32a_socketTimeoutStart[u8_socket] = millis();  // this is reset for activity
+                return false;
+              }
+              else {  // this is the last group, hooray! - no modbus message here
+                mtrGrp.groupLastFlags(s8a_dataFlags);
+
+                liveXML(u8_socket, u8_selSlv, fa_liveXmlData, s8a_dataFlags);
+                return true;
+              }
+              
+            }
+            else {  // data has not yet been returned
+              return false;
+              break;
+            }
+          }
           // return false;  // return false so it knows nothing has been sent back yet
           break;
+        }
         case FileReq_INFO:
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
           //sendXmlEnd(g_eca_socks[u8_socket], XmlFile::INFO);

@@ -122,8 +122,15 @@ SockFlag g_u16a_socketFlags[8] = { SockFlag_LISTEN, SockFlag_LISTEN, SockFlag_LI
 uint16_t  g_u16a_mbReqUnqId[8] = { 0 };  // unique id of modbus request in ModbusStack
 EthernetClient52 g_eca_socks[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
+// MOVE THESE TO MBSTACK CLASS
+bool g_b_485avail = true;  // can assume 485 is open at init
+bool g_ba_clientSocksAvail[2] = { false, false };  // assume both socks used at init
+
+
 // miscellaneous
 bool g_b_sdInit = false;  // sdInit                                   // set flag corresponding to sd card initializtion
+const int gk_i_maxNumElecVals(32);
+const int gk_i_maxNumStmChwVals(10);
 
 // test vars
 #if DISP_TIMING_DEBUG
@@ -137,9 +144,10 @@ void resetArd(void);
 void handleServers();
 // handleHTTP
 SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv, char ca_fileReq[gk_u16_requestLineSize]);
-bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType,  const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize], ModbusStack &mbStack);
+bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType,  const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize], ModbusStack &mbStack, uint8_t &u8_curGrp, float fa_liveXmlData[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]);
 // secondaryHTTP - GET and general functions
 //void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
+bool isSerial(uint8_t u8_selSlv);
 void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]);
 void send404(EthernetClient52 &ec_client);
 void sendBadSD(EthernetClient52 &ec_client);
@@ -148,7 +156,7 @@ void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType
 void sendDownLinks(EthernetClient52 &ec_client, const char *const cp_firstLine);
 void sendXmlEnd(EthernetClient52 &ec_client, XmlFile en_xmlType);
 void sendIP(EthernetClient52 &ec_client);
-void liveXML(EthernetClient52 &ec_client, uint8_t u8a_selectedSlave);
+void liveXML(uint8_t u8_socket, uint8_t u8_selSlv, float fa_data[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]);
 // tertiaryHTTP - POST related functions
 void sendPostResp(EthernetClient52 &ec_client);
 char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_postLen);
