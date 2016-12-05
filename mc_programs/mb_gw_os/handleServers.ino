@@ -14,7 +14,7 @@ void handleServers() {
   
   
   float fa_liveXmlData[9][gk_i_maxNumElecVals];  // 
-  int8_t s8a_dataFlags[9][gk_i_maxNumElecVals];
+  int8_t s8a_dataFlags[9][gk_i_maxNumElecVals] = { 0 };
   FileType s16_fileTypes[8];
   FileReq u16_fileReqs[8];
   uint8_t u8_selSlvs[8];

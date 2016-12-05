@@ -277,11 +277,11 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 			}
 			
 			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
-				// Serial.print("tcp resp from slave: ");
-				// for (int ii = 0; ii < u16_mbRxSize; ++ii) {
-					// Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
-				// }
-				// Serial.println();
+				Serial.println("raw tcp resp from slave: ");
+				for (int ii = 0; ii < u16_mbRxSize; ++ii) {
+					Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
+				}
+				Serial.println();
 				
 				// verify device id
 				if (u8p_devResp[6] != mr_mbReq.u8_id) {
@@ -292,7 +292,7 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 					u8_mbStatus = k_u8_MBInvalidFunction;
 				}
 				// check for returned errors
-				else if (bitRead(u8p_devResp[8], 7)) {
+				else if (bitRead(u8p_devResp[7], 7)) {
 					u8_mbStatus = u8p_devResp[8];
 				}
 				// can exit from loop now

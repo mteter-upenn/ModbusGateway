@@ -75,7 +75,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
         cp_meterInd = strstr(ca_httpReqDummy, "METER=");  // the other string strips everything else off
 
         if (cp_meterInd != nullptr) {
-          Serial.println("found METER=");
+          //Serial.println("found METER=");
           char *cp_dumPtr;
           cp_meterInd += 6;  // move pointer to end of phrase 'METER='
           cp_dumPtr = cp_meterInd + 3;
@@ -94,7 +94,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
           }
         }
         else {
-          Serial.println("did not find METER=");
+          //Serial.println("did not find METER=");
           u8_selSlv = 0;
         }
 
@@ -254,10 +254,17 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           break;
         case FileReq_DATA: {
           // LIVE XML - NEED MODBUS HANDLING HERE
-          Serial.println("in data");
+          //Serial.print("in data, current group: "); Serial.println(u8_curGrp, DEC);
+          //Serial.print("meter type: "); Serial.println(g_u8a_slaveTypes[u8_selSlv][0], DEC);
+          
           MeterLibGroups mtrGrp(g_u8a_slaveTypes[u8_selSlv][0]);
+          //Serial.print("total Groups: "); Serial.println(mtrGrp.getNumGrps(), DEC);
 
+          //send404(g_eca_socks[u8_socket]);
+          //return true;
+          // MUST REMOVE ABOVE TO TRULY WORK
           if (u8_curGrp == 0) { // first time, must add to stack
+            
             ModbusRequest mbReq;
             u8_curGrp = 1;
             mtrGrp.setGroup(u8_curGrp);
@@ -271,18 +278,45 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           }
           else {
             uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[u8_socket]);
+            if (!(u8_mbReqInd < mbStack.k_u8_maxSize)) {  // NOTHING EXISTS IN STACK!
+              send404(g_eca_socks[u8_socket]);
+              return true;
+            }
             if (mbStack[u8_mbReqInd].u8_flags & (MRFLAG_goodData | MRFLAG_timeout)) {
-              uint8_t u8a_respBuf[256] = { 0 };
-              uint16_t u16_respLen(0);
-              uint8_t u8a_dummyArr[2] = { 0 };
-              uint8_t u8_mbStatus;
+              //uint8_t u8a_respBuf[256] = { 0 };
+              uint16_t u16a_respData[128] = { 0 };
+              uint8_t u8_numBytes(0);
+              //uint16_t u16_respLen(0);
+              //uint8_t u8a_dummyArr[2] = { 0 };
+              uint8_t u8_mbStatus(0);
 
-              u8_mbStatus = g_modbusServer.returnResponse(mbStack[u8_mbReqInd], u8a_dummyArr, u8a_respBuf, u16_respLen);
+              if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_timeout) {  // protocol has timed out, no message from slave device
+                u8_mbStatus = g_modbusServer.k_u8_MBResponseTimedOut;
+              }
+              else if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // there is a good message over tcp
+                u8_mbStatus = g_modbusServer.recvTcpResponse(mbStack[u8_mbReqInd], u16a_respData, u8_numBytes);
+              }
+              else {  // there is a good message over serial
+                u8_mbStatus = g_modbusServer.recvSerialResponse(mbStack[u8_mbReqInd], u16a_respData, u8_numBytes);
+              }
 
+              //u8_mbStatus = g_modbusServer.returnResponse(mbStack[u8_mbReqInd], u8a_dummyArr, u8a_respBuf, u16_respLen);
+
+              Serial.print("modbus resp for group "); Serial.print(u8_curGrp, DEC); Serial.println(":");
+              for (int ii = 0; ii < u8_numBytes/2; ++ii) {
+                Serial.print(highByte(u16a_respData[ii]), DEC); Serial.print(" ");
+                Serial.print(lowByte(u16a_respData[ii]), DEC); Serial.print(" ");
+              }
+              Serial.println();
+
+              mtrGrp.setGroup(u8_curGrp);
               if (!u8_mbStatus) {
-                mtrGrp.groupToFloat(&u8a_respBuf[9], fa_liveXmlData, s8a_dataFlags);
+                Serial.println("good data!");
+                /*mtrGrp.groupToFloat(&u8a_respBuf[9], fa_liveXmlData, s8a_dataFlags);*/
+                mtrGrp.groupToFloat(u16a_respData, fa_liveXmlData, s8a_dataFlags);
               }
               else {
+                Serial.println("bad data :(");
                 mtrGrp.groupMbErr(s8a_dataFlags);
               }
               g_u32a_socketTimeoutStart[u8_socket] = millis();
@@ -302,14 +336,15 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
               g_u16a_mbReqUnqId[u8_socket] = 0;
 
               // go to next group
-              ModbusRequest mbReq;
+              
               u8_curGrp++;
-              if (u8_curGrp < mtrGrp.getNumGrps()) {
-                mtrGrp.setGroup(u8_curGrp);
+              mtrGrp.setGroup(u8_curGrp);
 
+              if (u8_curGrp < mtrGrp.getNumGrps()) {
+                ModbusRequest mbReq;
                 mbReq = mtrGrp.getGroupRequest(isSerial(u8_selSlv), g_u8a_slaveIds[u8_selSlv], g_u8a_slaveVids[u8_selSlv]);
                 g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
-                                                                       //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
+                Serial.print("unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);                                              //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
                 g_u32a_socketTimeoutStart[u8_socket] = millis();  // this is reset for activity
                 return false;
               }
@@ -317,6 +352,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
                 mtrGrp.groupLastFlags(s8a_dataFlags);
 
                 liveXML(u8_socket, u8_selSlv, fa_liveXmlData, s8a_dataFlags);
+                u8_curGrp = 0;
                 return true;
               }
               

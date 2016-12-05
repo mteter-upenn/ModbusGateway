@@ -70,7 +70,7 @@ void handle_data() {
 
           if (u8_mbStatus == 0) {
             // record data for group's values
-            mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
+            //mtrGrps.groupToFloat(&u8a_mbResp[9], fa_data, s8a_dataFlags);
           }
           else if (jj == 1) {
             // set all flags to error - assume that since the first group failed, others will fail as well and cut losses

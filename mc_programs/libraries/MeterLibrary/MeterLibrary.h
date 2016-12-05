@@ -94,7 +94,7 @@ class MeterLibGroups {
 		
 		ModbusRequest getGroupRequest(bool b_serialComm, uint8_t u8_mbId, uint8_t mbVid);
 		
-		bool groupToFloat(const uint8_t *const u8p_data, float *const fp_retData, int8_t *const s8kp_dataFlags);
+		bool groupToFloat(const uint16_t * k_u16p_data, float *const fkp_retData, int8_t *const s8kp_dataFlags);
 		bool groupMbErr(int8_t *const s8kp_dataFlags);
 		bool groupLastFlags(int8_t *const s8kp_dataFlags);		
 };

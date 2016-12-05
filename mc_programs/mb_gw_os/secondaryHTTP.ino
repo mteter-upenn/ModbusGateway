@@ -40,7 +40,7 @@ void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]) {
     switch (ca_fileReq[ii]) {
     case 32:  // space
     case 38:  // &
-    case 63:
+    case 63:  // ?
       ca_fileReq[ii] = 0;
       goto exitConvertForLoop;
       break;
@@ -396,6 +396,8 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
   //// end handling of last group **************************************************************************
 
   // add to xml string, indicate that data is contained
+
+  Serial.println("liveXml");
   strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>true</has_data>"));
 
   if ((g_u8a_slaveTypes[u8_selSlv][0] == 11) || (g_u8a_slaveTypes[u8_selSlv][0] == 12)){
@@ -409,7 +411,12 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
 
       switch (s8a_dataFlags[ii]){
         case 1:  // good data
-          dtostrf(fa_data[ii], 1, 2, (ca_respXml + strlen(ca_respXml)));
+          //if (isnan(fa_data[ii]) || isinf(fa_data[ii])) {
+          //  strcat_P(ca_respXml, PSTR("fperr"));
+          //}
+          //else {
+            dtostrf(fa_data[ii], 1, 2, (ca_respXml + strlen(ca_respXml)));
+          //}
           break;
         case 0:  // data does not exist on hardware
 //          strcat(respXml, "-");
@@ -417,6 +424,9 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
           break;
         case (-1):  // no modbus return
           strcat_P(ca_respXml, PSTR("error"));
+          break;
+        case (-2):
+          strcat_P(ca_respXml, PSTR("fperrr"));
           break;
         default:
           break;
@@ -448,7 +458,12 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
 
       switch (s8a_dataFlags[ii]){
         case 1:  // good data
-          dtostrf(fa_data[ii], 1, 2, (ca_respXml + strlen(ca_respXml)));
+          //if (isnan(fa_data[ii]) || isinf(fa_data[ii])) {
+          //  strcat_P(ca_respXml, PSTR("fperr"));
+          //}
+          //else {
+            dtostrf(fa_data[ii], 1, 2, (ca_respXml + strlen(ca_respXml)));
+          //}
           break;
         case 0:  // data does not exist on hardware
 //          strcat(respXml, "-");
@@ -456,6 +471,9 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
           break;
         case (-1):  // no modbus return
           strcat_P(ca_respXml, PSTR("error"));
+          break;
+        case (-2):
+          strcat_P(ca_respXml, PSTR("fperrr"));
           break;
         default:
           break;
@@ -480,8 +498,10 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
   }
 
   strcat_P(ca_respXml, PSTR("</inputs>"));
+
+  Serial.println("before write");
   g_eca_socks[u8_socket].write(ca_respXml);
-  
+  Serial.println("post write");
   g_eca_socks[u8_socket].flush();
 }
 

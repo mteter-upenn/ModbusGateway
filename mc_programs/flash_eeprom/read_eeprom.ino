@@ -246,6 +246,8 @@ void read_eeprom(char c_menuChar) {
     Serial.println();
 
     for (ii = 0; ii < u8_numMaps; ++ii) {
+      uint16_t u16_slvLibStrt = word(EEPROM.read(u16_mapStrt + 3 + ii * 4), EEPROM.read(u16_mapStrt + 4 + ii * 4));
+
       Serial.print(F("Library number: "));
       Serial.println(EEPROM.read(u16_mapStrt + 5 + ii * 4), DEC);
 
@@ -253,7 +255,15 @@ void read_eeprom(char c_menuChar) {
       Serial.println(EEPROM.read(u16_mapStrt + 6 + ii * 4), DEC);
 
       Serial.print(F("Library index: "));
-      Serial.println(word(EEPROM.read(u16_mapStrt + 3 + ii * 4), EEPROM.read(u16_mapStrt + 4 + ii * 4)));
+      Serial.println(u16_slvLibStrt, DEC);
+
+      Serial.print("\tNumber of blocks: ");
+      Serial.println(EEPROM.read(u16_slvLibStrt + 2), DEC);
+
+      Serial.print("\tNumber of groups: ");
+      Serial.println(EEPROM.read(u16_slvLibStrt + 3), DEC);
+
+
       Serial.println();
     }
   }

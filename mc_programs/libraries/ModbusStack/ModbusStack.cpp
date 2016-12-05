@@ -312,7 +312,7 @@ void ModbusStack::printReqByInd(uint8_t u8_ind) {
 		return;
 	}
 	
-	Serial.print("Unique Id:  "); Serial.println(m_mbStack[u8_ind].u16_unqId, DEC);
+	Serial.print("Unique Stack Id:  "); Serial.println(m_mbStack[u8_ind].u16_unqId, DEC);
 	Serial.print("Actual Id:  "); Serial.println(m_mbStack[u8_ind].u8_id, DEC);
 	Serial.print("Virtual Id: "); Serial.println(m_mbStack[u8_ind].u8_vid, DEC);
 	Serial.print("Function:   "); Serial.println(m_mbStack[u8_ind].u8_func, DEC);
