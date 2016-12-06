@@ -3,11 +3,12 @@
 	<head>
 	  <title>Live Electric Data</title>
 	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
-	  <link rel="stylesheet" type="text/css" href="/ep_style.css">
+	  <link rel="stylesheet" type="text/css" href="ep_style.css">
 	  <style>
 			table.mtr_data {
 				font-family: Arial, Helvetica, sans-serif;
-				width: 100%;
+				max-width: 100%;
+				min-width: 30em;
 				border-collapse: collapse;
 				table-layout: fixed;
 			}
@@ -44,8 +45,10 @@
 	  </style>
 	  <script>
 			var selSlv = 0;
+			var utility = "";
 			var elecClasses = ["curr", "v_LN", "rl_p", "rc_p", "ap_p", "p_fc", "engy", "v_LL"];
-			
+			var chwClasses = ["flow", "tmp1", "tmp2", "dlta", "engy"];
+			var stmClasses = ["flow", "tmp1", "pres", "engy"];
 			
 			var txtArray = ["",
 							"Eaton IQ DP 4000", "Eaton PXM 2260", "Eaton IQ 200", "Eaton IQ 300", "Eaton Power Xpert 4000",
@@ -100,17 +103,18 @@
 			}
 			
 			function getDisplayInfo(){
-				
-							
-				nocache = "&nocache=" + Math.random() * 1000000;
-		
 				var slvSelect = document.getElementById('slave');
 				var option = document.createElement("option");
 				option.disabled = true;
 				option.text = concatDropdown("IP", "Modbus Id", "Modbus vId", "Meter Type");
 				slvSelect.appendChild(option);
-				drawElecTable();
 				
+				
+				//drawChwTable();
+				//drawStmTable();
+				//drawElecTable();
+				
+				nocache = "&nocache=" + Math.random() * 1000000;
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function(){
 					
@@ -184,12 +188,15 @@
 								// draw tables
 								if (xmlDoc.getElementsByTagName("type")[selSlv].childNodes[0].nodeValue == "11.1.0") {
 									drawChwTable();
+									utility = "chw";
 								}
-								else if (xmlDoc.getElementsByTagName("type")[ii].childNodes[0].nodeValue == "12.1.0") {
+								else if (xmlDoc.getElementsByTagName("type")[selSlv].childNodes[0].nodeValue == "12.1.0") {
 									drawStmTable();
+									utility = "stm";
 								}
 								else {
 									drawElecTable();
+									utility = "elec";
 								}
 							}
 						}
@@ -215,18 +222,29 @@
 									document.getElementById("last_update").innerHTML = d.toLocaleString();
 									document.getElementById("update_txt").innerHTML = "Successful retrieval!";
 									
-									var count;
-									var cl_cnt;
 									var num_cls;
+									var totNumClass = 0;
+									var classArr;
 									
+									if (utility == "chw") {
+										totNumClass = 5;
+										classArr = chwClasses;
+									}
+									else if (utility == "stm") {
+										totNumClass = 4;
+										classArr = stmClasses;
+									}
+									else {
+										totNumClass = 8;
+										classArr = elecClasses;
+									}
 									
-									
-									for (cl_cnt = 0; cl_cnt < 8; cl_cnt++){
-										num_cls = this.responseXML.getElementsByTagName(elecClasses[cl_cnt]).length;
+									for (var cl_cnt = 0; cl_cnt < totNumClass; cl_cnt++){
+										num_cls = this.responseXML.getElementsByTagName(classArr[cl_cnt]).length;
 										
-										for (count = 0; count < num_cls; count++){
-											document.getElementsByClassName(elecClasses[cl_cnt])[count].innerHTML = 
-												this.responseXML.getElementsByTagName(elecClasses[cl_cnt])[count].childNodes[0].nodeValue;
+										for (var count = 0; count < num_cls; count++){
+											document.getElementsByClassName(classArr[cl_cnt])[count].innerHTML = 
+												this.responseXML.getElementsByTagName(classArr[cl_cnt])[count].childNodes[0].nodeValue;
 										}
 									}	
 								}
@@ -255,9 +273,101 @@
 			}
 			
 			function drawChwTable() {
+				var chwRowNms = ["Heat Flow (tons)", "Mass Flow (lbs/m)", "Volumetric Flow (gpm)", 
+				                 "Supply Temperature (F)", "Return Temperature (F)", "Delta Temperature (F)",
+												 "Heat Grand Total (ton-hrs)", "Mass Grand Total (lbs)", "Volume Grand Total (gal)"];
+				var tableDiv = document.getElementById("table_div");
+				
+				var table1 = document.createElement("TABLE");
+				table1.className = "mtr_data";
+				tableDiv.appendChild(table1);
+				
+				var tableRow = document.createElement("tr");
+				table1.appendChild(tableRow);
+				
+				addTableCell(tableRow, "th", "width:11em;", "", "Chilled Water");
+				addTableCell(tableRow, "th", "", "", "Values");
+				
+				
+				
+				for (var ii = 0; ii < 3; ++ii) {
+					var tableRow = document.createElement("tr");
+					if (ii % 2 == 0) { tableRow.className = "typ"; }
+					else { tableRow.className = "alt"; }
+					table1.appendChild(tableRow);
+					
+					addTableCell(tableRow, "td", "", "", chwRowNms[ii]);
+					addTableCell(tableRow, "td", "", chwClasses[0], "");
+				}
+				
+				for (var ii = 3; ii < 6; ++ii) {
+					var tableRow = document.createElement("tr");
+					if (ii % 2 == 0) { tableRow.className = "typ"; }
+					else { tableRow.className = "alt"; }
+					table1.appendChild(tableRow);
+					
+					addTableCell(tableRow, "td", "", "", chwRowNms[ii]);
+					addTableCell(tableRow, "td", "", chwClasses[ii - 2], "");
+				}
+				
+				for (var ii = 6; ii < 9; ++ii) {
+					var tableRow = document.createElement("tr");
+					if (ii % 2 == 0) { tableRow.className = "typ"; }
+					else { tableRow.className = "alt"; }
+					table1.appendChild(tableRow);
+					
+					addTableCell(tableRow, "td", "", "", chwRowNms[ii]);
+					addTableCell(tableRow, "td", "", chwClasses[4], "");
+				}
 			}
 			
 			function drawStmTable() {
+				var stmRowNms = ["Heat Flow (kBtu/hr)", "Mass Flow (lb/hr)", "Volumetric Flow (cf/hr)", 
+				                 "Temperature (F)", "Pressure (psig)", "Heat Grand Total (kBtu)", 
+												 "Mass Grand Total (lbs)", "Volume Grand Total (cf)"];
+				var tableDiv = document.getElementById("table_div");
+				
+				var table1 = document.createElement("TABLE");
+				table1.className = "mtr_data";
+				tableDiv.appendChild(table1);
+				
+				var tableRow = document.createElement("tr");
+				table1.appendChild(tableRow);
+				
+				addTableCell(tableRow, "th", "width:11em;", "", "Steam");
+				addTableCell(tableRow, "th", "", "", "Values");
+				
+				
+				
+				for (var ii = 0; ii < 3; ++ii) {
+					var tableRow = document.createElement("tr");
+					if (ii % 2 == 0) { tableRow.className = "typ"; }
+					else { tableRow.className = "alt"; }
+					table1.appendChild(tableRow);
+					
+					addTableCell(tableRow, "td", "", "", stmRowNms[ii]);
+					addTableCell(tableRow, "td", "", stmClasses[0], "");
+				}
+				
+				for (var ii = 3; ii < 5; ++ii) {
+					var tableRow = document.createElement("tr");
+					if (ii % 2 == 0) { tableRow.className = "typ"; }
+					else { tableRow.className = "alt"; }
+					table1.appendChild(tableRow);
+					
+					addTableCell(tableRow, "td", "", "", stmRowNms[ii]);
+					addTableCell(tableRow, "td", "", stmClasses[ii - 2], "");
+				}
+				
+				for (var ii = 5; ii < 8; ++ii) {
+					var tableRow = document.createElement("tr");
+					if (ii % 2 == 0) { tableRow.className = "typ"; }
+					else { tableRow.className = "alt"; }
+					table1.appendChild(tableRow);
+					
+					addTableCell(tableRow, "td", "", "", stmRowNms[ii]);
+					addTableCell(tableRow, "td", "", stmClasses[3], "");
+				}
 			}
 			
 			function drawElecTable() {
@@ -267,6 +377,7 @@
 				
 				var table1 = document.createElement("TABLE");
 				table1.className = "mtr_data";
+				table1.style = "width:100%;";
 				tableDiv.appendChild(table1);
 				
 				var tableRow = document.createElement("tr");
@@ -340,6 +451,7 @@
 				
 				var table1 = document.createElement("TABLE");
 				table1.className = "mtr_data";
+				table1.style = "width:100%;";
 				tableDiv.appendChild(table1);
 				
 				var tableRow = document.createElement("tr");
@@ -388,7 +500,7 @@
 					<li><a href="/reset.htm">Reset</a></li>
 					
 					<a id="imglink" href="http://www.upenn.edu/">
-						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
+						<img style="width:155px;height:43px;border:0;" src="images/logo_let.gif" alt="Upenn">
 					</a>
 				</ul>
 			</nav>
@@ -396,24 +508,13 @@
 			<!-- Main content -->
 				<br/>
 				<form method="get">
-					<!-- <input type="submit" value="Go to Meter:"> -->
 					<label for="slave">Go to Slave: </label>
 					<select id="slave" onchange="this.form.submit()" name="METER" style="font-family: monospace;">
-						<!-- <option selected disabled>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IP&nbsp;|&nbsp;Modbus Id&nbsp;|&nbsp;Modbus vId&nbsp;|&nbsp;Meter&nbsp;</option> -->
-						<!-- <option>&nbsp;255.255.255.255&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;255&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;128&nbsp;|&nbsp;SquareD Micrologic A Trip Unit</option> -->
-						<!-- <option>&nbsp;&nbsp;&nbsp;&nbsp;10.166.7.201&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;25&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Eaton PXM 2260</option> -->
-						<!-- <option>&nbsp;&nbsp;&nbsp;&nbsp;Serial Comms&nbsp;|&nbsp;255&nbsp;|&nbsp;255&nbsp;|&nbsp;SquareD Micrologic A Trip Unit</option> -->
 					</select>
 				</form>
 				
 				<br>
-				<!-- <p>Current Slave:<br/> -->
-					<!-- <span id="slvIP">IP: </span><br/> -->
-					<!-- <span id="slvID">Modbus ID: </span><br/> -->
-					<!-- <span id="slvVID">Modbus Virtual ID: </span><br/> -->
-					<!-- <span id="slvTyp">Meter Type: </span> -->
-				<!-- </p> -->
-				<!-- <br> -->
+
 				<p style="margin-top: 0em">
 					<button onclick="getMeterData()">Get Data</button>
 					<span id="update_txt" style="padding-left:2em">Data not yet retrieved.</span>

@@ -70,9 +70,9 @@ enum FileReq : uint16_t {
   FileReq_INDEX,      // html
   FileReq_GENSETUP,   // html, xml, post
   FileReq_MTRSETUP,   // html, xml, post
-  FileReq_ELIVE,      // html
-  FileReq_SLIVE,      // html
-  FileReq_CLIVE,      // html
+  FileReq_LIVE,      // html
+  //FileReq_SLIVE,      // html
+  //FileReq_CLIVE,      // html
   FileReq_PASTDOWN,   // html
   FileReq_PASTVIEW,   // html
   FileReq_RESET,      // html

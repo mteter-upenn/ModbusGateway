@@ -68,6 +68,8 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
         u16_fileReq = FileReq_MTRSETUP;
       }
       else if (strstr(ca_fileReq, "live.htm") != nullptr) {
+        u16_fileReq = FileReq_LIVE;
+        /*
         uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
         char *cp_meterInd;                                     // index of 'METER' in GET request
 
@@ -113,6 +115,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
           u16_fileReq = FileReq_ELIVE;        // electric 
           strcpy(ca_fileReq, "/elive.htm");
         }
+        */
       }
       else if (strstr(ca_fileReq, "/pastdown.htm") != nullptr) {  // strstr since there will be more afterwards
         u16_fileReq = FileReq_PASTDOWN;
@@ -397,9 +400,9 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
         case (FileReq_INDEX):
         case (FileReq_GENSETUP):
         case (FileReq_MTRSETUP):
-        case (FileReq_ELIVE):
-        case (FileReq_SLIVE):
-        case (FileReq_CLIVE):
+        case (FileReq_LIVE):
+        //case (FileReq_SLIVE):
+        //case (FileReq_CLIVE):
         case (FileReq_PASTVIEW):
         case (FileReq_RESET):
         case (FileReq_NOPAGE):
