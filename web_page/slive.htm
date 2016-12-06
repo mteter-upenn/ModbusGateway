@@ -49,6 +49,37 @@
 			function isNumeric(num) {
 				return !isNaN(num);
 			}
+			function wSpc(length) {
+				return Array(length + 1).join(String.fromCharCode(160));
+			}
+			
+			function concatDropdown(ipStr, idStr, vidStr, typeStr) {
+				var cctStr = " ";
+				var ipMaxLen = 15;
+				var idMaxLen = 9;
+				var vidMaxLen = 10;
+				var typeMaxLen = 30;
+				
+				cctStr += wSpc(ipMaxLen - ipStr.length);
+				cctStr += ipStr;
+				
+				cctStr += wSpc(1) + "|" + wSpc(1);
+				
+				cctStr += wSpc(idMaxLen - idStr.length);
+				cctStr += idStr;
+				
+				cctStr += wSpc(1) + "|" + wSpc(1);
+				
+				cctStr += wSpc(vidMaxLen - vidStr.length);
+				cctStr += vidStr;
+				
+				cctStr += wSpc(1) + "|" + wSpc(1);
+				
+				cctStr += wSpc(typeMaxLen - typeStr.length);
+				cctStr += typeStr;
+				
+				return cctStr;
+			}
 			
 			function getDisplayInfo(){
 				var txtArray = ["",
@@ -69,7 +100,14 @@
 								"11.1.0", "12.1.0"];
 							
 				nocache = "&nocache=" + Math.random() * 1000000;
-
+		
+				var slvSelect = document.getElementById('slave');
+				var option = document.createElement("option");
+				option.disabled = true;
+				option.text = concatDropdown("IP", "Modbus Id", "Modbus vId", "Meter Type");
+				slvSelect.appendChild(option);
+				
+				
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function(){
 					
@@ -77,7 +115,7 @@
 						if (this.status == 200) {
 							if (this.responseXML != null) {
 								var xmlDoc = this.responseXML;
-								
+						
 								var pageUrl = window.location.href;
 								var urlIndex = pageUrl.indexOf("METER=");
 								
@@ -96,7 +134,6 @@
 											break;
 										}
 									}
-									//selSlv -= 1;
 								}
 								
 								var totSlvs = xmlDoc.getElementsByTagName('meter').length;
@@ -104,58 +141,49 @@
 									selSlv = 0;
 								}
 								
-								var input = document.getElementById('slave');
+								var ipStr = "Serial Comms";
+								var idStr = "err";
+								var vidStr = "err";
+								var typeStr = "err";
 								
 								for (var ii = 0; ii < totSlvs; ++ii){
 									var option = document.createElement("option");
 									option.value = ii;
-									option.text = ii;
-									input.appendChild(option);
-								}
-								
-								input.selectedIndex = selSlv;
-								
-								if (xmlDoc.getElementsByTagName("mip")[selSlv].childNodes.length > 0){
-									document.getElementById("slvIP").innerHTML = "IP: " + xmlDoc.getElementsByTagName("mip")[selSlv].childNodes[0].nodeValue;
-								}
-								else{
-									document.getElementById("slvIP").innerHTML = "Serial Comms";
-								}
-								
-								if (xmlDoc.getElementsByTagName("dev")[selSlv].childNodes.length > 0){
-									document.getElementById("slvID").innerHTML = "Modbus ID: " + xmlDoc.getElementsByTagName("dev")[selSlv].childNodes[0].nodeValue;
-								}
-								else{
-									document.getElementById("slvID").innerHTML = "Modbus ID: ";
-								}
-								
-								if (xmlDoc.getElementsByTagName("vid")[selSlv].childNodes.length > 0){
-									document.getElementById("slvVID").innerHTML = "Modbus Virtual ID: " + xmlDoc.getElementsByTagName("vid")[selSlv].childNodes[0].nodeValue;
-								}
-								else{
-									document.getElementById("slvVID").innerHTML = "Modbus Virtual ID: ";
-								}
-								
-								if (xmlDoc.getElementsByTagName("type")[selSlv].childNodes.length > 0){
-									var mtrTyp = xmlDoc.getElementsByTagName("type")[selSlv].childNodes[0].nodeValue;
 									
-									for (var j = 0; j < txtArray.length; j++){
-										if (valArray[j] == mtrTyp){
-											document.getElementById("slvTyp").innerHTML = "Meter Type: " + txtArray[j];
-											break;
+									if (xmlDoc.getElementsByTagName("mip")[ii].childNodes.length > 0){
+										ipStr =  xmlDoc.getElementsByTagName("mip")[ii].childNodes[0].nodeValue;
+									}
+									if (xmlDoc.getElementsByTagName("dev")[ii].childNodes.length > 0){
+										idStr = xmlDoc.getElementsByTagName("dev")[ii].childNodes[0].nodeValue;
+									}
+									
+									if (xmlDoc.getElementsByTagName("vid")[ii].childNodes.length > 0){
+										vidStr = xmlDoc.getElementsByTagName("vid")[ii].childNodes[0].nodeValue;
+									}
+									
+									if (xmlDoc.getElementsByTagName("type")[ii].childNodes.length > 0){
+										var mtrTyp = xmlDoc.getElementsByTagName("type")[ii].childNodes[0].nodeValue;
+										
+										for (var jj = 0; jj < txtArray.length; jj++){
+											if (valArray[jj] == mtrTyp){
+												typeStr = txtArray[jj];
+												break;
+											}
 										}
 									}
+								
+									option.text = concatDropdown(ipStr, idStr, vidStr, typeStr);
+									slvSelect.appendChild(option);
 								}
-								else{
-									document.getElementById("slvTyp").innerHTML = "Meter Type: ";
-								}
+								
+								slvSelect.selectedIndex = selSlv + 1;  // plus one to account for header
 							}
 						}
 					}
 				}
+
 				request.open("GET", "info.xml" + nocache, true);
-				request.send(null); 
-				/*setTimeout('GetMeterData()', 1000);*/
+				request.send(null);
 			}
 			
 			function getMeterData(){	

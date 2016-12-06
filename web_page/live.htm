@@ -44,7 +44,26 @@
 	  </style>
 	  <script>
 			var selSlv = 0;
+			var elecClasses = ["curr", "v_LN", "rl_p", "rc_p", "ap_p", "p_fc", "engy", "v_LL"];
 			
+			
+			var txtArray = ["",
+							"Eaton IQ DP 4000", "Eaton PXM 2260", "Eaton IQ 200", "Eaton IQ 300", "Eaton Power Xpert 4000",
+							"Emon Dmon 3400",
+							"GE EPM 3720", "GE EPM 5100", "GE PQM",
+							"Schneider PM5300", "Schneider PM8000",
+							"Siemens 9200", "Siemens 9330", "Siemens 9340", "Siemens 9350", "Siemens 9360", "Siemens 9510", "Siemens 9610", "Siemens 9700", "Siemens Sentron PAC 4200", "Siemens Sentron PAC 3200",
+							"SquareD CM 2350", "SquareD PM 210", "SquareD PM 710", "SquareD Micrologic A Trip Unit", "SquareD Micrologic P Trip Unit", "SquareD Micrologic H Trip Unit", "SquareD CM 3350", "SquareD CM 4000", "SquareD CM 4250", "SquareD PM 800", "SquareD PM 820", "SquareD PM 850", "SquareD PM 870",
+							"Chilled Water KEP", "Steam KEP"];
+			var valArray = ["0.0.0", 
+							"0.1.1", "15.1.0", "0.1.3", "0.1.4", "1.1.0", 
+							"2.1.0", 
+							"3.1.0", "0.2.1", "4.1.0", 
+							"16.1.0", "17.1.0",
+							"0.3.1", "5.1.0", "10.8.0", "5.2.0", "5.3.0", "6.1.0", "6.2.0", "5.4.0", "14.1.0", "14.2.0",
+							"7.1.0", "13.1.0", "8.1.0", "9.1.0", "9.2.0", "9.3.0", "10.1.0", "10.2.0", "10.3.0", "10.4.0", "10.5.0", "10.6.0", "10.7.0",
+							"11.1.0", "12.1.0"];
+								
 			function isNumeric(num) {
 				return !isNaN(num);
 			}
@@ -52,26 +71,46 @@
 				return Array(length + 1).join(String.fromCharCode(160));
 			}
 			
+			function concatDropdown(ipStr, idStr, vidStr, typeStr) {
+				var cctStr = " ";
+				var ipMaxLen = 15;
+				var idMaxLen = 9;
+				var vidMaxLen = 10;
+				var typeMaxLen = 30;
+				
+				cctStr += wSpc(ipMaxLen - ipStr.length);
+				cctStr += ipStr;
+				
+				cctStr += wSpc(1) + "|" + wSpc(1);
+				
+				cctStr += wSpc(idMaxLen - idStr.length);
+				cctStr += idStr;
+				
+				cctStr += wSpc(1) + "|" + wSpc(1);
+				
+				cctStr += wSpc(vidMaxLen - vidStr.length);
+				cctStr += vidStr;
+				
+				cctStr += wSpc(1) + "|" + wSpc(1);
+				
+				cctStr += wSpc(typeMaxLen - typeStr.length);
+				cctStr += typeStr;
+				
+				return cctStr;
+			}
+			
 			function getDisplayInfo(){
-				var txtArray = ["",
-								"Eaton IQ DP 4000", "Eaton PXM 2260", "Eaton IQ 200", "Eaton IQ 300", "Eaton Power Xpert 4000",
-								"Emon Dmon 3400",
-								"GE EPM 3720", "GE EPM 5100", "GE PQM",
-								"Schneider PM5300", "Schneider PM8000",
-								"Siemens 9200", "Siemens 9330", "Siemens 9340", "Siemens 9350", "Siemens 9360", "Siemens 9510", "Siemens 9610", "Siemens 9700", "Siemens Sentron PAC 4200", "Siemens Sentron PAC 3200",
-								"SquareD CM 2350", "SquareD PM 210", "SquareD PM 710", "SquareD Micrologic A Trip Unit", "SquareD Micrologic P Trip Unit", "SquareD Micrologic H Trip Unit", "SquareD CM 3350", "SquareD CM 4000", "SquareD CM 4250", "SquareD PM 800", "SquareD PM 820", "SquareD PM 850", "SquareD PM 870",
-								"Chilled Water KEP", "Steam KEP"];
-				var valArray = ["0.0.0", 
-								"0.1.1", "15.1.0", "0.1.3", "0.1.4", "1.1.0", 
-								"2.1.0", 
-								"3.1.0", "0.2.1", "4.1.0", 
-								"16.1.0", "17.1.0",
-								"0.3.1", "5.1.0", "10.8.0", "5.2.0", "5.3.0", "6.1.0", "6.2.0", "5.4.0", "14.1.0", "14.2.0",
-								"7.1.0", "13.1.0", "8.1.0", "9.1.0", "9.2.0", "9.3.0", "10.1.0", "10.2.0", "10.3.0", "10.4.0", "10.5.0", "10.6.0", "10.7.0",
-								"11.1.0", "12.1.0"];
+				
 							
 				nocache = "&nocache=" + Math.random() * 1000000;
 		
+				var slvSelect = document.getElementById('slave');
+				var option = document.createElement("option");
+				option.disabled = true;
+				option.text = concatDropdown("IP", "Modbus Id", "Modbus vId", "Meter Type");
+				slvSelect.appendChild(option);
+				drawElecTable();
+				
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function(){
 					
@@ -98,7 +137,6 @@
 											break;
 										}
 									}
-									//selSlv -= 1;
 								}
 								
 								var totSlvs = xmlDoc.getElementsByTagName('meter').length;
@@ -106,50 +144,52 @@
 									selSlv = 0;
 								}
 								
-								var input = document.getElementById('slave');
+								var ipStr = "Serial Comms";
+								var idStr = "err";
+								var vidStr = "err";
+								var typeStr = "err";
 								
 								for (var ii = 0; ii < totSlvs; ++ii){
 									var option = document.createElement("option");
 									option.value = ii;
-									option.text = ii;
-									input.appendChild(option);
-								}
-								
-								input.selectedIndex = selSlv;
-								
-								if (xmlDoc.getElementsByTagName("mip")[selSlv].childNodes.length > 0){
-									document.getElementById("slvIP").innerHTML = "IP: " + xmlDoc.getElementsByTagName("mip")[selSlv].childNodes[0].nodeValue;
-								}
-								else{
-									document.getElementById("slvIP").innerHTML = "Serial Comms";
-								}
-								
-								if (xmlDoc.getElementsByTagName("dev")[selSlv].childNodes.length > 0){
-									document.getElementById("slvID").innerHTML = "Modbus ID: " + xmlDoc.getElementsByTagName("dev")[selSlv].childNodes[0].nodeValue;
-								}
-								else{
-									document.getElementById("slvID").innerHTML = "Modbus ID: ";
-								}
-								
-								if (xmlDoc.getElementsByTagName("vid")[selSlv].childNodes.length > 0){
-									document.getElementById("slvVID").innerHTML = "Modbus Virtual ID: " + xmlDoc.getElementsByTagName("vid")[selSlv].childNodes[0].nodeValue;
-								}
-								else{
-									document.getElementById("slvVID").innerHTML = "Modbus Virtual ID: ";
-								}
-								
-								if (xmlDoc.getElementsByTagName("type")[selSlv].childNodes.length > 0){
-									var mtrTyp = xmlDoc.getElementsByTagName("type")[selSlv].childNodes[0].nodeValue;
 									
-									for (var jj = 0; jj < txtArray.length; jj++){
-										if (valArray[jj] == mtrTyp){
-											document.getElementById("slvTyp").innerHTML = "Meter Type: " + txtArray[jj];
-											break;
+									if (xmlDoc.getElementsByTagName("mip")[ii].childNodes.length > 0){
+										ipStr =  xmlDoc.getElementsByTagName("mip")[ii].childNodes[0].nodeValue;
+									}
+									if (xmlDoc.getElementsByTagName("dev")[ii].childNodes.length > 0){
+										idStr = xmlDoc.getElementsByTagName("dev")[ii].childNodes[0].nodeValue;
+									}
+									
+									if (xmlDoc.getElementsByTagName("vid")[ii].childNodes.length > 0){
+										vidStr = xmlDoc.getElementsByTagName("vid")[ii].childNodes[0].nodeValue;
+									}
+									
+									if (xmlDoc.getElementsByTagName("type")[ii].childNodes.length > 0){
+										var mtrTyp = xmlDoc.getElementsByTagName("type")[ii].childNodes[0].nodeValue;
+										
+										for (var jj = 0; jj < txtArray.length; jj++){
+											if (valArray[jj] == mtrTyp){
+												typeStr = txtArray[jj];
+												break;
+											}
 										}
 									}
+								
+									option.text = concatDropdown(ipStr, idStr, vidStr, typeStr);
+									slvSelect.appendChild(option);
 								}
-								else{
-									document.getElementById("slvTyp").innerHTML = "Meter Type: ";
+								
+								slvSelect.selectedIndex = selSlv + 1;  // plus one to account for header
+								
+								// draw tables
+								if (xmlDoc.getElementsByTagName("type")[selSlv].childNodes[0].nodeValue == "11.1.0") {
+									drawChwTable();
+								}
+								else if (xmlDoc.getElementsByTagName("type")[ii].childNodes[0].nodeValue == "12.1.0") {
+									drawStmTable();
+								}
+								else {
+									drawElecTable();
 								}
 							}
 						}
@@ -179,14 +219,14 @@
 									var cl_cnt;
 									var num_cls;
 									
-									var classes = ["curr", "v_LN", "rl_p", "rc_p", "ap_p", "p_fc", "engy", "v_LL"];
+									
 									
 									for (cl_cnt = 0; cl_cnt < 8; cl_cnt++){
-										num_cls = this.responseXML.getElementsByTagName(classes[cl_cnt]).length;
+										num_cls = this.responseXML.getElementsByTagName(elecClasses[cl_cnt]).length;
 										
 										for (count = 0; count < num_cls; count++){
-											document.getElementsByClassName(classes[cl_cnt])[count].innerHTML = 
-												this.responseXML.getElementsByTagName(classes[cl_cnt])[count].childNodes[0].nodeValue;
+											document.getElementsByClassName(elecClasses[cl_cnt])[count].innerHTML = 
+												this.responseXML.getElementsByTagName(elecClasses[cl_cnt])[count].childNodes[0].nodeValue;
 										}
 									}	
 								}
@@ -212,6 +252,122 @@
 				request.open("GET", "data.xml" + nocache, true);
 				request.send(null); 
 				/*setTimeout('GetMeterData()', 1000);*/
+			}
+			
+			function drawChwTable() {
+			}
+			
+			function drawStmTable() {
+			}
+			
+			function drawElecTable() {
+				var elecRowNms = ["Current", "Voltage L-N", "Real Power", "Reactive Power", "Apparent Power",
+			                   "Power Factor", "Real Energy", "Reactive Energy", "Apparent Energy", "Voltage L-L"];
+				var tableDiv = document.getElementById("table_div");
+				
+				var table1 = document.createElement("TABLE");
+				table1.className = "mtr_data";
+				tableDiv.appendChild(table1);
+				
+				var tableRow = document.createElement("tr");
+				table1.appendChild(tableRow);
+				
+				addTableCell(tableRow, "th", "width:7em;", "", "Electric");
+				addTableCell(tableRow, "th", "", "", "A");
+				addTableCell(tableRow, "th", "", "", "B");
+				addTableCell(tableRow, "th", "", "", "C");
+				addTableCell(tableRow, "th", "", "", "Average");
+				addTableCell(tableRow, "th", "", "", "Total");
+				
+				// Current
+				tableRow = document.createElement("tr");
+				tableRow.className = "typ";
+				table1.appendChild(tableRow);
+				addTableCell(tableRow, "td", "", "", "Current");
+				for (var jj = 0; jj < 5; ++jj) {
+					addTableCell(tableRow, "td", "", elecClasses[0], "");
+				}
+				
+				// Voltage L-N
+				tableRow = document.createElement("tr");
+				tableRow.className = "alt";
+				table1.appendChild(tableRow);
+				addTableCell(tableRow, "td", "", "", "Voltage L-N");
+				for (var jj = 0; jj < 4; ++jj) {
+					addTableCell(tableRow, "td", "", elecClasses[1], "");
+				}
+				addTableCell(tableRow, "td", "", "", String.fromCharCode(8212));
+				
+				
+				for (var ii = 2; ii < 6; ++ii) {
+					var tableRow = document.createElement("tr");
+					if (ii % 2 == 0) {
+						tableRow.className = "typ";
+					}
+					else {
+						tableRow.className = "alt";
+					}
+					table1.appendChild(tableRow);
+					
+					addTableCell(tableRow, "td", "", "", elecRowNms[ii]);
+					for (var jj = 0; jj < 3; ++jj) {
+						addTableCell(tableRow, "td", "", elecClasses[ii], "");
+					}
+					addTableCell(tableRow, "td", "", "", String.fromCharCode(8212));
+					addTableCell(tableRow, "td", "", elecClasses[ii], "");
+				}
+				
+				for (var ii = 6; ii < 9; ++ii) {
+					var tableRow = document.createElement("tr");
+					if (ii % 2 == 0) {
+						tableRow.className = "typ";
+					}
+					else {
+						tableRow.className = "alt";
+					}
+					table1.appendChild(tableRow);
+					
+					addTableCell(tableRow, "td", "", "", elecRowNms[ii]);
+					for (var jj = 0; jj < 4; ++jj) {
+						addTableCell(tableRow, "td", "", "", String.fromCharCode(8212));
+					}
+					addTableCell(tableRow, "td", "", elecClasses[6], "");
+				}
+				
+				
+				var brkPt = document.createElement("br");
+				tableDiv.appendChild(brkPt);
+				
+				var table1 = document.createElement("TABLE");
+				table1.className = "mtr_data";
+				tableDiv.appendChild(table1);
+				
+				var tableRow = document.createElement("tr");
+				table1.appendChild(tableRow);
+				
+				addTableCell(tableRow, "th", "width:7em;", "", "");
+				addTableCell(tableRow, "th", "", "", "A - B");
+				addTableCell(tableRow, "th", "", "", "B - C");
+				addTableCell(tableRow, "th", "", "", "C - A");
+				addTableCell(tableRow, "th", "", "", "Average");
+				addTableCell(tableRow, "th", "", "", "Total");
+				
+				tableRow = document.createElement("tr");
+				tableRow.className = "typ";
+				table1.appendChild(tableRow);
+				addTableCell(tableRow, "td", "", "", "Voltage L-L");
+				for (var jj = 0; jj < 4; ++jj) {
+					addTableCell(tableRow, "td", "", elecClasses[7], "");
+				}
+				addTableCell(tableRow, "td", "", "", String.fromCharCode(8212));
+			}
+			
+			function addTableCell(tableRow, elmtType, cellStyle, cellClass, cellHtml) {
+				var tableCell = document.createElement(elmtType);
+				tableCell.style = cellStyle;
+				tableCell.className = cellClass;
+				tableCell.innerHTML = cellHtml;
+				tableRow.appendChild(tableCell);
 			}
 		</script>
 	</head>
@@ -251,13 +407,13 @@
 				</form>
 				
 				<br>
-				<p>Current Slave:<br/>
-					<span id="slvIP">IP: </span><br/>
-					<span id="slvID">Modbus ID: </span><br/>
-					<span id="slvVID">Modbus Virtual ID: </span><br/>
-					<span id="slvTyp">Meter Type: </span>
-				</p>
-				<br>
+				<!-- <p>Current Slave:<br/> -->
+					<!-- <span id="slvIP">IP: </span><br/> -->
+					<!-- <span id="slvID">Modbus ID: </span><br/> -->
+					<!-- <span id="slvVID">Modbus Virtual ID: </span><br/> -->
+					<!-- <span id="slvTyp">Meter Type: </span> -->
+				<!-- </p> -->
+				<!-- <br> -->
 				<p style="margin-top: 0em">
 					<button onclick="getMeterData()">Get Data</button>
 					<span id="update_txt" style="padding-left:2em">Data not yet retrieved.</span>
@@ -266,7 +422,7 @@
 				</p>
 
 				<div id="table_div">
-					<table class="mtr_data">
+					<!-- <table class="mtr_data">
 						<tr>
 							<th style="width:7em">Electric</th> 
 							
@@ -391,8 +547,10 @@
 							<td class="v_LL"></td>
 							<td>&mdash;</th>
 						</tr>
-					</div>
-				</table>
+					</table>
+					<br>
+					<br> -->
+				</div>
 			</article>		
 
 			<footer>
