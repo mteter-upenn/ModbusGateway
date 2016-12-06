@@ -374,7 +374,7 @@ void loop() {
   handleServers();
 
   if (g_b_recordData && g_b_rtcGood) {
-    handle_data();
+    //handle_data();
   }
 
   if (g_b_useNtp && ((millis() - g_u32_rtcNtpLastReset) > gk_u32_rtcNtpResetDelay)) {

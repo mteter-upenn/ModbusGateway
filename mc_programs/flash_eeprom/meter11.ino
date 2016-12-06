@@ -66,7 +66,7 @@ uint16_t meter11(uint16_t u16_mapStart){
 
   // New Group #1
   EEPROM.write(u16_grpStart, 9);              // number of values
-  EEPROM.write(++u16_grpStart, 30);           // number of registers
+  EEPROM.write(++u16_grpStart, 38);           // number of registers
   EEPROM.write(++u16_grpStart, highByte(0));  // starting register
   EEPROM.write(++u16_grpStart, lowByte(0));   // 
   EEPROM.write(++u16_grpStart, 17);             // skip bytes to data types

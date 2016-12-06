@@ -397,7 +397,6 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
 
   // add to xml string, indicate that data is contained
 
-  Serial.println("liveXml");
   strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>true</has_data>"));
 
   if ((g_u8a_slaveTypes[u8_selSlv][0] == 11) || (g_u8a_slaveTypes[u8_selSlv][0] == 12)){
@@ -426,7 +425,10 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
           strcat_P(ca_respXml, PSTR("error"));
           break;
         case (-2):
-          strcat_P(ca_respXml, PSTR("fperrr"));
+          strcat_P(ca_respXml, PSTR("nan"));
+          break;
+        case (-3):
+          strcat_P(ca_respXml, PSTR("inf"));
           break;
         default:
           break;
@@ -473,7 +475,10 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
           strcat_P(ca_respXml, PSTR("error"));
           break;
         case (-2):
-          strcat_P(ca_respXml, PSTR("fperrr"));
+          strcat_P(ca_respXml, PSTR("nan"));
+          break;
+        case (-3):
+          strcat_P(ca_respXml, PSTR("inf"));
           break;
         default:
           break;
@@ -499,9 +504,7 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
 
   strcat_P(ca_respXml, PSTR("</inputs>"));
 
-  Serial.println("before write");
   g_eca_socks[u8_socket].write(ca_respXml);
-  Serial.println("post write");
   g_eca_socks[u8_socket].flush();
 }
 

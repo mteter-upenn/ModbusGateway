@@ -312,13 +312,17 @@ void ModbusStack::printReqByInd(uint8_t u8_ind) {
 		return;
 	}
 	
-	Serial.print("Unique Stack Id:  "); Serial.println(m_mbStack[u8_ind].u16_unqId, DEC);
-	Serial.print("Actual Id:  "); Serial.println(m_mbStack[u8_ind].u8_id, DEC);
-	Serial.print("Virtual Id: "); Serial.println(m_mbStack[u8_ind].u8_vid, DEC);
-	Serial.print("Function:   "); Serial.println(m_mbStack[u8_ind].u8_func, DEC);
-	Serial.print("Start Reg:  "); Serial.println(m_mbStack[u8_ind].u16_start, DEC);
-	Serial.print("Num Regs:   "); Serial.println(m_mbStack[u8_ind].u16_length, DEC);
-	Serial.print("Meter Type: "); Serial.println(m_mbStack[u8_ind].u8_mtrType, DEC);
-	Serial.print("Flags:      "); Serial.println(m_mbStack[u8_ind].u8_flags, BIN);
+	Serial.print("Unique Stack Id:  "); Serial.print(m_mbStack[u8_ind].u16_unqId, DEC);
+	Serial.print("\tFunction:   "); Serial.print(m_mbStack[u8_ind].u8_func, DEC);
+	Serial.print("\tMeter Type: "); Serial.println(m_mbStack[u8_ind].u8_mtrType, DEC);
+	
+	Serial.print("Actual Id:        "); Serial.print(m_mbStack[u8_ind].u8_id, DEC);
+	Serial.print("\tStart Reg:  "); Serial.print(m_mbStack[u8_ind].u16_start, DEC);
+	Serial.print("\tFlags:      "); Serial.println(m_mbStack[u8_ind].u8_flags, BIN);
+	
+	Serial.print("Virtual Id:       "); Serial.print(m_mbStack[u8_ind].u8_vid, DEC);
+	Serial.print("\tNum Regs:   "); Serial.println(m_mbStack[u8_ind].u16_length, DEC);
+	
+	
 	
 }

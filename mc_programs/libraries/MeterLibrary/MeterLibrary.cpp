@@ -289,6 +289,7 @@ uint8_t MeterLibGroups::getNumGrps() {
 ModbusRequest MeterLibGroups::getGroupRequest(bool b_serialComm, uint8_t u8_mbId, uint8_t u8_mbVid) {
 	ModbusRequest mbReq;
 	
+	mbReq.u8_flags = 0;  // might be problems with initialization
 	// mbReq.u8_flags = MRFLAG_adjReq;  // remove this to stop double reversal
 	if (!b_serialComm) {
 		mbReq.u8_flags |= MRFLAG_isTcp;
@@ -331,7 +332,7 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 	if (!(m_u8_curGrp < m_u8_numGrps)) {  // check to make sure curGrp is not last group
 		return false;
 	}
-	Serial.print("mb float cur grp: "); Serial.println(m_u8_curGrp, DEC);
+	// Serial.print("mb float cur grp: "); Serial.println(m_u8_curGrp, DEC);
 	/* GROUP STRUCTURE:
 	*  ADDRESS   0: number of values in group
 	*  ADDRESS   1: number of registers to request in modbus
@@ -368,15 +369,15 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 				ii += 2;
 			}
 			
-			if (s8_valType == 30) {
-				Serial.print("is the ptr in the right spot?: ");
-				for (int kk = 0; kk < 4; ++kk) {
-					Serial.print(highByte(k_u16p_data[kk]), DEC); Serial.print(" ");
-					Serial.print(lowByte(k_u16p_data[kk]), DEC); Serial.print(" ");
-				}
-				Serial.println();
-				Serial.println(*k_u16p_data, DEC);
-			}
+			// if (s8_valType == 30) {
+				// Serial.print("is the ptr in the right spot?: ");
+				// for (int kk = 0; kk < 4; ++kk) {
+					// Serial.print(highByte(k_u16p_data[kk]), DEC); Serial.print(" ");
+					// Serial.print(lowByte(k_u16p_data[kk]), DEC); Serial.print(" ");
+				// }
+				// Serial.println();
+				// Serial.println(*k_u16p_data, DEC);
+			// }
 			// convert register data to float and store
 			
 			fkp_retData[s8_valType - 1] = g_convertToFloat(k_u16p_data, dataType);
@@ -387,8 +388,11 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 			
 			// mark all flags as a successful read
 			// if (fkp_retData[s8_valType - 1] != fkp_retData[s8_valType - 1]) {  // check if NaN
-			if (isnan(fkp_retData[s8_valType - 1]) || isinf(fkp_retData[s8_valType - 1])) {
+			if (isnan(fkp_retData[s8_valType - 1])) {
 				s8kp_dataFlags[s8_valType - 1] = -2;
+			}
+			else if (isinf(fkp_retData[s8_valType - 1])) {
+				s8kp_dataFlags[s8_valType - 1] = -3;
 			}
 			else {
 				s8kp_dataFlags[s8_valType - 1] = 1;

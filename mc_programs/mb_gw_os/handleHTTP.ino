@@ -271,7 +271,9 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
 
             mbReq = mtrGrp.getGroupRequest(isSerial(u8_selSlv), g_u8a_slaveIds[u8_selSlv], g_u8a_slaveVids[u8_selSlv]);
             g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
-            Serial.print("unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);
+            //Serial.print("group "); Serial.print(u8_curGrp, DEC);
+            //Serial.print(" request unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);
+            //Serial.print("Time: "); Serial.println(millis());
             //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
             g_u32a_socketTimeoutStart[u8_socket] = millis();  // this is reset for activity
             return false;
@@ -280,6 +282,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
             uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[u8_socket]);
             if (!(u8_mbReqInd < mbStack.k_u8_maxSize)) {  // NOTHING EXISTS IN STACK!
               send404(g_eca_socks[u8_socket]);
+              u8_curGrp = 0;
               return true;
             }
             if (mbStack[u8_mbReqInd].u8_flags & (MRFLAG_goodData | MRFLAG_timeout)) {
@@ -300,23 +303,21 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
                 u8_mbStatus = g_modbusServer.recvSerialResponse(mbStack[u8_mbReqInd], u16a_respData, u8_numBytes);
               }
 
-              //u8_mbStatus = g_modbusServer.returnResponse(mbStack[u8_mbReqInd], u8a_dummyArr, u8a_respBuf, u16_respLen);
-
-              Serial.print("modbus resp for group "); Serial.print(u8_curGrp, DEC); Serial.println(":");
-              for (int ii = 0; ii < u8_numBytes/2; ++ii) {
-                Serial.print(highByte(u16a_respData[ii]), DEC); Serial.print(" ");
-                Serial.print(lowByte(u16a_respData[ii]), DEC); Serial.print(" ");
-              }
-              Serial.println();
+              //Serial.print("modbus resp for group "); Serial.print(u8_curGrp, DEC); Serial.println(":");
+              //for (int ii = 0; ii < u8_numBytes/2; ++ii) {
+              //  Serial.print(highByte(u16a_respData[ii]), DEC); Serial.print(" ");
+              //  Serial.print(lowByte(u16a_respData[ii]), DEC); Serial.print(" ");
+              //}
+              //Serial.println();
 
               mtrGrp.setGroup(u8_curGrp);
               if (!u8_mbStatus) {
-                Serial.println("good data!");
-                /*mtrGrp.groupToFloat(&u8a_respBuf[9], fa_liveXmlData, s8a_dataFlags);*/
+                //Serial.println("good data!");
                 mtrGrp.groupToFloat(u16a_respData, fa_liveXmlData, s8a_dataFlags);
               }
               else {
-                Serial.println("bad data :(");
+                //Serial.print("bad data :( -> "); Serial.println(u8_mbStatus, HEX);
+                //Serial.print("Time: "); Serial.println(millis());
                 mtrGrp.groupMbErr(s8a_dataFlags);
               }
               g_u32a_socketTimeoutStart[u8_socket] = millis();
@@ -344,8 +345,9 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
                 ModbusRequest mbReq;
                 mbReq = mtrGrp.getGroupRequest(isSerial(u8_selSlv), g_u8a_slaveIds[u8_selSlv], g_u8a_slaveVids[u8_selSlv]);
                 g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
-                Serial.print("unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);                                              //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
-                g_u32a_socketTimeoutStart[u8_socket] = millis();  // this is reset for activity
+                Serial.print("group "); Serial.print(u8_curGrp, DEC);
+                Serial.print(" request unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);                                              //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
+                //g_u32a_socketTimeoutStart[u8_socket] = millis();  // this is reset for activity
                 return false;
               }
               else {  // this is the last group, hooray! - no modbus message here
