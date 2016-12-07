@@ -134,7 +134,7 @@ class SlaveDataClass {
 		// bool getIPByInd(uint8_t u8_slvInd, uint8_t u8a_ip[4]);
 		
 		bool isSlaveTcpByInd(uint8_t u8_slvInd);
-		
+		uint8_t getNumSlvs();
 		SlaveDataStruct operator[](int index) const;
 };
 

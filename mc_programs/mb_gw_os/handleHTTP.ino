@@ -104,7 +104,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
             }
           }
 
-          if (u8_selSlv > g_u8_numSlaves) {  // if greater than number of meters listed
+          if (u8_selSlv > SlaveData.getNumSlvs()) {  // if greater than number of meters listed
             u8_selSlv = 0;
           }
         }
@@ -194,7 +194,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           //Serial.print("in data, current group: "); Serial.println(u8_curGrp, DEC);
           //Serial.print("meter type: "); Serial.println(g_u8a_slaveTypes[u8_selSlv][0], DEC);
           
-          MeterLibGroups mtrGrp(g_u8a_slaveTypes[u8_selSlv][0]);
+          MeterLibGroups mtrGrp(SlaveData[u8_selSlv].u8a_type[0]);
           //Serial.print("total Groups: "); Serial.println(mtrGrp.getNumGrps(), DEC);
 
           //send404(g_eca_socks[u8_socket]);
@@ -205,8 +205,8 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
             ModbusRequest mbReq;
             u8_curGrp = 1;
             mtrGrp.setGroup(u8_curGrp);
-
-            mbReq = mtrGrp.getGroupRequest(isSerial(u8_selSlv), g_u8a_slaveIds[u8_selSlv], g_u8a_slaveVids[u8_selSlv]);
+            
+            mbReq = mtrGrp.getGroupRequest(SlaveData.isSlaveTcpByInd(u8_selSlv), SlaveData[u8_selSlv].u8_id, SlaveData[u8_selSlv].u8_vid);
             g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
             //Serial.print("group "); Serial.print(u8_curGrp, DEC);
             //Serial.print(" request unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);
@@ -280,7 +280,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
 
               if (u8_curGrp < mtrGrp.getNumGrps()) {
                 ModbusRequest mbReq;
-                mbReq = mtrGrp.getGroupRequest(isSerial(u8_selSlv), g_u8a_slaveIds[u8_selSlv], g_u8a_slaveVids[u8_selSlv]);
+                mbReq = mtrGrp.getGroupRequest(SlaveData.isSlaveTcpByInd(u8_selSlv), SlaveData[u8_selSlv].u8_id, SlaveData[u8_selSlv].u8_vid);
                 g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
                 Serial.print("group "); Serial.print(u8_curGrp, DEC);
                 Serial.print(" request unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);                                              //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml

@@ -13,7 +13,7 @@ void handle_data() {
 
 
     g_u32_lastDataRequest = u32_curDataTime;
-    u8_numSlvsRcd = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
+    u8_numSlvsRcd = SlaveData.getNumSlvs() > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : SlaveData.getNumSlvs();
     memset(u8a_mbReq, 0, 5);
     u8a_mbReq[5] = 6;     // length of modbus half
 
@@ -43,8 +43,8 @@ void handle_data() {
       uint16_t u16_mbRespLen;
 
       for (int ii = 0; ii < u8_numSlvsRcd; ++ii) {
-        u8_slvMtrType = g_u8a_slaveTypes[ii][0];
-        u8_slvVid = g_u8a_slaveVids[ii];
+        u8_slvMtrType = SlaveData[ii].u8a_type[0];
+        u8_slvVid = SlaveData[ii].u8_vid;
         u8_slvMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType + 2);
 
         mtrGrps.setMeterType(u8_slvMtrType);
