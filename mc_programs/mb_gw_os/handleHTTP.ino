@@ -29,16 +29,6 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
   strcpy(ca_httpReqDummy, ca_fileReq);
 
   if (strncmp(ca_fileReq, "GET", 3) == 0) {
-    // make sure string has zero at end for searches
-    //for (int ii = 4; ii < gk_u16_requestLineSize; ++ii) {
-    //  if (ca_fileReq[ii] == 32) {
-    //    ca_fileReq[ii] = 0;
-    //    break;
-    //  }
-    //  else if (ca_fileReq[ii] == 0) {
-    //    break;
-    //  }
-    //}
     convertToFileName(ca_fileReq);
 
     Serial.print("GET: ");  Serial.println(ca_fileReq);
@@ -67,55 +57,8 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
       else if (strcmp(ca_fileReq, "/mtrsetup.htm") == 0) {
         u16_fileReq = FileReq_MTRSETUP;
       }
-      else if (strstr(ca_fileReq, "live.htm") != nullptr) {
+      else if (strcmp(ca_fileReq, "/live.htm") == 0) {
         u16_fileReq = FileReq_LIVE;
-        /*
-        uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
-        char *cp_meterInd;                                     // index of 'METER' in GET request
-
-        u8_selSlv = 0;
-        cp_meterInd = strstr(ca_httpReqDummy, "METER=");  // the other string strips everything else off
-
-        if (cp_meterInd != nullptr) {
-          //Serial.println("found METER=");
-          char *cp_dumPtr;
-          cp_meterInd += 6;  // move pointer to end of phrase 'METER='
-          cp_dumPtr = cp_meterInd + 3;
-
-          for (; cp_meterInd < cp_dumPtr; ++cp_meterInd) {
-            if (isdigit(*cp_meterInd)) {
-              u8_selSlv = u8_selSlv * 10 + ((*cp_meterInd) - '0');
-            }
-            else {
-              break;
-            }
-          }
-
-          if (u8_selSlv > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
-            u8_selSlv = 0;
-          }
-        }
-        else {
-          //Serial.println("did not find METER=");
-          u8_selSlv = 0;
-        }
-
-        u8_meterType = g_u8a_slaveTypes[u8_selSlv][0];  // turn meter from slave index to meter type X.x.x
-
-        switch (u8_meterType) {
-        case 11:
-          u16_fileReq = FileReq_CLIVE;
-          strcpy(ca_fileReq, "/clive.htm");
-          break;
-        case 12:
-          u16_fileReq = FileReq_SLIVE;        // steam
-          strcpy(ca_fileReq, "/slive.htm");
-          break;
-        default:
-          u16_fileReq = FileReq_ELIVE;        // electric 
-          strcpy(ca_fileReq, "/elive.htm");
-        }
-        */
       }
       else if (strstr(ca_fileReq, "/pastdown.htm") != nullptr) {  // strstr since there will be more afterwards
         u16_fileReq = FileReq_PASTDOWN;
@@ -198,15 +141,6 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
     return SockFlag_GET;
   }
   else if (strncmp(ca_fileReq, "POST", 4) == 0) {
-    //for (int ii = 5; ii < gk_u16_requestLineSize; ++ii) {
-    //  if (ca_fileReq[ii] == 32) {
-    //    ca_fileReq[ii] = 0;
-    //    break;
-    //  }
-    //  else if (ca_fileReq[ii] == 0) {
-    //    break;
-    //  }
-    //}
     convertToFileName(ca_fileReq);
     Serial.print("POST: "); Serial.println(ca_fileReq);
 
@@ -401,8 +335,6 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
         case (FileReq_GENSETUP):
         case (FileReq_MTRSETUP):
         case (FileReq_LIVE):
-        //case (FileReq_SLIVE):
-        //case (FileReq_CLIVE):
         case (FileReq_PASTVIEW):
         case (FileReq_RESET):
         case (FileReq_NOPAGE):

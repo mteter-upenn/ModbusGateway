@@ -3,7 +3,7 @@
 	<head>
 	  <title>Live Electric Data</title>
 	  <link rel="shortcut icon" href="http://live-penn-flagship.pantheon.io/sites/default/files/favicon.ico">
-	  <link rel="stylesheet" type="text/css" href="ep_style.css">
+	  <link rel="stylesheet" type="text/css" href="/ep_style.css">
 	  <style>
 			table.mtr_data {
 				font-family: Arial, Helvetica, sans-serif;
@@ -108,8 +108,7 @@
 				option.disabled = true;
 				option.text = concatDropdown("IP", "Modbus Id", "Modbus vId", "Meter Type");
 				slvSelect.appendChild(option);
-				
-				
+
 				//drawChwTable();
 				//drawStmTable();
 				//drawElecTable();
@@ -204,12 +203,11 @@
 				}
 
 				request.open("GET", "info.xml" + nocache, true);
-				request.send(null); 
-				/*setTimeout('GetMeterData()', 1000);*/
+				request.send(null);
 			}
 			
 			function getMeterData(){	
-				nocache = "?METER=" + selSlv + "&nocache=" + Math.random() * 1000000;
+				var nocache = "&METER=" + selSlv + "&nocache=" + Math.random() * 1000000;
 				
 				var request = new XMLHttpRequest();
 				request.onreadystatechange = function(){
@@ -222,7 +220,7 @@
 									document.getElementById("last_update").innerHTML = d.toLocaleString();
 									document.getElementById("update_txt").innerHTML = "Successful retrieval!";
 									
-									var num_cls;
+									var numXmlElmts;
 									var totNumClass = 0;
 									var classArr;
 									
@@ -239,12 +237,12 @@
 										classArr = elecClasses;
 									}
 									
-									for (var cl_cnt = 0; cl_cnt < totNumClass; cl_cnt++){
-										num_cls = this.responseXML.getElementsByTagName(classArr[cl_cnt]).length;
+									for (var curClass = 0; curClass < totNumClass; curClass++){
+										numXmlElmts = this.responseXML.getElementsByTagName(classArr[curClass]).length;
 										
-										for (var count = 0; count < num_cls; count++){
-											document.getElementsByClassName(classArr[cl_cnt])[count].innerHTML = 
-												this.responseXML.getElementsByTagName(classArr[cl_cnt])[count].childNodes[0].nodeValue;
+										for (var curElmt = 0; curElmt < numXmlElmts; curElmt++){
+											document.getElementsByClassName(classArr[curClass])[curElmt].innerHTML = 
+												this.responseXML.getElementsByTagName(classArr[curClass])[curElmt].childNodes[0].nodeValue;
 										}
 									}	
 								}
@@ -268,210 +266,78 @@
 					}
 				}
 				request.open("GET", "data.xml" + nocache, true);
-				request.send(null); 
-				/*setTimeout('GetMeterData()', 1000);*/
+				request.send(null);
 			}
 			
-			function drawChwTable() {
-				var chwRowNms = ["Heat Flow (tons)", "Mass Flow (lbs/m)", "Volumetric Flow (gpm)", 
-				                 "Supply Temperature (F)", "Return Temperature (F)", "Delta Temperature (F)",
-												 "Heat Grand Total (ton-hrs)", "Mass Grand Total (lbs)", "Volume Grand Total (gal)"];
-				var tableDiv = document.getElementById("table_div");
-				
-				var table1 = document.createElement("TABLE");
-				table1.className = "mtr_data";
-				tableDiv.appendChild(table1);
-				
-				var tableRow = document.createElement("tr");
-				table1.appendChild(tableRow);
-				
-				addTableCell(tableRow, "th", "width:11em;", "", "Chilled Water");
-				addTableCell(tableRow, "th", "", "", "Values");
-				
-				
-				
-				for (var ii = 0; ii < 3; ++ii) {
-					var tableRow = document.createElement("tr");
-					if (ii % 2 == 0) { tableRow.className = "typ"; }
-					else { tableRow.className = "alt"; }
-					table1.appendChild(tableRow);
-					
-					addTableCell(tableRow, "td", "", "", chwRowNms[ii]);
-					addTableCell(tableRow, "td", "", chwClasses[0], "");
-				}
-				
-				for (var ii = 3; ii < 6; ++ii) {
-					var tableRow = document.createElement("tr");
-					if (ii % 2 == 0) { tableRow.className = "typ"; }
-					else { tableRow.className = "alt"; }
-					table1.appendChild(tableRow);
-					
-					addTableCell(tableRow, "td", "", "", chwRowNms[ii]);
-					addTableCell(tableRow, "td", "", chwClasses[ii - 2], "");
-				}
-				
-				for (var ii = 6; ii < 9; ++ii) {
-					var tableRow = document.createElement("tr");
-					if (ii % 2 == 0) { tableRow.className = "typ"; }
-					else { tableRow.className = "alt"; }
-					table1.appendChild(tableRow);
-					
-					addTableCell(tableRow, "td", "", "", chwRowNms[ii]);
-					addTableCell(tableRow, "td", "", chwClasses[4], "");
-				}
+			function drawChwTable() {			 
+				var chwTable = [["",    ["th", "width:11em;", "", "Chilled Water"],   ["th", "", "", "Values"]], 
+												["typ", ["td", "", "", "Heat Flow (tons)"],           ["td", "", "flow", ""]],
+												["alt", ["td", "", "", "Mass Flow (lbs/m)"],          ["td", "", "flow", ""]],
+												["typ", ["td", "", "", "Volumetric Flow (gpm)"],      ["td", "", "flow", ""]],
+												["alt", ["td", "", "", "Supply Temperature (F)"],     ["td", "", "tmp1", ""]],
+												["typ", ["td", "", "", "Return Temperature (F)"],     ["td", "", "tmp2", ""]],
+												["alt", ["td", "", "", "Delta Temperature (F)"],      ["td", "", "dlta", ""]],
+												["typ", ["td", "", "", "Heat Grand Total (ton-hrs)"], ["td", "", "engy", ""]],
+												["alt", ["td", "", "", "Mass Grand Total (lbs)"],     ["td", "", "engy", ""]],
+												["typ", ["td", "", "", "Volume Grand Total (gal)"],   ["td", "", "engy", ""]]];
+												
+				addTable("table_div", "mtr_data", "", chwTable);
 			}
 			
-			function drawStmTable() {
-				var stmRowNms = ["Heat Flow (kBtu/hr)", "Mass Flow (lb/hr)", "Volumetric Flow (cf/hr)", 
-				                 "Temperature (F)", "Pressure (psig)", "Heat Grand Total (kBtu)", 
-												 "Mass Grand Total (lbs)", "Volume Grand Total (cf)"];
-				var tableDiv = document.getElementById("table_div");
-				
-				var table1 = document.createElement("TABLE");
-				table1.className = "mtr_data";
-				tableDiv.appendChild(table1);
-				
-				var tableRow = document.createElement("tr");
-				table1.appendChild(tableRow);
-				
-				addTableCell(tableRow, "th", "width:11em;", "", "Steam");
-				addTableCell(tableRow, "th", "", "", "Values");
-				
-				
-				
-				for (var ii = 0; ii < 3; ++ii) {
-					var tableRow = document.createElement("tr");
-					if (ii % 2 == 0) { tableRow.className = "typ"; }
-					else { tableRow.className = "alt"; }
-					table1.appendChild(tableRow);
-					
-					addTableCell(tableRow, "td", "", "", stmRowNms[ii]);
-					addTableCell(tableRow, "td", "", stmClasses[0], "");
-				}
-				
-				for (var ii = 3; ii < 5; ++ii) {
-					var tableRow = document.createElement("tr");
-					if (ii % 2 == 0) { tableRow.className = "typ"; }
-					else { tableRow.className = "alt"; }
-					table1.appendChild(tableRow);
-					
-					addTableCell(tableRow, "td", "", "", stmRowNms[ii]);
-					addTableCell(tableRow, "td", "", stmClasses[ii - 2], "");
-				}
-				
-				for (var ii = 5; ii < 8; ++ii) {
-					var tableRow = document.createElement("tr");
-					if (ii % 2 == 0) { tableRow.className = "typ"; }
-					else { tableRow.className = "alt"; }
-					table1.appendChild(tableRow);
-					
-					addTableCell(tableRow, "td", "", "", stmRowNms[ii]);
-					addTableCell(tableRow, "td", "", stmClasses[3], "");
-				}
+
+			function drawStmTable() {				
+				var stmTable = [["",    ["th", "width:11em;", "", "Steam"],        ["th", "", "", "Values"]], 
+												["typ", ["td", "", "", "Heat Flow (kBtu/hr)"],     ["td", "", "flow", ""]],
+												["alt", ["td", "", "", "Mass Flow (lb/hr)"],       ["td", "", "flow", ""]],
+												["typ", ["td", "", "", "Volumetric Flow (cf/hr)"], ["td", "", "flow", ""]],
+												["alt", ["td", "", "", "Temperature (F)"],         ["td", "", "tmp1", ""]],
+												["typ", ["td", "", "", "Pressure (psig)"],         ["td", "", "pres", ""]],
+												["alt", ["td", "", "", "Heat Grand Total (kBtu)"], ["td", "", "engy", ""]],
+												["typ", ["td", "", "", "Mass Grand Total (lbs)"],  ["td", "", "engy", ""]],
+												["alt", ["td", "", "", "Volume Grand Total (cf)"], ["td", "", "engy", ""]]];
+												 
+				addTable("table_div", "mtr_data", "", stmTable);
 			}
 			
 			function drawElecTable() {
-				var elecRowNms = ["Current", "Voltage L-N", "Real Power", "Reactive Power", "Apparent Power",
-			                   "Power Factor", "Real Energy", "Reactive Energy", "Apparent Energy", "Voltage L-L"];
-				var tableDiv = document.getElementById("table_div");
-				
+				var elecTable1 = [["",    ["th", "width:7em;", "", "Electric"], ["th", "", "", "A"], ["th", "", "", "B"], ["th", "", "", "C"], ["th", "", "", "Average"], ["th", "", "", "Total"]], 
+												["typ", ["td", "", "", "Current"],         ["td", "", "curr", ""], ["td", "", "curr", ""], ["td", "", "curr", ""], ["td", "", "curr", ""], ["td", "", "curr", ""]],
+												["alt", ["td", "", "", "Voltage L - N"],     ["td", "", "v_LN", ""], ["td", "", "v_LN", ""], ["td", "", "v_LN", ""], ["td", "", "v_LN", ""], ["td", "", "", emDash()]],
+												["typ", ["td", "", "", "Real Power"],      ["td", "", "rl_p", ""], ["td", "", "rl_p", ""], ["td", "", "rl_p", ""], ["td", "", "", emDash()], ["td", "", "rl_p", ""]],
+												["alt", ["td", "", "", "Reactive Power"],  ["td", "", "rc_p", ""], ["td", "", "rc_p", ""], ["td", "", "rc_p", ""], ["td", "", "", emDash()], ["td", "", "rc_p", ""]],
+												["typ", ["td", "", "", "Apparent Power"],  ["td", "", "ap_p", ""], ["td", "", "ap_p", ""], ["td", "", "ap_p", ""], ["td", "", "", emDash()], ["td", "", "ap_p", ""]],
+												["alt", ["td", "", "", "Power Factor"],    ["td", "", "p_fc", ""], ["td", "", "p_fc", ""], ["td", "", "p_fc", ""], ["td", "", "", emDash()], ["td", "", "p_fc", ""]],
+												["typ", ["td", "", "", "Real Energy"],     ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "engy", ""]],
+												["alt", ["td", "", "", "Reactive Energy"], ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "engy", ""]],
+												["typ", ["td", "", "", "Apparent Energy"], ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "", emDash()], ["td", "", "engy", ""]]];
+										
+				var elecTable2 = [["",    ["th", "width:7em;", "", ""], ["th", "", "", "A - B"], ["th", "", "", "B - C"], ["th", "", "", "C - A"], ["th", "", "", "Average"], ["th", "", "", "Total"]], 
+												["typ", ["td", "", "", "Voltage L - L"],         ["td", "", "v_LL", ""], ["td", "", "v_LL", ""], ["td", "", "v_LL", ""], ["td", "", "v_LL", ""], ["td", "", "", emDash()]]];
+
+				addTable("table_div", "mtr_data", "width:100%;", elecTable1);
+				addBreak("table_div");
+				addTable("table_div", "mtr_data", "width:100%;", elecTable2);
+			}
+			
+			function addTable(tableDivId, tableClass, tableStyle, tableArray) {
+				var tableDiv = document.getElementById(tableDivId);
 				var table1 = document.createElement("TABLE");
-				table1.className = "mtr_data";
-				table1.style = "width:100%;";
+				var tableNumRws = tableArray.length;
+				
+				table1.className = tableClass;
+				table1.style = tableStyle;
 				tableDiv.appendChild(table1);
 				
-				var tableRow = document.createElement("tr");
-				table1.appendChild(tableRow);
-				
-				addTableCell(tableRow, "th", "width:7em;", "", "Electric");
-				addTableCell(tableRow, "th", "", "", "A");
-				addTableCell(tableRow, "th", "", "", "B");
-				addTableCell(tableRow, "th", "", "", "C");
-				addTableCell(tableRow, "th", "", "", "Average");
-				addTableCell(tableRow, "th", "", "", "Total");
-				
-				// Current
-				tableRow = document.createElement("tr");
-				tableRow.className = "typ";
-				table1.appendChild(tableRow);
-				addTableCell(tableRow, "td", "", "", "Current");
-				for (var jj = 0; jj < 5; ++jj) {
-					addTableCell(tableRow, "td", "", elecClasses[0], "");
-				}
-				
-				// Voltage L-N
-				tableRow = document.createElement("tr");
-				tableRow.className = "alt";
-				table1.appendChild(tableRow);
-				addTableCell(tableRow, "td", "", "", "Voltage L-N");
-				for (var jj = 0; jj < 4; ++jj) {
-					addTableCell(tableRow, "td", "", elecClasses[1], "");
-				}
-				addTableCell(tableRow, "td", "", "", String.fromCharCode(8212));
-				
-				
-				for (var ii = 2; ii < 6; ++ii) {
+				for (var ii = 0; ii < tableNumRws; ++ii) {
 					var tableRow = document.createElement("tr");
-					if (ii % 2 == 0) {
-						tableRow.className = "typ";
-					}
-					else {
-						tableRow.className = "alt";
-					}
+					tableRow.className = tableArray[ii][0];
 					table1.appendChild(tableRow);
 					
-					addTableCell(tableRow, "td", "", "", elecRowNms[ii]);
-					for (var jj = 0; jj < 3; ++jj) {
-						addTableCell(tableRow, "td", "", elecClasses[ii], "");
+					var rowNumCols = tableArray[ii].length; 
+					for (var jj = 1; jj < rowNumCols; ++jj) {
+						addTableCell(tableRow, tableArray[ii][jj][0], tableArray[ii][jj][1], tableArray[ii][jj][2], tableArray[ii][jj][3]);
 					}
-					addTableCell(tableRow, "td", "", "", String.fromCharCode(8212));
-					addTableCell(tableRow, "td", "", elecClasses[ii], "");
 				}
-				
-				for (var ii = 6; ii < 9; ++ii) {
-					var tableRow = document.createElement("tr");
-					if (ii % 2 == 0) {
-						tableRow.className = "typ";
-					}
-					else {
-						tableRow.className = "alt";
-					}
-					table1.appendChild(tableRow);
-					
-					addTableCell(tableRow, "td", "", "", elecRowNms[ii]);
-					for (var jj = 0; jj < 4; ++jj) {
-						addTableCell(tableRow, "td", "", "", String.fromCharCode(8212));
-					}
-					addTableCell(tableRow, "td", "", elecClasses[6], "");
-				}
-				
-				
-				var brkPt = document.createElement("br");
-				tableDiv.appendChild(brkPt);
-				
-				var table1 = document.createElement("TABLE");
-				table1.className = "mtr_data";
-				table1.style = "width:100%;";
-				tableDiv.appendChild(table1);
-				
-				var tableRow = document.createElement("tr");
-				table1.appendChild(tableRow);
-				
-				addTableCell(tableRow, "th", "width:7em;", "", "");
-				addTableCell(tableRow, "th", "", "", "A - B");
-				addTableCell(tableRow, "th", "", "", "B - C");
-				addTableCell(tableRow, "th", "", "", "C - A");
-				addTableCell(tableRow, "th", "", "", "Average");
-				addTableCell(tableRow, "th", "", "", "Total");
-				
-				tableRow = document.createElement("tr");
-				tableRow.className = "typ";
-				table1.appendChild(tableRow);
-				addTableCell(tableRow, "td", "", "", "Voltage L-L");
-				for (var jj = 0; jj < 4; ++jj) {
-					addTableCell(tableRow, "td", "", elecClasses[7], "");
-				}
-				addTableCell(tableRow, "td", "", "", String.fromCharCode(8212));
 			}
 			
 			function addTableCell(tableRow, elmtType, cellStyle, cellClass, cellHtml) {
@@ -481,12 +347,23 @@
 				tableCell.innerHTML = cellHtml;
 				tableRow.appendChild(tableCell);
 			}
+			
+			function addBreak(divId) {
+				var divVar = document.getElementById(divId);
+				var brkPt = document.createElement("br");
+				
+				divVar.appendChild(brkPt);
+			}
+			
+			function emDash() {
+				return String.fromCharCode(8212);
+			}
 		</script>
 	</head>
 
 
 	<!-- Main content -->
-	<body onload="getDisplayInfo()">  <!-- onload="GetMeterData()"> -->
+	<body onload="getDisplayInfo()">
 		<!-- Site navigation menu -->
 		<div id="main-wrapper">
 			<nav>
@@ -500,7 +377,7 @@
 					<li><a href="/reset.htm">Reset</a></li>
 					
 					<a id="imglink" href="http://www.upenn.edu/">
-						<img style="width:155px;height:43px;border:0;" src="images/logo_let.gif" alt="Upenn">
+						<img style="width:155px;height:43px;border:0;" src="/images/logo_let.gif" alt="Upenn">
 					</a>
 				</ul>
 			</nav>
@@ -523,134 +400,6 @@
 				</p>
 
 				<div id="table_div">
-					<!-- <table class="mtr_data">
-						<tr>
-							<th style="width:7em">Electric</th> 
-							
-							<th>A</th>
-							<th>B</th>
-							<th>C</th>
-							
-							<th>Average</th>
-							<th>Total</th>
-						</tr>
-						<tr class="typ">
-							<td>Current</td>
-							
-							<td class="curr"></td>
-							<td class="curr"></td>
-							<td class="curr"></td>
-							
-							<td class="curr"></td>
-							<td class="curr"></td>
-						</tr>
-						<tr class="alt">
-							<td>Voltage L-N</td>
-							
-							<td class="v_LN"></td>
-							<td class="v_LN"></td>
-							<td class="v_LN"></td>
-							
-							<td class="v_LN"></td>
-							<td>&mdash;</td>
-						</tr>
-						<tr class="typ">
-							<td>Real Power</td>
-							
-							<td class="rl_p"></td>
-							<td class="rl_p"></td>
-							<td class="rl_p"></td>
-							
-							<td>&mdash;</td>
-							<td class="rl_p"></td>
-						</tr>
-						<tr class="alt">
-							<td>Reactive Power</td>
-							
-							<td class="rc_p"></td>
-							<td class="rc_p"></td>
-							<td class="rc_p"></td>
-							
-							<td>&mdash;</td>
-							<td class="rc_p"></td>
-						</tr>
-						<tr class="typ">
-							<td>Apparent Power</td>
-							
-							<td class="ap_p"></td>
-							<td class="ap_p"></td>
-							<td class="ap_p"></td>
-							
-							<td>&mdash;</td>
-							<td class="ap_p"></td>
-						</tr>
-						<tr class="alt">
-							<td>Power Factor</td>
-							
-							<td class="p_fc"></td>
-							<td class="p_fc"></td>
-							<td class="p_fc"></td>
-							
-							<td>&mdash;</td>
-							<td class="p_fc"></td>
-						</tr>
-						<tr class="typ">
-							<td>Real Energy</td>
-							
-							<td>&mdash;</td>
-							<td>&mdash;</td>
-							<td>&mdash;</td>
-							
-							<td>&mdash;</td>
-							<td class="engy"></td>
-						</tr>
-						<tr class="alt">
-							<td>Reactive Energy</td>
-							
-							<td>&mdash;</td>
-							<td>&mdash;</td>
-							<td>&mdash;</td>
-							
-							<td>&mdash;</td>
-							<td class="engy"></td>
-						</tr>
-						<tr class="typ">
-							<td>Apparent Energy</td>
-							
-							<td>&mdash;</td>
-							<td>&mdash;</td>
-							<td>&mdash;</td>
-							
-							<td>&mdash;</td>
-							<td class="engy"></td>
-						</tr>
-					</table>
-					<br>
-
-					<table class="mtr_data">
-						<tr>
-							<th style="width:7em"></th>  
-							
-							<th>A - B</th>
-							<th>B - C</th>
-							<th>C - A</th>
-							
-							<th>Average</th>
-							<th>Total</th>
-						</tr>
-						<tr class="typ">
-							<td>Voltage L-L</td>
-							
-							<td class="v_LL"></td>
-							<td class="v_LL"></td>
-							<td class="v_LL"></td>
-							
-							<td class="v_LL"></td>
-							<td>&mdash;</th>
-						</tr>
-					</table>
-					<br>
-					<br> -->
 				</div>
 			</article>		
 
