@@ -471,7 +471,7 @@ bool mbidFunc(char *cp_input) {  // checks valid modbus device id
     ++kk;
   }
 
-  if (u32_dum > 247) {
+  if (u32_dum > 255) {
     return false;
   }
 
