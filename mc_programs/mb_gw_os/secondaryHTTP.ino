@@ -13,14 +13,14 @@
 //  }
 //}
 
-bool isSerial(uint8_t u8_selSlv) {
-  for (int ii = 0; ii < 4; ++ii) {
-    if (g_u8a_slaveIps[u8_selSlv][ii] != 0) {
-      return false;
-    }
-  }
-  return true;
-}
+//bool isSerial(uint8_t u8_selSlv) {
+//  for (int ii = 0; ii < 4; ++ii) {
+//    if (g_u8a_slaveIps[u8_selSlv][ii] != 0) {
+//      return false;
+//    }
+//  }
+//  return true;
+//}
 
 
 // converts first line of http request to the file requested- overwrites char array, BE CAREFUL
@@ -399,7 +399,7 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
 
   strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>true</has_data>"));
 
-  if ((g_u8a_slaveTypes[u8_selSlv][0] == 11) || (g_u8a_slaveTypes[u8_selSlv][0] == 12)){
+  if ((SlaveData[u8_selSlv].u8a_type[0] == 11) || (SlaveData[u8_selSlv].u8a_type[0] == 12)){
     for (int ii = 0; ii < gk_i_maxNumStmChwVals; ++ii) { 
       if (ii < 3) strcat_P(ca_respXml, PSTR("<flow>"));
       else if (ii < 4) strcat_P(ca_respXml, PSTR("<tmp1>"));
