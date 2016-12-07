@@ -41,18 +41,18 @@ void setConstants() {
   g_u16_timeout = word(EEPROM.read(g_u16_ipBlkStart + 26), EEPROM.read(g_u16_ipBlkStart + 27));
 
 
-  g_u8_numSlaves = EEPROM.read(g_u16_mtrBlkStart);
+  //g_u8_numSlaves = EEPROM.read(g_u16_mtrBlkStart);
 
-  for (int ii = 0; ii < g_u8_numSlaves; ++ii){
-    g_u8a_slaveIds[ii] = EEPROM.read(9 * ii + 8 + g_u16_mtrBlkStart);
-    g_u8a_slaveVids[ii] = EEPROM.read(9 * ii + 9 + g_u16_mtrBlkStart);
+  //for (int ii = 0; ii < g_u8_numSlaves; ++ii){
+  //  //g_u8a_slaveIds[ii] = EEPROM.read(9 * ii + 8 + g_u16_mtrBlkStart);
+  //  g_u8a_slaveVids[ii] = EEPROM.read(9 * ii + 9 + g_u16_mtrBlkStart);
 
-    g_u8a_slaveIps[ii][0] = EEPROM.read(9 * ii + 4 + g_u16_mtrBlkStart);
-    for (int jj = 1; jj < 4; ++jj){
-      g_u8a_slaveIps[ii][jj] = EEPROM.read(9 * ii + g_u16_mtrBlkStart + jj + 4);
-      g_u8a_slaveTypes[ii][(jj - 1)] = EEPROM.read(9 * ii + g_u16_mtrBlkStart + jj);
-    }
-  }
+  //  g_u8a_slaveIps[ii][0] = EEPROM.read(9 * ii + 4 + g_u16_mtrBlkStart);
+  //  for (int jj = 1; jj < 4; ++jj){
+  //    g_u8a_slaveIps[ii][jj] = EEPROM.read(9 * ii + g_u16_mtrBlkStart + jj + 4);
+  //    g_u8a_slaveTypes[ii][(jj - 1)] = EEPROM.read(9 * ii + g_u16_mtrBlkStart + jj);
+  //  }
+  //}
 }
 
 
@@ -167,30 +167,30 @@ void writeMtrSetupFile(){
                       
   webFile.print(F("<?xml version = \"1.0\" ?><meterList>"));
   
-  for (int ii = 0; ii < g_u8_numSlaves; ++ii){
+  for (int ii = 0; ii < SlaveData.getNumSlvs(); ++ii){
     webFile.print(F("<meter><mip>"));
     
-    if (g_u8a_slaveIps[ii][0] != 0){
-      webFile.print(g_u8a_slaveIps[ii][0], DEC);
+    if (SlaveData[ii].u8a_ip[0] != 0){
+      webFile.print(SlaveData[ii].u8a_ip[0], DEC);
       for (int jj = 1; jj < 4; ++jj){
         webFile.print(F("."));
-        webFile.print(g_u8a_slaveIps[ii][jj], DEC);
+        webFile.print(SlaveData[ii].u8a_ip[jj], DEC);
       }
     }
     webFile.print(F("</mip><dev>"));
     
-    webFile.print(g_u8a_slaveIds[ii], DEC);
+    webFile.print(SlaveData[ii].u8_id, DEC);
 
     webFile.print(F("</dev><vid>"));
     
-    webFile.print(g_u8a_slaveVids[ii], DEC);
+    webFile.print(SlaveData[ii].u8_vid, DEC);
 
     webFile.print(F("</vid><type>"));
 
-    webFile.print(g_u8a_slaveTypes[ii][0], DEC);
+    webFile.print(SlaveData[ii].u8a_type[0], DEC);
     for (int jj = 1; jj < 3; ++jj){
       webFile.print(F("."));
-      webFile.print(g_u8a_slaveTypes[ii][jj], DEC);
+      webFile.print(SlaveData[ii].u8a_type[jj], DEC);
     }
 
     webFile.print(F("</type></meter>"));
