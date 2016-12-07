@@ -84,7 +84,7 @@ void getFileName(time_t t_time, char *cp_fileName) {
     uint8_t u8_maxSlvs;
 
     tempFile = SD.open(cp_fileName, FILE_WRITE);
-    u8_maxSlvs = g_u8_numSlaves > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : g_u8_numSlaves;
+    u8_maxSlvs = SlaveData.getNumSlvs() > g_u8_maxRecordSlaves ? g_u8_maxRecordSlaves : SlaveData.getNumSlvs();
 
     if (tempFile) {
       tempFile.print(F("UTC time"));
@@ -92,7 +92,7 @@ void getFileName(time_t t_time, char *cp_fileName) {
       for (int ii = 0; ii < u8_maxSlvs; ++ii) {
         tempFile.print(F(","));
 
-        if (g_u8a_slaveIps[ii][0] == 0) { // if serial device, print gateway ip
+        if (SlaveData[ii].u8a_ip[0] == 0) { // if serial device, print gateway ip
           tempFile.print(g_ip_ip[0], DEC);
           for (int jj = 1; jj < 4; ++jj) {
             tempFile.print(F("."));
@@ -100,20 +100,20 @@ void getFileName(time_t t_time, char *cp_fileName) {
           }
         }
         else {  // otherwise, print device ip
-          tempFile.print(g_u8a_slaveIps[ii][0], DEC);
+          tempFile.print(SlaveData[ii].u8a_ip[0], DEC);
           for (int jj = 1; jj < 4; ++jj) {
             tempFile.print(F("."));
-            tempFile.print(g_u8a_slaveIps[ii][jj], DEC);
+            tempFile.print(SlaveData[ii].u8a_ip[jj], DEC);
           }
         }
 
         tempFile.print(F(": "));
-        tempFile.print(g_u8a_slaveIds[ii], DEC);
+        tempFile.print(SlaveData[ii].u8_id, DEC);
         tempFile.print(F("/"));
-        tempFile.print(g_u8a_slaveVids[ii], DEC);
+        tempFile.print(SlaveData[ii].u8_vid, DEC);
         tempFile.print(F(": "));
 
-        switch (g_u8a_slaveTypes[ii][0]) {
+        switch (SlaveData[ii].u8a_type[0]) {
           case 11:  // chilled water
             tempFile.print(F("Heat Flow,Mass Flow,Vol. Flow,Supply Temp,Return Temp,Delta Temp,Reserved,Heat Total,"
               "Mass Total,Vol. Total"));

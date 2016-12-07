@@ -286,12 +286,12 @@ uint8_t MeterLibGroups::getNumGrps() {
 }
 
 
-ModbusRequest MeterLibGroups::getGroupRequest(bool b_serialComm, uint8_t u8_mbId, uint8_t u8_mbVid) {
+ModbusRequest MeterLibGroups::getGroupRequest(bool b_tcpComm, uint8_t u8_mbId, uint8_t u8_mbVid) {
 	ModbusRequest mbReq;
 	
 	mbReq.u8_flags = 0;  // might be problems with initialization
 	// mbReq.u8_flags = MRFLAG_adjReq;  // remove this to stop double reversal
-	if (!b_serialComm) {
+	if (b_tcpComm) {
 		mbReq.u8_flags |= MRFLAG_isTcp;
 	}
 	mbReq.u8_id = u8_mbId;
@@ -548,6 +548,11 @@ bool SlaveDataClass::isSlaveTcpByInd(uint8_t u8_slvInd) {
 		}
 	}
 	return false;
+}
+
+
+uint8_t SlaveDataClass::getNumSlvs() {
+	return m_u8_numSlaves;
 }
 
 
