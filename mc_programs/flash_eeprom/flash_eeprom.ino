@@ -263,15 +263,15 @@ void loop() {
           //storeIP(ca_input, u16_slvStrt + 9 * (i + 1) - 5, 4);
 
           // actual modbus id
-          term_func(F("Please insert actual Modbus id. (0-247)"), mbidFunc, F(""),
-            F("Please insert actual Modbus id. (0-247)"), ca_slvId, "1", false, 0, false);
+          term_func(F("Please insert actual Modbus id. [0-255]"), mbidFunc, F(""),
+            F("Please insert actual Modbus id. [0-255]"), ca_slvId, "1", false, 0, false);
           //storeByte(ca_input, u16_slvStrt + 9 * (i + 1) - 1);
           strcat(ca_checkQues, "\nActual Id: ");
           strcat(ca_checkQues, ca_slvId);
 
           // virtual modbus id
-          term_func(F("Please insert virtual Modbus id. (0-247)"), mbidFunc, F(""),
-            F("Please insert virtual Modbus id. (0-247)"), ca_slvVid, "1", false, 0, false);
+          term_func(F("Please insert virtual Modbus id. [0-255]"), mbidFunc, F(""),
+            F("Please insert virtual Modbus id. [0-255]"), ca_slvVid, "1", false, 0, false);
           //storeByte(ca_input, u16_slvStrt + 9 * (i + 1));
           strcat(ca_checkQues, "\nVirtual Id: ");
           strcat(ca_checkQues, ca_slvVid);

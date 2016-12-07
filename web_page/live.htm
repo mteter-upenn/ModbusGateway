@@ -147,18 +147,18 @@
 									selSlv = 0;
 								}
 								
-								var ipStr = "Serial Comms";
-								var idStr = "err";
-								var vidStr = "err";
-								var typeStr = "err";
-								
 								for (var ii = 0; ii < totSlvs; ++ii){
+									var ipStr = "Serial Comms";
+									var idStr = "err";
+									var vidStr = "err";
+									var typeStr = "err";
 									var option = document.createElement("option");
 									option.value = ii;
 									
 									if (xmlDoc.getElementsByTagName("mip")[ii].childNodes.length > 0){
 										ipStr =  xmlDoc.getElementsByTagName("mip")[ii].childNodes[0].nodeValue;
 									}
+									
 									if (xmlDoc.getElementsByTagName("dev")[ii].childNodes.length > 0){
 										idStr = xmlDoc.getElementsByTagName("dev")[ii].childNodes[0].nodeValue;
 									}
