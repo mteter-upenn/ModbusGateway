@@ -1,1 +1,14 @@
-<?xml version = "1.0" ?><meterList><meter><mip>10.166.13.194</mip><dev>10</dev><vid>10</vid><type>12.1.0</type></meter><meter><mip></mip><dev>15</dev><vid>15</vid><type>11.1.0</type></meter>
+<?xml version = "1.0" ?>
+<meterList>
+	<meter>
+		<mip>10.166.13.194</mip>
+		<dev>10</dev>
+		<vid>10</vid>
+		<type>12.1.0</type>
+	</meter>
+	<meter>
+		<mip></mip>
+		<dev>15</dev>
+		<vid>15</vid>
+		<type>11.1.0</type>
+	</meter>
