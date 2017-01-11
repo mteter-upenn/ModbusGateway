@@ -3,7 +3,6 @@
     {
       "meter":1,
       "name":"Eaton Power Xpert 4000",
-      "mb_func": 3,
       "blocks":[
         {
           "block":1,
@@ -144,33 +143,6 @@
           "values":1,
           "registers":0,
           "order":[5]
-        }
-      ]
-    },
-    {
-      "meter":,
-      "name":,
-      "blocks":[
-        {
-          "block":,
-          "start":,
-          "end":,
-          "type":
-        }
-      ],
-      "groups":[
-        {
-          "group":,
-          "values":,
-          "registers":,
-          "start":,
-          "order":[],
-          "types":[
-            {
-              "type":,
-              "valid_to":
-            }
-          ]
         }
       ]
     }

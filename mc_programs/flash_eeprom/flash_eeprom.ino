@@ -6,7 +6,8 @@
 #include <MeterLibrary.h>
 #include <EEPROM.h>
 #include "mac.h"
-
+#include <SD.h>
+#include <ArduinoJson.h>
 
 #define SERIAL_INPUT 1  // 0 for no serial input, 1 for serial input (mac, ip, name, etc)
 
@@ -46,6 +47,18 @@ void setup() {
   delay(2000);
   Serial.println(F("delay over"));
 
+  pinMode(10, OUTPUT);
+  digitalWrite(10, HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH);
+
+  Serial.println(F("Initializing SD card..."));
+  if (!SD.begin(4)) {
+    Serial.println(F("ERROR - SD card initialization failed!"));
+  }
+  else{
+    Serial.println(F("SUCCESS - SD card initialized."));
+  }
 
   u16_nmStrt = 10;
   u16_ipStrt = u16_nmStrt + 33; // 43
