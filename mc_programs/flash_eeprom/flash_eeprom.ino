@@ -13,6 +13,12 @@
 
 #define NEW_GROUP_STYLE 1
  
+#include "globals.h"
+#include "read_eeprom.h"
+#include "term_func.h"
+#include "writeLibrary.h"
+#include "meters.h"
+
 //byte const FLOAT = 0x00;
 //byte const U16_to_FLOAT = 0x01;
 //byte const S16_to_FLOAT = 0x02;
@@ -27,13 +33,13 @@
 //byte const DBL_to_FLOAT = 0x0B;
 //byte const WORDSWAP = 0x80;
 
-bool b_firstLoop = true;
-bool b_quit = false;
+//bool b_firstLoop = true;
+//bool b_quit = false;
 
 // PROTOTYPES
-bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __FlashStringHelper *,
-  const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
-//const __FlashStringHelper *
+//bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __FlashStringHelper *,
+//  const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
+////const __FlashStringHelper *
 
 void setup() {
   uint16_t u16_ipStrt, u16_nmStrt, u16_mapStrt, u16_slvStrt;
