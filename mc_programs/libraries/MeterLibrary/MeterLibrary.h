@@ -4,19 +4,15 @@
 
 /* _____STANDARD INCLUDES____________________________________________________ */
 // include types & constants of Wiring core API
-#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
 /* _____UTILITY MACROS_______________________________________________________ */
 
 
 /* _____PROJECT INCLUDES_____________________________________________________ */
 #include <EEPROM.h>
-
 #include <ModbusStructs.h>
+#include <ArduinoJson.h>
 
 /* _____CLASS DEFINITIONS____________________________________________________ */
 
@@ -28,6 +24,22 @@ along with selected registers.
 */
 
 // class ModbusMaster;
+struct MapBlock {
+  uint16_t u16_start;
+  uint16_t u16_end;
+  FloatConv dataType;
+};
+
+struct MapGroup {
+  uint16_t u16_start;
+  uint8_t u8_vals;
+  uint8_t u8_regs;
+  int8_t *s8p_grpOrder;
+  uint8_t u8_orderLen;
+  int8_t *s8p_grpType;
+  uint8_t u8_typeLen;
+};
+
 
 class MeterLibBlocks {
 	private:
@@ -97,6 +109,25 @@ class MeterLibGroups {
 		bool groupToFloat(const uint16_t * k_u16p_data, float *const fkp_retData, int8_t *const s8kp_dataFlags);
 		bool groupMbErr(int8_t *const s8kp_dataFlags);
 		bool groupLastFlags(int8_t *const s8kp_dataFlags);		
+};
+
+
+class WriteMaps {
+private:
+  uint8_t m_u8_numMaps;
+//  uint8_t m_u8_curMap;
+  uint16_t m_u16_mapIndexStart;
+  uint8_t *m_u8p_mapArray;
+  uint16_t m_u16_mapArrLen;
+
+  uint16_t calcStartingPos(uint8_t u8_map);
+public:
+  WriteMaps();
+  WriteMaps(int8_t s8_sizeFlag);
+
+
+  bool writeMaps(JsonObject& root);
+  bool addMap(MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uin8_t u8_numGrps, uint8_t u8_mbFunc);
 };
 
 

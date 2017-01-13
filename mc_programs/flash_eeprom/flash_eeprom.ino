@@ -333,11 +333,7 @@ void loop() {
   //return;  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 }
 
-void clearSerialRx() {
-  while(Serial.available()){
-    Serial.read();
-  }
-}
+
 
   /* Meter Versions
    *

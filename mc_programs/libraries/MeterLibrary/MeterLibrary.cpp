@@ -455,6 +455,64 @@ bool MeterLibGroups::groupLastFlags(int8_t *const s8kp_dataFlags) {
 }
 
 
+// WriteMaps class functions #######################################
+WriteMaps::WriteMaps(void) {
+  WriteMaps(0);
+}
+
+WriteMaps::WriteMaps(int8_t s8_sizeFlag) {
+  m_u16_mapIndexStart = word(EEPROM.read(6), EEPROM.read(7));
+  m_u8_numMaps = EEPROM.read(m_u16_mapIndexStart + 2);
+//  m_u8_curMap = m_u8_numMaps;
+
+  switch (u8_sizeFlag) {
+  case -1:
+    m_u16_mapArrLen = EEPROM.length();
+    break;
+  default:
+    m_u16_mapArrLen = EEPROM.length() - m_u16_mapIndexStart - 1;
+    break;
+  }
+  m_u8p_mapArray = calloc(sizeof(uint8_t), m_u16_mapArrLen);
+}
+
+
+WriteMaps::~WriteMaps() {
+  free(m_u8p_mapArray);
+  m_u8p_mapArray = NULL;
+}
+
+
+bool WriteMaps::writeMaps(JsonObject &root) {
+  // reset total num of maps
+}
+
+
+bool WriteMaps::addMap(MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uin8_t u8_numGrps, uint8_t u8_mbFunc) {
+  uint16_t u16_mapIdx = 0;
+
+
+}
+
+
+uint16_t WriteMaps::calcStartingPos(uint8_t u8_map) {
+// where should map u8_map start?
+  if (u8_map == 0) {
+    return m_u8_numMaps * 4 + m_u16_mapIndexStart + 3;
+  }
+  else {
+    uint16_t u16_prevStart;
+    EEPROM.get((u8_map - 1) * 4 + 3, u16_prevStart);
+
+    uint8_t u8_prevNumGrps = EEPROM.read(u16_prevStart + 3);
+    uint16_t u16_lastGrpStart;
+    EEPROM.get(u16_prevStart + u8_prevNumGrps * 2 + 2, u16_lastGrpStart);
+    uint8_t u8_lastGrpVals = EEPROM.read(u16_lastGrpStart);
+    return u16_lastGrpStart + u8_lastGrpVals + 1;
+  }
+}
+
+
 // SlaveData Functions##############################################################################
 SlaveDataClass SlaveData;
 const SlaveDataStruct SlaveDataClass::mk_sdInvalid = {0, 0, {0, 0, 0, 0}, {0, 0, 0}};

@@ -1,4 +1,9 @@
 #include "writeLibrary.h"
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <SD.h>
+#include <EEPROM.h>
+#include "meters.h"
 
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   File jsonFile = SD.open("/maplist.jsn");
@@ -22,6 +27,9 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
     EEPROM.write(u16_mapIndStrt + 6 + ii * 4, 3);  // function
   }
 
+
+
+  // OLD CODE STARTS HERE #############################################################################################
   //uint16_t indMtrStrt;
   const uint8_t k_u8_numMaps(16);
 //  uint16_t u16_mapStart;
