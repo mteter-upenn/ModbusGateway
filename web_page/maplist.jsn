@@ -40,7 +40,7 @@
           "types":[
             {
               "type":"FLOAT_WS",
-              "valid_to":255
+              "valid_to":127
             }
           ]
         },
@@ -53,7 +53,7 @@
           "types":[
             {
               "type":"ENERGY_WS",
-              "valid_to":255
+              "valid_to":127
             }
           ]
         },
@@ -92,7 +92,7 @@
           "types":[
             {
               "type":"FLOAT_WS",
-              "valid_to":255
+              "valid_to":127
             }
           ]
         },
@@ -135,7 +135,7 @@
             },
             {
               "type":"MOD1K",
-              "valid_to":255
+              "valid_to":127
             }
           ]
         },

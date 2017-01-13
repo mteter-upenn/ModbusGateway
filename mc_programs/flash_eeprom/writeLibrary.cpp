@@ -4,35 +4,42 @@
 #include <SD.h>
 #include <EEPROM.h>
 #include "meters.h"
+#include <MeterLibrary.h>
 
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   File jsonFile = SD.open("/maplist.jsn");
 
-  StaticJsonBuffer<20000> jsonBuffer;
+  // try using while loop, show_free_mem and delete[] to find minimum space needed
+  //   (use switch case to select best size)
+  const uint16_t u16_test = 20000;
+  StaticJsonBuffer<u16_test> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(jsonFile);
+  WriteMaps cls_writeMaps;
 
-  if (!root.success()) {
-    Serial.println("Failed to access maplist.jsn!");
-    return u16_mapIndStrt;
-  }
+//  if (!root.success()) {
+//    Serial.println("Failed to access maplist.jsn!");
+//    return u16_mapIndStrt;
+//  }
 
-  uint16_t u16_numMaps = root["meterlist"].size();
+//  uint16_t u16_numMaps = root["meterlist"].size();
 
-  uint16_t u16_mapStart = u16_mapIndStrt + 3 + u16_numMaps * 4;
+//  uint16_t u16_mapStart = u16_mapIndStrt + 3 + u16_numMaps * 4;
 
-  for (int ii = 0; ii < u16_numMaps; ++ii) {
-    EEPROM.write(u16_mapIndStrt + 3 + ii * 4, highByte(u16_mapStart));  // 117 -> 146
-    EEPROM.write(u16_mapIndStrt + 4 + ii * 4, lowByte(u16_mapStart));
-    EEPROM.write(u16_mapIndStrt + 5 + ii * 4, ii + 1);  // meter number
-    EEPROM.write(u16_mapIndStrt + 6 + ii * 4, 3);  // function
-  }
+//  for (int ii = 0; ii < u16_numMaps; ++ii) {
+//    EEPROM.write(u16_mapIndStrt + 3 + ii * 4, highByte(u16_mapStart));  // 117 -> 146
+//    EEPROM.write(u16_mapIndStrt + 4 + ii * 4, lowByte(u16_mapStart));
+//    EEPROM.write(u16_mapIndStrt + 5 + ii * 4, ii + 1);  // meter number
+//    EEPROM.write(u16_mapIndStrt + 6 + ii * 4, 3);  // function
+//  }
 
+
+  return cls_writeMaps.writeMaps(root);
 
 
   // OLD CODE STARTS HERE #############################################################################################
   //uint16_t indMtrStrt;
   const uint8_t k_u8_numMaps(16);
-//  uint16_t u16_mapStart;
+  uint16_t u16_mapStart;
   //  EEPROM.write(bt_strt, 2);  // current meter type  default is 2.1.0
   //  EEPROM.write(bt_strt + 1, 1);
   //  EEPROM.write(bt_strt + 2, 0);

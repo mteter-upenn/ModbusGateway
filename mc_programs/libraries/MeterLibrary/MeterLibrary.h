@@ -34,9 +34,9 @@ struct MapGroup {
   uint16_t u16_start;
   uint8_t u8_vals;
   uint8_t u8_regs;
-  int8_t *s8p_grpOrder;
+  int8_t s8a_grpOrder[63];
   uint8_t u8_orderLen;
-  int8_t *s8p_grpType;
+  int8_t s8a_grpType[64];
   uint8_t u8_typeLen;
 };
 
@@ -117,8 +117,8 @@ private:
   uint8_t m_u8_numMaps;
 //  uint8_t m_u8_curMap;
   uint16_t m_u16_mapIndexStart;
-  uint8_t *m_u8p_mapArray;
-  uint16_t m_u16_mapArrLen;
+//  uint8_t *m_u8p_mapArray;
+//  uint16_t m_u16_mapArrLen;
 
   uint16_t calcStartingPos(uint8_t u8_map);
 public:
@@ -126,8 +126,8 @@ public:
   WriteMaps(int8_t s8_sizeFlag);
 
 
-  bool writeMaps(JsonObject& root);
-  bool addMap(MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uin8_t u8_numGrps, uint8_t u8_mbFunc);
+  uint16_t writeMaps(JsonObject& root);
+  uint16_t addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uint8_t u8_numGrps, uint8_t u8_mbFunc);
 };
 
 

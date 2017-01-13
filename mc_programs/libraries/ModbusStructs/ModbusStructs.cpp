@@ -203,3 +203,84 @@ FloatConv Int8_2_FloatConv(int8_t s8_dataType){
 			return FloatConv::FLOAT;
 	}
 }
+
+FloatConv Char_2_FloatConv(const char *k_cp_dataType) {
+  if (strcmp_P(k_cp_dataType, PSTR("SKIP"))) {
+		return FloatConv::SKIP;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("FLOAT"))) {
+		return FloatConv::FLOAT;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("UINT16"))) {
+		return FloatConv::UINT16;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("INT16"))) {
+		return FloatConv::INT16;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("UINT32"))) {
+		return FloatConv::UINT32;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("INT32"))) {
+		return FloatConv::INT32;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("MOD1K"))) {
+		return FloatConv::MOD1K;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("MOD10K"))) {
+		return FloatConv::MOD10K;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("MOD20K"))) {
+		return FloatConv::MOD20K;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("MOD30K"))) {
+		return FloatConv::MOD30K;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("INT64"))) {
+		return FloatConv::INT64;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("UINT64"))) {
+		return FloatConv::UINT64;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("ENERGY"))) {
+		return FloatConv::ENERGY;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("DOUBLE"))) {
+		return FloatConv::DOUBLE;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("FLOAT_WS"))) {
+		return FloatConv::FLOAT_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("UINT32_WS"))) {
+		return FloatConv::UINT32_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("INT32_WS"))) {
+		return FloatConv::INT32_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("MOD1K_WS"))) {
+		return FloatConv::MOD1K_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("MOD10K_WS"))) {
+		return FloatConv::MOD10K_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("MOD20K_WS"))) {
+		return FloatConv::MOD20K_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("MOD30K_WS"))) {
+		return FloatConv::MOD30K_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("INT64_WS"))) {
+		return FloatConv::INT64_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("UINT64_WS"))) {
+		return FloatConv::UINT64_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("ENERGY_WS"))) {
+		return FloatConv::ENERGY_WS;
+	}
+  else if (strcmp_P(k_cp_dataType, PSTR("DOUBLE_WS"))) {
+		return FloatConv::DOUBLE_WS;
+	}
+	else {
+		return FloatConv::FLOAT;
+	}
+}
