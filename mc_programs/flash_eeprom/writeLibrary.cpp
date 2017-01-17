@@ -6,7 +6,12 @@
 #include "meters.h"
 #include <MeterLibrary.h>
 
+#define VIAJSON 0
+#define LIMITNUMMAPS 0
+
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
+
+#if VIAJSON
   File jsonFile = SD.open("/maplist.jsn");
 
   // try using while loop, show_free_mem and delete[] to find minimum space needed
@@ -34,11 +39,11 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
 
 
   return cls_writeMaps.writeMaps(root);
-
+#else
 
   // OLD CODE STARTS HERE #############################################################################################
   //uint16_t indMtrStrt;
-  const uint8_t k_u8_numMaps(16);
+  const uint8_t k_u8_numMaps(3);
   uint16_t u16_mapStart;
   //  EEPROM.write(bt_strt, 2);  // current meter type  default is 2.1.0
   //  EEPROM.write(bt_strt + 1, 1);
@@ -96,6 +101,7 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   EEPROM.write(u16_mapIndStrt + 14, 3);  // function
   u16_mapStart = meter3(u16_mapStart);
 
+#if LIMITNUMMAPS
   // ge pqm    #4
   //indMtrStrt -= 0;
   //meter4(0);
@@ -219,12 +225,12 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   //EEPROM.write(u16_mapIndStrt + 70, 3);  // function
   //u16_mapStart = meter17(u16_mapStart);
 
-
+#endif
   Serial.print("Meter register library starts at: ");
   Serial.println(u16_mapIndStrt + 3 + k_u8_numMaps * 4);
 
   return (u16_mapStart);  // returns end of map libraries
-
+#endif
   //  //
   //  indMtrStrt -= ;
   //  meterXX(indMtrStrt);

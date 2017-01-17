@@ -16,7 +16,10 @@ uint16_t meter1(uint16_t u16_mapStart){
   u16_blkStart = u16_mapStart + 4 + u8_numGrps * 2;
   // used to be 117, now it's 83
   u16_grpStart = u16_blkStart + (u8_numBlks * 5);
-  
+
+  Serial.println();
+  Serial.print("map Start: "); Serial.println(u16_mapStart);
+
   EEPROM.write(u16_mapStart, highByte(u16_blkStart));
   EEPROM.write(u16_mapStart + 1, lowByte(u16_blkStart));
   EEPROM.write(u16_mapStart + 2, u8_numBlks);  // number of blocks;
@@ -60,6 +63,7 @@ uint16_t meter1(uint16_t u16_mapStart){
   EEPROM.write(u16_blkStart + 19, FloatConv2Int8(FloatConv::ENERGY_WS));
 
 
+  Serial.print("grp 1 start: "); Serial.println(u16_grpStart);
 
   // New Group #1, +0
   EEPROM.write(u16_grpStart, 28);                 // number of values
@@ -105,6 +109,7 @@ uint16_t meter1(uint16_t u16_mapStart){
   EEPROM.write(++u16_grpStart, FloatConv2Int8(FloatConv::FLOAT_WS));
   EEPROM.write(++u16_grpStart, 255);
 
+  Serial.print("grp 2 start: "); Serial.println(u16_grpStart + 1);
 
   // New Group #2, +40
   EEPROM.write(++u16_grpStart, 3);               // number of values
@@ -121,6 +126,7 @@ uint16_t meter1(uint16_t u16_mapStart){
   EEPROM.write(++u16_grpStart, FloatConv2Int8(FloatConv::ENERGY_WS));
   EEPROM.write(++u16_grpStart, 255);
 
+  Serial.print("grp 3 start: "); Serial.println(u16_grpStart + 1);
 
   // New Group #3 (LAST), +51
   EEPROM.write(++u16_grpStart, 1); // number of values
