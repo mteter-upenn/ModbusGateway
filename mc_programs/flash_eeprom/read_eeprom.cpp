@@ -261,8 +261,21 @@ void read_eeprom(char c_menuChar) {
       Serial.print(F("Library index: "));
       Serial.println(u16_slvLibStrt, DEC);
 
-      Serial.print("\tNumber of blocks: ");
-      Serial.println(EEPROM.read(u16_slvLibStrt + 2), DEC);
+//      Serial.print("\tNumber of blocks: ");
+//      Serial.println(EEPROM.read(u16_slvLibStrt + 2), DEC);
+      uint8_t u8_numBlks = EEPROM.read(u16_slvLibStrt + 2);
+      uint8_t u8_numGrps = EEPROM.read(u16_slvLibStrt + 3);
+      uint16_t u16_blkStrt = word(EEPROM.read(u16_slvLibStrt), EEPROM.read(u16_slvLibStrt + 1));
+      uint16_t u16_grpStrt = word(EEPROM.read(u16_slvLibStrt + 4), EEPROM.read(u16_slvLibStrt + 5));
+
+      Serial.println("\tBlock\tStart\tEnd\tType");
+      for (int jj = 0; jj < u8_numBlks; ++jj) {
+        Serial.print("\t"); Serial.print(ii + 1);
+        Serial.print("\t"); Serial.print(word(EEPROM.read(u16_blkStrt + jj * 5), EEPROM.read(u16_blkStrt + jj * 5 + 1)));
+        Serial.print("\t"); Serial.print(word(EEPROM.read(u16_blkStrt + jj * 5 + 2), EEPROM.read(u16_blkStrt + jj * 5 + 3)));
+        Serial.print("\t"); Serial.print(EEPROM.read(u16_blkStrt + jj * 5 + 4));
+      }
+      Serial.println();
 
       Serial.print("\tNumber of groups: ");
       Serial.println(EEPROM.read(u16_slvLibStrt + 3), DEC);

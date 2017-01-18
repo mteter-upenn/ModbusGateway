@@ -6,7 +6,7 @@
 #include "meters.h"
 #include <MeterLibrary.h>
 
-#define VIAJSON 1
+#define VIAJSON 0
 #define LIMITNUMMAPS 0
 
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
