@@ -41,6 +41,8 @@
 //  const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
 ////const __FlashStringHelper *
 
+
+
 void setup() {
   uint16_t u16_ipStrt, u16_nmStrt, u16_mapStrt, u16_slvStrt;
 
@@ -79,6 +81,8 @@ void setup() {
   EEPROM.write(5, lowByte(u16_slvStrt));
   EEPROM.write(6, highByte(u16_mapStrt));
   EEPROM.write(7, lowByte(u16_mapStrt));
+
+//  u32_time = millis();
 }
 
 void loop() {
@@ -87,6 +91,8 @@ void loop() {
   bool b_resp;
   char ca_input[50];
   char c_menuSelect;
+
+
 
 
   // duplicate should make this global

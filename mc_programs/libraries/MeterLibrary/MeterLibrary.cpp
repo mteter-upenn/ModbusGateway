@@ -565,23 +565,23 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
 
   Serial.println();
   Serial.print("map: "); Serial.println(u8_map, DEC);
-  Serial.print("map start: "); Serial.println(u16_mapStart);
+  Serial.print("u16_mapStart: "); Serial.println(u16_mapStart);
   Serial.println();
 
   uint16_t u16_mapIdx = u16_mapStart;
 
 //  EEPROM.put(u8_map * 4 + 3, u16_mapStart);  // worried about MSB/LSB
-  EEPROM.write(u8_map * 4 + 3, highByte(u16_mapStart));
-  EEPROM.write(u8_map * 4 + 4, lowByte(u16_mapStart));
-  EEPROM.write(u8_map * 4 + 5, u8_map + 1);
-  EEPROM.write(u8_map * 4 + 6, u8_mbFunc);
+  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 3, highByte(u16_mapStart));
+  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 4, lowByte(u16_mapStart));
+  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 5, u8_map + 1);
+  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 6, u8_mbFunc);
 
   uint16_t u16_blkStart = u16_mapStart + 4 + u8_numGrps * 2;
   uint16_t u16_grpStart = u16_blkStart + u8_numBlks * 5;
 
   Serial.println();
   Serial.print("map: "); Serial.println(u8_map, DEC);
-  Serial.print("map start: "); Serial.println(u16_mapIdx);
+  Serial.print("u16_mapIdx: "); Serial.println(u16_mapIdx);
   Serial.println();
 
   EEPROM.write(u16_mapIdx, highByte(u16_blkStart));
@@ -598,8 +598,6 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
     EEPROM.write(++u16_mapIdx, highByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
     EEPROM.write(++u16_mapIdx, lowByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
   }
-
-  Serial.println();
 
   // blocks
   for (int ii = 0; ii < u8_numBlks; ++ii) {
@@ -672,7 +670,7 @@ uint16_t WriteMaps::calcStartingPos(uint8_t u8_map) {
 //    Serial.print("from word: "); Serial.println(word(EEPROM.read((u8_map - 1) * 4 + 3), EEPROM.read((u8_map - 1) * 4 + 4)));
 //    Serial.println();
 
-    u16_prevStart = word(EEPROM.read((u8_map - 1) * 4 + 3), EEPROM.read((u8_map - 1) * 4 + 4));
+    u16_prevStart = word(EEPROM.read(m_u16_mapIndexStart + (u8_map - 1) * 4 + 3), EEPROM.read(m_u16_mapIndexStart + (u8_map - 1) * 4 + 4));
 
     Serial.println();
     Serial.print("prev Start: "); Serial.println(u16_prevStart);
