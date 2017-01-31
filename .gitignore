@@ -1,8 +1,8 @@
 #ignore __vm, Debug directories
-#__vm/
+__vm/
 Debug/
 .vs/
-mc_programs/mb_gw_os/__vm/Configuration.Release.vmps.xml
-mc_programs/mb_gw_os/__vm/Configuration.Debug.vmps.xml
-mc_programs/mb_gw_os/__vm/Upload.vmps.xml
-mc_programs/mb_gw_os/__vm/Compile.vmps.xml
+#mc_programs/mb_gw_os/__vm/Configuration.Release.vmps.xml
+#mc_programs/mb_gw_os/__vm/Configuration.Debug.vmps.xml
+#mc_programs/mb_gw_os/__vm/Upload.vmps.xml
+#mc_programs/mb_gw_os/__vm/Compile.vmps.xml
