@@ -1,4 +1,6 @@
 #include "read_eeprom.h"
+#include <Arduino.h>
+#include <EEPROM.h>
 
 void read_eeprom(char c_menuChar) {
   uint16_t ii, jj; //  , j;

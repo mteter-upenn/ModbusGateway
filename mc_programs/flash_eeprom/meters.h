@@ -1,6 +1,7 @@
 #ifndef METER01_H
 #define METER01_H
 
+#include <Arduino.h>
 
 uint16_t meter1(uint16_t u16_mapStart);
 uint16_t meter2(uint16_t u16_mapStart);
