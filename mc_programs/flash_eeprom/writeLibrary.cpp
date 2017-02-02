@@ -1,4 +1,6 @@
 #include "writeLibrary.h"
+#include <EEPROM.h>
+#include "meters.h"
 
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   //uint16_t indMtrStrt;
