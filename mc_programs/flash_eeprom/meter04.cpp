@@ -1,4 +1,6 @@
 #include "meters.h"
+#include <EEPROM.h>
+#include <ModbusStructs.h>
 
 uint16_t meter4(uint16_t u16_mapStart){
   uint16_t u16_blkStart;
