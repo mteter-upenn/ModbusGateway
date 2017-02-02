@@ -1,5 +1,5 @@
 #ignore __vm, Debug directories
-#__vm/
+__vm/
 Debug/
 .vs/
 mc_programs/mb_gw_os/__vm/Configuration.Release.vmps.xml
