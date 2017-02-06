@@ -16,23 +16,81 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="mb_gw_os.ino" />
-    <None Include="handleData.ino" />
-    <None Include="handleHTTP.ino" />
-    <None Include="handleModbus.ino" />
-    <None Include="handleRTC.ino" />
-    <None Include="secondaryData.ino" />
-    <None Include="secondaryHTTP.ino" />
-    <None Include="secondaryModbus.ino" />
-    <None Include="setConstants.ino" />
-    <None Include="tertiaryHTTP.ino" />
-    <None Include="handleServers.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.mb_gw_os.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleHTTP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleModbus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleRTC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleServers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="mb_names.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="miscFuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="secondaryData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="secondaryHTTP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="secondaryModbus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tertiaryHTTP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="globals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="handleData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="handleHTTP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="handleModbus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="handleRTC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="handleServers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="miscFuncs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="secondaryData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="secondaryHTTP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="secondaryModbus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tertiaryHTTP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

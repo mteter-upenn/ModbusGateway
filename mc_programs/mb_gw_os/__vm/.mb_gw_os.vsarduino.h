@@ -54,14 +54,4 @@ typedef void *__builtin_va_list;
 
 #define NEW_H
 #include "mb_gw_os.ino"
-#include "handleData.ino"
-#include "handleHTTP.ino"
-#include "handleModbus.ino"
-#include "handleRTC.ino"
-#include "handleServers.ino"
-#include "secondaryData.ino"
-#include "secondaryHTTP.ino"
-#include "secondaryModbus.ino"
-#include "setConstants.ino"
-#include "tertiaryHTTP.ino"
 #endif

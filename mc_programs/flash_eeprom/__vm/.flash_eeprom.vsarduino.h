@@ -15,7 +15,7 @@
 #define __MK20DX256__
 #define TEENSYDUINO 130
 #define ARDUINO 106011
-#define F_CPU 72000000
+#define F_CPU 96000000
 #define USB_SERIAL
 #define LAYOUT_US_ENGLISH
 #define SERIAL3_SIZE_256
@@ -54,24 +54,4 @@ typedef void *__builtin_va_list;
 
 #define NEW_H
 #include "flash_eeprom.ino"
-#include "meter01.ino"
-#include "meter02.ino"
-#include "meter03.ino"
-#include "meter04.ino"
-#include "meter05.ino"
-#include "meter06.ino"
-#include "meter07.ino"
-#include "meter08.ino"
-#include "meter09.ino"
-#include "meter10.ino"
-#include "meter11.ino"
-#include "meter12.ino"
-#include "meter13.ino"
-#include "meter14.ino"
-#include "meter15.ino"
-#include "meter16.ino"
-#include "meter17.ino"
-#include "read_eeprom.ino"
-#include "term_func.ino"
-#include "writeLibrary.ino"
 #endif
