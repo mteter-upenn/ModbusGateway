@@ -32,6 +32,7 @@ time_t getNtpTime() {
   while ((millis() - u32_startTime) < 1500) {
     if (eu_ntpClient.parsePacket() >= k_s_ntpPacketSize) {
       time_t t_time;
+      const int32_t k_s32_timeZone = -5;
 
       eu_ntpClient.read(ca_packetBuffer, k_s_ntpPacketSize); // read the packet into the buffer
       
@@ -39,7 +40,7 @@ time_t getNtpTime() {
       uint32_t lowWd = word(ca_packetBuffer[42], ca_packetBuffer[43]);
   
       uint32_t secsSince1900 = (highWd << 16) | lowWd;
-      t_time = secsSince1900 - 2208988800UL;
+      t_time = secsSince1900 - 2208988800UL + k_s32_timeZone * SECS_PER_HOUR;
 
       Serial.print(F("Retrieved time via NTP: "));
       printTime(t_time);

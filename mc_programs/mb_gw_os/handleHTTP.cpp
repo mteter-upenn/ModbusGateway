@@ -339,6 +339,8 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
         }
         break;
       case (FileType::TXT):
+        sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::TXT);
+        break;
       case (FileType::CSV):
         sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::NONE);
         break;

@@ -141,7 +141,7 @@ bool ModbusStack::removeByUnqId(uint16_t u16_unqId) {
 
 
 bool ModbusStack::removeByInd(uint8_t u8_ind) {
-	Serial.println("removeByInd");
+	//Serial.println("removeByInd");
 	if (u8_ind < m_u8_length) {
 		pullForward(u8_ind);
 			

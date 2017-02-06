@@ -3,7 +3,6 @@
 #include "MeterLibrary.h"
 #include <IPAddress.h>
 
-
 ModbusServer::ModbusServer(uint8_t u8_serialPort) {
 	ModbusServer(u8_serialPort, 255);  // call next constructor
 }
@@ -79,12 +78,132 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 	
 	m_u32_serialTime = millis();
 	
+
 	if (m_u8_enablePin != 255) {
 		digitalWrite(m_u8_enablePin, HIGH); // MJT, set pin for transmission  was low
 	}
 	return true;
 }
 
+void digitalClockDisplay(time_t t) {
+ // digital clock display of the time
+ Serial.print(hour(t));
+ printDigits(minute(t));
+ printDigits(second(t));
+ Serial.print(" ");
+ Serial.print(day(t));
+ Serial.print(" ");
+ Serial.print(monthStr(month(t)));
+// Serial.print(month(t));
+ Serial.print(" ");
+ Serial.print(year(t));
+ Serial.println();
+}
+
+void printDigits(int digits) {
+ // utility function for digital clock display: prints preceding colon and leading 0
+ Serial.print(":");
+ if (digits < 10)
+ Serial.print('0');
+ Serial.print(digits);
+}
+
+
+void print3SpaceDigits(uint8_t num) {
+  if (num < 10) {
+    Serial.print("  ");
+  }
+  else if (num < 100) {
+    Serial.print(" ");
+  }
+  Serial.print(num, DEC);
+}
+
+
+void write3SpaceDigits(File sdFile, uint8_t num) {
+  if (num < 10) {
+    sdFile.print("  ");
+  }
+  else if (num < 100) {
+    sdFile.print(" ");
+  }
+  sdFile.print(num, DEC);
+}
+
+
+void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, bool b_showTime) {
+  time_t t_time = now();
+  int t_yr, t_mn, t_dy;
+  char ca_yr[5];
+  char ca_mn[3];
+  char ca_dy[3];
+  uint8_t u8_digit;
+  File tempFile;
+  char cp_fileName[30] = {0};
+
+  ca_yr[4] = 0;
+  ca_mn[2] = 0;
+  ca_dy[2] = 0;
+  strcpy_P(cp_fileName, PSTR("/PASTDATA/ERRORS/"));
+
+  t_yr = year(t_time);
+  t_mn = month(t_time);
+  t_dy = day(t_time);
+
+  for (int ii = 3, jj = 0; jj < 4; --ii, ++jj) {
+    u8_digit = t_yr / pow(10, ii);
+    ca_yr[jj] = u8_digit + '0';
+    t_yr -= u8_digit * pow(10, ii);
+  }
+
+  for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+    u8_digit = t_mn / pow(10, ii);
+    ca_mn[jj] = u8_digit + '0';
+    t_mn -= u8_digit * pow(10, ii);
+  }
+
+  for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+    u8_digit = t_dy / pow(10, ii);
+    ca_dy[jj] = u8_digit + '0';
+    t_dy -= u8_digit * pow(10, ii);
+  }
+
+  strcat(cp_fileName, ca_yr);
+  strcat(cp_fileName, ca_mn);
+  strcat(cp_fileName, ca_dy);
+  strcat(cp_fileName, ".txt");
+
+  tempFile = SD.open(cp_fileName, FILE_WRITE);
+
+//  tempFile.println();
+  tempFile.print(k_cp_string);
+  if (b_showTime) {
+    tempFile.print(hour(t_time));
+
+    tempFile.print(":");
+    if (minute(t_time) < 10) tempFile.print('0');
+    tempFile.print(minute(t_time));
+
+    tempFile.print(":");
+    if (second(t_time) < 10) tempFile.print('0');
+    tempFile.print(second(t_time));
+
+    tempFile.print(" ");
+    tempFile.print(day(t_time));
+
+    tempFile.print(" ");
+    tempFile.print(monthStr(month(t_time)));
+
+    tempFile.print(" ");
+    tempFile.print(year(t_time));
+  }
+  tempFile.println();
+  for (int ii = 0; ii < u16_arrLen; ++ii) {
+    write3SpaceDigits(tempFile, u8p_arr[ii]); tempFile.print(" ");
+  }
+  tempFile.println();
+  tempFile.close();
+}
 
 bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_mbReq) {
 	uint8_t u8a_txBuffer[12] = {0};
@@ -121,7 +240,17 @@ bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_
 		ec_client.write(u8a_txBuffer, 12);
 		m_u32a_tcpTime[u8_sock] = millis();
 		
-		Serial.println("sent modbus/tcp mesg");
+    time_t t_time = now();
+
+    Serial.println();
+    Serial.print("sent modbus/tcp mesg at ");
+    digitalClockDisplay(t_time);
+    for (int ii = 0; ii < 12; ++ii) {
+//      Serial.print(u8a_txBuffer[ii], DEC); Serial.print(" ");
+      print3SpaceDigits(u8a_txBuffer[ii]); Serial.print(" ");
+    }
+    Serial.println();
+    storeStringAndArr("sent modbus/tcp mesg at ", u8a_txBuffer, 12, true);
 		return true;
 	}
 	return false;
@@ -279,10 +408,12 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
 				Serial.println("raw tcp resp from slave: ");
 				for (int ii = 0; ii < u16_mbRxSize; ++ii) {
-					Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
+//					Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
+          print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
 				}
 				Serial.println();
-				
+        storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, true);
+
 				// verify device id
 				if (u8p_devResp[6] != mr_mbReq.u8_id) {
 					u8_mbStatus = k_u8_MBInvalidSlaveID;
@@ -377,10 +508,12 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 		// u16_respLen = 13;
 		// end debugging
 		for (int ii = 0; ii < u16_respLen; ++ii) {
-			Serial.print(u8a_respBuf[ii], DEC); Serial.print(", ");
+//      Serial.print(u8a_respBuf[ii], DEC); Serial.print(" ");
+      print3SpaceDigits(u8a_respBuf[ii]); Serial.print(" ");
 		}
 		Serial.println();
-		
+    storeStringAndArr("message to laptop at ", u8a_respBuf, u16_respLen, true);
+
 		ec_client.write(u8a_respBuf, u16_respLen);
 		ec_client.flush();  // do anything?
 		
@@ -504,7 +637,8 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 			// Serial.println();
 			// Serial.print("given: "); Serial.println(u16_givenLen, DEC);
 			// Serial.print("lenRead: "); Serial.println(u16_lenRead, DEC);
-			
+
+
 			while (u16_lenRead < u16_givenLen) {  // make sure to grab the full packet
 				u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, k_u16_mbMsgMaxLen - u16_lenRead);
 
@@ -521,6 +655,8 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				}
 			}
 			
+      storeStringAndArr("\nincoming request at ", u8a_mbReq, u16_lenRead, true);
+
 			// SET MODBUSREQUEST VARIABLE/
 			u8a_strtBytes[0] = u8a_mbReq[0];
 			u8a_strtBytes[1] = u8a_mbReq[1];
