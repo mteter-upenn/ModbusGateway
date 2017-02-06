@@ -124,6 +124,9 @@ void handleServers() {
                 // ADD TO STACK
                 g_u16a_mbReqUnqId[ii] = mbStack.add(mbReq, 1);
 
+                uint8_t u8a_respBuf[1] = { 0 };
+                storeStringAndArr("above is assigned",u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], false);
+
                 uint8_t u8_stkInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
 //                Serial.print("added this to "); Serial.print(mbStack.getLength(), DEC);
 //                Serial.print(" long stack: "); Serial.println(g_u16a_mbReqUnqId[ii], DEC);
