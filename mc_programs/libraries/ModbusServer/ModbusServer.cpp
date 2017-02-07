@@ -82,6 +82,9 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 	if (m_u8_enablePin != 255) {
 		digitalWrite(m_u8_enablePin, HIGH); // MJT, set pin for transmission  was low
 	}
+	
+	storeStringAndArr("sent modbus serial mesg at ", u8a_txBuffer, 8, mr_mbReq.u16_unqId, true);
+	
 	return true;
 }
 
@@ -316,6 +319,8 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 					// Serial.print(u8p_devResp[ii], DEC); Serial.print(", ");
 				// }
 				// Serial.println();
+				
+				storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, true);
 				
 				uint16_t u16_crc = 0xFFFF;
 				for (int ii = 6; ii < (u16_mbRxSize - 2); ++ii) {
