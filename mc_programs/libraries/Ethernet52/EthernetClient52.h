@@ -53,6 +53,7 @@ private:
 public:
   void getRemoteIP(uint8_t remoteIP[4]); // ACH
   uint16_t getRemotePort(); // ACH
+  void remoteIp2Char(char *cp_string);
 #endif
 
 public:

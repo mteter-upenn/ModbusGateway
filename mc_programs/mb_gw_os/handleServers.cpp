@@ -125,7 +125,11 @@ void handleServers() {
                 g_u16a_mbReqUnqId[ii] = mbStack.add(mbReq, 1);
 
                 uint8_t u8a_respBuf[1] = { 0 };
-                storeStringAndArr("above is assigned",u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], false);
+                char ca_remIp[16] = { 0 };
+                char ca_errStr[30] = "ip is ";
+                g_eca_socks[ii].remoteIp2Char(ca_remIp);
+                strcpy(ca_errStr, ca_remIp);
+                storeStringAndArr(ca_errStr, u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], false);
 
                 uint8_t u8_stkInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
 //                Serial.print("added this to "); Serial.print(mbStack.getLength(), DEC);

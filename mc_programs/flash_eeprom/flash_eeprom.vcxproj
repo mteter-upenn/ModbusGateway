@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{477132F9-356E-41B9-B54E-F6219EA8F524}</ProjectGuid>
+    <ProjectGuid>{5C6C717E-FE9D-45BC-A684-768E42ABA121}</ProjectGuid>
     <RootNamespace>flash_eeprom</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
