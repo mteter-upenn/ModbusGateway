@@ -1,0 +1,64 @@
+#######################################
+# Syntax Coloring Map For Ethernet52s
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Ethernet52	KEYWORD1
+EthernetClient52	KEYWORD1
+EthernetServer52	KEYWORD1
+IPAddress	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# Ethernet52
+begin	KEYWORD2
+cleanSockets KEYWORD2
+localIP KEYWORD2
+subnetMask KEYWORD2
+gatewayIP KEYWORD2
+
+# EthernetServer52
+available	KEYWORD2
+#begin	KEYWORD2
+write	KEYWORD2
+
+# EthernetClient52
+status	KEYWORD2
+connect	KEYWORD2
+#write	KEYWORD2
+#available	KEYWORD2
+read	KEYWORD2
+peek	KEYWORD2
+flush	KEYWORD2
+stop	KEYWORD2
+forceClose KEYWORD2
+connected	KEYWORD2
+getSocketNumber KEYWORD2
+getRemoteIP	KEYWORD2
+getRemotePort	KEYWORD2
+
+# EthernetUDP52
+#begin	KEYWORD2
+beginMulticast KEYWORD2
+#stop	KEYWORD2
+beginPacket	KEYWORD2
+endPacket	KEYWORD2
+#write	KEYWORD2
+parsePacket	KEYWORD2
+#available	KEYWORD2
+#read	KEYWORD2
+#peek	KEYWORD2
+#flush KEYWORD2
+remoteIP KEYWORD2
+remotePort KEYWORD2
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

@@ -1,346 +1,286 @@
-void handle_http() {
-  bool post_fl = false;                              // set true if http request is POST
-  bool fnd_len = false;                              // set true to find length of POST message
-  uint16_t post_len = 0;                             // length of POST message
-  uint16_t i;                                        // tickers
-  uint8_t meter;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
-  char *mtr_ind;                                   // index of 'METER' in GET request
-  //uint8_t reqFlag = 0;                               // flag for different http requests [live.xml, mtrsetup.xml]
-  char HTTP_req[REQ_BUF_SZ] = {0};                   // buffered HTTP request stored as null terminated string
-  uint8_t req_index = 0;                             // index into HTTP_req buffer
-  char ch;                                           // used for reading GET request with extra information
-  char c;
+void handle_http(bool b_idleModbus) {
 #if DISP_TIMING_DEBUG == 1
-  uint32_t gotClient, doneHttp, doneFind, doneSend;  // times for debugging
+  uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
+  //uint32_t totBytes = 0;
 #endif
-//  bool testBool = true;                              // flag used for debug
   
-  EthernetClient client = serv_web.available();  // try to get client
+  EthernetClient52 ec_client = g_es_webServ.available();  // try to get client
 
-  if (client) {  // got client?
-      boolean currentLineIsBlank = true;
+  if (ec_client) {  // got client?
 #if DISP_TIMING_DEBUG == 1
-      gotClient = millis();
+    gotClient = millis();
 #endif
-      HTTP_req[REQ_BUF_SZ - 1] = 0;
+    while (ec_client.connected()) {
+      uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
+      char *cp_meterInd;                                     // index of 'METER' in GET request
+      char ca_firstLine[gk_u16_requestLineSize] = { 0 };                 // buffer for first line of HTTP request stored as null terminated string
+      char ca_remHeader[gk_u16_requestBuffSize] = { 0 };                // buffer for remaining HTTP request
 
-      while (client.connected()) {
-          if (client.available()) {   // client data available to read
-//            if (testBool){
-//              Serial.println(client.available(), DEC);
-//              testBool = false;
-//            }
+      if (ec_client.available()) {   // client data available to read
+        char *cp_dumPtr;
+        uint16_t u16_lenRead;
+        uint32_t u32_msgRecvTime;
 
-            c = client.read(); // read 1 byte (character) from client
-            
-            // buffer first part of HTTP request in HTTP_req array (string)
-            // leave last element in array as 0 to null terminate string (REQ_BUF_SZ - 1)
-            if (req_index < (REQ_BUF_SZ - 1)) {
-                HTTP_req[req_index] = c;          // save HTTP request character
-                req_index++;
-            }
+        u16_lenRead = ec_client.read((uint8_t*)ca_firstLine, gk_u16_requestLineSize - 1);
 
-            //Serial.print(c);    // print HTTP request character to serial monitor
-            
-            if ((req_index == 4) && (strstr(HTTP_req, "POST"))){
-              post_fl = true;  // http request is POST
-            }
-            if (post_fl == true){  // http request is POST
-              if (post_cont.searchString("Content-Length: ", 16)){
-                fnd_len = true;
-                post_fl = false;
-                post_cont.clear();
-              }
-              
-              post_cont.put(c);
-            }
+        u32_msgRecvTime = millis();
+        while (u16_lenRead < gk_u16_requestLineSize - 1) {  // make sure enough is read
+          uint32_t k_u32_mesgTimeout(50);
 
-            if (fnd_len){
-              if (!((c == '\n') || (c == '\r'))){
-                post_len = post_len * 10 + (c - '0');
-              }
-              else{
-                fnd_len = false;
-              }
-            }
+          u16_lenRead += ec_client.read((uint8_t*)ca_firstLine + u16_lenRead, gk_u16_requestLineSize - u16_lenRead - 1);
 
-            
-              // last line of client request is blank and ends with \n
-              // respond to client only after last line received
-              if (c == '\n' && currentLineIsBlank) {
+          if ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout) {  // stop trying to read message after 50 ms - assume it's never coming
+            ec_client.stop();
+            Ethernet52.cleanSockets(80);
+            return;
+          }
+        }
+
 #if DISP_TIMING_DEBUG == 1
-                doneHttp = millis();
+        lineTime = millis();
 #endif
-                  // send a standard http response header
-                if (sdInit){ 
-                  if (strstr(HTTP_req, "GET")){
-                    if (strstr(HTTP_req, ".css")){
-                      sendWebFile(client, "/ep_style.css");
-                      //webFile = SD.open("ep_style.css");        // open style file
-                    }
-                    else if (strstr(HTTP_req, ".gif")) {  // will need to expand if more pictures are desired
-                      sendGifHdr(client);
-                      sendWebFile(client, "/images/logo_let.gif");
 
-                      if (bReset) {
-                        client.stop();
-                        resetArd();
-                        return;
-                      }
-                    }
-                    else if (strstr(HTTP_req, ".htm") || strstr(HTTP_req, "GET / ")){ // if html or index request
-                      if (strstr(HTTP_req, "GET / ") || strstr(HTTP_req, "GET /index.htm")) {
-                        sendWebFile(client, "/index.htm");
-                        //webFile = SD.open("index.htm");        // open web page file
-                      }
-                      else if (strstr(HTTP_req, "GET /gensetup.htm")) {
-                        sendWebFile(client, "/gensetup.htm");
-                        //webFile = SD.open("gensetup.htm");        // open web page file
-                      }
-                      else if (strstr(HTTP_req, "GET /mtrsetup.htm")) {
-                        sendWebFile(client, "/mtrsetup.htm");
-                        //webFile = SD.open("mtrsetup.htm");        // open web page file
-                      }
-                      else if (strstr(HTTP_req, "live.htm")) {
-                        mtr_ind = strstr(HTTP_req, "METER=");
+        ca_firstLine[gk_u16_requestLineSize - 1] = 0;  // this will replace a character, though I don't think it is important
+        ca_remHeader[gk_u16_requestBuffSize - 1] = 0;
 
-                        if (mtr_ind){
-                          
-                          selSlv = 0;
-                          for (i = 0; i < 3; i++){  // search all of HTTP_req
-                            ch = HTTP_req[i + (mtr_ind - HTTP_req) + 6];
+        if (strncmp(ca_firstLine, "GET", 3) == 0) {
+#if DISP_TIMING_DEBUG == 1
+          doneHttp = millis();
+#endif
+          if (g_b_sdInit) {
+            if (strstr(ca_firstLine, ".css") != nullptr) {
+              sendWebFile(ec_client, "/ep_style.css", FileType::CSS);  // only css available
+            }
+            else if (strstr(ca_firstLine, ".gif") != nullptr) {  // will need to expand if more pictures are desired
+              sendWebFile(ec_client, "/images/logo_let.gif", FileType::GIF);  // only gif available
 
-                            if ((ch == '&') || (ch == ' ')){
-                              break;
-                            }
-                            else{
-                              selSlv = selSlv * 10 + (ch - '0');
-                            }
-                          }
-                          
-                          if (selSlv > EEPROM.read(mtr_strt)){  // if greater than number of meters listed
-                            selSlv = 1;
-                          }
-                        }  
-
-                        meter = slv_typs[(selSlv - 1)][0];
-                        //meter = EEPROM.read(mtr_strt + selSlv * 8 - 7);  // turn meter from slave index to meter type X.x.x
-                        
-                        if (meter == 11){
-                          sendWebFile(client, "/clive.htm");
-                           //webFile = SD.open("clive.htm");        // chilled water
-                        }
-                        else if (meter == 12){
-                          sendWebFile(client, "/slive.htm");
-                           //webFile = SD.open("slive.htm");        // steam
-                        }
-                        else{
-                          sendWebFile(client, "/elive.htm");
-                           //webFile = SD.open("elive.htm");        // electric
-                        }
-                      }
-                      else if (strstr(HTTP_req, "GET /pastdown.htm")) {
+              // assuming gif is last request and reset is required, reset
+              if (g_b_reset) {
+                ec_client.stop();
+                resetArd();  // this will restart the gateway
+                return;  // this should never fire
+              }
+              break;
+            }
+// html requests
+            else if ((strstr(ca_firstLine, ".htm") != nullptr) || (strncmp(ca_firstLine, "GET / ", 6) == 0)) { // if html or index request
+              if ((strncmp(ca_firstLine, "GET / ", 6) == 0) || (strncmp(ca_firstLine, "GET /index.htm", 14) == 0)) {
 #if DISP_TIMING_DEBUG
-                        time1 = millis();
+                time1 = millis();
 #endif
-                        sendWebFile(client, "/pstdown1.htm");
-                        sendDownLinks(client, HTTP_req);
-                        sendWebFile(client, "/pstdown2.htm");
+                sendWebFile(ec_client, "/index.htm", FileType::HTML);
 #if DISP_TIMING_DEBUG
-                        time2 = millis();
+                time2 = millis();
 #endif
-                        //webFile = SD.open("pstdown1.htm");        // open web page file
-                        //reqFlag = 4;
-                      }
-                      else if (strstr(HTTP_req, "GET /pastview.htm")) {  // need to flesh out ideas for this (mimic pastdown?)
-                        // graph data?
-                        sendWebFile(client, "/pastview.htm");
-                        //webFile = SD.open("pastview.htm");        // open web page file
-                      }
-                      else if (strstr(HTTP_req, "GET /reset.htm")) {
-                        sendWebFile(client, "/reset.htm");
-                        //webFile = SD.open("reset.htm");        // open web page file
-                      }
-                      else if (strstr(HTTP_req, "GET /redirect.htm")) {
-                        sendWebFile(client, "/rdct1.htm");
-                        sendIP(client);
-                        sendWebFile(client, "/rdct2.htm");
+              }
+              else if (strncmp(ca_firstLine, "GET /gensetup.htm", 17) == 0) {
+                sendWebFile(ec_client, "/gensetup.htm", FileType::HTML);
+              }
+              else if (strncmp(ca_firstLine, "GET /mtrsetup.htm", 17) == 0) {
+                sendWebFile(ec_client, "/mtrsetup.htm", FileType::HTML);
+              }
+              else if (strstr(ca_firstLine, "live.htm") != nullptr) {
+                cp_meterInd = strstr(ca_firstLine, "METER=");
 
-                        bReset = true;
-                        /*client.stop();
-                        resetArd();
-                        return;*/
-                      }
-                      else{
-                        sendWebFile(client, "/nopage.htm");
-                        //webFile = SD.open("nopage.htm");
-//                        send404(client);
-//                        break;
-                      }
+                if (cp_meterInd != nullptr) {
+                  g_u8a_selectedSlave = 0;
+                  cp_meterInd += 6;  // move pointer to end of phrase
+                  cp_dumPtr = cp_meterInd + 3;
+
+                  for (; cp_meterInd < cp_dumPtr; ++cp_meterInd) {
+                    if (isdigit(*cp_meterInd)) {
+                      g_u8a_selectedSlave = g_u8a_selectedSlave * 10 + ((*cp_meterInd) - '0');
                     }
-                    else if (strstr(HTTP_req, ".xml")){
-                      if (strstr(HTTP_req, "GET /gensetup.xml")) {
-                        sendWebFile(client, "/gensetup.xml");
-                        sendXmlEnd(client, 3);
-                        //webFile = SD.open("gensetup.xml");
-                      }
-                      else if (strstr(HTTP_req, "GET /mtrsetup.xml")) {
-                        //webFile = SD.open("mtrsetup.xml");
-                        sendWebFile(client, "/mtrsetup.xml");  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-                        sendXmlEnd(client, 2);
-                        //reqFlag = 2;
-                      }
-                      else if (strstr(HTTP_req, "GET /data.xml")) {
-                        mtr_ind = strstr(HTTP_req, "METER=");
-                         
-                        if (mtr_ind){
-                          selSlv = 0;
-                          for (i = 0; i < 3; i++){  // search all of HTTP_req
-                            ch = HTTP_req[i = (mtr_ind - HTTP_req) + 6];
-
-                            if ((ch == '&') || (ch == ' ')){
-                              break;
-                            }
-                            else{
-                              selSlv = selSlv * 10 + (ch - '0');
-                            }
-                          }
-                          
-                          if (selSlv > EEPROM.read(mtr_strt)){  // if greater than number of meters listed
-                            selSlv = 1;
-                          }
-                        }
-                        liveXML(client);  // handles http in function
-                        break;
-                      }
-                      else if (strstr(HTTP_req, "GET /info.xml")) {
-                        sendWebFile(client, "/mtrsetup.xml");  // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-                        sendXmlEnd(client, 1);
-                        //webFile = SD.open("mtrsetup.xml");
-                        //reqFlag = 1;
-                      }
-                      else{  // could not find xml file
-                        send404(client);  // handles http in function
-                        break;
-                      }   
-                    }
-                    else if (strstr(HTTP_req, ".TXT") || strstr(HTTP_req, ".CSV")) {
-                      if (strstr(HTTP_req, "GET /TEST.CSV")) {
-                        client.println("HTTP/1.1 200 OK");
-                        client.println("Content-Disposition: attachment; filename=test.txt");
-                        client.println("Connection: close\n");
-
-                        sendWebFile(client, "/test.CSV");
-                        //webFile = SD.open("test.CSV");
-                        //reqFlag = 3;
-                      }
-                      else if (strstr(HTTP_req, "GET /TEST.TXT")) {
-                        client.println("HTTP/1.1 200 OK");
-                        client.println("Content-Disposition: attachment; filename=test.txt");
-                        client.println("Connection: close\n");
-
-                        sendWebFile(client, "test.txt");
-                        //webFile = SD.open("test.txt");
-                        //reqFlag = 3;
-                      }
-                      else {  
-                        char filename[36] = {0};
-                        
-                        strcpy(filename, HTTP_req + 4);
-                        filename[35] = 0;
-                        for (i = 0; i < 36; i++) {
-                          if (filename[i] == 32) {
-                            filename[i] = 0;
-                            break;
-                          }
-                          else if (filename[i] == 0) {
-                            break;
-                          }
-                        }
-                        /*client.println("HTTP/1.1 200 OK");
-                        client.println("Content-Disposition: attachment; filename=test.txt");
-                        client.println("Connection: close\n");*/
-                        sendWebFile(client, filename);
-                        break;
-                      }
-                    }
-                    else{  // not htm, css, or xml
-                      send404(client);
+                    else {
                       break;
                     }
+                  }
 
-#if DISP_TIMING_DEBUG == 1
-                    doneFind = millis();
-#endif
-                    //sendWebFile(client, reqFlag);  // reset buffer index and all buffer elements to 0 in function
+                  if (g_u8a_selectedSlave > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
+                    g_u8a_selectedSlave = 1;
+                  }
+                }
+                else {
+                  g_u8a_selectedSlave = 1;
+                }
 
-#if DISP_TIMING_DEBUG == 1
-                    doneSend = millis();
+                u8_meterType = g_u8a_slaveTypes[(g_u8a_selectedSlave - 1)][0];  // turn meter from slave index to meter type X.x.x
 
-                    Serial.print(F("HTTP Header: "));
-                    Serial.println((doneHttp - gotClient), DEC);
-                    Serial.print(F("Find: "));
-                    Serial.println((doneFind - doneHttp), DEC);
-                    Serial.print(F("Message: "));
-                    Serial.println((doneSend - doneFind), DEC);
-                    Serial.print(F("time2 - time1: "));
-                    Serial.println((time2 - time1), DEC);
-#endif
-                                   
+                if (u8_meterType == 11) {
+                  sendWebFile(ec_client, "/clive.htm", FileType::HTML);        // chilled water
+                }
+                else if (u8_meterType == 12) {
+                  sendWebFile(ec_client, "/slive.htm", FileType::HTML);        // steam
+                }
+                else {
+                  sendWebFile(ec_client, "/elive.htm", FileType::HTML);        // electric 
+                }
+              }
+              else if (strncmp(ca_firstLine, "GET /pastdown.htm", 17) == 0) {
+
+                sendWebFile(ec_client, "/pstdown1.htm", FileType::HTML);
+                sendDownLinks(ec_client, ca_firstLine);
+                sendWebFile(ec_client, "/pstdown2.htm", FileType::NONE);
+              }
+              else if (strncmp(ca_firstLine, "GET /pastview.htm", 17) == 0) {  // need to flesh out ideas for this (mimic pastdown?)
+                                                                  // graph data?
+                sendWebFile(ec_client, "/pastview.htm", FileType::HTML);
+              }
+              else if (strncmp(ca_firstLine, "GET /reset.htm", 14) == 0) {
+                sendWebFile(ec_client, "/reset.htm", FileType::HTML);
+              }
+              else if (strncmp(ca_firstLine, "GET /redirect.htm", 17) == 0) {
+                sendWebFile(ec_client, "/rdct1.htm", FileType::HTML);
+                sendIP(ec_client);
+                sendWebFile(ec_client, "/rdct2.htm", FileType::NONE);
+
+                g_b_reset = true;  // must wait for css and gif requests before restarting
+              }
+              else {
+                sendWebFile(ec_client, "/nopage.htm", FileType::HTML);
+              }
+            }
+//  xml requests
+            else if (strstr(ca_firstLine, ".xml") != nullptr) {
+              if (strncmp(ca_firstLine, "GET /gensetup.xml", 17) == 0) {
+                sendWebFile(ec_client, "/gensetup.xml", FileType::XML);
+                sendXmlEnd(ec_client, XmlFile::GENERAL);
+              }
+              else if (strncmp(ca_firstLine, "GET /mtrsetup.xml", 17) == 0) {
+                sendWebFile(ec_client, "/mtrsetup.xml", FileType::XML);
+                sendXmlEnd(ec_client, XmlFile::METER);
+              }
+              else if (strncmp(ca_firstLine, "GET /data.xml", 13) == 0) {
+                cp_meterInd = strstr(ca_firstLine, "METER=");
+
+                if (cp_meterInd != nullptr) {
+                  g_u8a_selectedSlave = 0;
+                  cp_meterInd += 6;  // move pointer to end of phrase
+                  cp_dumPtr = cp_meterInd + 3;
+
+                  for (; cp_meterInd < cp_dumPtr; ++cp_meterInd) {
+                    if (isdigit(*cp_meterInd)) {
+                      g_u8a_selectedSlave = g_u8a_selectedSlave * 10 + ((*cp_meterInd) - '0');
+                    }
+                    else {
+                      break;
+                    }
+                  }
+
+                  if (g_u8a_selectedSlave > EEPROM.read(g_u16_mtrBlkStart)) {  // if greater than number of meters listed
+                    g_u8a_selectedSlave = 1;
+                  }
+                }
+                liveXML(ec_client);  // handles http in function
+              }
+              else if (strncmp(ca_firstLine, "GET /info.xml", 13) == 0) {
+                sendWebFile(ec_client, "/mtrsetup.xml", FileType::XML);
+                sendXmlEnd(ec_client, XmlFile::INFO);
+              }
+              else {  // could not find xml file
+                send404(ec_client);  // handles http in function
+              }
+            }
+// txt and csv requests
+            else if ((strstr(ca_firstLine, ".TXT") != nullptr) || (strstr(ca_firstLine, ".CSV") != nullptr)) {
+              //if (strncmp(HTTP_req, "GET /TEST.CSV", 13) == 0) {
+              //  ec_client.println("HTTP/1.1 200 OK");
+              //  ec_client.println("Content-Disposition: attachment; filename=test.txt");
+              //  ec_client.println("Connection: close\n");
+
+              //  sendWebFile(ec_client, "/test.CSV");
+              //}
+              //else if (strstr(HTTP_req, "GET /TEST.TXT")) {
+              //  ec_client.println("HTTP/1.1 200 OK");
+              //  ec_client.println("Content-Disposition: attachment; filename=test.txt");
+              //  ec_client.println("Connection: close\n");
+
+              //  sendWebFile(ec_client, "test.txt");
+              //}
+              //else {
+                char filename[36] = { 0 };
+
+                strcpy(filename, ca_firstLine + 4);
+                filename[35] = 0;
+                for (int ii = 0; ii < 36; ++ii) {
+                  if (filename[ii] == 32) {
+                    filename[ii] = 0;
                     break;
-                  } // end else if GET
-                  else if (strstr(HTTP_req, "POST")){
-                    if (strstr(HTTP_req, "setup.htm")){
-                      digitalWrite(epWriteLed, HIGH);
-                      getPostSetupData(client, post_len);  // reads and stores POST data to EEPROM
-                      digitalWrite(epWriteLed, LOW);
-
-                      digitalWrite(sdWriteLed, HIGH);
-                      if (strstr(HTTP_req, "mtrsetup.htm")){
-                        writeMtrSetupFile();
-                      }
-                      else if (strstr(HTTP_req, "gensetup.htm")){
-                        writeGenSetupFile();
-                      }
-                      digitalWrite(sdWriteLed, LOW);
-                            
-                      sendPostResp(client);
-
-                      /*client.stop();
-                      resetArd();
-                      return;*/
-                      break;
-                    }
-                    else{
-                      sendWebFile(client, "nopage.htm");
-                      //webFile = SD.open("nopage.htm");
-                      //sendWebFile(client, reqFlag);  // reset buffer index and all buffer elements to 0 in function
-                      break;
-                    }
-                  } // end else if POST
-                  else{  // not GET or POST
-                    send404(client);
+                  }
+                  else if (filename[ii] == 0) {
                     break;
                   }
                 }
-                else{  // sd card could not be initialized, send back standard response
-                  sendBadSD(client);
-                  break;
-                }
-              } // end blank line
-              // every line of text received from the client ends with \r\n
-              if (c == '\n') {
-                  // last character on line of received text
-                  // starting new line with next character read
-                  currentLineIsBlank = true;
-              } 
-              else if (c != '\r') {
-                  // a text character was received from client
-                  currentLineIsBlank = false;
-              }
-          } // end if (client.available())
-      } // end while (client.connected())
-      delay(1);      // give the web browser time to receive the data
-      client.stop(); // close the connection
-  } // end if (client)
+                sendWebFile(ec_client, filename, FileType::NONE);
+              //}
+            }
+// not htm, css, or xml
+            else {  
+              send404(ec_client);
+            }
+
+#if DISP_TIMING_DEBUG == 1
+            doneFind = millis();
+#endif
+
+#if DISP_TIMING_DEBUG == 1
+            //doneSend = millis();
+            //Serial.write(HTTP_req, gk_u16_requestLineSize - 1);
+            //Serial.println();
+            //Serial.print(F("Message length: "));
+            //Serial.println(totBytes, DEC);
+            Serial.print(F("HTTP Header: "));
+            Serial.println((doneHttp - gotClient), DEC);
+            Serial.print(F("time to grab first 40: "));
+            Serial.println((lineTime - gotClient), DEC);
+            Serial.print(F("Find: "));
+            Serial.println((doneFind - doneHttp), DEC);
+            Serial.print(F("time to send page: "));
+            //Serial.println((doneSend - doneFind), DEC);
+            //Serial.print(F("time2 - time1: "));
+            Serial.println((time2 - time1), DEC);
+            Serial.println();
+#endif
+            break;  // break from while loop to kill client and end func
+          }
+          else {
+            sendBadSD(ec_client);
+            break;  // don't bother trying to keep connection open - there's no reason to if there's no sd card
+          }
+        }
+// POST http
+        else if (strstr(ca_firstLine, "POST") != nullptr) {
+          if (strstr(ca_firstLine, "setup.htm")) {
+            digitalWrite(gk_s16_epWriteLed, HIGH);
+            getPostSetupData(ec_client, ca_remHeader);  // reads and stores POST data to EEPROM
+            digitalWrite(gk_s16_epWriteLed, LOW);
+
+            // rewrite xml files
+            digitalWrite(gk_s16_sdWriteLed, HIGH);
+            if (strncmp(ca_firstLine, "POST /mtrsetup.htm", 18)) {
+              writeMtrSetupFile();
+            }
+            else if (strncmp(ca_firstLine, "POST /gensetup.htm", 18)) {
+              writeGenSetupFile();
+            }
+            digitalWrite(gk_s16_sdWriteLed, LOW);
+
+            sendPostResp(ec_client);
+         
+            break;
+          }
+        }
+
+      } // end if (ec_client.available())
+      else if (b_idleModbus) {
+        //handle_modbus(false);
+      }
+    } // end while (ec_client.connected() && < timeout)
+
+
+    delay(1);      // give the web browser time to receive the data
+    ec_client.stop(); // close the connection
+
+    Ethernet52.cleanSockets(80);
+  } // end if (ec_client)
 } // end handle_http

@@ -1,116 +1,70 @@
-time_t getNtpTime(){
-  //IPAddress timeServer(128, 91, 2, 13);
-//  char timeServer[] = "time.nist.gov"; // time.nist.gov NTP server
-  const int NTP_PACKET_SIZE = 48;
-  byte packetBuffer[NTP_PACKET_SIZE];
-  EthernetUDP ntpClient;
-  unsigned int localPort = 8888;
-  uint32_t curTime, oldTime;
-  time_t t;
+time_t getNtpTime() {
+  const int k_s_ntpPacketSize = 48;  // NTP_PACKET_SIZE
+  char ca_packetBuffer[k_s_ntpPacketSize] = {0};
+  EthernetUDP52 eu_ntpClient;
+  uint16_t u16_localPort = 8888;
 
-  
+  eu_ntpClient.begin(u16_localPort);
 
-  ntpClient.begin(localPort);
-
-  memset(packetBuffer, 0, NTP_PACKET_SIZE);
-
-  packetBuffer[0] = 0b11100011;   // LI, Version, Mode
-  packetBuffer[1] = 0;     // Stratum, or type of clock
-  packetBuffer[2] = 6;     // Polling Interval
-  packetBuffer[3] = 0xEC;  // Peer Clock Precision
+  ca_packetBuffer[0] = 0b11100011;   // LI, Version, Mode
+  ca_packetBuffer[1] = 0;     // Stratum, or type of clock
+  ca_packetBuffer[2] = 6;     // Polling Interval
+  ca_packetBuffer[3] = 0xEC;  // Peer Clock Precision
   // 8 bytes of zero for Root Delay & Root Dispersion
-  packetBuffer[12]  = 49;
-  packetBuffer[13]  = 0x4E;
-  packetBuffer[14]  = 49;
-  packetBuffer[15]  = 52;
+  ca_packetBuffer[12]  = 49;
+  ca_packetBuffer[13]  = 0x4E;
+  ca_packetBuffer[14]  = 49;
+  ca_packetBuffer[15]  = 52;
 
-  ntpClient.beginPacket(ntpIp, 123); //NTP requests are to port 123
-  ntpClient.write(packetBuffer, NTP_PACKET_SIZE);
-  ntpClient.endPacket();
+  eu_ntpClient.beginPacket(g_ip_ntpIp, 123); //NTP requests are to port 123
+  eu_ntpClient.write(ca_packetBuffer, k_s_ntpPacketSize);
+  eu_ntpClient.endPacket();
   
-  oldTime = millis();
-  curTime = millis();
+  uint32_t u32_startTime;
+  u32_startTime = millis();
 
-  while ((curTime - oldTime) < 1500) {
-    if (ntpClient.parsePacket() >= NTP_PACKET_SIZE) {
-      ntpClient.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
-      //oldArdTime = millis();
+  while ((millis() - u32_startTime) < 1500) {
+    if (eu_ntpClient.parsePacket() >= k_s_ntpPacketSize) {
+      time_t t_time;
+
+      eu_ntpClient.read(ca_packetBuffer, k_s_ntpPacketSize); // read the packet into the buffer
       
-      uint32_t highWd = word(packetBuffer[40], packetBuffer[41]);
-      uint32_t lowWd = word(packetBuffer[42], packetBuffer[43]);
+      uint32_t highWd = word(ca_packetBuffer[40], ca_packetBuffer[41]);
+      uint32_t lowWd = word(ca_packetBuffer[42], ca_packetBuffer[43]);
   
       uint32_t secsSince1900 = (highWd << 16) | lowWd;
-      t = secsSince1900 - 2208988800UL;
+      t_time = secsSince1900 - 2208988800UL;
 
       Serial.print(F("Retrieved time via NTP: "));
-      printTime(t);
-      ntpClient.stop();
-      return t;  // return unix time
-
-      //curExcelDay = (secsSince1900 / 86400UL) + 2UL;  // day in excel date format
-      //initExcelSecs = (secsSince1900 % 86400UL);  // seconds in day
-
-      //Serial.print(F("day: "));
-      //Serial.print(curExcelDay);
-      //Serial.print(F(", seconds: "));
-      //Serial.println(initExcelSecs);
-
-      //break;
+      printTime(t_time);
+      eu_ntpClient.stop();
+      return t_time;  // return unix time
     }
-
-    curTime = millis();
   }
 
-  ntpClient.stop();
+  eu_ntpClient.stop();
   Serial.println(F("NTP time retrieval failed!"));
   return 0;  // return whether or not ntp server could be contacted
 }
 
 
 time_t getRtcTime() {
-#if defined(CORE_TEENSY)
   return Teensy3Clock.get();
-#else
-  return 0;
-#endif
 }
 
 
-//bool getFakeTime() {
-//  curExcelDay = 42304;
-//  initExcelSecs = 46000;
-//  return true;
-//}
-
-void printTime(time_t t) {
-  Serial.print(month(t));
+void printTime(time_t t_time) {
+  Serial.print(month(t_time));
   Serial.print(F("-"));
-  Serial.print(day(t));
+  Serial.print(day(t_time));
   Serial.print(F("-"));
-  Serial.print(year(t));
+  Serial.print(year(t_time));
   Serial.print(F(" "));
-  Serial.print(hour(t));
+  Serial.print(hour(t_time));
   Serial.print(F(":"));
-  Serial.print(minute(t));
+  Serial.print(minute(t_time));
   Serial.print(F(":"));
-  Serial.println(second(t));
+  Serial.println(second(t_time));
 }
 
-
-//void handle_RT(){
-//  /*uint32_t curArdTime;
-//
-//  curArdTime = millis()*/;
-//
-//  //if (((curArdTime - oldArdTime) / 1000) > 60) {  // this line for debugging
-// // if ((initExcelSecs + ((curArdTime - oldArdTime) / 1000)) > 86400){  // if it's been longer than a day -> 86400 seconds
-// //   oldArdTime = curArdTime;
-// //   //setSyncProvider(getNtpTime);  // get time from ntp server
-// //   //getFakeTime();
-//	////getRtcTime();  // get time from real time clock
-// // }
-//  
-//  
-//  
-//}
 

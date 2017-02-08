@@ -1,23 +1,29 @@
 
+
+
+
+#include <FloatConvEnum.h>
 #include <EEPROM.h>
 #include "mac.h"
 
+
 #define SERIAL_INPUT 1  // 0 for no serial input, 1 for serial input (mac, ip, name, etc)
 
+#define NEW_GROUP_STYLE 1
  
-byte const FLOAT = 0x00;
-byte const U16_to_FLOAT = 0x01;
-byte const S16_to_FLOAT = 0x02;
-byte const U32_to_FLOAT = 0x03;
-byte const S32_to_FLOAT = 0x04;
-byte const M1K_to_FLOAT = 0x05;
-byte const M10K_to_FLOAT = 0x06;
-byte const M20K_to_FLOAT = 0x07;
-byte const M30K_to_FLOAT = 0x08;
-byte const U64_to_FLOAT = 0x09;
-byte const EGY_to_FLOAT = 0x0A;
-byte const DBL_to_FLOAT = 0x0B;
-byte const WORDSWAP = 0x80;
+//byte const FLOAT = 0x00;
+//byte const U16_to_FLOAT = 0x01;
+//byte const S16_to_FLOAT = 0x02;
+//byte const U32_to_FLOAT = 0x03;
+//byte const S32_to_FLOAT = 0x04;
+//byte const M1K_to_FLOAT = 0x05;
+//byte const M10K_to_FLOAT = 0x06;
+//byte const M20K_to_FLOAT = 0x07;
+//byte const M30K_to_FLOAT = 0x08;
+//byte const U64_to_FLOAT = 0x09;
+//byte const EGY_to_FLOAT = 0x0A;
+//byte const DBL_to_FLOAT = 0x0B;
+//byte const WORDSWAP = 0x80;
 
 bool bFirstLoop = true;
 bool bQuit = false;
@@ -28,7 +34,8 @@ bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __Flash
 
 
 void setup() {
-  
+  uint16_t ip_strt, nm_strt, reg_strt, mtr_strt;
+
   pinMode(19, OUTPUT);
   pinMode(20, OUTPUT);
   digitalWrite(19, HIGH);
@@ -38,6 +45,20 @@ void setup() {
   delay(2000);
   Serial.println(F("delay over"));
 
+
+  nm_strt = 10;
+  ip_strt = nm_strt + 33; // 43
+  mtr_strt = ip_strt + 28; // 71
+  reg_strt = mtr_strt + 181;  // 252
+
+  EEPROM.write(0, highByte(nm_strt));
+  EEPROM.write(1, lowByte(nm_strt));
+  EEPROM.write(2, highByte(ip_strt));
+  EEPROM.write(3, lowByte(ip_strt));
+  EEPROM.write(4, highByte(mtr_strt));
+  EEPROM.write(5, lowByte(mtr_strt));
+  EEPROM.write(6, highByte(reg_strt));
+  EEPROM.write(7, lowByte(reg_strt));
 }
 
 void loop() {
@@ -47,6 +68,8 @@ void loop() {
   char inpt[50];
   char cMenu;
 
+
+  // duplicate should make this global
   nm_strt = 10;
   ip_strt = nm_strt + 33; // 43
   mtr_strt = ip_strt + 28; // 71
@@ -142,7 +165,7 @@ void loop() {
 
     // ntp server ip
     if (bResponse) {
-      term_func(F("Please insert the device's IP address."), ipFunc, F("Ok, now for 485 parameters."),
+      term_func(F("Please insert the address of the NTP server."), ipFunc, F("Ok."),
         F("Please insert IP using X.X.X.X format where X is in [0, 255]."), inpt, "128.91.3.136", true, 0, false);
     }
     else {
@@ -175,14 +198,18 @@ void loop() {
     if (bResponse) {
       term_func(F("Please insert number of meters to record (max 20)."), mtrnumFunc, F("Ok."),
         F("Please insert number of meters to record (max 20)."), inpt, "5", true, 0, false);
+      storeByte(inpt, nm_strt + 32);
     }
     else {
       // default number of meters? (change if outside of bounds)
       if (EEPROM.read(nm_strt + 32) > 20) {
         strcpy_P(inpt, PSTR("5"));
+
+        storeByte(inpt, nm_strt + 32);
       }
+      // else do nothing
     }
-    storeByte(inpt, nm_strt + 32);
+    
   }
 
   if (cMenu == 'M' || cMenu == 'A') {
@@ -236,12 +263,14 @@ void loop() {
 
   if (cMenu == 'L' || cMenu == 'A') {
     // write library
-    reg_end = writeBlocks(reg_strt);
+    if (!bQuit) {
+      reg_end = writeBlocks(reg_strt);
 
-    Serial.println("Finished writing to EEPROM.");
-    Serial.print("indexing stops at byte ");
-    Serial.println(reg_end, DEC);
-    digitalWrite(20, HIGH);
+      Serial.println("Finished writing to EEPROM.");
+      Serial.print("indexing stops at byte ");
+      Serial.println(reg_end, DEC);
+      digitalWrite(20, HIGH);
+    }
   }
   
   if (islower(cMenu)) {

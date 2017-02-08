@@ -18,8 +18,16 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   indMtrStrt = 4096;
 #endif
 
+  //// New Group #1, +0
+  //EEPROM.write(grp_strt, );                 // number of values
+  //EEPROM.write(++grp_strt, );              // number of registers
+  //EEPROM.write(++grp_strt, highByte());  // starting register
+  //EEPROM.write(++grp_strt, lowByte());   // starting register
+  //EEPROM.write(++grp_strt, );              // skip bytes to data types
+
+
   // eaton power xpert 4000    #1
-  indMtrStrt -= 117;
+  indMtrStrt -= 83;
   meter1(indMtrStrt);
   EEPROM.write(reg_strt + 3, highByte(indMtrStrt));  // 117 -> 146
   EEPROM.write(reg_strt + 4, lowByte(indMtrStrt));
@@ -27,7 +35,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 6, 3);  // function
 
 // emon dmon    #2
-  indMtrStrt -= 95;
+  indMtrStrt -= 61;
   meter2(indMtrStrt);
   EEPROM.write(reg_strt + 7, highByte(indMtrStrt));  // 95 -> 150
   EEPROM.write(reg_strt + 8, lowByte(indMtrStrt));
@@ -35,7 +43,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 10, 3);  // function
 
 // ge epm 3720    #3
-  indMtrStrt -= 101;
+  indMtrStrt -= 65;
   meter3(indMtrStrt);
   EEPROM.write(reg_strt + 11, highByte(indMtrStrt));  // 101 -> 150
   EEPROM.write(reg_strt + 12, lowByte(indMtrStrt));
@@ -54,7 +62,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
 
 
   // siemens 9330, 9350, 9360    #5
-  indMtrStrt -= 103;
+  indMtrStrt -= 71;
   meter5(indMtrStrt);
   EEPROM.write(reg_strt + 19, highByte(indMtrStrt));  // 103 -> 150
   EEPROM.write(reg_strt + 20, lowByte(indMtrStrt));
@@ -62,7 +70,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 22, 3);  // function
 
 // siemens 9510, 9610    #6
-  indMtrStrt -= 126;
+  indMtrStrt -= 84;
   meter6(indMtrStrt);
   EEPROM.write(reg_strt + 23, highByte(indMtrStrt));  // 126 -> 175
   EEPROM.write(reg_strt + 24, lowByte(indMtrStrt));
@@ -70,7 +78,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 26, 3);  // function
 
 // squareD cm2350   #7
-  indMtrStrt -= 126;
+  indMtrStrt -= 96;
   meter7(indMtrStrt);
   EEPROM.write(reg_strt + 27, highByte(indMtrStrt));  // 126 -> 175
   EEPROM.write(reg_strt + 28, lowByte(indMtrStrt));
@@ -78,7 +86,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 30, 3);  // function
 
 // squareD pm710   #8
-  indMtrStrt -= 97;
+  indMtrStrt -= 65;
   meter8(indMtrStrt);
   EEPROM.write(reg_strt + 31, highByte(indMtrStrt));  // 97 -> 150
   EEPROM.write(reg_strt + 32, lowByte(indMtrStrt));
@@ -86,7 +94,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 34, 3);  // function
 
 // squareD micrologic a, p, h trip units    #9
-  indMtrStrt -= 116;
+  indMtrStrt -= 86;
   meter9(indMtrStrt);
   EEPROM.write(reg_strt + 35, highByte(indMtrStrt));  // 116 -> 150
   EEPROM.write(reg_strt + 36, lowByte(indMtrStrt));
@@ -94,7 +102,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 38, 3);  // function
 
 // squareD cm3350, cm4000 series, pm800 series    #10
-  indMtrStrt -= 114;
+  indMtrStrt -= 82;
   meter10(indMtrStrt);
   EEPROM.write(reg_strt + 39, highByte(indMtrStrt));  // 111 -> 150
   EEPROM.write(reg_strt + 40, lowByte(indMtrStrt));
@@ -102,7 +110,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 42, 3);  // function
 
 // Chilled water KEP    #11
-  indMtrStrt -= 66;
+  indMtrStrt -= 54;
   meter11(indMtrStrt);
   EEPROM.write(reg_strt + 43, highByte(indMtrStrt));
   EEPROM.write(reg_strt + 44, lowByte(indMtrStrt));
@@ -110,7 +118,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 46, 3);  // function
 
 // Steam KEP    #12
-  indMtrStrt -= 69;
+  indMtrStrt -= 55;
   meter12(indMtrStrt);
   EEPROM.write(reg_strt + 47, highByte(indMtrStrt));  // 69 -> 100
   EEPROM.write(reg_strt + 48, lowByte(indMtrStrt));
@@ -118,7 +126,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 50, 3);  // function
 
 // SquareD PM210  13
-  indMtrStrt -= 97;
+  indMtrStrt -= 65;
   meter13(indMtrStrt);
   EEPROM.write(reg_strt + 51, highByte(indMtrStrt));  // 97 -> 150
   EEPROM.write(reg_strt + 52, lowByte(indMtrStrt));
@@ -126,7 +134,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 54, 3);  // function
 
 // Siemens Pac4200/3200 14
-  indMtrStrt -= 123;
+  indMtrStrt -= 95;
   meter14(indMtrStrt);
   EEPROM.write(reg_strt + 55, highByte(indMtrStrt));  //  -> 150
   EEPROM.write(reg_strt + 56, lowByte(indMtrStrt));
@@ -134,7 +142,7 @@ uint16_t writeBlocks(uint16_t reg_strt) {
   EEPROM.write(reg_strt + 58, 3);  // function
 
 // Eaton Series PXM 2000 15
-  indMtrStrt -= 108;
+  indMtrStrt -= 94;
   meter15(indMtrStrt);
   EEPROM.write(reg_strt + 59, highByte(indMtrStrt));  //  -> 150
   EEPROM.write(reg_strt + 60, lowByte(indMtrStrt));

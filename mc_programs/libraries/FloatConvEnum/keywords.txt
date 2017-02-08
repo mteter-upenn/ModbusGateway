@@ -1,0 +1,22 @@
+#######################################
+# Syntax Coloring Map For FloatConvEnum
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+FloatConv            KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+FloatConvEnumNumRegs KEYWORD2
+FloatConv2Int8       KEYWORD2
+Int8_2_FloatConv     KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

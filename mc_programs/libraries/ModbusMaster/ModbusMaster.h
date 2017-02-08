@@ -59,10 +59,10 @@ Set to 1 to enable debugging features within class:
 
 
 /* _____PROJECT INCLUDES_____________________________________________________ */
-#include <Ethernet.h>
+#include <Ethernet52.h>
 
 // functions to calculate Modbus Application Data Unit CRC
-#include "util/crc16.h"
+// #include "util/crc16.h"
 
 // functions to manipulate words
 #include "util/word.h"
@@ -77,10 +77,12 @@ class ModbusMaster
 {
   public:
     ModbusMaster();
-    ModbusMaster(uint8_t); // slave id,  default ip 192.168.1.1, default enable pin 255, default serial 0
-	ModbusMaster(uint8_t, uint8_t (&)[4]); // slave id, ip, default enable pin 255, default serial 0
-    ModbusMaster(uint8_t, uint8_t (&)[4], uint8_t); // slave id, ip, enable pin, default serial 0
-    ModbusMaster(uint8_t, uint8_t (&)[4], uint8_t, uint8_t); // slave id, ip, enable pin,serial
+    // ModbusMaster(uint8_t u8_mbSlave); // slave id,  default ip 192.168.1.1, default enable pin 255, default serial 0
+	// ModbusMaster(uint8_t, uint8_t (&)[4]); // slave id, ip, default enable pin 255, default serial 0
+    // ModbusMaster(uint8_t, uint8_t cl_ip_mem[4], const uint8_t); // slave id, ip, enable pin, default serial 0
+    // ModbusMaster(uint8_t, uint8_t (&)[4], const uint8_t, const uint8_t); // slave id, ip, enable pin,serial
+		ModbusMaster(const uint8_t u8_enablePin);  // enable pin
+		ModbusMaster(const uint8_t u8_enablePin, const uint8_t u8_serialPort);  // enable pin, hardware serial
 	
     void begin();
     void begin(uint16_t);
@@ -209,12 +211,14 @@ class ModbusMaster
     static const uint8_t ku8MBInvalidClient                = 0xE4;
 	
 	
-	void     setSlave(uint8_t);  // MJT
-	void     setClientIP(uint8_t (&)[4]);
-	void     setSerialEthernet(bool);
-	void     setTimeout(uint16_t);  // MJT
+		void     setSlave(uint8_t);  // MJT
+		void     setClientIP(uint8_t u8a_clientIp[4]);
+		void     setSerialEthernet(bool);
+		void     setTimeout(uint16_t);  // MJT
     uint16_t getResponseBuffer(uint8_t);
     void     clearResponseBuffer();
+		bool     copyResponseBuffer(uint16_t *const u16p_dataDest);
+		bool     copyResponseBuffer(uint8_t *const u8p_dataDest);
     uint8_t  setTransmitBuffer(uint8_t, uint16_t);
     void     clearTransmitBuffer();
         
@@ -234,26 +238,28 @@ class ModbusMaster
     uint8_t  readWriteMultipleRegisters(uint16_t, uint16_t);
     
   private:
-	bool     _bSerialTrans;
-    uint8_t  _u8SerialPort;                                      ///< serial port (0..3) initialized in constructor
-    uint8_t  _u8MBSlave;                                         ///< Modbus slave (1..255) initialized in constructor
-	uint8_t  _u8EnablePin;
-	uint8_t _u8ClientIP[4];
-    uint16_t _u16BaudRate;                                       ///< baud rate (300..115200) initialized in begin()
-    static const uint8_t ku8MaxBufferSize                = 64;   ///< size of response/transmit buffers    
-    uint16_t _u16ReadAddress;                                    ///< slave register from which to read
-    uint16_t _u16ReadQty;                                        ///< quantity of words to read
-    uint16_t _u16ResponseBuffer[ku8MaxBufferSize];               ///< buffer to store Modbus slave response; read via GetResponseBuffer()
-    uint16_t _u16WriteAddress;                                   ///< slave register to which to write
-    uint16_t _u16WriteQty;                                       ///< quantity of words to write
-    uint16_t _u16TransmitBuffer[ku8MaxBufferSize];               ///< buffer containing data to transmit to Modbus slave; set via SetTransmitBuffer()
+		bool      _bSerialTrans;
+		uint8_t   _u8MBStatus;
+    uint8_t   _u8SerialPort;                                      ///< serial port (0..3) initialized in constructor
+    uint8_t   _u8MBSlave;                                         ///< Modbus slave (1..255) initialized in constructor
+		uint8_t   _u8EnablePin;
+		uint8_t   _u8ClientIP[4];
+    uint16_t  _u16BaudRate;                                       ///< baud rate (300..115200) initialized in begin()
+    static const uint8_t ku8MaxBufferSize{126};                   ///< size of response/transmit buffers (max possible permitted by protocol)  
+    uint16_t  _u16ReadAddress;                                    ///< slave register from which to read
+    uint16_t  _u16ReadQty;                                        ///< quantity of words to read
+    uint16_t  _u16ResponseBuffer[ku8MaxBufferSize];               ///< buffer to store Modbus slave response; read via GetResponseBuffer()
+    uint16_t  _u16WriteAddress;                                   ///< slave register to which to write
+    uint16_t  _u16WriteQty;                                       ///< quantity of words to write
+    uint16_t  _u16TransmitBuffer[ku8MaxBufferSize];               ///< buffer containing data to transmit to Modbus slave; set via SetTransmitBuffer()
     uint16_t* txBuffer; // from Wire.h -- need to clean this up Rx
-    uint8_t _u8TransmitBufferIndex;
-    uint16_t u16TransmitBufferLength;
+    uint8_t   _u8TransmitBufferIndex;
+    uint16_t  u16TransmitBufferLength;
     uint16_t* rxBuffer; // from Wire.h -- need to clean this up Rx
-    uint8_t _u8ResponseBufferIndex;
-    uint8_t _u8ResponseBufferLength;
-    uint16_t _u16MBResponseTimeout          = 2000; ///< Modbus timeout [milliseconds]  // MJT
+    uint16_t  _u16ResponseBufferIndex;
+    // uint16_t  _u16ResponseBufferLength;
+		uint8_t   m_u8_responseBytes;
+    uint16_t  _u16MBResponseTimeout          = 2000; ///< Modbus timeout [milliseconds]  // MJT
 	
     // Modbus function codes for bit access
     static const uint8_t ku8MBReadCoils                  = 0x01; ///< Modbus function 0x01 Read Coils
@@ -270,12 +276,16 @@ class ModbusMaster
     static const uint8_t ku8MBReadWriteMultipleRegisters = 0x17; ///< Modbus function 0x17 Read Write Multiple Registers
     
     
-    
+    uint16_t crc16_update(uint16_t crc, uint8_t a);
+		
     // master function that conducts Modbus transactions
     uint8_t ModbusMasterTransaction(uint8_t u8MBFunction);
     
     // idle callback function; gets called during idle time between TX and RX
     void (*_idle)();
+		
+	public:  // not sure if this is necessary
+		friend class MeterLibBlocks;
 };
 #endif
 

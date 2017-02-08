@@ -1,1 +1,1 @@
-sa
+<?xml version = "1.0" ?><setup><name>UPenn_Modbus_Gateway</name><rd>false</rd><mxslvs>6</mxslvs><mac>04:E9:E5:02:5E:03</mac><ip>130.91.138.141</ip><sm>255.255.255.224</sm><gw>130.91.136.1</gw><ntp>true</ntp><nip>128.91.3.136</nip><br>9600</br><to>1500</to>

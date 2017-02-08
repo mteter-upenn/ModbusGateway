@@ -8,19 +8,19 @@ void meter4(uint16_t mtr_start){
   // ge pqm
   // 384
   
-  blk_strt = mtr_start + 6;
   blk_num = 52;
-  grp_num = 18;
-
+  grp_num = 0;
+  blk_strt = mtr_start + 4 + grp_num * 2;
+  // used to be , now it's 
   grp_strt = blk_strt + (blk_num * 5);
   
   //EEPROM.write(mtr_start, highByte(blk_strt));
   //EEPROM.write(mtr_start + 1, lowByte(blk_strt));
   //EEPROM.write(mtr_start + 2, blk_num);  // number of blocks;
 
-  //EEPROM.write(mtr_start + 3, highByte(grp_strt));
-  //EEPROM.write(mtr_start + 4, lowByte(grp_strt));
-  //EEPROM.write(mtr_start + 5, grp_num);  // number of blocks;
+  //EEPROM.write(mtr_start + 3, grp_num);  // number of blocks;
+  //EEPROM.write(mtr_start + 4, highByte(grp_strt));
+  //EEPROM.write(mtr_start + 5, lowByte(grp_strt));
 
 //  // Block #1 - [, , ]
 //  EEPROM.write(blk_strt, highByte());

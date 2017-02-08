@@ -86,6 +86,7 @@ bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const 
 
                 if (term_func(F("Verify (y/n)"), verFunc, F("Input Verified"), F("Input Declined"), verInput, "n", false, 0, true)) {
                   // user accepted input
+                  
                 }
                 else {
                   //  user decided to redo input
@@ -95,7 +96,7 @@ bool term_func(const __FlashStringHelper *msgStr, bool (*argFunc)(char*), const 
                   break;
                 }
               }
-
+              Serial.println("exit here");
               Serial.println(negStr);
               return false;
             }
@@ -117,7 +118,7 @@ void checkDefault(char *input, const char *defaultInput) {
     // input == "default", replace with defaultInput
     uint8_t i, defLen;
     
-    defLen = min(49, strlen(defaultInput));
+    defLen = min(49UL, strlen(defaultInput));
 
     for (i = 0; i < defLen; i++) {
       input[i] = defaultInput[i];
@@ -535,6 +536,7 @@ bool storeBool(char *input, uint16_t regStrt) {
 }
 
 uint8_t storeByte(char *input, uint16_t regStrt) {
+  
   if (bQuit) {
     return 0;
   }

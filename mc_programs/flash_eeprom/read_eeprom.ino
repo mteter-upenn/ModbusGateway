@@ -4,7 +4,7 @@ void read_eeprom(char cMenu) {
   uint32_t baudrate;
   uint16_t timeout;
   uint8_t mtrs, libs;
-  char inpt[50];
+  //char inpt[50];
 
   nm_strt = word(EEPROM.read(0), EEPROM.read(1));
   ip_strt = word(EEPROM.read(2), EEPROM.read(3));
@@ -223,8 +223,10 @@ void read_eeprom(char cMenu) {
       // Meter virt ID
       Serial.print(F("Virtual Modbus ID: "));
       Serial.println(EEPROM.read(mtr_strt + j * 9 + 9), DEC);
+
+      Serial.println();
     }
-    Serial.println();
+    
 
     //// Scroll?
     //term_func(F("Continue? (Y)"), verFunc, F(""), F("Continue? (Y)"), inpt, "n", false, 0, false);

@@ -3,117 +3,105 @@
  Modbus gateway sketch
  */
 
-#include <Time.h>
-#include <ByteBuffer.h>
+
+#include "mb_names.h"
+#include <FloatConvEnum.h>
+#include <TimeLib.h>
 #include <SPI.h>
-#include <Ethernet.h>
+#include <Ethernet52.h>
+#include <EthernetUdp52.h>
 #include <ModbusMaster.h>
 #include <EEPROM.h>
+#include <MeterLibrary.h>
 #include <SD.h>
-#include <EthernetUdp.h>
 
-#define REQ_BUF_SZ   40                                // buffer size to capture beginning of http request
-#define ARR_SIZE     264                               // array size for modbus/tcp rx/tx buffers
-
-//#define UPENN_TEENSY_MBGW
-
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-#define STRM_BUF_SZ  3584                              // array size for buffer between sd card and ethernet
-#else
-#define STRM_BUF_SZ  1024                              // array size for buffer between sd card and ethernet
-#endif
-
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-#define MODBUS_SERIAL 3
-#else
-#define MODBUS_SERIAL 1                                // which hardware serial to use
+#ifndef CORE_TEENSY
+#error "This program designed for the Teensy 3.2"
 #endif
 
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
-#define RT_FROM_NTP 1                                  // 1 for ntp, 0 for rtc
-
-// pin ids
+#define SHOW_FREE_MEM 0                                // 1 for print free memory
 
 
+const uint16_t gk_u16_requestLineSize(40);                       // g_REQ_BUF_SZ buffer size to capture beginning of http request
+const uint16_t gk_u16_requestBuffSize(1500);                     // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of 
+                                                       //   message, the rest of the array may loop around if the http request is large enough
+const uint16_t gk_u16_postBuffSize((gk_u16_requestBuffSize - 1 - 1030 - 50));  // POST_BUF_SZ currently 419
 
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-//int resetPin = 255;                                      // when set high, will trigger hard reset
-int sdFailLed = 21;                                     // 
-int sdWriteLed = 20;
-int epWriteLed = 19;
-int rtcFailLed = 22;
-int battDeadLed = 23;
-int mb485Ctrl = 6;                                     // when set low, transmit mode, high is receive mode?
+// FIND ANOTHER WAY TO TEST FOR SMALL POST BUFFER SIZE
+//#if gk_u16_postBuffSize < 20                                   // make sure post buffer has enough room to play with, 20 bytes sounds good for min
+//#error "not enough room in array for POST messages"
+//#endif
 
+const uint16_t gk_u16_mbArraySize(264);                    // MB_ARR_SIZE array size for modbus/tcp rx/tx buffers - limited by modbus standards
+    
+const uint16_t gk_u16_respBuffSize(1400);              // RESP_BUF_SZ array size for buffer between sd card and ethernet
+                                                       //     keep short of 1500 to make room for headers
+const uint8_t gk_u8_modbusSerialHardware(3);           // MODBUS_SERIAL use hardware serial 3
+
+// reset necessaries
 #define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
 #define CPU_RESTART_VAL 0x5FA0004
 #define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL);
-#else
-int resetPin = 6;                                      // when set high, will trigger hard reset
-int sdFailLed = 7;                                     // 
-int sdWriteLed = 11;
-int epWriteLed = 8;
-int mb485Ctrl = 9;
-int rtcFailLed = 8;    // USING EPWRITELED IS SILLY
-#endif
+
+// pin ids
+const int gk_s16_sdFailLed   = 21;                     // sd card unavailable
+const int gk_s16_sdWriteLed  = 20;                     // currently writing to sd card
+const int gk_s16_epWriteLed  = 19;                     // currently writing to eeprom
+const int gk_s16_rtcFailLed  = 22;                     // no rtc set
+const int gk_s16_battDeadLed = 23;                     // dead battery - currently no way to determine
+const uint8_t gk_u8_mb485Ctrl   =  6;                     // when set low, transmit mode, high is receive mode
 
 // ethernet info
-uint8_t mac[] = {0x46, 0x52, 0x45, 0x53, 0x00, 0x00};  // enter mac, will need some sort of generator for this
-IPAddress ip(130, 91, 138, 140);                       // this value will be overwritten by ip stored in eeprom
-IPAddress subnet(255, 255, 252, 0);                    // this value will be overwritten by ip stored in eeprom
-IPAddress gateway(130, 91, 136, 1);                    // this value will be overwritten by ip stored in eeprom
-uint8_t clientIP[] = {192, 168, 1, 1};                 // ip of slave on pseudo modbus network
-bool bReset = false;
+uint8_t g_u8a_mac[8] = {0};                      // enter mac, will need some sort of generator for this
+IPAddress g_ip_ip(0, 0, 0, 0);                       // this value will be overwritten by ip stored in eeprom
+IPAddress g_ip_subnet(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
+IPAddress g_ip_gateway(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
+bool g_b_reset = false;                                    // bReset
 
-bool bNTPserv = false;                                 // turns ntp on/off (overwritten by eeprom)
-IPAddress ntpIp(128, 91, 3, 136);                      // this value will be overwritten by ip stored in eeprom
+bool g_b_useNtp = false;                                 // bNTPserv turns ntp on/off (overwritten by eeprom)
+IPAddress g_ip_ntpIp(0, 0, 0, 0);                      // this value will be overwritten by ip stored in eeprom
 
 // gateway info
-char meter_nm[31] = {0};                               // name of gateway
-uint16_t nm_strt, ip_strt, mtr_strt, reg_strt;         // addresses for components stored in eeprom (see flash_eeprom.ino for more details)
+char g_c_gwName[31] = {0};                               // meter_nm name of gateway
+// addresses for components stored in eeprom (see flash_eeprom.ino for more details)
+uint16_t g_u16_nameBlkStart;  // nm_strt
+uint16_t g_u16_ipBlkStart;  // ip_strt
+uint16_t g_u16_mtrBlkStart;  // mtr_strt
+uint16_t g_u16_regBlkStart;  // reg_strt
 
 // modbus info
-uint32_t baudrate = 9600;                              // baud rate of 485 network
-uint16_t timeout = 2000;                               // modbus timeout
+uint32_t g_u32_baudrate = 9600;                              // baud rate of 485 network
+uint16_t g_u16_timeout = 2000;                               // modbus timeout
 
 // slave info
-uint8_t slaves;                                        // number of modbus slaves attached to gateway
-uint8_t slv_devs[20];                                  // array of modbus device ids (meters can share these!)
-uint8_t slv_vids[20];                                  // array of modbus virtual ids (these should be unique!) they can be the same as devs
-uint8_t slv_ips[20][4];                                // array of slave ips
-uint8_t slv_typs[20][3];                               // array of slave meter types
-uint8_t selSlv = 1;                                    // selected slave - used for webpage live data
+uint8_t g_u8_numSlaves;  // slaves                              // number of modbus slaves attached to gateway
+uint8_t g_u8a_slaveIds[20];  // slv_devs                                // array of modbus device ids (meters can share these!)
+uint8_t g_u8a_slaveVids[20];    // slv_vids                              // array of modbus virtual ids (these should be unique!) they can be the same as devs
+uint8_t g_u8a_slaveIps[20][4];  // slv_ips                              // array of slave ips
+uint8_t g_u8a_slaveTypes[20][3]; // slv_typs                              // array of slave meter types
+uint8_t g_u8a_selectedSlave = 1;      // selSlv                              // selected slave - used for webpage live data
 
 // rtc info
-bool bGoodRTC = false;
-//uint32_t curExcelDay;                                  // current day - gotten from ntp
-//uint32_t initExcelSecs;                                // time recieved from ntp
-//uint32_t oldArdTime;                                   // local time recorded when message recieved from ntp server
+bool g_b_rtcGood = false;  // bGoodRTC
+uint32_t g_u32_rtcNtpLastReset(0UL);  // for resetting rtc with ntp
+const uint32_t gk_u32_rtcNtpResetDelay(604800000UL);  // delay in ms
 
 // data collection timing
-uint32_t oldDataTime;
-bool bRecordData = false;
-uint8_t maxSlvsRcd = 5;
+uint32_t g_u32_lastDataRequest;  // oldDataTime
+bool g_b_recordData = false;  // bRecordData
+uint8_t g_u8_maxRecordSlaves = 5;  // maxSlvsRcd
 
 // classes
-EthernetServer serv_web(80);                           // start server on http
-#ifdef UPENN_TEENSY_MBGW
-EthernetServer serv_web2(80);                           // start server on http
-#endif
+EthernetServer52 g_es_webServ(80);  //serv_web                           // start server on http
 
-EthernetServer serv_mb(502);                           // start server on modbus port
-#ifdef UPENN_TEENSY_MBGW
-EthernetServer serv_mb2(502);                           // start server on modbus port
-EthernetServer serv_mb3(502);                           // start server on modbus port
-EthernetServer serv_mb4(502);                           // start server on modbus port
-#endif
+EthernetServer52 g_es_mbServ(502);  // serv_mb                           // start server on modbus port
 
-ModbusMaster node(1, clientIP, mb485Ctrl, MODBUS_SERIAL);                  // initialize node on device 1, client ip, enable pin, serial port
+ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
 
 
 // miscellaneous
-ByteBuffer post_cont;                                  // circular buffer for string searches within entire http request
-bool sdInit = false;                                   // set flag corresponding to sd card initializtion
+bool g_b_sdInit = false;  // sdInit                                   // set flag corresponding to sd card initializtion
 
 // test vars
 #if DISP_TIMING_DEBUG
@@ -124,134 +112,104 @@ uint32_t doneHttp, gotClient, doneFind, doneSend, time1, time2;
 // main
 void resetArd(void);
 // handleHTTP
-void handle_http(void);
-// secondaryHTTP
-void send404(EthernetClient);
-void sendBadSD(EthernetClient);
-void sendGifHdr(EthernetClient);
-void sendWebFile(EthernetClient, const char*);
-void sendDownLinks(EthernetClient, char*);
-void sendXmlEnd(EthernetClient, uint8_t);
-void sendIP(EthernetClient);
-void sendPostResp(EthernetClient);
-void liveXML(EthernetClient);
-void getPostSetupData(EthernetClient, uint16_t);
+void handle_http(bool b_idleModbus);
+// secondaryHTTP - GET and general functions
+//void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
+void send404(EthernetClient52 &ec_client);
+void sendBadSD(EthernetClient52 &ec_client);
+//void sendGifHdr(EthernetClient52 &ec_client);
+void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType en_fileType = FileType::NONE);
+void sendDownLinks(EthernetClient52 &ec_client, char *const cp_firstLine);
+void sendXmlEnd(EthernetClient52 &ec_client, XmlFile en_xmlType);
+void sendIP(EthernetClient52 &ec_client);
+void liveXML(EthernetClient52 &ec_client);
+// tertiaryHTTP - POST related functions
+void sendPostResp(EthernetClient52 &ec_client);
+char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_postLen);
+void getPostSetupData(EthernetClient52 &ec_client, char *cp_httpHdr);
 // handleModbus
-bool getModbus(uint8_t*, uint16_t, uint8_t*, uint16_t&);
-void handle_modbus(void);
+uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen, bool b_byteSwap);
+void handle_modbus(bool b_idleHttp);
 // secondaryModbus
-bool findRegister(uint16_t&, uint8_t&, uint8_t);
-bool isMeterEth(uint8_t, uint8_t&, uint8_t&);
+bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meterType);
+bool isMeterEth(uint8_t u8_virtId, uint8_t &u8_meterType, uint8_t &u8_trueId);
 // setConstants
 void setConstants(void);
 void writeGenSetupFile(void);
 void writeMtrSetupFile(void);
-// stringFuncs
-void StrClear(char*, char);
-//byte StrContains(char*, const char*);
 // handleRTC
 time_t getNtpTime(void);
 time_t getRtcTime(void);
-void handle_RT(void);
-void printTime(time_t);
+void printTime(time_t t_time);
 // handleData
-void handle_data(void);
+void handle_data();
 // secondaryData
-void getElecRegs(uint16_t, uint8_t, uint16_t&, uint16_t&);
-void getFileName(time_t, char*);
-
-// debugging
-bool getFakeTime(void);
+void getFileName(time_t t_time, char *cp_fileName);
 
 
-//extern int __bss_end;
-//extern void *__brkval;
-//
-//int get_free_memory()
-//{
-//  int free_memory;
-//
-//  if((int)__brkval == 0)
-//    free_memory = ((int)&free_memory) - ((int)&__bss_end);
-//  else
-//    free_memory = ((int)&free_memory) - ((int)__brkval);
-//
-//  return free_memory;
-//}
+#if SHOW_FREE_MEM
+extern int __bss_end;
+extern void *__brkval;
 
+int getFreeMemory()
+{
+  int free_memory;
 
-void resetArd(){
+  if((int)__brkval == 0)
+    free_memory = ((int)&free_memory) - ((int)&__bss_end);
+  else
+    free_memory = ((int)&free_memory) - ((int)__brkval);
+
+  return free_memory;
+}
+#endif
+
+void resetArd() {
 //   Serial.println("resetting...");
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
   CPU_RESTART
   delay(20);
-#else
-   digitalWrite(resetPin, HIGH);
-#endif
 }
 
 
 void setup() {
-  time_t t = 0;
-
   Serial.begin(9600);
   //Serial.println(F("delay here"));
   //delay(2000);
   //Serial.println(F("delay over"));
   
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-  pinMode(rtcFailLed, OUTPUT);
-  pinMode(battDeadLed, OUTPUT);
-#else
-  pinMode(resetPin, OUTPUT);
-#endif
-  pinMode(sdFailLed, OUTPUT);
-  pinMode(sdWriteLed, OUTPUT);
-  pinMode(epWriteLed, OUTPUT);
+  // set output pins
+  pinMode(gk_s16_rtcFailLed, OUTPUT);
+  pinMode(gk_s16_battDeadLed, OUTPUT);
+  pinMode(gk_s16_sdFailLed, OUTPUT);
+  pinMode(gk_s16_sdWriteLed, OUTPUT);
+  pinMode(gk_s16_epWriteLed, OUTPUT);
   
-  
-  nm_strt = word(EEPROM.read(0), EEPROM.read(1));
-  ip_strt = word(EEPROM.read(2), EEPROM.read(3));
-  mtr_strt = word(EEPROM.read(4), EEPROM.read(5));
-  reg_strt = word(EEPROM.read(6), EEPROM.read(7));
-  meter_nm[30] = 0;
+  // get indices from eeprom
+  g_u16_nameBlkStart = word(EEPROM.read(0), EEPROM.read(1));
+  g_u16_ipBlkStart = word(EEPROM.read(2), EEPROM.read(3));
+  g_u16_mtrBlkStart = word(EEPROM.read(4), EEPROM.read(5));
+  g_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));
+
+  // take constants from eeprom into memory
   setConstants();
 
   
 //  set serial1 pins high - needed for 485 shield to work
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
-#if MODBUS_SERIAL == 2
-  digitalWrite(9, HIGH);
-  digitalWrite(10, HIGH);
-#elif MODBUS_SERIAL == 3
-  /*pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);*/
-  pinMode(7, INPUT_PULLUP);
-  //pinMode(8, OUTPUT);
-  digitalWrite(7, HIGH);
-  //digitalWrite(8, HIGH);
-  //Serial3.transmitterEnable(6);
-  /*digitalWrite(7, LOW);
-  digitalWrite(8, LOW);*/
-#else
-  digitalWrite(0, HIGH);
-  digitalWrite(1, HIGH);
-#endif
-#else
-#if MODBUS_SERIAL == 1
-  digitalWrite(19, HIGH);
-  digitalWrite(18, HIGH);
-#elif MODBUS_SERIAL == 2
-  digitalWrite(17, HIGH);
-  digitalWrite(16, HIGH);
-#elif MODBUS_SERIAL == 3
-  digitalWrite(15, HIGH);
-  digitalWrite(14, HIGH);
-#else
-  digitalWrite(0, HIGH);
-  digitalWrite(1, HIGH);
-#endif
-#endif
+  switch (gk_u8_modbusSerialHardware) {
+    case 2:
+      digitalWrite(9, HIGH);
+      digitalWrite(10, HIGH);
+      break;
+    case 3:
+      pinMode(7, INPUT_PULLUP);
+      //pin 8 has external pullup
+      digitalWrite(7, HIGH);
+      break;
+    default:
+      digitalWrite(0, HIGH);
+      digitalWrite(1, HIGH);
+      break;
+  }
 
   // may be necessary to set pin 10 high regardless of arduino type
   pinMode(10, OUTPUT);  
@@ -259,154 +217,136 @@ void setup() {
   pinMode(4, OUTPUT);
   digitalWrite(4, HIGH);
   
-//  168 and 328 arduino
-#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega168P__) || defined(__AVR_ATmega328P__)
-  Serial.println(F("uno"));
-#elif defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-  pinMode(53, OUTPUT);  // set ethernet high
-  digitalWrite(53, HIGH);
-  Serial.println(F("mega"));
-#elif defined(CORE_TEENSY)  // if teensy3.0 or greater
+//  reset w5200 ethernet chip
   pinMode(9, OUTPUT);
   digitalWrite(9, LOW);
-  Serial.println(F("teensy"));  
-#endif
-
-  
   
   Serial.println(F("Initializing SD card..."));
   if (!SD.begin(4)) {
     Serial.println(F("ERROR - SD card initialization failed!"));
-    
-    //digitalWrite(sdFailLed, HIGH);
   }
   else{
     Serial.println(F("SUCCESS - SD card initialized."));
-    sdInit = true;
+    g_b_sdInit = true;
 
+    // generate xml files for web server  SHOULD THIS FIRE AT THE TOP EVERY TIME?  probably, won't know changes if flash_eeprom used
     writeGenSetupFile();
     writeMtrSetupFile();
   }
-
-  /*delay(1);
-  digitalWrite(9, HIGH);
-  digitalWrite(4, HIGH);
-  digitalWrite(10, HIGH);
-  delay(150);*/
-
   
-  Ethernet.begin(mac, ip, gateway, gateway, subnet);
-  
-  serv_web.begin();
-#ifdef UPENN_TEENSY_MBGW
-  serv_web2.begin();
-#endif
+  // start ethernet 
+  uint16_t u16a_socketSizes[8] = { 4, 4, 1, 1, 1, 1, 2, 2 };  // sizes are >>10 eg 4->4096
+  uint16_t u16a_socketPorts[8] = { 80, 80, 502, 502, 502 ,502, 0, 0 };
 
-  serv_mb.begin();
-#ifdef UPENN_TEENSY_MBGW
-  serv_mb2.begin();
-  serv_mb3.begin();
-  serv_mb4.begin();
-#endif
+  Ethernet52.begin(g_u8a_mac, g_ip_ip, g_ip_gateway, g_ip_gateway, g_ip_subnet, 8, u16a_socketSizes, u16a_socketPorts);
 
-  node.begin(baudrate);
-  node.setTimeout(timeout);
-  //Serial3.begin(9600);
-  
-  post_cont.init(16);  // creates circular buffer 16 bytes around
+  // initialize sockets
+  g_es_webServ.begin();
+  g_es_webServ.begin();
 
-  delay(1100);
-  //setTime(4, 40, 0, 30, 10, 2015);
+  g_es_mbServ.begin();
+  g_es_mbServ.begin();
+  g_es_mbServ.begin();
+  g_es_mbServ.begin();
+
+  g_mm_node.begin(g_u32_baudrate);
+  g_mm_node.setTimeout(g_u16_timeout);
+  //  g_mm_node.idle(*function_here);  // add function for idling during wait for modbus return message
+
+  // start ntp or rtc
+  time_t t_localTime(0);
+  delay(1500);  // 1100
   setSyncProvider(getRtcTime);
 
-  if (bNTPserv) {
-    t = getNtpTime();
+  if (g_b_useNtp) {
+    t_localTime = getNtpTime();
+    g_u32_rtcNtpLastReset = millis();
   }
 
-  if (t == 0) {  //  could not get ntp time, or ntp was disabled
-    if (getRtcTime() > 1451606400UL) {  // check if rtc is already working well, if not show as led error
-      bGoodRTC = true;  // time in RTC is greater than Jan 1 2016
+  if (t_localTime == 0) {  //  could not get ntp time, or ntp was disabled
+    if (getRtcTime() > 1451606400L) {  // check if rtc is already working well, if not show as led error
+      g_b_rtcGood = true;  // time in RTC is greater than Jan 1 2016
     }
-    //else {
-      //digitalWrite(rtcFailLed, HIGH);  // no connection to ntp servers and rtc has not been set
-    //}
   }
   else {  // set clock to time gotten from ntp
-#if defined(CORE_TEENSY)
-    Teensy3Clock.set(t);
-#endif
-    setTime(t);
-    bGoodRTC = true;
+    Teensy3Clock.set(t_localTime);
+    setTime(t_localTime);
+    g_b_rtcGood = true;
   }
 
   setSyncInterval(86400);
-  //setSyncInterval(3600);
 
+  // 2 s total delay
+  // 450 from flashing leds
+  // 1500 from pre ntp wait, 
 
-//#if RT_FROM_NTP
-//  setSyncProvider(getNtpTime);
-//  //getFakeTime();
-//#else
-//  setSyncProvider(getRtcTime);
-//#endif
-  
-//  node.idle(*function_here);  // add function for idling during wait for modbus return message
-  delay(550);  // initial delay
-
-
-  digitalWrite(battDeadLed, HIGH);
+  digitalWrite(gk_s16_battDeadLed, HIGH);
   delay(50);
-  digitalWrite(rtcFailLed, HIGH);
+  digitalWrite(gk_s16_rtcFailLed, HIGH);
   delay(50);
-  digitalWrite(battDeadLed, LOW);
-  digitalWrite(sdFailLed, HIGH);
+  digitalWrite(gk_s16_battDeadLed, LOW);
+  digitalWrite(gk_s16_sdFailLed, HIGH);
   delay(50);
-  digitalWrite(rtcFailLed, LOW);
-  digitalWrite(sdWriteLed, HIGH);
+  digitalWrite(gk_s16_rtcFailLed, LOW);
+  digitalWrite(gk_s16_sdWriteLed, HIGH);
   delay(50);
-  digitalWrite(sdFailLed, LOW);
-  digitalWrite(epWriteLed, HIGH);
+  digitalWrite(gk_s16_sdFailLed, LOW);
+  digitalWrite(gk_s16_epWriteLed, HIGH);
   delay(50);
-  digitalWrite(sdWriteLed, LOW);
+  digitalWrite(gk_s16_sdWriteLed, LOW);
   delay(50);
-  digitalWrite(epWriteLed, LOW);
+  digitalWrite(gk_s16_epWriteLed, LOW);
 
   delay(50);
-  digitalWrite(battDeadLed, HIGH);
-  digitalWrite(rtcFailLed, HIGH);
-  digitalWrite(sdFailLed, HIGH);
-  digitalWrite(sdWriteLed, HIGH);
-  digitalWrite(epWriteLed, HIGH);
+  digitalWrite(gk_s16_battDeadLed, HIGH);
+  digitalWrite(gk_s16_rtcFailLed, HIGH);
+  digitalWrite(gk_s16_sdFailLed, HIGH);
+  digitalWrite(gk_s16_sdWriteLed, HIGH);
+  digitalWrite(gk_s16_epWriteLed, HIGH);
   delay(50);
-  digitalWrite(battDeadLed, LOW);
-  digitalWrite(rtcFailLed, LOW);
-  digitalWrite(sdFailLed, LOW);
-  digitalWrite(sdWriteLed, LOW);
-  digitalWrite(epWriteLed, LOW);
+  digitalWrite(gk_s16_battDeadLed, LOW);
+  digitalWrite(gk_s16_rtcFailLed, LOW);
+  digitalWrite(gk_s16_sdFailLed, LOW);
+  digitalWrite(gk_s16_sdWriteLed, LOW);
+  digitalWrite(gk_s16_epWriteLed, LOW);
   delay(50);
 
-  if (!sdInit) {
-    digitalWrite(sdFailLed, HIGH);
+  if (!g_b_sdInit) {
+    digitalWrite(gk_s16_sdFailLed, HIGH);
   }
 
-  if (!bGoodRTC) {
-    digitalWrite(rtcFailLed, HIGH);
+  if (!g_b_rtcGood) {
+    digitalWrite(gk_s16_rtcFailLed, HIGH);
   }
+
+#if SHOW_FREE_MEM
+  Serial.print(F("start: "));
+  Serial.println(getFreeMemory());
+#endif
 }  // end setup
 
 
-void loop()
-{ 
-  //handle_RT(); // not necessary with time.h
-  handle_modbus();
-  handle_http();
-  if (bRecordData && bGoodRTC) {
-#if defined(CORE_TEENSY)  // if teensy3.0 or greater
+void loop() { 
+  handle_modbus(true);
+  handle_http(true);
+  if (g_b_recordData && g_b_rtcGood) {
     handle_data();
-    
-#else
-    handle_data();
-#endif
+  }
+  if (g_b_useNtp && ((millis() - g_u32_rtcNtpLastReset) > gk_u32_rtcNtpResetDelay)) {
+    // if enough time has elapsed and we want to use ntp
+    time_t t_localTime(0);
+
+    t_localTime = getNtpTime();
+
+    if (t_localTime != 0) {  // set clock to time gotten from ntp
+      Teensy3Clock.set(t_localTime);  // just need to set Teensy3 time, class defined time updates from here
+      //setTime(t_localTime);  // this should not be strictly necessary, though update will be delayed
+      g_b_rtcGood = true;
+
+      digitalWrite(gk_s16_rtcFailLed, LOW);
+    }
+
+    g_u32_rtcNtpLastReset = millis();  // reset timer
   }
 }  // end loop
 
