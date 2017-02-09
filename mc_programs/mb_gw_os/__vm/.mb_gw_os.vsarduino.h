@@ -15,7 +15,7 @@
 #define __MK20DX256__
 #define TEENSYDUINO 130
 #define ARDUINO 106011
-#define F_CPU 72000000
+#define F_CPU 144000000
 #define USB_SERIAL
 #define LAYOUT_US_ENGLISH
 #define SERIAL3_SIZE_256
@@ -54,14 +54,4 @@ typedef void *__builtin_va_list;
 
 #define NEW_H
 #include "mb_gw_os.ino"
-#include "handleData.ino"
-#include "handleHTTP.ino"
-#include "handleModbus.ino"
-#include "handleRTC.ino"
-#include "handleServers.ino"
-#include "secondaryData.ino"
-#include "secondaryHTTP.ino"
-#include "secondaryModbus.ino"
-#include "setConstants.ino"
-#include "tertiaryHTTP.ino"
 #endif

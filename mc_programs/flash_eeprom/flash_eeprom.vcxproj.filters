@@ -16,30 +16,90 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="flash_eeprom.ino" />
-    <None Include="meter01.ino" />
-    <None Include="meter02.ino" />
-    <None Include="meter03.ino" />
-    <None Include="meter04.ino" />
-    <None Include="meter05.ino" />
-    <None Include="meter06.ino" />
-    <None Include="meter07.ino" />
-    <None Include="meter08.ino" />
-    <None Include="meter09.ino" />
-    <None Include="meter10.ino" />
-    <None Include="meter11.ino" />
-    <None Include="meter12.ino" />
-    <None Include="meter13.ino" />
-    <None Include="meter14.ino" />
-    <None Include="meter15.ino" />
-    <None Include="read_eeprom.ino" />
-    <None Include="term_func.ino" />
-    <None Include="writeLibrary.ino" />
-    <None Include="meter16.ino" />
-    <None Include="meter17.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.flash_eeprom.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="meters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="read_eeprom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="term_func.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="writeLibrary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="globals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter01.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter02.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter03.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter04.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter05.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter06.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter07.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter08.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter09.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter10.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter11.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter13.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter14.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter15.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter16.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="meter17.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="read_eeprom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="term_func.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="writeLibrary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

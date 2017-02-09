@@ -88,9 +88,9 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\matt\Documents\Arduino\libraries\ModbusStructs;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary;C:\Users\matt\Documents\Arduino\libraries\ModbusStack;C:\Users\matt\Documents\Arduino\libraries\ModbusServer;C:\Users\matt\Documents\Arduino\libraries\Ethernet52;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM\utility;C:\Users\matt\Documents\Arduino\libraries\Ethernet52\utility;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary\utility;C:\Users\matt\Documents\Arduino\libraries\ModbusServer\utility;C:\Users\matt\Documents\Arduino\libraries\ModbusStack\utility;C:\Users\matt\Documents\Arduino\libraries\ModbusStructs\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Users\matt\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\utils;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy/../tools/arm/bin/..\arm-none-eabi\include;C:\Users\matt\mbgw\mc_programs\mb_gw_os;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Users\matt\Documents\Arduino\libraries\ModbusStructs;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary;C:\Users\matt\Documents\Arduino\libraries\ModbusStack;C:\Users\matt\Documents\Arduino\libraries\ModbusServer;C:\Users\matt\Documents\Arduino\libraries\Ethernet52;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\uc2ddzmr.zqh\Micro Platforms\default\debuggers\VM_DBG;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\uc2ddzmr.zqh\Micro Platforms\default\debuggers;C:\Users\matt\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD\utility;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>C:\Users\matt\mbgw\mc_programs\mb_gw_os\__vm\.mb_gw_os.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
-      <PreprocessorDefinitions>__HARDWARE_MK20dx256__;__HARDWARE_MK20DX256__;__MK20DX256__;TEENSYDUINO=130;ARDUINO=106011;F_CPU=96000000;USB_SERIAL;LAYOUT_US_ENGLISH;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\matt\Documents\Arduino\libraries\ModbusStructs;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary;C:\Users\matt\Documents\Arduino\libraries\ArduinoJson;C:\Users\matt\Documents\Arduino\libraries\ModbusStack;C:\Users\matt\Documents\Arduino\libraries\ModbusServer;C:\Users\matt\Documents\Arduino\libraries\Ethernet52;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD;C:\Users\matt\Documents\Arduino\libraries\ArduinoJson\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM\utility;C:\Users\matt\Documents\Arduino\libraries\Ethernet52\utility;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary\utility;C:\Users\matt\Documents\Arduino\libraries\ModbusServer\utility;C:\Users\matt\Documents\Arduino\libraries\ModbusStack\utility;C:\Users\matt\Documents\Arduino\libraries\ModbusStructs\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Users\matt\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\utils;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy/../tools/arm/bin/..\arm-none-eabi\include;C:\Users\matt\Upenn_Projects\ModbusGateway\mc_programs\mb_gw_os;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Users\matt\Documents\Arduino\libraries\ModbusStructs;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary;C:\Users\matt\Documents\Arduino\libraries\ArduinoJson;C:\Users\matt\Documents\Arduino\libraries\ModbusStack;C:\Users\matt\Documents\Arduino\libraries\ModbusServer;C:\Users\matt\Documents\Arduino\libraries\Ethernet52;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\Time;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\uc2ddzmr.zqh\Micro Platforms\default\debuggers;C:\Users\matt\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD\utility;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>C:\Users\matt\Upenn_Projects\ModbusGateway\mc_programs\mb_gw_os\__vm\.mb_gw_os.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <PreprocessorDefinitions>__HARDWARE_MK20dx256__;__HARDWARE_MK20DX256__;__MK20DX256__;TEENSYDUINO=130;ARDUINO=106011;F_CPU=144000000;USB_SERIAL;LAYOUT_US_ENGLISH;SERIAL3_SIZE_256;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -126,43 +126,59 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="handleData.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="handleHTTP.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="handleModbus.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="handleRTC.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="handleServers.ino">
-      <FileType>CppCode</FileType>
-    </None>
     <None Include="mb_gw_os.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="secondaryData.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="secondaryHTTP.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="secondaryModbus.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="setConstants.ino">
-      <FileType>CppCode</FileType>
-    </None>
-    <None Include="tertiaryHTTP.ino">
       <FileType>CppCode</FileType>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="globals.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="handleData.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="handleHTTP.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="handleModbus.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="handleRTC.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="handleServers.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
     <ClInclude Include="mb_names.h" />
+    <ClInclude Include="miscFuncs.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="secondaryData.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="secondaryHTTP.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="secondaryModbus.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="tertiaryHTTP.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
     <ClInclude Include="__vm\.mb_gw_os.vsarduino.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="globals.cpp" />
+    <ClCompile Include="handleData.cpp" />
+    <ClCompile Include="handleHTTP.cpp" />
+    <ClCompile Include="handleModbus.cpp" />
+    <ClCompile Include="handleRTC.cpp" />
+    <ClCompile Include="handleServers.cpp" />
+    <ClCompile Include="miscFuncs.cpp" />
+    <ClCompile Include="secondaryData.cpp" />
+    <ClCompile Include="secondaryHTTP.cpp" />
+    <ClCompile Include="secondaryModbus.cpp" />
+    <ClCompile Include="tertiaryHTTP.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
