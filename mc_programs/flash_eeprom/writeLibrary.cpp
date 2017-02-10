@@ -6,7 +6,7 @@
 #include "meters.h"
 #include <MeterLibrary.h>
 
-#define VIAJSON 0
+#define VIAJSON 1
 #define LIMITNUMMAPS 0
 
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
@@ -105,11 +105,11 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   // ge pqm    #4
   //indMtrStrt -= 0;
   //meter4(0);
-  EEPROM.write(u16_mapIndStrt + 15, highByte(0));  // assume 400
-  EEPROM.write(u16_mapIndStrt + 16, lowByte(0));
+  EEPROM.write(u16_mapIndStrt + 15, highByte(u16_mapStart));  // assume 400
+  EEPROM.write(u16_mapIndStrt + 16, lowByte(u16_mapStart));
   EEPROM.write(u16_mapIndStrt + 17, 4);  // meter number
   EEPROM.write(u16_mapIndStrt + 18, 3);  // function
-  //u16_mapStart = meter4(u16_mapStart);
+  u16_mapStart = meter4(u16_mapStart);
 
 
   // siemens 9330, 9350, 9360    #5

@@ -528,6 +528,7 @@ uint16_t WriteMaps::writeMaps(JsonObject &root) {
       mapBlkArr[jj].u16_end = root["meterlist"][ii]["blocks"][jj]["end"];
       const char *k_cp_dataType = root["meterlist"][ii]["blocks"][jj]["type"];
       mapBlkArr[jj].dataType = Char_2_FloatConv(k_cp_dataType);
+//      Serial.print(k_cp_dataType); Serial.print(", "); Serial.println(FloatConv2Uint8(mapBlkArr[jj].dataType), DEC);
     }
 
     for (int jj = 0; jj < u8_numGrps - 1; ++jj) {
@@ -595,9 +596,12 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
   EEPROM.write(++u16_mapIdx, lowByte(u16_grpStart));
   for (int ii = 0; ii < u8_numGrps - 1; ++ii) {
     uint16_t u16_prevGrpStrt = word(EEPROM.read(u16_mapIdx - 1), EEPROM.read(u16_mapIdx));
-    EEPROM.write(++u16_mapIdx, highByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
-    EEPROM.write(++u16_mapIdx, lowByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
+    EEPROM.write(++u16_mapIdx, highByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen * 2 + 5));
+    EEPROM.write(++u16_mapIdx, lowByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen * 2 + 5));
+//    EEPROM.write(++u16_mapIdx, highByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
+//    EEPROM.write(++u16_mapIdx, lowByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
   }
+
 
   // blocks
   for (int ii = 0; ii < u8_numBlks; ++ii) {

@@ -12,7 +12,7 @@ uint16_t meter4(uint16_t u16_mapStart){
   // ge pqm
   // 384
   
-  u8_numBlks = 52;
+  u8_numBlks = 0;  // maybe 52
   u8_numGrps = 0;
   u16_blkStart = u16_mapStart + 4 + u8_numGrps * 2;
   // used to be , now it's 

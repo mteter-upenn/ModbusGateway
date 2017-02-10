@@ -45,20 +45,25 @@
 
 void setup() {
   uint16_t u16_ipStrt, u16_nmStrt, u16_mapStrt, u16_slvStrt;
-
-  pinMode(19, OUTPUT);
-  pinMode(20, OUTPUT);
-  digitalWrite(19, HIGH);
-
   Serial.begin(9600);
   Serial.println(F("delay"));
   delay(2000);
   Serial.println(F("delay over"));
 
+  pinMode(19, OUTPUT);
+  pinMode(20, OUTPUT);
+  digitalWrite(19, HIGH);
+
+
+
   pinMode(10, OUTPUT);
   digitalWrite(10, HIGH);
   pinMode(4, OUTPUT);
   digitalWrite(4, HIGH);
+
+  //  reset w5200 ethernet chip
+  pinMode(9, OUTPUT);
+  digitalWrite(9, LOW);
 
   Serial.println(F("Initializing SD card..."));
   if (!SD.begin(4)) {

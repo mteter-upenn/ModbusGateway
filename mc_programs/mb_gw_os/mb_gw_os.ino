@@ -193,10 +193,10 @@ bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meter
 
 void setup() {
   Serial.begin(9600);
-  //Serial.println(F("delay here"));
-  //delay(2000);
-  //Serial.println(F("delay over"));
-  
+//  Serial.println(F("delay here"));
+//  delay(2000);
+//  Serial.println(F("delay over"));
+
   // set output pins
   pinMode(gk_s16_rtcFailLed, OUTPUT);
   pinMode(gk_s16_battDeadLed, OUTPUT);
