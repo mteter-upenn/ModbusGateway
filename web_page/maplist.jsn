@@ -60,7 +60,6 @@
         {
           "group":3,
           "values":1,
-          "registers":0,
           "order":[5]
         }
       ]
@@ -99,7 +98,6 @@
         {
           "group":2,
           "values":1,
-          "registers":0,
           "order":[32]
         }
       ]
@@ -142,14 +140,82 @@
         {
           "group":2,
           "values":1,
-          "registers":0,
           "order":[5]
         }
       ]
     },
     {
-      "meter":,
-      "name":,
+      "meter":4,
+      "name":"GE PQM",
+      "blocks":[
+        {
+          "block":1,
+          "start":576,
+          "end":591,
+          "type":"UINT16"
+        }
+      ],
+      
+    },
+    {
+      "meter":5,
+      "name":"Siemens 9330, 9350, 9360",
+      "blocks":[
+        {
+          "block":1,
+          "start":10,
+          "end":25,
+          "type":"UINT16"
+        },
+        {
+          "block":2,
+          "start":26,
+          "end":86,
+          "type":"INT32_WS"
+        },
+        {
+          "block":3,
+          "start":88,
+          "end":116,
+          "type":"MOD10K_WS"
+        }
+      ],
+      
+    },
+    {
+      "meter":6,
+      "name":"Siemens 9510, 9610",
+      "blocks":[
+        {
+          "block":1,
+          "start":149,
+          "end":164,
+          "type":"UINT16"
+        },
+        {
+          "block":2,
+          "start":165,
+          "end":187,
+          "type":"UINT32_WS"
+        },
+        {
+          "block":3,
+          "start":197,
+          "end":237,
+          "type":"INT32_WS"
+        },
+        {
+          "block":4,
+          "start":261,
+          "end":276,
+          "type":"INT16"
+        }
+      ],
+      
+    },
+    {
+      "meter":7,
+      "name":"SquareD CM 2530",
       "blocks":[
         {
           "block":,
@@ -158,21 +224,124 @@
           "type":
         }
       ],
-      "groups":[
+      
+    },
+    {
+      "meter":8,
+      "name":"SquareD PM 710",
+      "blocks":[
         {
-          "group":,
-          "values":,
-          "registers":,
+          "block":,
           "start":,
-          "order":[],
-          "types":[
-            {
-              "type":,
-              "valid_to":
-            }
-          ]
+          "end":,
+          "type":
         }
-      ]
+      ],
+      
+    },
+    {
+      "meter":9,
+      "name":"SquareD Micrologic A, P, H Trip Units",
+      "blocks":[
+        {
+          "block":,
+          "start":,
+          "end":,
+          "type":
+        }
+      ],
+      
+    },
+    {
+      "meter":10,
+      "name":"SquareD CM 3350, CM 4000, PM 800",
+      "blocks":[
+        {
+          "block":,
+          "start":,
+          "end":,
+          "type":
+        }
+      ],
+      
+    },
+    {
+      "meter":11,
+      "name":"Chilled Water KEP",
+      "blocks":[
+        {
+          "block":,
+          "start":,
+          "end":,
+          "type":
+        }
+      ],
+      
+    },
+    {
+      "meter":12,
+      "name":"Steam KEP",
+      "blocks":[
+        {
+          "block":,
+          "start":,
+          "end":,
+          "type":
+        }
+      ],
+      
+    },
+    {
+      "meter":13,
+      "name":"SquareD PM 210",
+      "blocks":[
+        {
+          "block":,
+          "start":,
+          "end":,
+          "type":
+        }
+      ],
+      
+    },
+    {
+      "meter":14,
+      "name":"Siemens PAC 3200, 4200",
+      "blocks":[
+        {
+          "block":,
+          "start":,
+          "end":,
+          "type":
+        }
+      ],
+      
+    },
+    {
+      "meter":15,
+      "name":"Eaton PXM 2000",
+      "blocks":[
+        {
+          "block":,
+          "start":,
+          "end":,
+          "type":
+        }
+      ],
+      
+    },
+    {
+      "meter":16,
+      "name":"Schneider PM 5000",
+      "blocks":[
+        {
+          "block":,
+          "start":,
+          "end":,
+          "type":
+        }
+      ],
+      
     }
   ]
 }
