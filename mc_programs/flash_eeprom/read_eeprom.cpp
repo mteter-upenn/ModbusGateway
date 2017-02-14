@@ -253,7 +253,10 @@ void read_eeprom(char c_menuChar) {
       "ap_a", "ap_b", "ap_c", "ap_t", 
       "pf_a", "pf_b", "pf_c", "pf_t", 
       "e_rl", "e_rc", "e_ap" };
-
+    char *cpa_idTypeCS[] = {"na",
+      "ht_fl", "ms_fl", "vl_fl",
+      "t_1", "t_2", "d_t", "pres",
+      "ht_t", "ms_t", "vl_t"};
 
     // register library
     Serial.print(F("Number of libraries: "));
@@ -326,7 +329,12 @@ void read_eeprom(char c_menuChar) {
               }
 
               Serial.print("\t"); Serial.print(u16_grpReg);
-              Serial.print("\t"); Serial.print(cpa_idType[s8_id]);  // Serial.print(s8_id, DEC);
+              if (jj == 10 || jj == 11) {  // if chw or stm kep
+                Serial.print("\t"); Serial.print(cpa_idTypeCS[s8_id]);  // Serial.print(s8_id, DEC);
+              }
+              else {
+                Serial.print("\t"); Serial.print(cpa_idType[s8_id]);  // Serial.print(s8_id, DEC);
+              }
               Serial.print("\t"); Serial.print(s8_type, DEC);
 
               u16_grpReg += u16_mult;
@@ -352,7 +360,12 @@ void read_eeprom(char c_menuChar) {
 
           for (int kk = 0; kk < u8_grpVals; ++kk) {
             int8_t s8_id = static_cast<int8_t>(EEPROM.read(u16_grpStrt + 1 + kk));
-            Serial.print("\t"); Serial.println(cpa_idType[s8_id]);
+            if (jj == 10 || jj == 11) {  // if chw or stm kep
+              Serial.print("\t"); Serial.print(cpa_idTypeCS[s8_id]);  // Serial.print(s8_id, DEC);
+            }
+            else {
+              Serial.print("\t"); Serial.print(cpa_idType[s8_id]);  // Serial.print(s8_id, DEC);
+            }
           }
         }
 
