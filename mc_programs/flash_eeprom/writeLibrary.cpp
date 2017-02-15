@@ -12,15 +12,15 @@
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
 
 #if VIAJSON
-  File jsonFile = SD.open("/maplist.jsn");
+  File jsonFile = SD.open("/maplist5.jsn");
 
   // try using while loop, show_free_mem and delete[] to find minimum space needed
   //   (use switch case to select best size)
-  const uint16_t u16_test = 20000;
+  const uint16_t u16_test = 40000;
   StaticJsonBuffer<u16_test> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(jsonFile);
   WriteMaps cls_writeMaps;
-
+  Serial.print("SIZE: "); Serial.println(jsonBuffer.size());
 //  if (!root.success()) {
 //    Serial.println("Failed to access maplist.jsn!");
 //    return u16_mapIndStrt;

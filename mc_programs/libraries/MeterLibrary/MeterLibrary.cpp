@@ -494,7 +494,7 @@ uint16_t WriteMaps::writeMaps(JsonObject &root) {
   uint16_t u16_mapLibEnd = 0;
   // reset total num of maps
   if (!root.success()) {
-    Serial.println("Failed to access maplist.jsn!");
+    Serial.println("Failed to parse maplist.jsn!");
     return 0;
   }
 

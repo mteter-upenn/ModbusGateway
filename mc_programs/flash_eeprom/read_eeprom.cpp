@@ -329,7 +329,7 @@ void read_eeprom(char c_menuChar) {
               }
 
               Serial.print("\t"); Serial.print(u16_grpReg);
-              if (jj == 10 || jj == 11) {  // if chw or stm kep
+              if (ii == 10 || ii == 11) {  // if chw or stm kep
                 Serial.print("\t"); Serial.print(cpa_idTypeCS[s8_id]);  // Serial.print(s8_id, DEC);
               }
               else {
@@ -360,7 +360,7 @@ void read_eeprom(char c_menuChar) {
 
           for (int kk = 0; kk < u8_grpVals; ++kk) {
             int8_t s8_id = static_cast<int8_t>(EEPROM.read(u16_grpStrt + 1 + kk));
-            if (jj == 10 || jj == 11) {  // if chw or stm kep
+            if (ii == 10 || ii == 11) {  // if chw or stm kep
               Serial.print("\t"); Serial.print(cpa_idTypeCS[s8_id]);  // Serial.print(s8_id, DEC);
             }
             else {
