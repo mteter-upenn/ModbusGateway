@@ -325,9 +325,14 @@ void loop() {
     if (!b_quit) {
       u16_mapEnd = writeBlocks(u16_mapStrt);
 
-      Serial.println("Finished writing to EEPROM.");
-      Serial.print("indexing stops at byte ");
-      Serial.println(u16_mapEnd, DEC);
+      if (u16_mapEnd) {
+        Serial.println("Finished writing to EEPROM.");
+        Serial.print("indexing stops at byte ");
+        Serial.println(u16_mapEnd, DEC);
+      }
+      else {
+        Serial.println("There was an error writing the library!");
+      }
       digitalWrite(20, HIGH);
     }
   }
