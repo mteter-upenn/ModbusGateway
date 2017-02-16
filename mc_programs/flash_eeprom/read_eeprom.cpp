@@ -273,7 +273,7 @@ void read_eeprom(char c_menuChar) {
       Serial.print(F("Modbus function: "));
       Serial.println(EEPROM.read(u16_mapStrt + 6 + ii * 4), DEC);
 
-      Serial.print(F("Library index: "));
+      Serial.print(F("Library start: "));
       Serial.println(u16_slvLibStrt, DEC);
 
 //      Serial.print("\tNumber of blocks: ");
@@ -352,7 +352,7 @@ void read_eeprom(char c_menuChar) {
         }
         else {  // LAST GROUP
           if (u8_grpVals == 1) {
-            Serial.print("\tThere is 1 value not applicable to this map");
+            Serial.println("\tThere is 1 value not applicable to this map");
           }
           else {
             Serial.print("\tThere are "); Serial.print(u8_grpVals, DEC); Serial.println(" values not applicable to this map");
@@ -361,12 +361,14 @@ void read_eeprom(char c_menuChar) {
           for (int kk = 0; kk < u8_grpVals; ++kk) {
             int8_t s8_id = static_cast<int8_t>(EEPROM.read(u16_grpStrt + 1 + kk));
             if (ii == 10 || ii == 11) {  // if chw or stm kep
-              Serial.print("\t"); Serial.print(cpa_idTypeCS[s8_id]);  // Serial.print(s8_id, DEC);
+              Serial.print("\t"); Serial.println(cpa_idTypeCS[s8_id]);  // Serial.print(s8_id, DEC);
             }
             else {
-              Serial.print("\t"); Serial.print(cpa_idType[s8_id]);  // Serial.print(s8_id, DEC);
+              Serial.print("\t"); Serial.println(cpa_idType[s8_id]);  // Serial.print(s8_id, DEC);
             }
           }
+          Serial.print("Library end: "); Serial.print(u16_grpStrt + u8_grpVals, DEC);
+          Serial.print(", "); Serial.print(u16_grpStrt + u8_grpVals - u16_slvLibStrt + 1); Serial.print(" bytes long");
         }
 
         Serial.println();
