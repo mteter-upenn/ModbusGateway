@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{BAEF557C-116A-46F1-BA23-69F3EC909EF4}</ProjectGuid>
+    <ProjectGuid>{A8DBEF97-F05A-4986-9B2C-D3C5CC03B5FA}</ProjectGuid>
     <RootNamespace>$safeprojectname$</RootNamespace>
     <ProjectName>flash_eeprom</ProjectName>
   </PropertyGroup>
@@ -47,10 +47,10 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\matt\Documents\Arduino\libraries\ModbusStructs;C:\Users\matt\Documents\Arduino\libraries\ModbusStack;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Users\matt\Documents\Arduino\libraries\ArduinoJson;C:\Users\matt\Documents\Arduino\libraries\mac;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI;C:\Users\matt\Documents\Arduino\libraries\ArduinoJson\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM\utility;C:\Users\matt\Documents\Arduino\libraries\mac\utility;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary\utility;C:\Users\matt\Documents\Arduino\libraries\ModbusStack\utility;C:\Users\matt\Documents\Arduino\libraries\ModbusStructs\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Users\matt\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\utils;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy/../tools/arm/bin/..\arm-none-eabi\include;C:\Users\matt\Upenn_Projects\ModbusGateway\mc_programs\flash_eeprom;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Users\matt\Documents\Arduino\libraries\ModbusStructs;C:\Users\matt\Documents\Arduino\libraries\ModbusStack;C:\Users\matt\Documents\Arduino\libraries\MeterLibrary;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Users\matt\Documents\Arduino\libraries\ArduinoJson;C:\Users\matt\Documents\Arduino\libraries\mac;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SPI;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\uc2ddzmr.zqh\Micro Platforms\default\debuggers;C:\Users\matt\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD\utility;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>C:\Users\matt\Upenn_Projects\ModbusGateway\mc_programs\flash_eeprom\__vm\.flash_eeprom.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>C:\Users\mteter\Documents\Arduino\libraries\ModbusStructs;C:\Users\mteter\Documents\Arduino\libraries\ModbusStack;C:\Users\mteter\Documents\Arduino\libraries\MeterLibrary;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM;C:\Users\mteter\Documents\Arduino\libraries\mac;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\EEPROM\utility;C:\Users\mteter\Documents\Arduino\libraries\mac\utility;C:\Users\mteter\Documents\Arduino\libraries\MeterLibrary\utility;C:\Users\mteter\Documents\Arduino\libraries\ModbusStack\utility;C:\Users\mteter\Documents\Arduino\libraries\ModbusStructs\utility;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries\SD\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Users\mteter\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\utils;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy/../tools/arm/bin/..\arm-none-eabi\include;C:\Users\mteter\mbgw_box\mc_programs\flash_eeprom;C:\Program Files (x86)\Arduino\hardware\hardware\include;C:\Program Files (x86)\Arduino\hardware\Arduino\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>C:\Users\mteter\mbgw_box\mc_programs\flash_eeprom\__vm\.flash_eeprom.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
-      <PreprocessorDefinitions>__HARDWARE_MK20dx256__;__HARDWARE_MK20DX256__;__MK20DX256__;TEENSYDUINO=130;ARDUINO=106011;F_CPU=144000000;USB_SERIAL;LAYOUT_US_ENGLISH;SERIAL3_SIZE_256;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__HARDWARE_MK20dx256__;__HARDWARE_MK20DX256__;__MK20DX256__;TEENSYDUINO=130;ARDUINO=106011;F_CPU={build.fcpu};__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -98,23 +98,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="globals.cpp" />
-    <ClCompile Include="meter01.cpp" />
-    <ClCompile Include="meter02.cpp" />
-    <ClCompile Include="meter03.cpp" />
-    <ClCompile Include="meter04.cpp" />
-    <ClCompile Include="meter05.cpp" />
-    <ClCompile Include="meter06.cpp" />
-    <ClCompile Include="meter07.cpp" />
-    <ClCompile Include="meter08.cpp" />
-    <ClCompile Include="meter09.cpp" />
-    <ClCompile Include="meter10.cpp" />
-    <ClCompile Include="meter11.cpp" />
-    <ClCompile Include="meter12.cpp" />
-    <ClCompile Include="meter13.cpp" />
-    <ClCompile Include="meter14.cpp" />
-    <ClCompile Include="meter15.cpp" />
-    <ClCompile Include="meter16.cpp" />
-    <ClCompile Include="meter17.cpp" />
     <ClCompile Include="read_eeprom.cpp" />
     <ClCompile Include="term_func.cpp" />
     <ClCompile Include="writeLibrary.cpp" />
