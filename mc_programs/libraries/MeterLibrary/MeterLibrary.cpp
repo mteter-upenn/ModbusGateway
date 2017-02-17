@@ -514,11 +514,13 @@ uint16_t WriteMaps::writeMaps(JsonObject &root) {
   uint8_t u8_numBlks;
   uint8_t u8_numGrps;
   uint8_t u8_mbFunc;
+//  uint8_t u8_mapId;
 
   for (int ii = 0; ii < m_u8_numMaps; ++ii) {
     u8_numBlks = root["meterlist"][ii]["blocks"].size();
     u8_numGrps = root["meterlist"][ii]["groups"].size();
     u8_mbFunc = root["meterlist"][ii]["mb_func"];
+//    u8_mapId = root["meterlist"][ii]["map"];
 
     MapBlock mapBlkArr[u8_numBlks];
     MapGroup mapGrpArr[u8_numGrps];
@@ -555,6 +557,7 @@ uint16_t WriteMaps::writeMaps(JsonObject &root) {
     }
 
     u16_mapLibEnd = addMap(ii, mapBlkArr, mapGrpArr, u8_numBlks, u8_numGrps, u8_mbFunc);
+//    u16_mapLibEnd = addMap(u8_mapId - 1, mapBlkArr, mapGrpArr, u8_numBlks, u8_numGrps, u8_mbFunc);
   }
   return u16_mapLibEnd;
 }

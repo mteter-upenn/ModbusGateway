@@ -1,7 +1,7 @@
 {
   "meterlist":[
     {
-      "meter":1,
+      "map":1,
       "name":"Eaton Power Xpert 4000",
       "mb_func": 3,
       "blocks":[
@@ -65,7 +65,7 @@
       ]
     },
     {
-      "meter":2,
+      "map":2,
       "name":"Emon Dmon 3400",
       "mb_func": 3,
       "blocks":[
@@ -104,7 +104,7 @@
       ]
     },
     {
-      "meter":3,
+      "map":3,
       "name":"GE 3720",
       "mb_func": 3,
       "blocks":[
@@ -147,7 +147,7 @@
       ]
     },
     {
-      "meter":4,
+      "map":4,
       "name":"GE PQM",
       "mb_func": 3,
       "blocks":[
@@ -362,7 +362,7 @@
       ]
     },
     {
-      "meter":5,
+      "map":5,
       "name":"Siemens 9330, 9350, 9360",
       "mb_func": 3,
       "blocks":[
@@ -415,7 +415,7 @@
       ]
     },
     {
-      "meter":6,
+      "map":6,
       "name":"Siemens 9510, 9610",
       "mb_func": 3,
       "blocks":[
@@ -478,7 +478,7 @@
       ]
     },
     {
-      "meter":7,
+      "map":7,
       "name":"SquareD CM 2530",
       "mb_func": 3,
       "blocks":[
@@ -560,7 +560,7 @@
       ]
     },
     {
-      "meter":8,
+      "map":8,
       "name":"SquareD PM 710",
       "mb_func": 3,
       "blocks":[
@@ -605,7 +605,7 @@
       ]
     },
     {
-      "meter":9,
+      "map":9,
       "name":"SquareD Micrologic A, P, H Trip Units",
       "mb_func": 3,
       "blocks":[
@@ -675,7 +675,7 @@
       ]
     },
     {
-      "meter":10,
+      "map":10,
       "name":"SquareD CM 3350, CM 4000, PM 800",
       "mb_func": 3,
       "blocks":[
@@ -739,7 +739,7 @@
       ]
     },
     {
-      "meter":11,
+      "map":11,
       "name":"Chilled Water KEP",
       "mb_func": 3,
       "blocks":[
@@ -796,7 +796,7 @@
       ]
     },
     {
-      "meter":12,
+      "map":12,
       "name":"Steam KEP",
       "mb_func": 3,
       "blocks":[
@@ -853,7 +853,7 @@
       ]
     },
     {
-      "meter":13,
+      "map":13,
       "name":"SquareD PM 210",
       "mb_func": 3,
       "blocks":[
@@ -898,7 +898,7 @@
       ]
     },
     {
-      "meter":14,
+      "map":14,
       "name":"Siemens PAC 3200, 4200",
       "mb_func": 3,
       "blocks":[
@@ -980,7 +980,7 @@
       ]
     },
     {
-      "meter":15,
+      "map":15,
       "name":"Eaton PXM 2000",
       "mb_func": 3,
       "blocks":[
@@ -1065,7 +1065,7 @@
       ]
     },
     {
-      "meter":16,
+      "map":16,
       "name":"Schneider PM 5000",
       "mb_func": 3,
       "blocks":[
