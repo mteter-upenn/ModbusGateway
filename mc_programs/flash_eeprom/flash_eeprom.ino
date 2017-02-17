@@ -17,7 +17,6 @@
 #include "read_eeprom.h"
 #include "term_func.h"
 #include "writeLibrary.h"
-#include "meters.h"
 
 //byte const FLOAT = 0x00;
 //byte const U16_to_FLOAT = 0x01;
