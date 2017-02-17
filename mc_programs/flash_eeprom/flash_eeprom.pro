@@ -8,31 +8,13 @@ SOURCES += 	flash_eeprom.ino \
     read_eeprom.cpp \
     term_func.cpp \
     writeLibrary.cpp \
-    meter01.cpp \
-    meter02.cpp \
-    meter03.cpp \
-    meter04.cpp \
-    meter05.cpp \
-    meter06.cpp \
-    meter07.cpp \
-    meter08.cpp \
-    meter09.cpp \
-    meter10.cpp \
-    meter11.cpp \
-    meter12.cpp \
-    meter13.cpp \
-    meter14.cpp \
-    meter15.cpp \
-    meter16.cpp \
-    meter17.cpp \
     globals.cpp
 
 HEADERS += \ 
     globals.h \
     read_eeprom.h \
     term_func.h \
-    writeLibrary.h \
-    meters.h
+    writeLibrary.h
 
 DISTFILES +=     Makefile
 
