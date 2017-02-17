@@ -42,6 +42,24 @@
     <ClInclude Include="mb_names.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleHTTP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleModbus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleRTC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="handleServers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="miscFuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>

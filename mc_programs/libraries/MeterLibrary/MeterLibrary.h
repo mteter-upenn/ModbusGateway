@@ -4,19 +4,40 @@
 
 /* _____STANDARD INCLUDES____________________________________________________ */
 // include types & constants of Wiring core API
-#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
 /* _____UTILITY MACROS_______________________________________________________ */
+/* Swap bytes in 16 bit value.  */
+#define __bswap_constant_16(x) \
+  ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
+# define __bswap_16(x) __bswap_constant_16 (x)
+
+/* Swap bytes in 32 bit value.  */
+#define __bswap_constant_32(x) \
+  ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) | \
+   (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
+
+# define __bswap_32(x) __bswap_constant_32 (x)
+
+/*
+#if defined __GNUC__ && __GNUC__ >= 2
+// Swap bytes in 64 bit value.
+# define __bswap_64(x)							      \
+     (__extension__							      \
+      ({ union { unsigned long long int __ll;				      \
+     unsigned long int __l[2]; } __bswap_64_v, __bswap_64_r;      \
+   __bswap_64_v.__ll = (x);					      \
+   __bswap_64_r.__l[0] = __bswap_32 (__bswap_64_v.__l[1]);	      \
+   __bswap_64_r.__l[1] = __bswap_32 (__bswap_64_v.__l[0]);	      \
+   __bswap_64_r.__ll; }))
+#endif
+*/
 
 /* _____PROJECT INCLUDES_____________________________________________________ */
 #include <EEPROM.h>
-
 #include <ModbusStructs.h>
+#include <ArduinoJson.h>
 
 /* _____CLASS DEFINITIONS____________________________________________________ */
 
@@ -28,6 +49,22 @@ along with selected registers.
 */
 
 // class ModbusMaster;
+struct MapBlock {
+  uint16_t u16_start;
+  uint16_t u16_end;
+  FloatConv dataType;
+};
+
+struct MapGroup {
+  uint16_t u16_start;
+  uint8_t u8_vals;
+  uint8_t u8_regs;
+  int8_t s8a_grpOrder[63];
+  uint8_t u8_orderLen;
+  int8_t s8a_grpType[64];
+  uint8_t u8_typeLen;
+};
+
 
 class MeterLibBlocks {
 	private:
@@ -45,7 +82,7 @@ class MeterLibBlocks {
 		FloatConv m_reqRegDataType;
 	public:
 		// CONSTRUCTORS
-		MeterLibBlocks(uint16_t u16_reqReg, uint8_t u8_mtrType);
+    MeterLibBlocks(uint16_t u16_reqReg, uint8_t u8_mtrType);
 		
 		//FUNCTIONS
 		int changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType);
@@ -97,6 +134,25 @@ class MeterLibGroups {
 		bool groupToFloat(const uint16_t * k_u16p_data, float *const fkp_retData, int8_t *const s8kp_dataFlags);
 		bool groupMbErr(int8_t *const s8kp_dataFlags);
 		bool groupLastFlags(int8_t *const s8kp_dataFlags);		
+};
+
+
+class WriteMaps {
+private:
+  uint8_t m_u8_numMaps;
+//  uint8_t m_u8_curMap;
+  uint16_t m_u16_mapIndexStart;
+//  uint8_t *m_u8p_mapArray;
+//  uint16_t m_u16_mapArrLen;
+
+  uint16_t calcStartingPos(uint8_t u8_map);
+public:
+  WriteMaps();
+//  WriteMaps(int8_t s8_sizeFlag);
+
+
+  uint16_t writeMaps(JsonObject& root);
+  uint16_t addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uint8_t u8_numGrps, uint8_t u8_mbFunc);
 };
 
 

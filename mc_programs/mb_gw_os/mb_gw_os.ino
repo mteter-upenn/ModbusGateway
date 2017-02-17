@@ -8,7 +8,7 @@
  */
 
 
-
+// testing
 #include "mb_names.h"
 #include <ModbusStructs.h>  // FloatConvEnum, ModbusRequest
 #include <EEPROM.h>
@@ -18,7 +18,8 @@
 #include "ModbusStack.h"
 #include <ModbusServer.h>
 
-#include <TimeLib.h>  // or Time.h?
+#include <TimeLib.h>  // sometimes should be called as TimeLib.h
+
 
 #include <Ethernet52.h>
 #include <EthernetUdp52.h>
@@ -192,10 +193,10 @@ bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meter
 
 void setup() {
   Serial.begin(9600);
-  //Serial.println(F("delay here"));
-  //delay(2000);
-  //Serial.println(F("delay over"));
-  
+//  Serial.println(F("delay here"));
+//  delay(2000);
+//  Serial.println(F("delay over"));
+
   // set output pins
   pinMode(gk_s16_rtcFailLed, OUTPUT);
   pinMode(gk_s16_battDeadLed, OUTPUT);

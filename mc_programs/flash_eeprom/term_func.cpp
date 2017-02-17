@@ -1,4 +1,5 @@
 #include "term_func.h"
+#include <Arduino.h>
 #include "globals.h"
 #include <EEPROM.h>
 
@@ -6,6 +7,9 @@ bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), c
   const __FlashStringHelper *fshp_falseStr, char *cp_input, const char *kcp_defaultInput, bool b_verify, uint8_t u8_repeatMsgTimeout, 
   bool b_exitOnNeg) {
   //const __FlashStringHelper
+
+//  uint32_t u32_time = millis();
+
   if (b_quit) {
     return false;
   }
@@ -24,6 +28,12 @@ bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), c
 
     while (!b_ready) {
       // repeat message if desired
+//      if ((millis() - u32_time) > 2000) {
+//        u32_time = millis();
+
+//        Serial.print("ipStrt [43]: "); Serial.println(word(EEPROM.read(2), EEPROM.read(3)));
+//      }
+
       if (u8_repeatMsgTimeout) {
         u32_curTime = millis();
         if ((u32_curTime - u32_oldTime) > u8_repeatMsgTimeout * 1000) {
@@ -599,11 +609,5 @@ uint32_t storeMedInt(char *cp_input, uint16_t u16_regStrt) {
     EEPROM.write(u16_regStrt + 2, (u32_dum & 0xFF));
 
     return u32_dum;
-  }
-}
-
-void clearSerialRx() {
-  while(Serial.available()){
-    Serial.read();
   }
 }

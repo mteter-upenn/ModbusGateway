@@ -455,6 +455,257 @@ bool MeterLibGroups::groupLastFlags(int8_t *const s8kp_dataFlags) {
 }
 
 
+// WriteMaps class functions #######################################
+//WriteMaps::WriteMaps(void) {
+//  WriteMaps(0);
+//}
+
+WriteMaps::WriteMaps(void) {
+  m_u16_mapIndexStart = word(EEPROM.read(6), EEPROM.read(7));
+  Serial.println();
+  Serial.print("map index start: "); Serial.println(m_u16_mapIndexStart);
+  Serial.print("index start eeprom: "); Serial.println(word(EEPROM.read(6), EEPROM.read(7)));
+  Serial.print("registers: "); Serial.print(EEPROM.read(6), DEC);
+  Serial.print(", "); Serial.println(EEPROM.read(7), DEC);
+  Serial.println();
+
+  m_u8_numMaps = EEPROM.read(m_u16_mapIndexStart + 2);
+//  m_u8_curMap = m_u8_numMaps;
+
+//  switch (u8_sizeFlag) {
+//  case -1:
+//    m_u16_mapArrLen = EEPROM.length();
+//    break;
+//  default:
+//    m_u16_mapArrLen = EEPROM.length() - m_u16_mapIndexStart - 1;
+//    break;
+//  }
+//  m_u8p_mapArray = calloc(sizeof(uint8_t), m_u16_mapArrLen);
+}
+
+
+//WriteMaps::~WriteMaps() {
+//  free(m_u8p_mapArray);
+//  m_u8p_mapArray = NULL;
+//}
+
+
+uint16_t WriteMaps::writeMaps(JsonObject &root) {
+  uint16_t u16_mapLibEnd = 0;
+  // reset total num of maps
+  if (!root.success()) {
+    Serial.println("Failed to parse maplist.jsn!");
+    return 0;
+  }
+
+  Serial.println();
+  Serial.print("Index Start: "); Serial.println(m_u16_mapIndexStart);
+  Serial.print("eeprom nummaps: "); Serial.println(m_u8_numMaps, DEC);
+
+  m_u8_numMaps = root["meterlist"].size();
+
+  Serial.print("json nummaps: "); Serial.println(m_u8_numMaps, DEC);
+
+  EEPROM.write(m_u16_mapIndexStart + 2, m_u8_numMaps);
+
+  Serial.print("eeprom new nummaps: "); Serial.println(EEPROM.read(m_u16_mapIndexStart + 2), DEC);
+  Serial.println();
+
+  uint8_t u8_numBlks;
+  uint8_t u8_numGrps;
+  uint8_t u8_mbFunc;
+//  uint8_t u8_mapId;
+
+  for (int ii = 0; ii < m_u8_numMaps; ++ii) {
+    u8_numBlks = root["meterlist"][ii]["blocks"].size();
+    u8_numGrps = root["meterlist"][ii]["groups"].size();
+    u8_mbFunc = root["meterlist"][ii]["mb_func"];
+//    u8_mapId = root["meterlist"][ii]["map"];
+
+    MapBlock mapBlkArr[u8_numBlks];
+    MapGroup mapGrpArr[u8_numGrps];
+
+    for (int jj = 0; jj < u8_numBlks; ++jj) {
+      mapBlkArr[jj].u16_start = root["meterlist"][ii]["blocks"][jj]["start"];
+      mapBlkArr[jj].u16_end = root["meterlist"][ii]["blocks"][jj]["end"];
+      const char *k_cp_dataType = root["meterlist"][ii]["blocks"][jj]["type"];
+      mapBlkArr[jj].dataType = Char_2_FloatConv(k_cp_dataType);
+//      Serial.print(k_cp_dataType); Serial.print(", "); Serial.println(FloatConv2Uint8(mapBlkArr[jj].dataType), DEC);
+    }
+
+    for (int jj = 0; jj < u8_numGrps - 1; ++jj) {
+      mapGrpArr[jj].u8_vals = root["meterlist"][ii]["groups"][jj]["values"];
+      mapGrpArr[jj].u8_regs = root["meterlist"][ii]["groups"][jj]["registers"];
+      mapGrpArr[jj].u16_start = root["meterlist"][ii]["groups"][jj]["start"];
+      mapGrpArr[jj].u8_orderLen = root["meterlist"][ii]["groups"][jj]["order"].size();
+      mapGrpArr[jj].u8_typeLen = root["meterlist"][ii]["groups"][jj]["types"].size();
+
+      for (int kk = 0; kk < mapGrpArr[jj].u8_orderLen; ++kk) {
+        mapGrpArr[jj].s8a_grpOrder[kk] = root["meterlist"][ii]["groups"][jj]["order"][kk];
+      }
+      for (int kk = 0; kk < mapGrpArr[jj].u8_typeLen; ++kk) {
+        const char *k_cp_dataType = root["meterlist"][ii]["groups"][jj]["types"][kk]["type"];
+        mapGrpArr[jj].s8a_grpType[2 * kk] = FloatConv2Int8(Char_2_FloatConv(k_cp_dataType));
+        mapGrpArr[jj].s8a_grpType[2 * kk + 1] = root["meterlist"][ii]["groups"][jj]["types"][kk]["valid_to"];
+      }
+    }
+    // LAST GROUP!
+    mapGrpArr[u8_numGrps - 1].u8_vals = root["meterlist"][ii]["groups"][u8_numGrps - 1]["values"];
+    mapGrpArr[u8_numGrps - 1].u8_orderLen = root["meterlist"][ii]["groups"][u8_numGrps - 1]["order"].size();
+    for (int kk = 0; kk < mapGrpArr[u8_numGrps - 1].u8_orderLen; ++kk) {
+      mapGrpArr[u8_numGrps - 1].s8a_grpOrder[kk] = root["meterlist"][ii]["groups"][u8_numGrps - 1]["order"][kk];
+    }
+
+    u16_mapLibEnd = addMap(ii, mapBlkArr, mapGrpArr, u8_numBlks, u8_numGrps, u8_mbFunc);
+//    u16_mapLibEnd = addMap(u8_mapId - 1, mapBlkArr, mapGrpArr, u8_numBlks, u8_numGrps, u8_mbFunc);
+  }
+  return u16_mapLibEnd;
+}
+
+
+uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uint8_t u8_numGrps, uint8_t u8_mbFunc) {
+
+  uint16_t u16_mapStart = calcStartingPos(u8_map);
+
+  Serial.println();
+  Serial.print("map: "); Serial.println(u8_map, DEC);
+  Serial.print("u16_mapStart: "); Serial.println(u16_mapStart);
+  Serial.println();
+
+  uint16_t u16_mapIdx = u16_mapStart;
+
+//  EEPROM.put(u8_map * 4 + 3, u16_mapStart);  // worried about MSB/LSB
+  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 3, highByte(u16_mapStart));
+  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 4, lowByte(u16_mapStart));
+  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 5, u8_map + 1);
+  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 6, u8_mbFunc);
+
+  uint16_t u16_blkStart = u16_mapStart + 4 + u8_numGrps * 2;
+  uint16_t u16_grpStart = u16_blkStart + u8_numBlks * 5;
+
+  Serial.println();
+  Serial.print("map: "); Serial.println(u8_map, DEC);
+  Serial.print("u16_mapIdx: "); Serial.println(u16_mapIdx);
+  Serial.println();
+
+  EEPROM.write(u16_mapIdx, highByte(u16_blkStart));
+  EEPROM.write(++u16_mapIdx, lowByte(u16_blkStart));
+
+  EEPROM.write(++u16_mapIdx, u8_numBlks);
+  EEPROM.write(++u16_mapIdx, u8_numGrps);
+
+  // group starting addresses
+  EEPROM.write(++u16_mapIdx, highByte(u16_grpStart));
+  EEPROM.write(++u16_mapIdx, lowByte(u16_grpStart));
+  for (int ii = 0; ii < u8_numGrps - 1; ++ii) {
+    uint16_t u16_prevGrpStrt = word(EEPROM.read(u16_mapIdx - 1), EEPROM.read(u16_mapIdx));
+    EEPROM.write(++u16_mapIdx, highByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen * 2 + 5));
+    EEPROM.write(++u16_mapIdx, lowByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen * 2 + 5));
+//    EEPROM.write(++u16_mapIdx, highByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
+//    EEPROM.write(++u16_mapIdx, lowByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
+  }
+
+
+  // blocks
+  for (int ii = 0; ii < u8_numBlks; ++ii) {
+    Serial.print("write block: "); Serial.println(ii + 1);
+    Serial.print("blk start: "); Serial.println(u16_mapIdx + 1);
+
+    EEPROM.write(++u16_mapIdx, highByte(mapBlkArr[ii].u16_start));
+    EEPROM.write(++u16_mapIdx, lowByte(mapBlkArr[ii].u16_start));
+    EEPROM.write(++u16_mapIdx, highByte(mapBlkArr[ii].u16_end));
+    EEPROM.write(++u16_mapIdx, lowByte(mapBlkArr[ii].u16_end));
+    EEPROM.write(++u16_mapIdx, FloatConv2Uint8(mapBlkArr[ii].dataType));
+  }
+
+  Serial.println();
+
+  // groups
+  for (int ii = 0; ii < u8_numGrps - 1; ++ii) {
+    Serial.print("write group: "); Serial.println(ii + 1);
+    Serial.print("group start: "); Serial.println(u16_mapIdx + 1);
+    Serial.print("order len: "); Serial.println(mapGrpArr[ii].u8_orderLen, DEC);
+    Serial.print("type len: "); Serial.println(mapGrpArr[ii].u8_typeLen, DEC);
+
+    EEPROM.write(++u16_mapIdx, mapGrpArr[ii].u8_vals);
+    EEPROM.write(++u16_mapIdx, mapGrpArr[ii].u8_regs);
+    EEPROM.write(++u16_mapIdx, highByte(mapGrpArr[ii].u16_start));
+    EEPROM.write(++u16_mapIdx, lowByte(mapGrpArr[ii].u16_start));
+    EEPROM.write(++u16_mapIdx, mapGrpArr[ii].u8_orderLen + 5);
+
+    for (int jj = 0; jj < mapGrpArr[ii].u8_orderLen; ++jj) {
+      EEPROM.write(++u16_mapIdx, static_cast<uint8_t>(mapGrpArr[ii].s8a_grpOrder[jj]));
+    }
+    for (int jj = 0; jj < mapGrpArr[ii].u8_typeLen * 2; ++jj) {
+      EEPROM.write(++u16_mapIdx, static_cast<uint8_t>(mapGrpArr[ii].s8a_grpType[jj]));
+
+    }
+  }
+  // LAST GROUP!
+  EEPROM.write(++u16_mapIdx, mapGrpArr[u8_numGrps - 1].u8_vals);
+  Serial.println();
+  Serial.print("map: "); Serial.println(u8_map, DEC);
+  Serial.print("last group start: "); Serial.println(u16_mapIdx);
+  Serial.print("last group vals: "); Serial.println(EEPROM.read(u16_mapIdx), DEC);
+  Serial.println();
+
+  for (int jj = 0; jj < mapGrpArr[u8_numGrps - 1].u8_orderLen; ++jj) {
+    EEPROM.write(++u16_mapIdx, static_cast<uint8_t>(mapGrpArr[u8_numGrps - 1].s8a_grpOrder[jj]));
+  }
+
+  return u16_mapIdx;
+//  // write to eeprom
+//  for (int ii = 0; ii < u16_mapIdx + 1; ++ii) {
+//    EEPROM.write(u16_mapStart + ii, m_u8p_mapArray[ii]);
+//  }
+}
+
+
+uint16_t WriteMaps::calcStartingPos(uint8_t u8_map) {
+// where should map u8_map start?
+  if (u8_map == 0) {
+    return m_u8_numMaps * 4 + m_u16_mapIndexStart + 3;
+  }
+  else {
+    uint16_t u16_prevStart;
+//    EEPROM.get((u8_map - 1) * 4 + 3, u16_prevStart);
+
+//    Serial.println();
+//    Serial.print("prev start raw: "); Serial.println(u16_prevStart);
+//    __bswap_16(u16_prevStart);
+//    Serial.print("prev start: "); Serial.println(u16_prevStart);
+//    Serial.print("from word: "); Serial.println(word(EEPROM.read((u8_map - 1) * 4 + 3), EEPROM.read((u8_map - 1) * 4 + 4)));
+//    Serial.println();
+
+    u16_prevStart = word(EEPROM.read(m_u16_mapIndexStart + (u8_map - 1) * 4 + 3), EEPROM.read(m_u16_mapIndexStart + (u8_map - 1) * 4 + 4));
+
+    Serial.println();
+    Serial.print("prev Start: "); Serial.println(u16_prevStart);
+    Serial.print("blk start: "); Serial.println(word(EEPROM.read(u16_prevStart), EEPROM.read(u16_prevStart + 1)));
+    Serial.print("num blks: "); Serial.println(EEPROM.read(u16_prevStart + 2), DEC);
+    Serial.print("num grps: "); Serial.println(EEPROM.read(u16_prevStart + 3), DEC);
+    Serial.print("grp start: "); Serial.println(word(EEPROM.read(u16_prevStart + 4), EEPROM.read(u16_prevStart + 5)));
+    Serial.print("grp start: "); Serial.println(word(EEPROM.read(u16_prevStart + 6), EEPROM.read(u16_prevStart + 7)));
+    Serial.print("grp start: "); Serial.println(word(EEPROM.read(u16_prevStart + 8), EEPROM.read(u16_prevStart + 9)));
+
+    uint8_t u8_prevNumGrps = EEPROM.read(u16_prevStart + 3);
+    uint16_t u16_lastGrpStart;
+//    EEPROM.get(u16_prevStart + u8_prevNumGrps * 2 + 2, u16_lastGrpStart);
+//    __bswap_16(u16_lastGrpStart);
+    u16_lastGrpStart = word(EEPROM.read(u16_prevStart + u8_prevNumGrps * 2 + 2), EEPROM.read(u16_prevStart + u8_prevNumGrps * 2 + 3));
+
+    Serial.print("last group start: "); Serial.println(u16_lastGrpStart);
+
+    uint8_t u8_lastGrpVals = EEPROM.read(u16_lastGrpStart);
+
+    Serial.print("num vals last grp: "); Serial.println(u8_lastGrpVals, DEC);
+    Serial.println();
+
+    return u16_lastGrpStart + u8_lastGrpVals + 1;
+  }
+}
+
+
 // SlaveData Functions##############################################################################
 SlaveDataClass SlaveData;
 const SlaveDataStruct SlaveDataClass::mk_sdInvalid = {0, 0, {0, 0, 0, 0}, {0, 0, 0}};

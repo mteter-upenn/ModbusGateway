@@ -25,6 +25,6 @@ bool storeBool(char *cp_input, uint16_t u16_regStrt);
 uint8_t storeByte(char *cp_input, uint16_t u16_regStrt);
 uint16_t storeInt(char *cp_input, uint16_t u16_regStrt);
 uint32_t storeMedInt(char *cp_input, uint16_t u16_regStrt);
-void clearSerialRx();
+
 
 #endif // TERM_FUNC_H
