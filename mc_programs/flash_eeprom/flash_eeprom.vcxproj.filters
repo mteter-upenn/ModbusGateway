@@ -16,30 +16,39 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="flash_eeprom.ino" />
-    <None Include="meter01.ino" />
-    <None Include="meter02.ino" />
-    <None Include="meter03.ino" />
-    <None Include="meter04.ino" />
-    <None Include="meter05.ino" />
-    <None Include="meter06.ino" />
-    <None Include="meter07.ino" />
-    <None Include="meter08.ino" />
-    <None Include="meter09.ino" />
-    <None Include="meter10.ino" />
-    <None Include="meter11.ino" />
-    <None Include="meter12.ino" />
-    <None Include="meter13.ino" />
-    <None Include="meter14.ino" />
-    <None Include="meter15.ino" />
-    <None Include="read_eeprom.ino" />
-    <None Include="term_func.ino" />
-    <None Include="writeLibrary.ino" />
-    <None Include="meter16.ino" />
-    <None Include="meter17.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.flash_eeprom.vsarduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="meters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="read_eeprom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="term_func.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="writeLibrary.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="globals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="read_eeprom.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="term_func.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="writeLibrary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

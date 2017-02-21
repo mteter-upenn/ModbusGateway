@@ -6,7 +6,8 @@
 #include <MeterLibrary.h>
 #include <EEPROM.h>
 #include "mac.h"
-
+#include <SD.h>
+#include <ArduinoJson.h>
 
 #define SERIAL_INPUT 1  // 0 for no serial input, 1 for serial input (mac, ip, name, etc)
 
@@ -16,7 +17,6 @@
 #include "read_eeprom.h"
 #include "term_func.h"
 #include "writeLibrary.h"
-#include "meters.h"
 
 //byte const FLOAT = 0x00;
 //byte const U16_to_FLOAT = 0x01;
@@ -40,18 +40,36 @@
 //  const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
 ////const __FlashStringHelper *
 
+
 void setup() {
   uint16_t u16_ipStrt, u16_nmStrt, u16_mapStrt, u16_slvStrt;
-
-  pinMode(19, OUTPUT);
-  pinMode(20, OUTPUT);
-  digitalWrite(19, HIGH);
-
   Serial.begin(9600);
   Serial.println(F("delay"));
   delay(2000);
   Serial.println(F("delay over"));
 
+  pinMode(19, OUTPUT);
+  pinMode(20, OUTPUT);
+  digitalWrite(19, HIGH);
+
+
+
+  pinMode(10, OUTPUT);
+  digitalWrite(10, HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, HIGH);
+
+  //  reset w5200 ethernet chip
+  pinMode(9, OUTPUT);
+  digitalWrite(9, LOW);
+
+  Serial.println(F("Initializing SD card..."));
+  if (!SD.begin(4)) {
+    Serial.println(F("ERROR - SD card initialization failed!"));
+  }
+  else{
+    Serial.println(F("SUCCESS - SD card initialized."));
+  }
 
   u16_nmStrt = 10;
   u16_ipStrt = u16_nmStrt + 33; // 43
@@ -66,6 +84,8 @@ void setup() {
   EEPROM.write(5, lowByte(u16_slvStrt));
   EEPROM.write(6, highByte(u16_mapStrt));
   EEPROM.write(7, lowByte(u16_mapStrt));
+
+//  u32_time = millis();
 }
 
 void loop() {
@@ -74,6 +94,8 @@ void loop() {
   bool b_resp;
   char ca_input[50];
   char c_menuSelect;
+
+
 
 
   // duplicate should make this global
@@ -301,9 +323,14 @@ void loop() {
     if (!b_quit) {
       u16_mapEnd = writeBlocks(u16_mapStrt);
 
-      Serial.println("Finished writing to EEPROM.");
-      Serial.print("indexing stops at byte ");
-      Serial.println(u16_mapEnd, DEC);
+      if (u16_mapEnd) {
+        Serial.println("Finished writing to EEPROM.");
+        Serial.print("indexing stops at byte ");
+        Serial.println(u16_mapEnd, DEC);
+      }
+      else {
+        Serial.println("There was an error writing the library!");
+      }
       digitalWrite(20, HIGH);
     }
   }
