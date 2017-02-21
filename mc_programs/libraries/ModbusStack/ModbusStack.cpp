@@ -48,7 +48,8 @@ uint16_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8
 	++m_u16_idGen; // = (m_u16_idGen != 65535) ? m_u16_idGen + 1: 1;
 	if (m_u16_idGen == 0) m_u16_idGen = 1;
 	
-	m_mbStack[u8_ind].u16_unqId    = m_u16_idGen;
+	m_mbStack[u8_ind].u16_unqId    = m_u16_idGen;	
+	// m_mbStack[u8_ind].u16_unqId    = (m_u16_idGen != 65535) ? ++m_u16_idGen : 1;
 	m_mbStack[u8_ind].u8_flags     = u8_flags;
 	m_mbStack[u8_ind].u8_id        = u8_id;
 	m_mbStack[u8_ind].u8_vid       = u8_vid;
