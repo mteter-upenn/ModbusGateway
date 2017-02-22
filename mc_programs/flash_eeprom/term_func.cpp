@@ -193,9 +193,9 @@ bool menuFunc(char *cp_input) {
 bool nmFunc(char *cp_input) {  // checks name
   uint8_t ii;
 
-  cp_input[30] = 0;  // this would put a 0 in the 31st slot, giving a name length of 30
+  cp_input[31] = 0;  // this would put a 0 in the 32nd slot, giving a name length of 31
 
-  for (ii = 0; ii < 30; ++ii) {
+  for (ii = 0; ii < 32; ++ii) {
     if (cp_input[ii] == 0) {  // end of string, don't need to check anything else
       break;
     }
@@ -213,13 +213,14 @@ bool nmFunc(char *cp_input) {  // checks name
   }
 
   Serial.print(F("Input: "));
-  for (ii = 0; ii < 30; ++ii) {
-    if (cp_input[ii] == 0) {
-      break;
-    }
-    Serial.print(cp_input[ii]);
-  }
-  Serial.println();
+//  for (ii = 0; ii < 32; ++ii) {
+//    if (cp_input[ii] == 0) {
+//      break;
+//    }
+//    Serial.print(cp_input[ii]);
+//  }
+  Serial.println(cp_input);
+//  Serial.println();
 
   return true;
 }
@@ -310,6 +311,71 @@ bool brFunc(char *cp_input) {  // checks baud rate
       return false;
       break;
   }
+}
+
+
+bool dbFunc(char *cp_input) {
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
+
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
+  }
+
+  if (u32_dum == 7 || u32_dum == 8) {
+    Serial.print(F("Input: "));
+    Serial.println(u32_dum, DEC);
+    return true;
+  }
+  return false;
+}
+
+
+bool parFunc(char *cp_input) {
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
+
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
+  }
+
+  if (u32_dum < 3) {
+    Serial.print(F("Input: "));
+
+    switch (u32_dum) {
+    case 0:
+      Serial.println("None (0)");
+      break;
+    case 1:
+      Serial.println("Odd (1)");
+      break;
+    case 2:
+      Serial.println("Even (2)");
+      break;
+    }
+    return true;
+  }
+  return false;
+}
+
+
+bool sbFunc(char *cp_input) {
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
+
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
+  }
+
+  if (u32_dum == 1 || u32_dum == 2) {
+    Serial.print(F("Input: "));
+    Serial.println(u32_dum, DEC);
+    return true;
+  }
+  return false;
 }
 
 bool toFunc(char *cp_input) {  // checks modbus timeout
@@ -500,13 +566,14 @@ void storeName(char *cp_input, uint16_t u16_regStrt) {
     return;
   }
   else {
-    for (int ii = 0; ii < 30; ++ii) {
+    for (int ii = 0; ii < 32; ++ii) {
       EEPROM.write(u16_regStrt + ii, cp_input[ii]);
 
       if (cp_input[ii] == 0) {
         break;
       }
     }
+    EEPROM.write(u16_regStrt + 31, 0);
   }
 }
 

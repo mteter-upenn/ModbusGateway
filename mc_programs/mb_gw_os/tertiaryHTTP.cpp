@@ -180,6 +180,7 @@ void getPostSetupData(EthernetClient52 &ec_client) {
   cp_paramStart = cp_postMsgPtr;
 
   digitalWrite(gk_s16_epWriteLed, HIGH);
+  Serial.println(cp_postMsgPtr);
 
   while (b_readingMsg) {
     if ((*cp_postMsgPtr) != '\0') {
@@ -284,8 +285,8 @@ void getPostSetupData(EthernetClient52 &ec_client) {
         else if (strncmp(cp_paramStart, "nm", 2) == 0) {  // ******************************** NAME ****************************************
           //Serial.println(F("nm"));
 
-          if ((cp_argEnd - cp_argStart) > 30) {
-            cp_argEnd = cp_argStart + 30;
+          if ((cp_argEnd - cp_argStart) > 31) {
+            cp_argEnd = cp_argStart + 31;
           }
           for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {  // limited to 30 characters
             if ((*cp_iterPtr) == 43) {  // filter out '+' as html concatenator
@@ -293,7 +294,7 @@ void getPostSetupData(EthernetClient52 &ec_client) {
             }
             EEPROM.write((cp_iterPtr - cp_argStart + g_u16_nameBlkStart), (*cp_iterPtr));
           }
-          if ((cp_argEnd - cp_argStart) != 30) {
+          if ((cp_argEnd - cp_argStart) != 31) {
             EEPROM.write((cp_argEnd - cp_argStart + g_u16_nameBlkStart), 0);
           }
         }
@@ -306,10 +307,10 @@ void getPostSetupData(EthernetClient52 &ec_client) {
           }
 
           if (u16_dum) {
-            EEPROM.write(g_u16_nameBlkStart + 31, true);
+            EEPROM.write(g_u16_nameBlkStart + 32, true);
           }
           else {
-            EEPROM.write(g_u16_nameBlkStart + 31, false);
+            EEPROM.write(g_u16_nameBlkStart + 32, false);
           }
         }
         else if (strncmp(cp_paramStart, "ms", 2) == 0) {  // ***************************** Max Number of Slaves to Record ************************************
@@ -320,7 +321,7 @@ void getPostSetupData(EthernetClient52 &ec_client) {
             u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-          EEPROM.write(g_u16_nameBlkStart + 32, u8_dum);
+          EEPROM.write(g_u16_nameBlkStart + 33, u8_dum);
         }
         else if (strncmp(cp_paramStart, "ip", 2) == 0) {  //  ***************************************** IP ************************************************
           //Serial.println(F("ip"));
@@ -405,6 +406,33 @@ void getPostSetupData(EthernetClient52 &ec_client) {
           EEPROM.write(g_u16_ipBlkStart + 24, (u32_dum >> 8));
           EEPROM.write(g_u16_ipBlkStart + 25, u32_dum);
         }
+        else if (strncmp(cp_paramStart, "db", 2) == 0) {  //  ************************************ DATA BITS *************************************************
+          u8_dum = 0;
+
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+          }
+
+          EEPROM.write(g_u16_ipBlkStart + 26, u8_dum);
+        }
+        else if (strncmp(cp_paramStart, "par", 3) == 0) {  //  ************************************ PARITY *************************************************
+          u8_dum = 0;
+
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+          }
+
+          EEPROM.write(g_u16_ipBlkStart + 27, u8_dum);
+        }
+        else if (strncmp(cp_paramStart, "sb", 2) == 0) {  //  ************************************ STOP BITS *************************************************
+          u8_dum = 0;
+
+          for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
+            u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
+          }
+
+          EEPROM.write(g_u16_ipBlkStart + 28, u8_dum);
+        }
         else if (strncmp(cp_paramStart, "to", 2) == 0) {  //  ****************************************** MB TIMEOUT *************************************************
           //Serial.println(F("to"));
 
@@ -413,8 +441,8 @@ void getPostSetupData(EthernetClient52 &ec_client) {
             u16_dum = u16_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-          EEPROM.write(g_u16_ipBlkStart + 26, highByte(u16_dum));
-          EEPROM.write(g_u16_ipBlkStart + 27, lowByte(u16_dum));
+          EEPROM.write(g_u16_ipBlkStart + 29, highByte(u16_dum));
+          EEPROM.write(g_u16_ipBlkStart + 30, lowByte(u16_dum));
         }
         else if (strncmp(cp_paramStart, "tm", 2) == 0) {  //  ****************************************** TIME *************************************************
           //Serial.println(F("time"));

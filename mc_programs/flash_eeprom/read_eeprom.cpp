@@ -6,8 +6,6 @@
 void read_eeprom(char c_menuChar) {
   uint16_t ii, jj; //  , j;
   uint16_t u16_nmStrt, u16_ipStrt, u16_slvStrt, u16_mapStrt;
-  uint32_t u32_baudrate;
-  uint16_t u16_timeout;
   uint8_t u8_numSlvs, u8_numMaps;
   //char inpt[50];
 
@@ -35,7 +33,7 @@ void read_eeprom(char c_menuChar) {
   if (c_menuChar == 'n' || c_menuChar == 'a') {
     // Name:
     Serial.print(F("Name: "));
-    for (ii = u16_nmStrt; ii < u16_nmStrt + 31; ++ii) {
+    for (ii = u16_nmStrt; ii < u16_nmStrt + 32; ++ii) {
       char c_dum = EEPROM.read(ii);
 
       if (c_dum == 0) {
@@ -109,15 +107,40 @@ void read_eeprom(char c_menuChar) {
   }
 
   if (c_menuChar == 's' || c_menuChar == 'a') {
+    uint32_t u32_baudrate;
+    uint16_t u16_timeout;
+    uint8_t u8_dum;
     // 485/modbus stuff
 
     Serial.print(F("Baud rate: "));
-    u32_baudrate = EEPROM.read(u16_ipStrt + 23);
-    u32_baudrate = (uint32_t)((u32_baudrate << 16) | (EEPROM.read(u16_ipStrt + 24) << 8) | (EEPROM.read(u16_ipStrt + 25)));
+//    u32_baudrate = EEPROM.read(u16_ipStrt + 23);
+    u32_baudrate = (uint32_t)((EEPROM.read(u16_ipStrt + 23)<< 16) | (EEPROM.read(u16_ipStrt + 24) << 8) | (EEPROM.read(u16_ipStrt + 25)));
     Serial.println(u32_baudrate, DEC);
 
+    Serial.print(F("Data bits: "));
+    Serial.println(EEPROM.read(u16_ipStrt + 26), DEC);
+
+    Serial.print(F("Parity: "));
+    u8_dum = EEPROM.read(u16_ipStrt + 27);
+    switch (u8_dum) {
+    case 0:
+      Serial.println("None");
+      break;
+    case 1:
+      Serial.println("Odd");
+      break;
+    case 2:
+      Serial.println("Even");
+      break;
+    default:
+      Serial.println("Unknown value");
+    }
+
+    Serial.print("Stop bits: ");
+    Serial.println(EEPROM.read(u16_ipStrt + 28), DEC);
+
     Serial.print(F("Modbus u16_timeout: "));
-    u16_timeout = word(EEPROM.read(u16_ipStrt + 26), EEPROM.read(u16_ipStrt + 27));
+    u16_timeout = word(EEPROM.read(u16_ipStrt + 29), EEPROM.read(u16_ipStrt + 30));
     Serial.println(u16_timeout, DEC);
     Serial.println();
   }
@@ -125,7 +148,7 @@ void read_eeprom(char c_menuChar) {
   if (c_menuChar == 'r' || c_menuChar == 'a') {
     // record stuff
     Serial.print(F("Record Data?: "));
-    if (EEPROM.read(u16_nmStrt + 31)) {
+    if (EEPROM.read(u16_nmStrt + 32)) {
       Serial.println(F("yes"));
     }
     else {
@@ -133,7 +156,7 @@ void read_eeprom(char c_menuChar) {
     }
 
     Serial.print("Max number of meters to record: ");
-    Serial.println(EEPROM.read(u16_nmStrt + 32), DEC);
+    Serial.println(EEPROM.read(u16_nmStrt + 33), DEC);
     Serial.println();
   }
   

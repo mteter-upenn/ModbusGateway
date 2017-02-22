@@ -30,6 +30,7 @@
 					if (this.status == 200) {
 						if (this.responseXML != null) {
 							// extract XML data from XML file (containing switch states and analog value)
+							// element names are {nm, rd, rdh, ms, mac, ip, sm, gw, ntp, ntph, nip, br, db, par, sb, to, rtc}
 							document.getElementById("nm").value = this.responseXML.getElementsByTagName('name')[0].childNodes[0].nodeValue;
 							
 							if (this.responseXML.getElementsByTagName('rd')[0].childNodes[0].nodeValue == "true") {
@@ -65,6 +66,10 @@
 							
 							
 							document.getElementById("br").value = this.responseXML.getElementsByTagName('br')[0].childNodes[0].nodeValue;
+							
+							document.getElementById("db").value = this.responseXML.getElementsByTagName('db')[0].childNodes[0].nodeValue;
+							document.getElementById("par").value = this.responseXML.getElementsByTagName('par')[0].childNodes[0].nodeValue;
+							document.getElementById("sb").value = this.responseXML.getElementsByTagName('sb')[0].childNodes[0].nodeValue;
 							
 							document.getElementById("to").value = this.responseXML.getElementsByTagName('to')[0].childNodes[0].nodeValue;
 							
@@ -367,6 +372,28 @@
 								<option value="38400">38400</option>
 								<option value="57600">57600</option>
 								<option value="115200">115200</option>
+							</select></td>
+						</tr>
+						<tr>
+							<td><label for="db">Data bits: </label></td>
+							<td><select id="db" name="db">
+								<option value="7">7</option>
+								<option value="8" selected="selected">8</option>
+							</select></td>
+						</tr>
+						<tr>
+							<td><label for="par">Parity: </label></td>
+							<td><select id="par" name="par">
+								<option value="0" selected="selected">None</option>
+								<option value="1">Odd</option>
+								<option value="2">Even</option>
+							</select></td>
+						</tr>
+						<tr>
+							<td><label for="sb">Stop bits: </label></td>
+							<td><select id="sb" name="sb">
+								<option value="1" selected="selected">1</option>
+								<option value="2">2</option>
 							</select></td>
 						</tr>
 						<tr>

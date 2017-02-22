@@ -43,7 +43,7 @@ bool g_b_useNtp = false;                                 // bNTPserv turns ntp o
 IPAddress g_ip_ntpIp(0, 0, 0, 0);                      // this value will be overwritten by ip stored in eeprom
 
 // gateway info
-char g_c_gwName[31] = {0};                               // meter_nm name of gateway
+char g_c_gwName[32] = {0};                               // meter_nm name of gateway
 // addresses for components stored in eeprom (see flash_eeprom.ino for more details)
 uint16_t g_u16_nameBlkStart;  // nm_strt
 uint16_t g_u16_ipBlkStart;  // ip_strt
@@ -52,6 +52,9 @@ uint16_t g_u16_regBlkStart;  // reg_strt
 
 // modbus info
 uint32_t g_u32_baudrate = 9600;                              // baud rate of 485 network
+uint8_t g_u8_dataBits = 8;                            // data bits 7 or 8
+uint8_t g_u8_parity = 0;                              // 0: None, 1: Odd, 2: Even
+uint8_t g_u8_stopBits = 1;                            // 1 or 2 stop bits
 uint16_t g_u16_timeout = 2000;                               // modbus timeout
 
 // slave info
