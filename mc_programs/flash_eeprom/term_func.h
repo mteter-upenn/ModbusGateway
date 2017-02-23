@@ -26,8 +26,8 @@ void storeName(char *cp_input, uint16_t u16_regStrt);
 void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts);
 bool storeBool(char *cp_input, uint16_t u16_regStrt);
 uint8_t storeByte(char *cp_input, uint16_t u16_regStrt);
-uint16_t storeInt(char *cp_input, uint16_t u16_regStrt);
-uint32_t storeMedInt(char *cp_input, uint16_t u16_regStrt);
+uint16_t storeShortInt(char *cp_input, uint16_t u16_regStrt);
+uint32_t storeInt(char *cp_input, uint16_t u16_regStrt);
 
 
 #endif // TERM_FUNC_H

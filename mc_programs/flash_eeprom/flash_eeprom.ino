@@ -74,8 +74,8 @@ void setup() {
 
   u16_nmStrt = 10;
   u16_ipStrt = u16_nmStrt + 34; // 44
-  u16_slvStrt = u16_ipStrt + 31; // 75
-  u16_mapStrt = u16_slvStrt + 181;  // 256
+  u16_slvStrt = u16_ipStrt + 32; // 76
+  u16_mapStrt = u16_slvStrt + 181;  // 257
 
   EEPROM.write(0, highByte(u16_nmStrt));
   EEPROM.write(1, lowByte(u16_nmStrt));
@@ -102,8 +102,8 @@ void loop() {
   // duplicate should make this global
   u16_nmStrt = 10;
   u16_ipStrt = u16_nmStrt + 34; // 44
-  u16_slvStrt = u16_ipStrt + 31; // 75
-  u16_mapStrt = u16_slvStrt + 181;  // 256
+  u16_slvStrt = u16_ipStrt + 32; // 76
+  u16_mapStrt = u16_slvStrt + 181;  // 257
 
   b_quit = false;
 
@@ -210,24 +210,24 @@ void loop() {
     term_func(F("Please insert a baudrate for 485 communications."), brFunc, F("Ok."),
       F("The number you entered is outside of the bounds!  Please select one of the following:\n300\n1200\n2400\n4800\n9600\n19200\n31250\n38400\n57600\n115200"),
       ca_input, "9600", true, 0, false);
-    storeMedInt(ca_input, u16_ipStrt + 23);
+    storeInt(ca_input, u16_ipStrt + 23);
 
     term_func(F("Please insert number of data bits (7 or 8)."), dbFunc, F("Ok."),
               F("That is not a viable number of data bits, please pick either 7 or 8."), ca_input, "8", true, 0, false);
-    storeByte(ca_input, u16_ipStrt + 26);
+    storeByte(ca_input, u16_ipStrt + 27);
 
     term_func(F("Please insert parity of 485 communications (0: None, 1: Odd, 2: Even)."), parFunc, F("Ok."),
               F("That is not a viable parity, please pick either 0, 1, or 2 for 'None', 'Odd', or 'Even'."), ca_input, "0", true, 0, false);
-    storeByte(ca_input, u16_ipStrt + 27);
+    storeByte(ca_input, u16_ipStrt + 28);
 
     term_func(F("Please insert number of stop bits (1 or 2)."), sbFunc, F("Ok."),
               F("That is not a viable number of stop bits, please pick either 1 or 2."), ca_input, "1", true, 0, false);
-    storeByte(ca_input, u16_ipStrt + 28);
+    storeByte(ca_input, u16_ipStrt + 29);
 
     // timeout
     term_func(F("Please insert a Modbus timeout. (ms)"), toFunc, F("Ok."),
       F("Please insert number from 1 to 30000 in decimal for Modbus timeout."), ca_input, "1500", true, 0, false);
-    storeInt(ca_input, u16_ipStrt + 29);
+    storeShortInt(ca_input, u16_ipStrt + 30);
   }
 
   if (c_menuSelect == 'R' || c_menuSelect == 'A') {

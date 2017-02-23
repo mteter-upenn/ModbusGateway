@@ -561,19 +561,25 @@ bool mbidFunc(char *cp_input) {  // checks valid modbus device id
 
 
 // storage functions *******************************************************************************************************
-void storeName(char *cp_input, uint16_t u16_regStrt) {
+void storeName(char cp_input[32], uint16_t u16_regStrt) {
   if (b_quit) {
     return;
   }
   else {
-    for (int ii = 0; ii < 32; ++ii) {
-      EEPROM.write(u16_regStrt + ii, cp_input[ii]);
+    NameArray qc_var;
 
-      if (cp_input[ii] == 0) {
-        break;
-      }
-    }
-    EEPROM.write(u16_regStrt + 31, 0);
+    cp_input[31] = 0;
+    memcpy(qc_var.ca_name, cp_input, 32);
+//    for (int ii = 0; ii < 32; ++ii) {
+//      EEPROM.write(u16_regStrt + ii, cp_input[ii]);
+
+//      if (cp_input[ii] == 0) {
+//        break;
+//      }
+//    }
+//    EEPROM.write(u16_regStrt + 31, 0);
+
+    EEPROM.put(u16_regStrt, qc_var.ca_name);
   }
 }
 
@@ -584,6 +590,8 @@ void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts) {
   else {
     uint16_t jj, kk;
     uint8_t u8_dum;
+    IpArray ipStruct;
+    TypeArray typeStruct;
 
     kk = 0;
     for (jj = 0; jj < u8_elmts; ++jj) {
@@ -595,7 +603,21 @@ void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts) {
       }
 
       ++kk;
-      EEPROM.write(u16_regStrt + jj, u8_dum);
+//      EEPROM.write(u16_regStrt + jj, u8_dum);
+      if (u8_elmts == 3) {
+        typeStruct.u8a_type[jj] = u8_dum;
+      }
+      else if (u8_elmts == 4) {
+        ipStruct.u8a_ip[jj] = u8_dum;
+      }
+
+    }
+
+    if (u8_elmts == 3) {
+      EEPROM.put(u16_regStrt, typeStruct);
+    }
+    else if (u8_elmts == 4) {
+      EEPROM.put(u16_regStrt, ipStruct);
     }
   }
 }
@@ -606,13 +628,13 @@ bool storeBool(char *cp_input, uint16_t u16_regStrt) {
   }
   else {
     if (cp_input[0] == 'y' || cp_input[0] == 'Y') {
-      EEPROM.write(u16_regStrt, true);
-
+//      EEPROM.write(u16_regStrt, true);
+      EEPROM.put(u16_regStrt, true);
       return true;
     }
     else {
-      EEPROM.write(u16_regStrt, false);
-
+//      EEPROM.write(u16_regStrt, false);
+      EEPROM.put(u16_regStrt, false);
       return false;
     }
   }
@@ -632,13 +654,13 @@ uint8_t storeByte(char *cp_input, uint16_t u16_regStrt) {
       ++kk;
     }
 
-    EEPROM.write(u16_regStrt, u8_dum);
+    EEPROM.put(u16_regStrt, u8_dum);
 
     return u8_dum;
   }
 }
 
-uint16_t storeInt(char *cp_input, uint16_t u16_regStrt) {
+uint16_t storeShortInt(char *cp_input, uint16_t u16_regStrt) {
   if (b_quit) {
     return 0;
   }
@@ -651,14 +673,14 @@ uint16_t storeInt(char *cp_input, uint16_t u16_regStrt) {
       ++kk;
     }
 
-    EEPROM.write(u16_regStrt, highByte(u16_dum));
-    EEPROM.write(u16_regStrt + 1, lowByte(u16_dum));
-
+//    EEPROM.write(u16_regStrt, highByte(u16_dum));
+//    EEPROM.write(u16_regStrt + 1, lowByte(u16_dum));
+    EEPROM.put(u16_regStrt, u16_dum);
     return u16_dum;
   }
 }
 
-uint32_t storeMedInt(char *cp_input, uint16_t u16_regStrt) {
+uint32_t storeInt(char *cp_input, uint16_t u16_regStrt) {
   if (b_quit) {
     return 0;
   }

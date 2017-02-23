@@ -62,17 +62,17 @@ void setConstants() {
 
   g_b_useNtp = EEPROM.read(g_u16_ipBlkStart + 18);
 
-  g_u32_baudrate = EEPROM.read(g_u16_ipBlkStart + 23);
-  g_u32_baudrate = (uint32_t)((g_u32_baudrate << 16) | (EEPROM.read(g_u16_ipBlkStart + 24) << 8) | (EEPROM.read(g_u16_ipBlkStart + 25)));
+  g_u32_baudrate = EEPROM.read(g_u16_ipBlkStart + 24);
+  g_u32_baudrate = (uint32_t)((g_u32_baudrate << 16) | (EEPROM.read(g_u16_ipBlkStart + 25) << 8) | (EEPROM.read(g_u16_ipBlkStart + 26)));
 
-  g_u8_dataBits = EEPROM.read(g_u16_ipBlkStart + 26);
-  g_u8_parity = EEPROM.read(g_u16_ipBlkStart + 27);
-  g_u8_stopBits = EEPROM.read(g_u16_ipBlkStart + 28);
+  g_u8_dataBits = EEPROM.read(g_u16_ipBlkStart + 27);
+  g_u8_parity = EEPROM.read(g_u16_ipBlkStart + 28);
+  g_u8_stopBits = EEPROM.read(g_u16_ipBlkStart + 29);
 
-  g_u16_timeout = word(EEPROM.read(g_u16_ipBlkStart + 29), EEPROM.read(g_u16_ipBlkStart + 30));
+  g_u16_timeout = word(EEPROM.read(g_u16_ipBlkStart + 30), EEPROM.read(g_u16_ipBlkStart + 31));
 
-  Serial.print("baud: "); Serial.print(g_u32_baudrate);
-  Serial.print(" at address "); Serial.println(g_u16_ipBlkStart + 23);
+//  Serial.print("baud: "); Serial.print(g_u32_baudrate);
+//  Serial.print(" at address "); Serial.println(g_u16_ipBlkStart + 23);
 
   //g_u8_numSlaves = EEPROM.read(g_u16_mtrBlkStart);
 
