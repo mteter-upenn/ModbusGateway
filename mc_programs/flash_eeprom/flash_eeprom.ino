@@ -72,9 +72,9 @@ void setup() {
   }
 
   u16_nmStrt = 10;
-  u16_ipStrt = u16_nmStrt + 33; // 43
-  u16_slvStrt = u16_ipStrt + 28; // 71
-  u16_mapStrt = u16_slvStrt + 181;  // 252
+  u16_ipStrt = u16_nmStrt + 34; // 44
+  u16_slvStrt = u16_ipStrt + 31; // 75
+  u16_mapStrt = u16_slvStrt + 181;  // 256
 
   EEPROM.write(0, highByte(u16_nmStrt));
   EEPROM.write(1, lowByte(u16_nmStrt));
@@ -100,9 +100,9 @@ void loop() {
 
   // duplicate should make this global
   u16_nmStrt = 10;
-  u16_ipStrt = u16_nmStrt + 33; // 43
-  u16_slvStrt = u16_ipStrt + 28; // 71
-  u16_mapStrt = u16_slvStrt + 181;  // 252
+  u16_ipStrt = u16_nmStrt + 34; // 44
+  u16_slvStrt = u16_ipStrt + 31; // 75
+  u16_mapStrt = u16_slvStrt + 181;  // 256
 
   b_quit = false;
 
@@ -211,30 +211,42 @@ void loop() {
       ca_input, "9600", true, 0, false);
     storeMedInt(ca_input, u16_ipStrt + 23);
 
+    term_func(F("Please insert number of data bits (7 or 8)."), dbFunc, F("Ok."),
+              F("That is not a viable number of data bits, please pick either 7 or 8."), ca_input, "8", true, 0, false);
+    storeByte(ca_input, u16_ipStrt + 26);
+
+    term_func(F("Please insert parity of 485 communications (0: None, 1: Odd, 2: Even)."), parFunc, F("Ok."),
+              F("That is not a viable parity, please pick either 0, 1, or 2 for 'None', 'Odd', or 'Even'."), ca_input, "0", true, 0, false);
+    storeByte(ca_input, u16_ipStrt + 27);
+
+    term_func(F("Please insert number of stop bits (1 or 2)."), sbFunc, F("Ok."),
+              F("That is not a viable number of stop bits, please pick either 1 or 2."), ca_input, "1", true, 0, false);
+    storeByte(ca_input, u16_ipStrt + 28);
+
     // timeout
     term_func(F("Please insert a Modbus timeout. (ms)"), toFunc, F("Ok."),
       F("Please insert number from 1 to 30000 in decimal for Modbus timeout."), ca_input, "1500", true, 0, false);
-    storeInt(ca_input, u16_ipStrt + 26);
+    storeInt(ca_input, u16_ipStrt + 29);
   }
 
   if (c_menuSelect == 'R' || c_menuSelect == 'A') {
     // record data locally?
     b_resp = term_func(F("Should this meter record data locally?"), verFunc, F("Ok, it will record data."),
       F("Ok, it won't record data."), ca_input, "n", true, 0, true);
-    storeBool(ca_input, u16_nmStrt + 31);
+    storeBool(ca_input, u16_nmStrt + 32);
 
     // number of meters to record
     if (b_resp) {
       term_func(F("Please insert number of meters to record (max 20)."), mtrnumFunc, F("Ok."),
         F("Please insert number of meters to record (max 20)."), ca_input, "5", true, 0, false);
-      storeByte(ca_input, u16_nmStrt + 32);
+      storeByte(ca_input, u16_nmStrt + 33);
     }
     else {
       // default number of meters? (change if outside of bounds)
-      if (EEPROM.read(u16_nmStrt + 32) > 20) {
+      if (EEPROM.read(u16_nmStrt + 33) > 20) {
         strcpy_P(ca_input, PSTR("5"));
 
-        storeByte(ca_input, u16_nmStrt + 32);
+        storeByte(ca_input, u16_nmStrt + 33);
       }
       // else do nothing
     }

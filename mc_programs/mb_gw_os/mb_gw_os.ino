@@ -192,9 +192,9 @@ bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meter
 
 void setup() {
   Serial.begin(9600);
-//  Serial.println(F("delay here"));
-//  delay(2000);
-//  Serial.println(F("delay over"));
+  Serial.println(F("delay here"));
+  delay(2000);
+  Serial.println(F("delay over"));
 
   // set output pins
   pinMode(gk_s16_rtcFailLed, OUTPUT);
@@ -241,7 +241,7 @@ void setup() {
 //  reset w5200 ethernet chip
   pinMode(9, OUTPUT);
   digitalWrite(9, LOW);
-  
+
   Serial.println(F("Initializing SD card..."));
   if (!SD.begin(4)) {
     Serial.println(F("ERROR - SD card initialization failed!"));
@@ -275,7 +275,7 @@ void setup() {
   //g_mm_node.begin(g_u32_baudrate);
   //g_mm_node.setTimeout(g_u16_timeout);
   //  g_mm_node.idle(*function_here);  // add function for idling during wait for modbus return message
-  g_modbusServer.begin(g_u32_baudrate);
+  g_modbusServer.begin(g_u32_baudrate, g_u8_dataBits, g_u8_parity, g_u8_stopBits);
   g_modbusServer.setTimeout(g_u16_timeout);
   //g_modbusServer.setTimeout(500);
 

@@ -15,12 +15,12 @@ ModbusServer::ModbusServer(uint8_t u8_serialPort, uint8_t u8_enablePin) {
 }
 
 
-void ModbusServer::begin() {
-	begin(19200);
-}
+//void ModbusServer::begin() {
+//	begin(19200);
+//}
 
 
-void ModbusServer::begin(uint16_t u16_baudRate) {
+void ModbusServer::begin(uint16_t u16_baudRate, uint8_t u8_dataBits, uint8_t u8_parity, uint8_t u8_stopBits) {
 	if (m_u8_enablePin != 255) {
 		pinMode(m_u8_enablePin, OUTPUT);
 		digitalWrite(m_u8_enablePin, LOW); // LOW is Tx enabled
@@ -42,7 +42,38 @@ void ModbusServer::begin(uint16_t u16_baudRate) {
       break;
 	}
 	
-	m_MBSerial->begin(u16_baudRate);
+  uint32_t u32_serialFormat = SERIAL_8N1;
+  if (u8_dataBits == 8) {
+    if (u8_parity == 0) {
+      if (u8_stopBits == 2) {
+        u32_serialFormat = SERIAL_8N2;
+      }
+    }
+    else if (u8_parity == 1) {
+      if (u8_stopBits == 1) {
+        u32_serialFormat = SERIAL_8O1;
+      }
+    }
+    else if (u8_parity == 2) {
+      if (u8_stopBits == 1) {
+        u32_serialFormat = SERIAL_8E1;
+      }
+    }
+  }
+  else if (u8_dataBits == 7) {
+    if (u8_parity == 1) {
+      if (u8_stopBits == 1) {
+        u32_serialFormat = SERIAL_7O1;
+      }
+    }
+    else if (u8_parity == 2) {
+      if (u8_stopBits == 1) {
+        u32_serialFormat = SERIAL_7E1;
+      }
+    }
+  }
+
+  m_MBSerial->begin(u16_baudRate, u32_serialFormat);
 }
 
 

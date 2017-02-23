@@ -15,4 +15,3 @@ INCLUDEPATH = /home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/cores/teen
     /home/fresep/Arduino/libraries/MeterLibrary \
     /home/fresep/Arduino/libraries/Ethernet52
 
-
