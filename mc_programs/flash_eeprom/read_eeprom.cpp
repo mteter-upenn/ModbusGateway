@@ -1,4 +1,5 @@
 #include "read_eeprom.h"
+#include "globals.h"
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <ModbusStructs.h>
@@ -9,10 +10,14 @@ void read_eeprom(char c_menuChar) {
   uint8_t u8_numSlvs, u8_numMaps;
   //char inpt[50];
 
-  u16_nmStrt = word(EEPROM.read(0), EEPROM.read(1));
-  u16_ipStrt = word(EEPROM.read(2), EEPROM.read(3));
-  u16_slvStrt = word(EEPROM.read(4), EEPROM.read(5));
-  u16_mapStrt = word(EEPROM.read(6), EEPROM.read(7));
+//  u16_nmStrt = word(EEPROM.read(0), EEPROM.read(1));
+//  u16_ipStrt = word(EEPROM.read(2), EEPROM.read(3));
+//  u16_slvStrt = word(EEPROM.read(4), EEPROM.read(5));
+//  u16_mapStrt = word(EEPROM.read(6), EEPROM.read(7));
+  EEPROM.get(0, u16_nmStrt);
+  EEPROM.get(2, u16_ipStrt);
+  EEPROM.get(4, u16_slvStrt);
+  EEPROM.get(6, u16_mapStrt);
 
   Serial.println();
   if (c_menuChar == 'a') {
@@ -31,66 +36,87 @@ void read_eeprom(char c_menuChar) {
   }
 
   if (c_menuChar == 'n' || c_menuChar == 'a') {
+    NameArray nameStruct;
+
     // Name:
     Serial.print(F("Name: "));
-    for (ii = u16_nmStrt; ii < u16_nmStrt + 32; ++ii) {
-      char c_dum = EEPROM.read(ii);
+//    for (ii = u16_nmStrt; ii < u16_nmStrt + 32; ++ii) {
+//      char c_dum = EEPROM.read(ii);
 
-      if (c_dum == 0) {
-        Serial.println();
-        break;
-      }
-      else {
-        Serial.print(c_dum);
-      }
-    }
+//      if (c_dum == 0) {
+//        Serial.println();
+//        break;
+//      }
+//      else {
+//        Serial.print(c_dum);
+//      }
+//    }
+    EEPROM.get(u16_nmStrt, nameStruct);
+    nameStruct.ca_name[31] = 0;  // just to be sure
+    Serial.println(nameStruct.ca_name);
   }
 
   if (c_menuChar == 'i' || c_menuChar == 'a') {
+    MacArray macStruct;
+    IpArray ipStruct;
+    IpArray smStruct;
+    IpArray dgStruct;
+
+    EEPROM.get(u16_ipStrt, macStruct);
+    EEPROM.get(u16_ipStrt + 6, ipStruct);
+    EEPROM.get(u16_ipStrt + 10, smStruct);
+    EEPROM.get(u16_ipStrt + 14, dgStruct);
+
     // IP info
     Serial.print(F("MAC: "));
-    if (EEPROM.read(u16_ipStrt) < 16) {
+    if (macStruct.u8a_mac[0] < 16) {
       Serial.print('0');
     }
-    Serial.print(EEPROM.read(u16_ipStrt), HEX);
+    Serial.print(macStruct.u8a_mac[0], HEX);
     for (ii = 1; ii < 6; ++ii) {
       Serial.print(":");
-      if (EEPROM.read(u16_ipStrt + ii) < 16) {
+      if (macStruct.u8a_mac[ii] < 16) {
         Serial.print('0');
       }
-      Serial.print(EEPROM.read(u16_ipStrt + ii), HEX);
+      Serial.print(macStruct.u8a_mac[ii], HEX);
     }
     Serial.println();
 
     Serial.print(F("IP: "));
-    Serial.print(EEPROM.read(u16_ipStrt + 6), DEC);
+    Serial.print(ipStruct.u8a_ip[0], DEC);
     for (ii = 1; ii < 4; ++ii) {
       Serial.print(".");
-      Serial.print(EEPROM.read(u16_ipStrt + 6 + ii), DEC);
+      Serial.print(ipStruct.u8a_ip[ii], DEC);
     }
     Serial.println();
 
     Serial.print(F("Subnet Mask: "));
-    Serial.print(EEPROM.read(u16_ipStrt + 10), DEC);
+    Serial.print(smStruct.u8a_ip[0], DEC);
     for (ii = 1; ii < 4; ++ii) {
       Serial.print(".");
-      Serial.print(EEPROM.read(u16_ipStrt + 10 + ii), DEC);
+      Serial.print(smStruct.u8a_ip[ii], DEC);
     }
     Serial.println();
 
     Serial.print(F("Default Gateway: "));
-    Serial.print(EEPROM.read(u16_ipStrt + 14), DEC);
+    Serial.print(dgStruct.u8a_ip[0], DEC);
     for (ii = 1; ii < 4; ++ii) {
       Serial.print(".");
-      Serial.print(EEPROM.read(u16_ipStrt + 14 + ii), DEC);
+      Serial.print(dgStruct.u8a_ip[ii], DEC);
     }
     Serial.println();
   }
 
   if (c_menuChar == 't' || c_menuChar == 'a') {
+    IpArray ntpIpStruct;
+    bool b_ntp;
+
+    EEPROM.get(u16_ipStrt + 18, b_ntp);
+    EEPROM.get(u16_ipStrt + 19, ntpIpStruct);
+
     // NTP server
     Serial.print(F("Use NTP Server?: "));
-    if (EEPROM.read(u16_ipStrt + 18)) {
+    if (b_ntp) {
       Serial.println(F("yes"));
     }
     else {
@@ -98,31 +124,40 @@ void read_eeprom(char c_menuChar) {
     }
 
     Serial.print(F("NTP Server IP: "));
-    Serial.print(EEPROM.read(u16_ipStrt + 19), DEC);
+    Serial.print(ntpIpStruct.u8a_ip[0], DEC);
     for (ii = 1; ii < 4; ++ii) {
       Serial.print(".");
-      Serial.print(EEPROM.read(u16_ipStrt + 19 + ii), DEC);
+      Serial.print(ntpIpStruct.u8a_ip[ii], DEC);
     }
     Serial.println('\n');
   }
 
   if (c_menuChar == 's' || c_menuChar == 'a') {
     uint32_t u32_baudrate;
+    uint8_t u8_dataBits;
+    uint8_t u8_parity;
+    uint8_t u8_stopBits;
     uint16_t u16_timeout;
-    uint8_t u8_dum;
+//    uint8_t u8_dum;
     // 485/modbus stuff
+
+    EEPROM.get(u16_ipStrt + 23, u32_baudrate);
+    EEPROM.get(u16_ipStrt + 27, u8_dataBits);
+    EEPROM.get(u16_ipStrt + 28, u8_parity);
+    EEPROM.get(u16_ipStrt + 29, u8_stopBits);
+    EEPROM.get(u16_ipStrt + 30, u16_timeout);
 
     Serial.print(F("Baud rate: "));
 //    u32_baudrate = EEPROM.read(u16_ipStrt + 23);
-    u32_baudrate = (uint32_t)((EEPROM.read(u16_ipStrt + 23)<< 16) | (EEPROM.read(u16_ipStrt + 24) << 8) | (EEPROM.read(u16_ipStrt + 25)));
-    Serial.println(u32_baudrate, DEC);
+//    u32_baudrate = (uint32_t)((EEPROM.read(u16_ipStrt + 23)<< 16) | (EEPROM.read(u16_ipStrt + 24) << 8) | (EEPROM.read(u16_ipStrt + 25)));
+    Serial.println(u32_baudrate);
 
     Serial.print(F("Data bits: "));
-    Serial.println(EEPROM.read(u16_ipStrt + 26), DEC);
+    Serial.println(u8_dataBits, DEC);
 
     Serial.print(F("Parity: "));
-    u8_dum = EEPROM.read(u16_ipStrt + 27);
-    switch (u8_dum) {
+//    u8_dum = EEPROM.read(u16_ipStrt + 27);
+    switch (u8_parity) {
     case 0:
       Serial.println("None");
       break;
@@ -137,11 +172,11 @@ void read_eeprom(char c_menuChar) {
     }
 
     Serial.print("Stop bits: ");
-    Serial.println(EEPROM.read(u16_ipStrt + 28), DEC);
+    Serial.println(u8_stopBits, DEC);
 
     Serial.print(F("Modbus u16_timeout: "));
-    u16_timeout = word(EEPROM.read(u16_ipStrt + 29), EEPROM.read(u16_ipStrt + 30));
-    Serial.println(u16_timeout, DEC);
+//    u16_timeout = word(EEPROM.read(u16_ipStrt + 29), EEPROM.read(u16_ipStrt + 30));
+    Serial.println(u16_timeout);
     Serial.println();
   }
 

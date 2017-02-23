@@ -77,15 +77,21 @@ void setup() {
   u16_slvStrt = u16_ipStrt + 32; // 76
   u16_mapStrt = u16_slvStrt + 181;  // 257
 
-  EEPROM.write(0, highByte(u16_nmStrt));
-  EEPROM.write(1, lowByte(u16_nmStrt));
-  EEPROM.write(2, highByte(u16_ipStrt));
-  EEPROM.write(3, lowByte(u16_ipStrt));
-  EEPROM.write(4, highByte(u16_slvStrt));
-  EEPROM.write(5, lowByte(u16_slvStrt));
-  EEPROM.write(6, highByte(u16_mapStrt));
-  EEPROM.write(7, lowByte(u16_mapStrt));
+//  EEPROM.write(0, highByte(u16_nmStrt));
+//  EEPROM.write(1, lowByte(u16_nmStrt));
+//  EEPROM.write(2, highByte(u16_ipStrt));
+//  EEPROM.write(3, lowByte(u16_ipStrt));
+//  EEPROM.write(4, highByte(u16_slvStrt));
+//  EEPROM.write(5, lowByte(u16_slvStrt));
+//  EEPROM.write(6, highByte(u16_mapStrt));
+//  EEPROM.write(7, lowByte(u16_mapStrt));
+  EEPROM.put(0, u16_nmStrt);
+  EEPROM.put(2, u16_ipStrt);
+  EEPROM.put(4, u16_slvStrt);
+  EEPROM.put(6, u16_mapStrt);
 
+  Serial.print("baud: "); Serial.print(g_u32_baudrate);
+  Serial.print(" at address "); Serial.println(g_u16_ipBlkStart + 23);
 //  u32_time = millis();
 }
 
@@ -144,10 +150,14 @@ void loop() {
     // mac
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
     if (!b_quit) {
+      MacArray macStruct;
+
       read_mac();
       for (int jj = 0; jj < 6; ++jj) {
-        EEPROM.write(u16_ipStrt + jj, mac[jj]);
+//        EEPROM.write(u16_ipStrt + jj, mac[jj]);
+        macStruct.u8a_mac[jj] = mac[jj];
       }
+      EEPROM.put(u16_ipStrt, macStruct);
 
       Serial.print(F("This microcontroller (Teensy) already has a MAC!  It is "));
 

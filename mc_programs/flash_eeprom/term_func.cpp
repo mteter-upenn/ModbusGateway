@@ -693,9 +693,10 @@ uint32_t storeInt(char *cp_input, uint16_t u16_regStrt) {
      ++kk;
     }
 
-    EEPROM.write(u16_regStrt, ((u32_dum >> 16) & 0xFF));
-    EEPROM.write(u16_regStrt + 1, ((u32_dum >> 8) & 0xFF));
-    EEPROM.write(u16_regStrt + 2, (u32_dum & 0xFF));
+//    EEPROM.write(u16_regStrt, ((u32_dum >> 16) & 0xFF));
+//    EEPROM.write(u16_regStrt + 1, ((u32_dum >> 8) & 0xFF));
+//    EEPROM.write(u16_regStrt + 2, (u32_dum & 0xFF));
+    EEPROM.put(u16_regStrt, u32_dum);
 
     return u32_dum;
   }
