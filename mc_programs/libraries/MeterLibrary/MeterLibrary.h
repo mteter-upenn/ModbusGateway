@@ -156,12 +156,12 @@ public:
 };
 
 
-struct SlaveDataStruct {
-	uint8_t u8_id;
-	uint8_t u8_vid;
-	uint8_t u8a_ip[4];
-	uint8_t u8a_type[3];
-};
+//struct SlaveDataStruct {
+//	uint8_t u8_id;
+//	uint8_t u8_vid;
+//	uint8_t u8a_ip[4];
+//	uint8_t u8a_type[3];
+//};
 
 // class used to grab slave meta data (id, vid, ip, type) from eeprom
 class SlaveDataClass {
@@ -174,9 +174,9 @@ class SlaveDataClass {
 		// uint8_t m_u8a_slaveIps[20][4];   // array of slave ips
 		// uint8_t m_u8a_slaveTypes[20][3]; // array of slave meter types
 		
-		SlaveDataStruct m_slaveList[20];
+    SlaveArray m_slaveList[20];
 		
-		static const SlaveDataStruct mk_sdInvalid;
+    static const SlaveArray mk_sdInvalid;
 	public:
 		void init();
 		
@@ -191,7 +191,7 @@ class SlaveDataClass {
 		
 		bool isSlaveTcpByInd(uint8_t u8_slvInd);
 		uint8_t getNumSlvs();
-		SlaveDataStruct operator[](int index) const;
+    SlaveArray operator[](int index) const;
 };
 
 extern SlaveDataClass SlaveData;

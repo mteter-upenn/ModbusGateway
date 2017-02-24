@@ -9,6 +9,7 @@
 #include "globals.h"
 #include "miscFuncs.h"
 #include <MeterLibrary.h>
+#include <ModbusStructs.h>
 
 #if SHOW_FREE_MEM
 int __bss_end;
@@ -35,7 +36,8 @@ void resetArd() {
 
 void setConstants() {
   for (int ii = 0; ii < 30; ++ii){
-    g_c_gwName[ii] = (char)EEPROM.read(ii + g_u16_nameBlkStart);
+//    g_c_gwName[ii] = (char)EEPROM.read(ii + g_u16_nameBlkStart);
+    EEPROM.get(ii + g_u16_nameBlkStart, g_c_gwName[ii]);
 
     if (g_c_gwName[ii] == 0){
       break;
@@ -45,15 +47,20 @@ void setConstants() {
   Serial.print(F("name: "));
   Serial.println(g_c_gwName);
   
-  g_b_recordData = EEPROM.read(g_u16_nameBlkStart + 32);  // whether or not to record data
-  g_u8_maxRecordSlaves = EEPROM.read(g_u16_nameBlkStart + 33) > 20 ? 5 : EEPROM.read(g_u16_nameBlkStart + 33);  // max slaves to record
+//  g_b_recordData = EEPROM.read(g_u16_nameBlkStart + 32);  // whether or not to record data
+//  g_u8_maxRecordSlaves = EEPROM.read(g_u16_nameBlkStart + 33) > 20 ? 5 : EEPROM.read(g_u16_nameBlkStart + 33);  // max slaves to record
+  EEPROM.get(g_u16_nameBlkStart + 32, g_b_recordData);
+  EEPROM.get(g_u16_nameBlkStart + 33, g_u8_maxRecordSlaves);
+  g_u8_maxRecordSlaves = g_u8_maxRecordSlaves > 20 ? 5 : g_u8_maxRecordSlaves;  // max slaves to record
 
   for (int ii = 0; ii < 6; ++ii){
     g_u8a_mac[ii] = EEPROM.read(g_u16_ipBlkStart + ii);
   }
 
+  EEPROM.get(g_u16_ipBlkStart + 6, g_ip_ip);
+
   for (int ii = 0; ii < 4; ++ii){
-    g_ip_ip[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 6);
+//    g_ip_ip[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 6);
     g_ip_subnet[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 10);
     g_ip_gateway[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 14);
 
@@ -131,10 +138,10 @@ void writeGenSetupFile(){
   }
   
   webFile.print(F("</mac><ip>"));
-  webFile.print(g_ip_ip[0], DEC);
+  webFile.print(g_ip_ip.u8a_ip[0], DEC);
   for (int ii = 1; ii < 4; ++ii){
     webFile.print(F("."));
-    webFile.print(g_ip_ip[ii], DEC);
+    webFile.print(g_ip_ip.u8a_ip[ii], DEC);
   }
   
   webFile.print(F("</ip><sm>"));
@@ -219,10 +226,10 @@ void writeMtrSetupFile(){
 
     webFile.print(F("</vid><type>"));
 
-    webFile.print(SlaveData[ii].u8a_type[0], DEC);
+    webFile.print(SlaveData[ii].u8a_mtrType[0], DEC);
     for (int jj = 1; jj < 3; ++jj){
       webFile.print(F("."));
-      webFile.print(SlaveData[ii].u8a_type[jj], DEC);
+      webFile.print(SlaveData[ii].u8a_mtrType[jj], DEC);
     }
 
     webFile.print(F("</type></meter>"));

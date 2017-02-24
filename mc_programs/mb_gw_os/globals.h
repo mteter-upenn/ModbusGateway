@@ -4,6 +4,7 @@
 #include <Ethernet52.h>
 #include <ModbusServer.h>
 #include "mb_names.h"
+#include <ModbusStructs.h>
 
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
 
@@ -37,8 +38,8 @@
 #define gk_u8_mb485Ctrl     6                     // when set low, transmit mode, high is receive mode
 
 // ethernet info
-extern uint8_t g_u8a_mac[8];                      // enter mac, will need some sort of generator for this
-extern IPAddress g_ip_ip;                       // this value will be overwritten by ip stored in eeprom
+extern uint8_t g_u8a_mac[6];                      // enter mac, will need some sort of generator for this
+extern IpArray g_ip_ip;                       // this value will be overwritten by ip stored in eeprom
 extern IPAddress g_ip_subnet;                    // this value will be overwritten by ip stored in eeprom
 extern IPAddress g_ip_gateway;                    // this value will be overwritten by ip stored in eeprom
 //bool g_b_reset = false;                                    // bReset

@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include "globals.h"
 #include <EEPROM.h>
+#include "ModbusStructs.h"
 
 bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), const __FlashStringHelper *fshp_trueStr,
   const __FlashStringHelper *fshp_falseStr, char *cp_input, const char *kcp_defaultInput, bool b_verify, uint8_t u8_repeatMsgTimeout, 

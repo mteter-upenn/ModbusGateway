@@ -268,16 +268,25 @@ bool MeterLibGroups::setGroup(uint8_t u8_grpInd) {  // u8_grpInd is 1 based!!
       EEPROM.get(m_u16_mtrLibStart + 4 + m_u8_curGrp * 2 - 2, m_u16_grpStrtInd);
 			
 			
-			m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
+//			m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
+      EEPROM.get(m_u16_grpStrtInd, m_u8_numGrpVals);
 			if (u8_grpInd < m_u8_numGrps) {
-				m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
-				m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
-				m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd + 4);
+        uint8_t u8_grpLenVals;
+
+//				m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
+        EEPROM.get(m_u16_grpStrtInd + 1, m_u16_numRegs);
+//				m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
+        EEPROM.get(m_u16_grpStrtInd + 2, m_u16_reqReg);
+        EEPROM.get(m_u16_grpStrtInd + 4, u8_grpLenVals);
+        m_u16_grpDataTypeInd = m_u16_grpStrtInd + u8_grpLenVals;
 			}
 			else {  // last group
+        uint8_t u8_grpLenVals;
+        EEPROM.get(m_u16_grpStrtInd, u8_grpLenVals);
+
 				m_u16_numRegs = 0;
 				m_u16_reqReg = 0;
-				m_u16_grpDataTypeInd = m_u16_grpStrtInd + EEPROM.read(m_u16_grpStrtInd) + 1;
+        m_u16_grpDataTypeInd = m_u16_grpStrtInd + u8_grpLenVals + 1;
 			}
 			
 			return true;
@@ -362,17 +371,20 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 	*  ADDRESS  (ADDRESS 0 + eval(ADDRESS 4)): data types in pairs (FloatConv, which values fall under it)
 	*/
 
-	uint8_t u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1);
-	FloatConv dataType = Int8_2_FloatConv(static_cast<int8_t>(EEPROM.read(m_u16_grpDataTypeInd)));
+  uint8_t u8_dataTypeCmp;  // = EEPROM.read(m_u16_grpDataTypeInd + 1);
+  FloatConv dataType;  // = Int8_2_FloatConv(static_cast<int8_t>(EEPROM.read(m_u16_grpDataTypeInd)));
 	uint8_t u8_valInd(0);  // order of value in group (NOT the VALUE TYPE (ie real power))
-
 	int ii(2); // skip 0 on assumption that u8_dataTypeCmp is initialized in such a case
-	
+
+  EEPROM.get(m_u16_grpDataTypeInd + 1, u8_dataTypeCmp);
+  EEPROM.get(m_u16_grpDataTypeInd, dataType);
+
 	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 5; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
 		int8_t s8_valType;  // if > 0, then this is the value Type (Power, current A, etc)
 		                    // if < 0, then this is the number of registers to skip to the next value
 		
-		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+//		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+    EEPROM.get(u16_valEepAdr, s8_valType);
 	
 		if (s8_valType < 0) {
 			// skip registers
@@ -383,8 +395,10 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 			
 			while (u8_valInd > u8_dataTypeCmp) {
 				
-				u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1 + ii);
-				dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd + ii));
+//				u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1 + ii);
+        EEPROM.get(m_u16_grpDataTypeInd + 1 + ii, u8_dataTypeCmp);
+//				dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd + ii));
+        EEPROM.get(m_u16_grpDataTypeInd + ii, dataType);
 				ii += 2;
 			}
 			
@@ -437,7 +451,8 @@ bool MeterLibGroups::groupMbErr(int8_t *const s8kp_dataFlags) {
 	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 5; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
 		int8_t s8_valType;
 		
-		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+//		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+    EEPROM.get(u16_valEepAdr, s8_valType);
 		
 		if (s8_valType > 0) {
 			// mark all flags as an unsuccessful read
@@ -462,7 +477,8 @@ bool MeterLibGroups::groupLastFlags(int8_t *const s8kp_dataFlags) {
 	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 1; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
 		int8_t s8_valType;
 		
-		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+//		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
+    EEPROM.get(u16_valEepAdr, s8_valType);
 		
 		if (s8_valType > 0) {
 			// mark all flags as not applicable
@@ -773,29 +789,28 @@ uint16_t WriteMaps::calcStartingPos(uint8_t u8_map) {
 
 // SlaveData Functions##############################################################################
 SlaveDataClass SlaveData;
-const SlaveDataStruct SlaveDataClass::mk_sdInvalid = {0, 0, {0, 0, 0, 0}, {0, 0, 0}};
+const SlaveArray SlaveDataClass::mk_sdInvalid = {{0, 0, 0}, {0, 0, 0, 0}, 0, 0};
 
 void SlaveDataClass::init() {
-  m_u16_slaveDataStart = word(EEPROM.read(4), EEPROM.read(5));
-	m_u8_numSlaves = EEPROM.read(m_u16_slaveDataStart);
+//  m_u16_slaveDataStart = word(EEPROM.read(4), EEPROM.read(5));
+//	m_u8_numSlaves = EEPROM.read(m_u16_slaveDataStart);
+  EEPROM.get(4, m_u16_slaveDataStart);
+  EEPROM.get(m_u16_slaveDataStart, m_u8_numSlaves);
 	
 	for (int ii = 0; ii < m_u8_numSlaves; ++ii) {
-    // m_u8a_slaveIds[ii] = EEPROM.read(9 * ii + 8 + m_u16_slaveDataStart);
-    // m_u8a_slaveVids[ii] = EEPROM.read(9 * ii + 9 + m_u16_slaveDataStart);
+    EEPROM.get(9 * ii + m_u16_slaveDataStart, m_slaveList[ii]);
 
-    // m_u8a_slaveIps[ii][0] = EEPROM.read(9 * ii + 4 + m_u16_slaveDataStart);
-		
-		m_slaveList[ii].u8_id = EEPROM.read(9 * ii + 8 + m_u16_slaveDataStart);
-		m_slaveList[ii].u8_vid = EEPROM.read(9 * ii + 9 + m_u16_slaveDataStart);
+//		m_slaveList[ii].u8_id = EEPROM.read(9 * ii + 8 + m_u16_slaveDataStart);
+//		m_slaveList[ii].u8_vid = EEPROM.read(9 * ii + 9 + m_u16_slaveDataStart);
 
-    m_slaveList[ii].u8a_ip[0] = EEPROM.read(9 * ii + 4 + m_u16_slaveDataStart);
-    for (int jj = 1; jj < 4; ++jj){
-      // m_u8a_slaveIps[ii][jj] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj + 4);
-      // m_u8a_slaveTypes[ii][(jj - 1)] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj);
+//    m_slaveList[ii].u8a_ip[0] = EEPROM.read(9 * ii + 4 + m_u16_slaveDataStart);
+//    for (int jj = 1; jj < 4; ++jj){
+//      // m_u8a_slaveIps[ii][jj] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj + 4);
+//      // m_u8a_slaveTypes[ii][(jj - 1)] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj);
 			
-			m_slaveList[ii].u8a_ip[jj] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj + 4);
-      m_slaveList[ii].u8a_type[(jj - 1)] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj);
-    }
+//			m_slaveList[ii].u8a_ip[jj] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj + 4);
+//      m_slaveList[ii].u8a_type[(jj - 1)] = EEPROM.read(9 * ii + m_u16_slaveDataStart + jj);
+//    }
   }
 }
 
@@ -872,7 +887,7 @@ uint8_t SlaveDataClass::getNumSlvs() {
 }
 
 
-SlaveDataStruct SlaveDataClass::operator[](int index) const {
+SlaveArray SlaveDataClass::operator[](int index) const {
 	if (!(index < m_u8_numSlaves)) {
 		return mk_sdInvalid;
 	}

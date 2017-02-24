@@ -572,7 +572,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				// SlaveData.getRedTypeByInd(u8_slvInd, mbReq.u8_mtrType);
 				
 				mbReq.u8_id = SlaveData[u8_slvInd].u8_id;
-				mbReq.u8_mtrType = SlaveData[u8_slvInd].u8a_type[0];
+				mbReq.u8_mtrType = SlaveData[u8_slvInd].u8a_mtrType[0];
 					
 				if (SlaveData.isSlaveTcpByInd(u8_slvInd)) {  // if slave is tcp
 					mbReq.u8_flags = MRFLAG_isTcp;

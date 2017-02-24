@@ -3,6 +3,7 @@
 #include "MeterLibrary.h"
 #include <Time.h>
 #include "globals.h"
+#include <ModbusStructs.h>
 
 
 void getFileName(time_t t_time, char *cp_fileName) {
@@ -96,10 +97,10 @@ void getFileName(time_t t_time, char *cp_fileName) {
         tempFile.print(F(","));
 
         if (SlaveData[ii].u8a_ip[0] == 0) { // if serial device, print gateway ip
-          tempFile.print(g_ip_ip[0], DEC);
+          tempFile.print(g_ip_ip.u8a_ip[0], DEC);
           for (int jj = 1; jj < 4; ++jj) {
             tempFile.print(F("."));
-            tempFile.print(g_ip_ip[jj], DEC);
+            tempFile.print(g_ip_ip.u8a_ip[jj], DEC);
           }
         }
         else {  // otherwise, print device ip
@@ -116,7 +117,7 @@ void getFileName(time_t t_time, char *cp_fileName) {
         tempFile.print(SlaveData[ii].u8_vid, DEC);
         tempFile.print(F(": "));
 
-        switch (SlaveData[ii].u8a_type[0]) {
+        switch (SlaveData[ii].u8a_mtrType[0]) {
           case 11:  // chilled water
             tempFile.print(F("Heat Flow,Mass Flow,Vol. Flow,Supply Temp,Return Temp,Delta Temp,Reserved,Heat Total,"
               "Mass Total,Vol. Total"));

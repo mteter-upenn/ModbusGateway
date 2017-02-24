@@ -53,9 +53,10 @@ void handle_data() {
       uint16_t u16_mbRespLen;
 
       for (int ii = 0; ii < u8_numSlvsRcd; ++ii) {
-        u8_slvMtrType = SlaveData[ii].u8a_type[0];
+        u8_slvMtrType = SlaveData[ii].u8a_mtrType[0];
         u8_slvVid = SlaveData[ii].u8_vid;
-        u8_slvMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType + 2);
+//        u8_slvMbFunc = EEPROM.read(g_u16_regBlkStart + 4 * u8_slvMtrType + 2);
+        EEPROM.get(g_u16_regBlkStart + 4 * u8_slvMtrType + 2, u8_slvMbFunc);
 
         mtrGrps.setMeterType(u8_slvMtrType);
         u16_numGrps = mtrGrps.getNumGrps();

@@ -41,6 +41,30 @@ const uint8_t MRFLAG_sentMsg = 0x40;
 const uint8_t MRFLAG_adjReq = 0x80;
 
 
+struct NameArray {
+  char ca_name[32];
+};
+
+struct MacArray {
+  uint8_t u8a_mac[6];
+};
+
+struct IpArray {
+  uint8_t u8a_ip[4];
+};
+
+struct TypeArray {
+  uint8_t u8a_type[3];
+};
+
+struct SlaveArray {
+  uint8_t u8a_mtrType[3];
+  uint8_t u8a_ip[4];
+  uint8_t u8_id;
+  uint8_t u8_vid;
+};
+
+
 /**
 enum class for definitions of different data types meters can return
 */
