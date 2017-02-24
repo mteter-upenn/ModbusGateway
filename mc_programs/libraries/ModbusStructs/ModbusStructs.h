@@ -44,7 +44,7 @@ const uint8_t MRFLAG_adjReq = 0x80;
 /**
 enum class for definitions of different data types meters can return
 */
-enum class FloatConv {
+enum class FloatConv : int8_t {
   SKIP = -1,        //  -1
   FLOAT,            //   0
   UINT16,           //   1
@@ -72,7 +72,7 @@ enum class FloatConv {
 	INT64_WS,         //  73
   UINT64_WS,        //  74
   ENERGY_WS,        //  75
-  DOUBLE_WS,        //  76
+  DOUBLE_WS        //  76
 };
 
 uint16_t FloatConvEnumNumRegs(FloatConv dataType);

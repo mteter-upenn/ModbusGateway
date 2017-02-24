@@ -7,7 +7,6 @@
 void read_eeprom(char c_menuChar) {
   uint16_t ii, jj; //  , j;
   uint16_t u16_nmStrt, u16_ipStrt, u16_slvStrt, u16_mapStrt;
-  uint8_t u8_numSlvs, u8_numMaps;
   //char inpt[50];
 
 //  u16_nmStrt = word(EEPROM.read(0), EEPROM.read(1));
@@ -181,9 +180,15 @@ void read_eeprom(char c_menuChar) {
   }
 
   if (c_menuChar == 'r' || c_menuChar == 'a') {
+    bool b_record;
+    uint8_t u8_rcdSlvs;
+
+    EEPROM.get(u16_nmStrt + 32, b_record);
+    EEPROM.get(u16_nmStrt + 33, u8_rcdSlvs);
+
     // record stuff
     Serial.print(F("Record Data?: "));
-    if (EEPROM.read(u16_nmStrt + 32)) {
+    if (b_record) {
       Serial.println(F("yes"));
     }
     else {
@@ -191,7 +196,7 @@ void read_eeprom(char c_menuChar) {
     }
 
     Serial.print("Max number of meters to record: ");
-    Serial.println(EEPROM.read(u16_nmStrt + 33), DEC);
+    Serial.println(u8_rcdSlvs, DEC);
     Serial.println();
   }
   
@@ -249,9 +254,16 @@ void read_eeprom(char c_menuChar) {
     Serial.println(F("|  Steam KEP                          |  12.1.0   |"));
     Serial.println(F("|-------------------------------------|-----------|"));
 
+    uint8_t u8_numSlvs;
+
+    uint8_t u8_slvStrSize;
+
+    EEPROM.get(u16_slvStrt, u8_numSlvs);
+    u8_slvStrSize = sizeof(SlaveArray);
+
     // meters listed to this gateway
     Serial.print(F("Meters listed in this gateway: "));
-    u8_numSlvs = EEPROM.read(u16_slvStrt);
+//    u8_numSlvs = EEPROM.read(u16_slvStrt);
     if (u8_numSlvs > 20) {
       u8_numSlvs = 0;
     }
@@ -259,36 +271,45 @@ void read_eeprom(char c_menuChar) {
     Serial.println();
 
     for (jj = 0; jj < u8_numSlvs; ++jj) {
+      SlaveArray slvStruct;
+
+      EEPROM.get(u16_slvStrt + 1 + jj * u8_slvStrSize, slvStruct);
+
       // Meter type
       Serial.print(F("Meter type: "));
-      Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 1), DEC);
+//      Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 1), DEC);
+      Serial.print(slvStruct.u8a_mtrType[0], DEC);
       for (ii = 1; ii < 3; ++ii) {
         Serial.print(".");
-        Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 1 + ii), DEC);
+//        Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 1 + ii), DEC);
+        Serial.print(slvStruct.u8a_mtrType[ii], DEC);
       }
       Serial.println();
 
       // Meter IP
-      if (EEPROM.read(u16_slvStrt + jj * 9 + 4) == 0) {
+      if (slvStruct.u8a_ip[0] == 0) {
         Serial.println(F("Meter is connected via 485"));
       }
       else {
         Serial.print(F("Meter IP: "));
-        Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 4), DEC);
+//        Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 4), DEC);
+        Serial.print(slvStruct.u8a_ip[0], DEC);
         for (ii = 1; ii < 4; ++ii) {
           Serial.print(".");
-          Serial.print(EEPROM.read(u16_slvStrt + jj * 9 + 4 + ii), DEC);
+          Serial.print(slvStruct.u8a_ip[ii], DEC);
         }
         Serial.println();
       }
 
       // Meter actual modbus id
       Serial.print(F("Actual Modbus ID: "));
-      Serial.println(EEPROM.read(u16_slvStrt + jj * 9 + 8), DEC);
+//      Serial.println(EEPROM.read(u16_slvStrt + jj * 9 + 8), DEC);
+      Serial.println(slvStruct.u8_id, DEC);
 
       // Meter virt ID
       Serial.print(F("Virtual Modbus ID: "));
-      Serial.println(EEPROM.read(u16_slvStrt + jj * 9 + 9), DEC);
+//      Serial.println(EEPROM.read(u16_slvStrt + jj * 9 + 9), DEC);
+      Serial.println(slvStruct.u8_vid, DEC);
 
       Serial.println();
     }
@@ -302,6 +323,8 @@ void read_eeprom(char c_menuChar) {
   }
 
   if (c_menuChar == 'l' || c_menuChar == 'a') {
+    uint8_t u8_numMaps;
+
     char *cpa_idType[] = { "na", 
       "c_a", "c_b", "c_c", "c_av", "c_t", 
       "ln_a", "ln_b", "ln_c", "ln_av", 
@@ -318,12 +341,14 @@ void read_eeprom(char c_menuChar) {
 
     // register library
     Serial.print(F("Number of libraries: "));
-    u8_numMaps = EEPROM.read(u16_mapStrt + 2);
+//    u8_numMaps = EEPROM.read(u16_mapStrt + 2);
+    EEPROM.get(u16_mapStrt + 2, u8_numMaps);
     Serial.println(u8_numMaps, DEC);
     Serial.println();
 
     for (ii = 0; ii < u8_numMaps; ++ii) {
-      uint16_t u16_slvLibStrt = word(EEPROM.read(u16_mapStrt + 3 + ii * 4), EEPROM.read(u16_mapStrt + 4 + ii * 4));
+      uint16_t u16_slvLibStrt; // = word(EEPROM.read(u16_mapStrt + 3 + ii * 4), EEPROM.read(u16_mapStrt + 4 + ii * 4));
+      EEPROM.get(u16_mapStrt + 3 + ii * 4, u16_slvLibStrt);
 
       Serial.print(F("Library number: "));
       Serial.println(EEPROM.read(u16_mapStrt + 5 + ii * 4), DEC);
@@ -336,52 +361,97 @@ void read_eeprom(char c_menuChar) {
 
 //      Serial.print("\tNumber of blocks: ");
 //      Serial.println(EEPROM.read(u16_slvLibStrt + 2), DEC);
-      uint8_t u8_numBlks = EEPROM.read(u16_slvLibStrt + 2);
-      uint8_t u8_numGrps = EEPROM.read(u16_slvLibStrt + 3);
-      uint16_t u16_blkStrt = word(EEPROM.read(u16_slvLibStrt), EEPROM.read(u16_slvLibStrt + 1));
-      //uint16_t u16_grpStrt = word(EEPROM.read(u16_slvLibStrt + 4), EEPROM.read(u16_slvLibStrt + 5));
+      uint8_t u8_numBlks;  // = EEPROM.read(u16_slvLibStrt + 2);
+      uint8_t u8_numGrps;  // = EEPROM.read(u16_slvLibStrt + 3);
+      uint16_t u16_blkStrt;  // = word(EEPROM.read(u16_slvLibStrt), EEPROM.read(u16_slvLibStrt + 1));
+
+      EEPROM.get(u16_slvLibStrt + 2, u8_numBlks);
+      EEPROM.get(u16_slvLibStrt + 3, u8_numGrps);
+      EEPROM.get(u16_slvLibStrt, u16_blkStrt);
 
       Serial.println("\tBlock\tStart\tEnd\tType");
       for (int jj = 0; jj < u8_numBlks; ++jj) {
+        uint16_t u16_blkRegStrt;
+        uint16_t U16_blkRegEnd;
+        uint8_t u8_blkType;
+
+        EEPROM.get(u16_blkStrt + jj * 5, u16_blkRegStrt);
+        EEPROM.get(u16_blkStrt + jj * 5 + 2, U16_blkRegEnd);
+        EEPROM.get(u16_blkStrt + jj * 5 + 4, u8_blkType);
+
         Serial.print("\t"); Serial.print(jj + 1);
-        Serial.print("\t"); Serial.print(word(EEPROM.read(u16_blkStrt + jj * 5), EEPROM.read(u16_blkStrt + jj * 5 + 1)));
-        Serial.print("\t"); Serial.print(word(EEPROM.read(u16_blkStrt + jj * 5 + 2), EEPROM.read(u16_blkStrt + jj * 5 + 3)));
-        Serial.print("\t"); Serial.print(EEPROM.read(u16_blkStrt + jj * 5 + 4));
+        Serial.print("\t"); Serial.print(u16_blkRegStrt);
+        Serial.print("\t"); Serial.print(U16_blkRegEnd);
+        Serial.print("\t"); Serial.print(u8_blkType, DEC);
         Serial.println();
       }
       Serial.println();
       
+//      Serial.println("DEBUGGING:");
+//      for (int jj = 0; jj < u8_numGrps * 2; ++jj) {
+//        Serial.print(u16_slvLibStrt + 4 + jj); Serial.print(": ");
+//        Serial.println(EEPROM.read(u16_slvLibStrt + 4 + jj), DEC);
+//      }
+
+//      for (int jj = 0; jj < u8_numGrps; ++jj) {
+//        uint16_t u16_grpStart;
+//        EEPROM.get(u16_slvLibStrt + 4 + jj * 2, u16_grpStart);
+
+//        Serial.print(u16_slvLibStrt + 4 + jj * 2); Serial.print(": ");
+//        Serial.println(u16_grpStart);
+//      }
+
       //Serial.println("\tGroup\tRegister\tID\tType");
       for (int jj = 0; jj < u8_numGrps; ++jj) {
-        uint16_t u16_grpStrt = word(EEPROM.read(u16_slvLibStrt + 4 + jj * 2), EEPROM.read(u16_slvLibStrt + 5 + jj * 2));
-        uint8_t u8_grpVals = EEPROM.read(u16_grpStrt);
+        uint16_t u16_grpStrt;  // = word(EEPROM.read(u16_slvLibStrt + 4 + jj * 2), EEPROM.read(u16_slvLibStrt + 5 + jj * 2));
+        uint8_t u8_grpVals;  // = EEPROM.read(u16_grpStrt);
+
+        EEPROM.get(u16_slvLibStrt + 4 + jj * 2, u16_grpStrt);
+        EEPROM.get(u16_grpStrt, u8_grpVals);
 
         if (jj < u8_numGrps - 1) {
-          uint8_t u8_grpLens = EEPROM.read(u16_grpStrt + 4) - 5;
-          uint16_t u16_grpReg = word(EEPROM.read(u16_grpStrt + 2), EEPROM.read(u16_grpStrt + 3));
+          uint8_t u8_grpLens;  // = EEPROM.read(u16_grpStrt + 4) - 5;
+          uint16_t u16_grpReg;  // = word(EEPROM.read(u16_grpStrt + 2), EEPROM.read(u16_grpStrt + 3));
+
+          EEPROM.get(u16_grpStrt + 4, u8_grpLens);
+          u8_grpLens -= 5;
+          EEPROM.get(u16_grpStrt + 2, u16_grpReg);
 
           Serial.print("\t"); Serial.print("Group ");  Serial.print(jj + 1); Serial.print(" has "); Serial.print(u8_grpVals, DEC);
           Serial.print(" values over "); Serial.print(EEPROM.read(u16_grpStrt + 1), DEC); Serial.println(" registers");
           Serial.println("\tReg\tID\tType\t|\tReg\tID\tType\t|\tReg\tID\tType");
           Serial.println("\t------------------------------------------------------------------------------------");
 
-          int8_t s8_type = static_cast<int8_t>(EEPROM.read(u16_grpStrt + u8_grpLens + 5));
-          uint16_t u16_mult = FloatConvEnumNumRegs(Int8_2_FloatConv(s8_type));
-          uint8_t u8_dataTypeCmp = EEPROM.read(u16_grpStrt + u8_grpLens + 6);
+          int8_t s8_type;  // = static_cast<int8_t>(EEPROM.read(u16_grpStrt + u8_grpLens + 5));
+          uint8_t u8_dataTypeCmp; // = EEPROM.read(u16_grpStrt + u8_grpLens + 6);
           uint8_t u8_cmpCntr = 2;
-
           uint8_t u8_valCntr = 0;
 
+          EEPROM.get(u16_grpStrt + u8_grpLens + 5, s8_type);
+          EEPROM.get(u16_grpStrt + u8_grpLens + 6, u8_dataTypeCmp);
+
+          uint16_t u16_mult = FloatConvEnumNumRegs(Int8_2_FloatConv(s8_type));
+
+//          Serial.println("DEBUGGING:");
+//          for (int kk = 0; kk < u8_grpLens + 10; ++kk) {
+//            Serial.print(u16_grpStrt + 5 + kk); Serial.print(": ");
+//            Serial.println(EEPROM.read(u16_grpStrt + 5 + kk), DEC);
+//          }
+
           for (int kk = 0; kk < u8_grpLens; ++kk) {
-            int8_t s8_id = static_cast<int8_t>(EEPROM.read(u16_grpStrt + 5 + kk));
+            int8_t s8_id;  // = static_cast<int8_t>(EEPROM.read(u16_grpStrt + 5 + kk));
+            EEPROM.get(u16_grpStrt + 5 + kk, s8_id);
 
             if (s8_id < 0) {
               u16_grpReg -= s8_id;
             }
             else {
               while (u8_valCntr + 1 > u8_dataTypeCmp) {
-                u8_dataTypeCmp = EEPROM.read(u16_grpStrt + u8_grpLens + 6 + u8_cmpCntr);
-                s8_type = static_cast<int8_t>(EEPROM.read(u16_grpStrt + u8_grpLens + 5 + u8_cmpCntr));
+                //u8_dataTypeCmp = EEPROM.read(u16_grpStrt + u8_grpLens + 6 + u8_cmpCntr);
+                //s8_type = static_cast<int8_t>(EEPROM.read(u16_grpStrt + u8_grpLens + 5 + u8_cmpCntr));
+                EEPROM.get(u16_grpStrt + u8_grpLens + 6 + u8_cmpCntr, u8_dataTypeCmp);
+                EEPROM.get(u16_grpStrt + u8_grpLens + 5 + u8_cmpCntr, s8_type);
+
                 u16_mult = FloatConvEnumNumRegs(Int8_2_FloatConv(s8_type));
                 u8_cmpCntr += 2;
               }
@@ -417,7 +487,9 @@ void read_eeprom(char c_menuChar) {
           }
 
           for (int kk = 0; kk < u8_grpVals; ++kk) {
-            int8_t s8_id = static_cast<int8_t>(EEPROM.read(u16_grpStrt + 1 + kk));
+            int8_t s8_id;  // = static_cast<int8_t>(EEPROM.read(u16_grpStrt + 1 + kk));
+            EEPROM.get(u16_grpStrt + 1 + kk, s8_id);
+
             if (ii == 10 || ii == 11) {  // if chw or stm kep
               Serial.print("\t"); Serial.println(cpa_idTypeCS[s8_id]);  // Serial.print(s8_id, DEC);
             }

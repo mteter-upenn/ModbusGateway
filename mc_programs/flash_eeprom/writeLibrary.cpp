@@ -7,7 +7,7 @@
 
 uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
 
-  File jsonFile = SD.open("/maplist5.jsn");
+  File jsonFile = SD.open("/maplist.jsn");
 
   // try using while loop, show_free_mem and delete[] to find minimum space needed
   //   (use switch case to select best size)
@@ -15,7 +15,7 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   StaticJsonBuffer<u16_test> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(jsonFile);
   WriteMaps cls_writeMaps;
-  Serial.print("SIZE: "); Serial.println(jsonBuffer.size());
+  Serial.print("JSON SIZE: "); Serial.println(jsonBuffer.size());
 
   return cls_writeMaps.writeMaps(root);
 

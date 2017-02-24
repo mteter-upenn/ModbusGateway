@@ -90,8 +90,8 @@ void setup() {
   EEPROM.put(4, u16_slvStrt);
   EEPROM.put(6, u16_mapStrt);
 
-  Serial.print("baud: "); Serial.print(g_u32_baudrate);
-  Serial.print(" at address "); Serial.println(g_u16_ipBlkStart + 23);
+//  Serial.print("baud: "); Serial.print(g_u32_baudrate);
+//  Serial.print(" at address "); Serial.println(g_u16_ipBlkStart + 23);
 //  u32_time = millis();
 }
 
