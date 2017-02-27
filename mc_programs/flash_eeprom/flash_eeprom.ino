@@ -275,11 +275,12 @@ void loop() {
     if (!b_quit) {
       // all meter information
       for (int ii = 0; ii < u16_numSlvs; ++ii) {
+        SlaveArray slvStruct;
         bool b_slaveDataGood = false;
-        char ca_slvType[50];
-        char ca_slvIp[50];
-        char ca_slvId[50];
-        char ca_slvVid[50];
+//        char ca_slvType[50];
+//        char ca_slvIp[50];
+//        char ca_slvId[50];
+//        char ca_slvVid[50];
         char ca_checkQues[300] = "Is this the correct information for the meter? (y/n)\nType: ";
 
         Serial.print(F("Meta data for meter "));
@@ -290,10 +291,10 @@ void loop() {
         while (!b_slaveDataGood) {
           // meter type
           term_func(F("Please insert meter type (X.X.X)."), mtrtypFunc, F(""),
-            F("Please insert meter type (X.X.X)."), ca_slvType, "12.1.0", false, 0, false);
+            F("Please insert meter type (X.X.X)."), ca_input, "12.1.0", false, 0, false);
           //storeIP(ca_input, u16_slvStrt + 9 * (i + 1) - 8, 3);
-          strcat(ca_checkQues, ca_slvType);
-          
+          strcat(ca_checkQues, ca_input);
+          storeIPRam(ca_input, slvStruct.u8a_mtrType, 3);
 
           // 485 or mb/tcp
           b_resp = term_func(F("Is this meter connected via IP? (y/n)"), verFunc, F("This meter is connected via IP."),
@@ -302,30 +303,34 @@ void loop() {
           if (b_resp) {
             // modbus ip
             term_func(F("Please insert the meter's IP."), ipFunc, F(""),
-              F("Please insert the meter's IP."), ca_slvIp, "0.0.0.0", false, 0, false);
+              F("Please insert the meter's IP."), ca_input, "0.0.0.0", false, 0, false);
             strcat(ca_checkQues, "\nIP: ");
-            strcat(ca_checkQues, ca_slvIp);
+            strcat(ca_checkQues, ca_input);
+            storeIPRam(ca_input, slvStruct.u8a_ip, 4);
           }
           else {
             // default ip of 0.0.0.0
-            strcpy_P(ca_slvIp, PSTR("0.0.0.0"));
+            strcpy_P(ca_input, PSTR("0.0.0.0"));
             strcat(ca_checkQues, "\nConnected via 485");
+            storeIPRam(ca_input, slvStruct.u8a_ip, 4);
           }
           //storeIP(ca_input, u16_slvStrt + 9 * (i + 1) - 5, 4);
 
           // actual modbus id
           term_func(F("Please insert actual Modbus id. [0-255]"), mbidFunc, F(""),
-            F("Please insert actual Modbus id. [0-255]"), ca_slvId, "1", false, 0, false);
+            F("Please insert actual Modbus id. [0-255]"), ca_input, "1", false, 0, false);
           //storeByte(ca_input, u16_slvStrt + 9 * (i + 1) - 1);
           strcat(ca_checkQues, "\nActual Id: ");
-          strcat(ca_checkQues, ca_slvId);
+          strcat(ca_checkQues, ca_input);
+          storeByteRam(ca_input, slvStruct.u8_id);
 
           // virtual modbus id
           term_func(F("Please insert virtual Modbus id. [0-255]"), mbidFunc, F(""),
-            F("Please insert virtual Modbus id. [0-255]"), ca_slvVid, "1", false, 0, false);
+            F("Please insert virtual Modbus id. [0-255]"), ca_input, "1", false, 0, false);
           //storeByte(ca_input, u16_slvStrt + 9 * (i + 1));
           strcat(ca_checkQues, "\nVirtual Id: ");
-          strcat(ca_checkQues, ca_slvVid);
+          strcat(ca_checkQues, ca_input);
+          storeByteRam(ca_input, slvStruct.u8_vid);
 
 
           b_slaveDataGood = term_func(F(ca_checkQues), verFunc, F("Great!"),
@@ -333,10 +338,11 @@ void loop() {
         }
 
         // once broken free from loop, store all the given data
-        storeIP(ca_slvType, u16_slvStrt + 9 * (ii + 1) - 8, 3);
-        storeIP(ca_slvIp, u16_slvStrt + 9 * (ii + 1) - 5, 4);
-        storeByte(ca_slvId, u16_slvStrt + 9 * (ii + 1) - 1);
-        storeByte(ca_slvVid, u16_slvStrt + 9 * (ii + 1));
+//        storeIP(ca_slvType, u16_slvStrt + 9 * (ii + 1) - 8, 3);
+//        storeIP(ca_slvIp, u16_slvStrt + 9 * (ii + 1) - 5, 4);
+//        storeByte(ca_slvId, u16_slvStrt + 9 * (ii + 1) - 1);
+//        storeByte(ca_slvVid, u16_slvStrt + 9 * (ii + 1));
+        storeSlaveStruct(slvStruct, u16_slvStrt + 9 * ii + 1);
       }
     }
   }

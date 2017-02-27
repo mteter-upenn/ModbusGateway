@@ -265,7 +265,7 @@ void setup() {
   uint16_t u16a_socketSizes[8] = { 4, 4, 1, 1, 1, 1, 2, 2 };  // sizes are >>10 eg 4->4096
   uint16_t u16a_socketPorts[8] = { 80, 80, 502, 502, 502 ,502, 0, 0 };
 
-  Ethernet52.begin(g_u8a_mac, g_ip_ip.u8a_ip, g_ip_gateway, g_ip_gateway, g_ip_subnet, 8, u16a_socketSizes, u16a_socketPorts);
+  Ethernet52.begin(g_u8a_mac, g_ip_ip, g_ip_gateway, g_ip_gateway, g_ip_subnet, 8, u16a_socketSizes, u16a_socketPorts);
 
   // initialize sockets
   g_es_webServ.begin();

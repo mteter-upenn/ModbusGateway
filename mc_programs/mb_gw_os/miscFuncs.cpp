@@ -35,17 +35,19 @@ void resetArd() {
 }
 
 void setConstants() {
-  for (int ii = 0; ii < 30; ++ii){
+//  for (int ii = 0; ii < 30; ++ii){
 //    g_c_gwName[ii] = (char)EEPROM.read(ii + g_u16_nameBlkStart);
-    EEPROM.get(ii + g_u16_nameBlkStart, g_c_gwName[ii]);
 
-    if (g_c_gwName[ii] == 0){
-      break;
-    }
-  }
-  g_c_gwName[31] = 0;  // doublecheck to make sure string ends in null
+//    if (g_c_gwName[ii] == 0){
+//      break;
+//    }
+//  }
+  EEPROM.get(g_u16_nameBlkStart, g_gwName);
+
+//  g_c_gwName[31] = 0;  // doublecheck to make sure string ends in null
+  g_gwName.ca_name[31] = 0;
   Serial.print(F("name: "));
-  Serial.println(g_c_gwName);
+  Serial.println(g_gwName.ca_name);
   
 //  g_b_recordData = EEPROM.read(g_u16_nameBlkStart + 32);  // whether or not to record data
 //  g_u8_maxRecordSlaves = EEPROM.read(g_u16_nameBlkStart + 33) > 20 ? 5 : EEPROM.read(g_u16_nameBlkStart + 33);  // max slaves to record
@@ -53,19 +55,28 @@ void setConstants() {
   EEPROM.get(g_u16_nameBlkStart + 33, g_u8_maxRecordSlaves);
   g_u8_maxRecordSlaves = g_u8_maxRecordSlaves > 20 ? 5 : g_u8_maxRecordSlaves;  // max slaves to record
 
-  for (int ii = 0; ii < 6; ++ii){
-    g_u8a_mac[ii] = EEPROM.read(g_u16_ipBlkStart + ii);
-  }
+//  for (int ii = 0; ii < 6; ++ii){
+//    g_u8a_mac[ii] = EEPROM.read(g_u16_ipBlkStart + ii);
+//  }
+  EEPROM.get(g_u16_ipBlkStart, g_u8a_mac);
 
+//  IpArray ipUnion;
+//  EEPROM.get(g_u16_ipBlkStart + 6, ipUnion);
+//  g_ip_ip = ipUnion.u8a_ip;
   EEPROM.get(g_u16_ipBlkStart + 6, g_ip_ip);
+  EEPROM.get(g_u16_ipBlkStart + 10, g_ip_subnet);
+  EEPROM.get(g_u16_ipBlkStart + 14, g_ip_gateway);
+  EEPROM.get(g_u16_ipBlkStart + 19, g_ip_ntpIp);
 
   for (int ii = 0; ii < 4; ++ii){
 //    g_ip_ip[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 6);
-    g_ip_subnet[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 10);
-    g_ip_gateway[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 14);
+    Serial.print(g_ip_ip.u8a_ip[ii], DEC); Serial.print(".");
+//    g_ip_subnet[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 10);
+//    g_ip_gateway[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 14);
 
-    g_ip_ntpIp[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 19);
+//    g_ip_ntpIp[ii] = EEPROM.read(ii + g_u16_ipBlkStart + 19);
   }
+  Serial.println();
 
   g_b_useNtp = EEPROM.read(g_u16_ipBlkStart + 18);
 
@@ -111,7 +122,7 @@ void writeGenSetupFile(){
 //    }
 //    webFile.print(g_c_gwName[ii]);
 //  }
-  webFile.print(g_c_gwName);
+  webFile.print(g_gwName.ca_name);
   
   webFile.print(F("</name><rd>"));
   if (g_b_recordData) {
@@ -125,16 +136,16 @@ void writeGenSetupFile(){
   webFile.print(g_u8_maxRecordSlaves, DEC);
 
   webFile.print(F("</mxslvs><mac>"));
-  if (g_u8a_mac[0] < 16) {
+  if (g_u8a_mac.u8a_mac[0] < 16) {
     webFile.print('0');
   }
-  webFile.print(g_u8a_mac[0], HEX);
+  webFile.print(g_u8a_mac.u8a_mac[0], HEX);
   for (int ii = 1; ii < 6; ++ii){
     webFile.print(F(":"));
-    if (g_u8a_mac[ii] < 16){
+    if (g_u8a_mac.u8a_mac[ii] < 16){
       webFile.print('0');
     }
-    webFile.print(g_u8a_mac[ii], HEX);
+    webFile.print(g_u8a_mac.u8a_mac[ii], HEX);
   }
   
   webFile.print(F("</mac><ip>"));
@@ -145,17 +156,17 @@ void writeGenSetupFile(){
   }
   
   webFile.print(F("</ip><sm>"));
-  webFile.print(g_ip_subnet[0], DEC);
+  webFile.print(g_ip_subnet.u8a_ip[0], DEC);
   for (int ii = 1; ii < 4; ++ii) {
     webFile.print(F("."));
-    webFile.print(g_ip_subnet[ii], DEC);
+    webFile.print(g_ip_subnet.u8a_ip[ii], DEC);
   }
   
   webFile.print(F("</sm><gw>"));
-  webFile.print(g_ip_gateway[0], DEC);
+  webFile.print(g_ip_gateway.u8a_ip[0], DEC);
   for (int ii = 1; ii < 4; ++ii) {
     webFile.print(F("."));
-    webFile.print(g_ip_gateway[ii], DEC);
+    webFile.print(g_ip_gateway.u8a_ip[ii], DEC);
   }
   
   webFile.print(F("</gw><ntp>"));
@@ -167,10 +178,10 @@ void writeGenSetupFile(){
   }
 
   webFile.print(F("</ntp><nip>"));
-  webFile.print(g_ip_ntpIp[0], DEC);
+  webFile.print(g_ip_ntpIp.u8a_ip[0], DEC);
   for (int ii = 1; ii < 4; ++ii) {
     webFile.print(F("."));
-    webFile.print(g_ip_ntpIp[ii], DEC);
+    webFile.print(g_ip_ntpIp.u8a_ip[ii], DEC);
   }
 
   webFile.print(F("</nip><br>"));

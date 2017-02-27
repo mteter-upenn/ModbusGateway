@@ -49,8 +49,8 @@ void handle_data() {
       uint8_t u8_slvMbFunc;
       uint8_t u8_slvMtrType;
       uint8_t u8_mbStatus = 1;
-      uint8_t u8a_mbResp[gk_u16_mbArraySize];
-      uint16_t u16_mbRespLen;
+//      uint8_t u8a_mbResp[gk_u16_mbArraySize];
+//      uint16_t u16_mbRespLen;
 
       for (int ii = 0; ii < u8_numSlvsRcd; ++ii) {
         u8_slvMtrType = SlaveData[ii].u8a_mtrType[0];

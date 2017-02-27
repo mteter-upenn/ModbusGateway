@@ -85,7 +85,7 @@ void sendBadSD(EthernetClient52 &ec_client){
   ec_client.write(ca_respBadSD);
 
   strcpy_P(ca_respBadSD, PSTR("<!DOCTYPE html><html><head><title>"));// 35 with \0
-  strcat(ca_respBadSD, g_c_gwName);
+  strcat(ca_respBadSD, g_gwName.ca_name);
   strcat_P(ca_respBadSD, PSTR("</title></head><body><p>The SD card for this gateway did not initialize properly.  "));// 84 with \0
   strcat_P(ca_respBadSD, PSTR("Website functionality is not available at this time.</p></body></html>"));// 71 with \0
 

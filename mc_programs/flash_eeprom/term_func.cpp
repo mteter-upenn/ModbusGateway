@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "globals.h"
 #include <EEPROM.h>
-#include "ModbusStructs.h"
+//#include "ModbusStructs.h"
 
 bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), const __FlashStringHelper *fshp_trueStr,
   const __FlashStringHelper *fshp_falseStr, char *cp_input, const char *kcp_defaultInput, bool b_verify, uint8_t u8_repeatMsgTimeout, 
@@ -623,6 +623,31 @@ void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts) {
   }
 }
 
+
+void storeIPRam(char *cp_input, uint8_t *u8p_ipStrt, uint8_t u8_elmts) {
+  if (b_quit || u8_elmts < 3 || u8_elmts > 4) {
+    return;
+  }
+  else {
+    uint16_t jj, kk;
+    uint8_t u8_dum;
+
+    kk = 0;
+    for (jj = 0; jj < u8_elmts; ++jj) {
+      u8_dum = 0;
+
+      while ((cp_input[kk] != '.') && (cp_input[kk] != 0)) {
+        u8_dum = u8_dum * 10 + (cp_input[kk] - '0');
+        ++kk;
+      }
+
+      ++kk;
+      u8p_ipStrt[jj] = u8_dum;
+    }
+  }
+}
+
+
 bool storeBool(char *cp_input, uint16_t u16_regStrt) {
   if (b_quit) {
     return false;
@@ -660,6 +685,27 @@ uint8_t storeByte(char *cp_input, uint16_t u16_regStrt) {
     return u8_dum;
   }
 }
+
+uint8_t storeByteRam(char *cp_input, uint8_t &u8p_byte) {
+
+  if (b_quit) {
+    return 0;
+  }
+  else {
+    uint16_t kk = 0;
+    uint8_t u8_dum = 0;
+
+    while (cp_input[kk] != 0) {
+      u8_dum = u8_dum * 10 + (cp_input[kk] - '0');
+      ++kk;
+    }
+
+    u8p_byte = u8_dum;
+
+    return u8_dum;
+  }
+}
+
 
 uint16_t storeShortInt(char *cp_input, uint16_t u16_regStrt) {
   if (b_quit) {
@@ -701,4 +747,14 @@ uint32_t storeInt(char *cp_input, uint16_t u16_regStrt) {
 
     return u32_dum;
   }
+}
+
+bool storeSlaveStruct(SlaveArray slvStruct, uint16_t u16_regStrt) {
+  if (b_quit) {
+    return false;
+  }
+  else {
+    EEPROM.put(u16_regStrt, slvStruct);
+  }
+  return true;
 }

@@ -37,18 +37,21 @@
 #define gk_s16_battDeadLed  23                     // dead battery - currently no way to determine
 #define gk_u8_mb485Ctrl     6                     // when set low, transmit mode, high is receive mode
 
+
 // ethernet info
-extern uint8_t g_u8a_mac[6];                      // enter mac, will need some sort of generator for this
-extern IpArray g_ip_ip;                       // this value will be overwritten by ip stored in eeprom
-extern IPAddress g_ip_subnet;                    // this value will be overwritten by ip stored in eeprom
-extern IPAddress g_ip_gateway;                    // this value will be overwritten by ip stored in eeprom
+//extern uint8_t g_u8a_mac[6];                      // enter mac, will need some sort of generator for this
+extern MacArray g_u8a_mac;                      // enter mac, will need some sort of generator for this
+//extern IPAddress g_ip_ip;                       // this value will be overwritten by ip stored in eeprom
+extern IpArray g_ip_ip;
+extern IpArray g_ip_subnet;                    // this value will be overwritten by ip stored in eeprom
+extern IpArray g_ip_gateway;                    // this value will be overwritten by ip stored in eeprom
 //bool g_b_reset = false;                                    // bReset
 
 extern bool g_b_useNtp;                                 // bNTPserv turns ntp on/off (overwritten by eeprom)
-extern IPAddress g_ip_ntpIp;                      // this value will be overwritten by ip stored in eeprom
+extern IpArray g_ip_ntpIp;                      // this value will be overwritten by ip stored in eeprom
 
 // gateway info
-extern char g_c_gwName[32];                               // meter_nm name of gateway
+extern NameArray g_gwName;  //[32];                               // meter_nm name of gateway
 // addresses for components stored in eeprom (see flash_eeprom.ino for more details)
 extern uint16_t g_u16_nameBlkStart;  // nm_strt
 extern uint16_t g_u16_ipBlkStart;  // ip_strt

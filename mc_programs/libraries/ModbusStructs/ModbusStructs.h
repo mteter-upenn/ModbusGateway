@@ -51,6 +51,7 @@ struct MacArray {
 
 struct IpArray {
   uint8_t u8a_ip[4];
+//  uint32_t u32_ip;  // ONLY USE IF UNION
 };
 
 struct TypeArray {

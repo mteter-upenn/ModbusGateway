@@ -33,17 +33,20 @@
 //const uint8_t gk_u8_mb485Ctrl   =  6;                     // when set low, transmit mode, high is receive mode
 
 // ethernet info
-uint8_t g_u8a_mac[6] = {0};                      // enter mac, will need some sort of generator for this
-//IpArray g_ip_ip(0, 0, 0, 0);                       // this value will be overwritten by ip stored in eeprom
-IPAddress g_ip_subnet(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
-IPAddress g_ip_gateway(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
+//uint8_t g_u8a_mac[6] = {0};                      // enter mac, will need some sort of generator for this
+MacArray g_u8a_mac;                      // enter mac, will need some sort of generator for this
+//IPAddress g_ip_ip(0, 0, 0, 0);                       // this value will be overwritten by ip stored in eeprom
+IpArray g_ip_ip;
+IpArray g_ip_subnet;  //(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
+IpArray g_ip_gateway;  //(0, 0, 0, 0);                    // this value will be overwritten by ip stored in eeprom
 //bool g_b_reset = false;                                    // bReset
 
 bool g_b_useNtp = false;                                 // bNTPserv turns ntp on/off (overwritten by eeprom)
-IPAddress g_ip_ntpIp(0, 0, 0, 0);                      // this value will be overwritten by ip stored in eeprom
+IpArray g_ip_ntpIp;  //(0, 0, 0, 0);                      // this value will be overwritten by ip stored in eeprom
 
 // gateway info
-char g_c_gwName[32] = {0};                               // meter_nm name of gateway
+//char g_ca_gwName[32] = {0};                               // meter_nm name of gateway
+NameArray g_gwName;
 // addresses for components stored in eeprom (see flash_eeprom.ino for more details)
 uint16_t g_u16_nameBlkStart;  // nm_strt
 uint16_t g_u16_ipBlkStart;  // ip_strt
