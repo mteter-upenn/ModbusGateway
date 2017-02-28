@@ -18,6 +18,7 @@ int getFreeMemory();
 void resetArd(void);
 
 void setConstants(void);
+void writeRestartFile();
 void writeGenSetupFile(void);
 void writeMtrSetupFile(void);
 

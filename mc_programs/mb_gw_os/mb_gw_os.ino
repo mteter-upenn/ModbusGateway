@@ -141,7 +141,7 @@
 //const int gk_i_maxNumElecVals(32);
 //const int gk_i_maxNumStmChwVals(10);
 
-//// test vars
+//// test varsvoid writeRestartFile()
 //#if DISP_TIMING_DEBUG
 //uint32_t doneHttp, gotClient, doneFind, doneSend, time1, time2;
 //#endif
@@ -168,7 +168,7 @@
 //void liveXML(uint8_t u8_socket, uint8_t u8_selSlv, float fa_data[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]);
 // tertiaryHTTP - POST related functions
 //void sendPostResp(EthernetClient52 &ec_client);
-//char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_postLen);
+//char* preprocPost(EthernetClient52 &ec_clientvoid writeRestartFile(), char *cp_httpHdr, uint16_t &u16_postLen);
 //void getPostSetupData(EthernetClient52 &ec_client);
 // handleModbus
 //uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen, bool b_byteSwap);
@@ -257,6 +257,7 @@ void setup() {
     g_b_sdInit = true;
 
     // generate xml files for web server  SHOULD THIS FIRE AT THE TOP EVERY TIME?  probably, won't know changes if flash_eeprom used
+    writeRestartFile();
     writeGenSetupFile();
     writeMtrSetupFile();
   }
