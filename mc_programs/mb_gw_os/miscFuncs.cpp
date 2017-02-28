@@ -121,10 +121,10 @@ void writeRestartFile() {
   SD.remove("restart.xml");
   webFile = SD.open("restart.xml", FILE_WRITE);
   webFile.print(F("<?xml version = \"1.0\" ?><setup><ip>"));
-  webFile.print(g_ip_ip[0], DEC);
+  webFile.print(g_ip_ip.u8a_ip[0], DEC);
   for (int ii = 1; ii < 4; ++ii){
     webFile.print(F("."));
-    webFile.print(g_ip_ip[ii], DEC);
+    webFile.print(g_ip_ip.u8a_ip[ii], DEC);
   }
 
   webFile.print(F("</ip></setup>"));

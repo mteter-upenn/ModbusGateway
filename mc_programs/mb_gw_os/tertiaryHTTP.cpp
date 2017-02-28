@@ -512,6 +512,6 @@ void getPostSetupData(EthernetClient52 &ec_client) {
 
   digitalWrite(gk_s16_epWriteLed, LOW);
   setConstants();
-  writeGenSetupFile();
+  writeRestartFile();
 }
 
