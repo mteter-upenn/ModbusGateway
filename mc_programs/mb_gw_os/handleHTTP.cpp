@@ -131,7 +131,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
       }
       else if (strcmp(ca_fileReq, "/restart.xml") == 0) {
         u16_fileReq = FileReq_RESTART;
-        strcpy(ca_fileReq, "/gensetup.xml");
+//        strcpy(ca_fileReq, "/gensetup.xml");
       }
       else {  // could not find xml file
         u16_fileReq = FileReq_404;
@@ -328,7 +328,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           break;
         case FileReq_RESTART:
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
-          sendXmlEnd(g_eca_socks[u8_socket], XmlFile::GENERAL);
+//          sendXmlEnd(g_eca_socks[u8_socket], XmlFile::GENERAL);
 
           g_eca_socks[u8_socket].stop();  // gently close socket for client
           resetArd();  // this will restart the gateway
