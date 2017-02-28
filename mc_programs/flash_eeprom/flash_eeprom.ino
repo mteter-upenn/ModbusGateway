@@ -254,7 +254,10 @@ void loop() {
     }
     else {
       // default number of meters? (change if outside of bounds)
-      if (EEPROM.read(u16_nmStrt + 33) > 20) {
+      uint8_t u8_listedNumSlvs;
+
+      EEPROM.get(u16_nmStrt + 33, u8_listedNumSlvs);
+      if (u8_listedNumSlvs > 20) {
         strcpy_P(ca_input, PSTR("5"));
 
         storeByte(ca_input, u16_nmStrt + 33);
