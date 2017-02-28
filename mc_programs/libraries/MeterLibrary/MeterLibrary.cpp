@@ -798,7 +798,7 @@ void SlaveDataClass::init() {
   EEPROM.get(m_u16_slaveDataStart, m_u8_numSlaves);
 	
 	for (int ii = 0; ii < m_u8_numSlaves; ++ii) {
-    EEPROM.get(9 * ii + m_u16_slaveDataStart, m_slaveList[ii]);
+    EEPROM.get(9 * ii + m_u16_slaveDataStart + 1, m_slaveList[ii]);
 
 //		m_slaveList[ii].u8_id = EEPROM.read(9 * ii + 8 + m_u16_slaveDataStart);
 //		m_slaveList[ii].u8_vid = EEPROM.read(9 * ii + 9 + m_u16_slaveDataStart);
