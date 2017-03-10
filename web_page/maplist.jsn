@@ -1007,10 +1007,10 @@
         },
         {
           "group":2,
-          "values":4,
-          "registers":12,
+          "values":3,
+          "registers":6,
           "start":5002,
-          "order":[1,2,3,-4,4],
+          "order":[1,2,3],
           "types":[
             {
               "type":"FLOAT_WS",
@@ -1020,10 +1020,10 @@
         },
         {
           "group":3,
-          "values":8,
-          "registers":72,
-          "start":6000,
-          "order":[14,15,16,17,-56,22,23,24,25],
+          "values":1,
+          "registers":2,
+          "start":5012,
+          "order":[4],
           "types":[
             {
               "type":"FLOAT_WS",
@@ -1033,10 +1033,10 @@
         },
         {
           "group":4,
-          "values":8,
-          "registers":94,
-          "start":6128,
-          "order":[18,19,20,21,-76,26,27,28,-2,29],
+          "values":4,
+          "registers":8,
+          "start":6000,
+          "order":[14,15,16,17],
           "types":[
             {
               "type":"FLOAT_WS",
@@ -1046,6 +1046,58 @@
         },
         {
           "group":5,
+          "values":4,
+          "registers":8,
+          "start":6064,
+          "order":[22,23,24,25],
+          "types":[
+            {
+              "type":"FLOAT_WS",
+              "valid_to":127
+            }
+          ]
+        },
+        {
+          "group":6,
+          "values":4,
+          "registers":8,
+          "start":6128,
+          "order":[18,19,20,21],
+          "types":[
+            {
+              "type":"FLOAT_WS",
+              "valid_to":127
+            }
+          ]
+        },
+        {
+          "group":7,
+          "values":3,
+          "registers":6,
+          "start":6212,
+          "order":[26,27,28],
+          "types":[
+            {
+              "type":"FLOAT_WS",
+              "valid_to":127
+            }
+          ]
+        },
+        {
+          "group":8,
+          "values":1,
+          "registers":2,
+          "start":6220,
+          "order":[29],
+          "types":[
+            {
+              "type":"FLOAT_WS",
+              "valid_to":127
+            }
+          ]
+        },
+        {
+          "group":9,
           "values":3,
           "registers":10,
           "start":7008,
@@ -1058,7 +1110,7 @@
           ]
         },
         {
-          "group":6,
+          "group":10,
           "values":1,
           "order":[5]
         }
