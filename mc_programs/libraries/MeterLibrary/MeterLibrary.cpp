@@ -272,9 +272,11 @@ bool MeterLibGroups::setGroup(uint8_t u8_grpInd) {  // u8_grpInd is 1 based!!
       EEPROM.get(m_u16_grpStrtInd, m_u8_numGrpVals);
 			if (u8_grpInd < m_u8_numGrps) {
         uint8_t u8_grpLenVals;
+        uint8_t u8_dum;
 
 //				m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
-        EEPROM.get(m_u16_grpStrtInd + 1, m_u16_numRegs);
+        EEPROM.get(m_u16_grpStrtInd + 1, u8_dum);
+        m_u16_numRegs = u8_dum;
 //				m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
         EEPROM.get(m_u16_grpStrtInd + 2, m_u16_reqReg);
         EEPROM.get(m_u16_grpStrtInd + 4, u8_grpLenVals);
@@ -618,7 +620,7 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
 //  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 4, lowByte(u16_mapStart));
   EEPROM.put(m_u16_mapIndexStart + u8_map * 4 + 3, u16_mapStart);
 //  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 5, u8_map + 1);
-  EEPROM.put(m_u16_mapIndexStart + u8_map * 4 + 5, u8_map + 1);
+  EEPROM.put(m_u16_mapIndexStart + u8_map * 4 + 5, static_cast<uint8_t>(u8_map + 1));
 //  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 6, u8_mbFunc);
   EEPROM.put(m_u16_mapIndexStart + u8_map * 4 + 6, u8_mbFunc);
 
@@ -654,7 +656,7 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
 
 //    EEPROM.write(++u16_mapIdx, highByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen * 2 + 5));
 //    EEPROM.write(++u16_mapIdx, lowByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen * 2 + 5));
-    EEPROM.put(u16_mapIdx, u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen * 2 + 5);
+    EEPROM.put(u16_mapIdx, static_cast<uint16_t>(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen * 2 + 5));
     u16_mapIdx += 2;
 //    EEPROM.write(++u16_mapIdx, highByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
 //    EEPROM.write(++u16_mapIdx, lowByte(u16_prevGrpStrt + mapGrpArr[ii].u8_orderLen + mapGrpArr[ii].u8_typeLen + 5 + 1));
@@ -664,7 +666,7 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
   // blocks
   for (int ii = 0; ii < u8_numBlks; ++ii) {
     Serial.print("write block: "); Serial.println(ii + 1);
-    Serial.print("blk start: "); Serial.println(u16_mapIdx + 1);
+    Serial.print("blk start: "); Serial.println(u16_mapIdx);
 
 //    EEPROM.write(++u16_mapIdx, highByte(mapBlkArr[ii].u16_start));
 //    EEPROM.write(++u16_mapIdx, lowByte(mapBlkArr[ii].u16_start));
@@ -699,17 +701,17 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
     EEPROM.put(u16_mapIdx, mapGrpArr[ii].u16_start);
     u16_mapIdx += 2;
 //    EEPROM.write(++u16_mapIdx, mapGrpArr[ii].u8_orderLen + 5);
-    EEPROM.put(u16_mapIdx, mapGrpArr[ii].u8_orderLen + 5);
+    EEPROM.put(u16_mapIdx, static_cast<uint8_t>(mapGrpArr[ii].u8_orderLen + 5));
     u16_mapIdx += 1;
 
     for (int jj = 0; jj < mapGrpArr[ii].u8_orderLen; ++jj) {
 //      EEPROM.write(++u16_mapIdx, static_cast<uint8_t>(mapGrpArr[ii].s8a_grpOrder[jj]));
-      EEPROM.put(u16_mapIdx, static_cast<uint8_t>(mapGrpArr[ii].s8a_grpOrder[jj]));
+      EEPROM.put(u16_mapIdx, mapGrpArr[ii].s8a_grpOrder[jj]);
       u16_mapIdx += 1;
     }
     for (int jj = 0; jj < mapGrpArr[ii].u8_typeLen * 2; ++jj) {
 //      EEPROM.write(++u16_mapIdx, static_cast<uint8_t>(mapGrpArr[ii].s8a_grpType[jj]));
-      EEPROM.put(u16_mapIdx, static_cast<uint8_t>(mapGrpArr[ii].s8a_grpType[jj]));
+      EEPROM.put(u16_mapIdx, mapGrpArr[ii].s8a_grpType[jj]);
       u16_mapIdx += 1;
     }
   }

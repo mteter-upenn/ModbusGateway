@@ -365,9 +365,9 @@ void read_eeprom(char c_menuChar) {
       uint8_t u8_numGrps;  // = EEPROM.read(u16_slvLibStrt + 3);
       uint16_t u16_blkStrt;  // = word(EEPROM.read(u16_slvLibStrt), EEPROM.read(u16_slvLibStrt + 1));
 
+      EEPROM.get(u16_slvLibStrt, u16_blkStrt);
       EEPROM.get(u16_slvLibStrt + 2, u8_numBlks);
       EEPROM.get(u16_slvLibStrt + 3, u8_numGrps);
-      EEPROM.get(u16_slvLibStrt, u16_blkStrt);
 
       Serial.println("\tBlock\tStart\tEnd\tType");
       for (int jj = 0; jj < u8_numBlks; ++jj) {
