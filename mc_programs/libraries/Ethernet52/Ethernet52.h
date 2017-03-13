@@ -3,12 +3,13 @@
 
 #define ACH_INSERTION
 
-#include <inttypes.h>
+//#include <inttypes.h>
+#include <Arduino.h>
 //#include "w5100.h"  // commented out by someone else
 #include "IPAddress.h"
 #include "EthernetClient52.h"
 #include "EthernetServer52.h"
-// #include "Dhcp.h"
+#include <ModbusStructs.h>
 
 #define MAX_SOCK_NUM 8  // let MAX_SOCK_NUM be the max number of sockets possible for the device
 
@@ -38,18 +39,21 @@ public:
   // Initialise the Ethernet shield to use the provided MAC address and gain the rest of the
   // configuration through DHCP.
   // Returns 0 if the DHCP configuration failed, and 1 if it succeeded
-  int begin(uint8_t *mac_address);
-  void begin(uint8_t *mac_address, IPAddress local_ip);
-  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server);
-  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway);
-  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet);
-	void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
-		uint8_t u8MaxUsedSocks);
-	void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
-		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes);
-  void begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet, 
-		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts);
-  // int maintain();
+
+//  int begin(uint8_t *mac_address);
+//  void begin(uint8_t *mac_address, IPAddress local_ip);
+//  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server);
+//  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway);
+//  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet);
+//	void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet,
+//		uint8_t u8MaxUsedSocks);
+//	void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet,
+//		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes);
+
+//  void begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet,
+//    uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts);
+  void begin(MacArray mac, IpArray local_ip, IpArray dns_server, IpArray gateway, IpArray subnet,
+    uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts);
 
 	void cleanSockets(uint16_t port);
 	

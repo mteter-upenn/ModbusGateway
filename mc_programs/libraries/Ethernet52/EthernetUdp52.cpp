@@ -119,6 +119,13 @@ int EthernetUDP52::beginPacket(IPAddress ip, uint16_t port)
   return socketStartUDP(_sock, rawIPAddress(ip), port);
 }
 
+int EthernetUDP52::beginPacket(IpArray ip, uint16_t port)
+{
+  _offset = 0;
+//  return socketStartUDP(_sock, rawIPAddress(ip), port);
+  return socketStartUDP(_sock, ip.u8a_ip, port);
+}
+
 int EthernetUDP52::endPacket()
 {
   return socketSendUDP(_sock);
@@ -249,7 +256,7 @@ uint8_t EthernetUDP52::beginMulticast(IPAddress ip, uint16_t port)
 	mac[3] = ip[1] & 0x7F;
 	mac[4] = ip[2];
 	mac[5] = ip[3];
-	W5200.writeSnDIPR(_sock, rawIPAddress(ip));   //239.255.0.1
+  W5200.writeSnDIPR(_sock, rawIPAddress(ip));   //239.255.0.1
 	W5200.writeSnDPORT(_sock, port);
 	W5200.writeSnDHAR(_sock, mac);
 	return 1;

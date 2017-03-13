@@ -41,10 +41,35 @@ const uint8_t MRFLAG_sentMsg = 0x40;
 const uint8_t MRFLAG_adjReq = 0x80;
 
 
+struct NameArray {
+  char ca_name[32];
+};
+
+struct MacArray {
+  uint8_t u8a_mac[6];
+};
+
+struct IpArray {
+  uint8_t u8a_ip[4];
+//  uint32_t u32_ip;  // ONLY USE IF UNION
+};
+
+struct TypeArray {
+  uint8_t u8a_type[3];
+};
+
+struct SlaveArray {
+  uint8_t u8a_mtrType[3];
+  uint8_t u8a_ip[4];
+  uint8_t u8_id;
+  uint8_t u8_vid;
+};
+
+
 /**
 enum class for definitions of different data types meters can return
 */
-enum class FloatConv {
+enum class FloatConv : int8_t {
   SKIP = -1,        //  -1
   FLOAT,            //   0
   UINT16,           //   1
@@ -72,7 +97,7 @@ enum class FloatConv {
 	INT64_WS,         //  73
   UINT64_WS,        //  74
   ENERGY_WS,        //  75
-  DOUBLE_WS,        //  76
+  DOUBLE_WS        //  76
 };
 
 uint16_t FloatConvEnumNumRegs(FloatConv dataType);

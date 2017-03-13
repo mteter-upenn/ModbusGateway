@@ -210,7 +210,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           //Serial.print("in data, current group: "); Serial.println(u8_curGrp, DEC);
           //Serial.print("meter type: "); Serial.println(g_u8a_slaveTypes[u8_selSlv][0], DEC);
           
-          MeterLibGroups mtrGrp(SlaveData[u8_selSlv].u8a_type[0]);
+          MeterLibGroups mtrGrp(SlaveData[u8_selSlv].u8a_mtrType[0]);
           //Serial.print("total Groups: "); Serial.println(mtrGrp.getNumGrps(), DEC);
 
           //send404(g_eca_socks[u8_socket]);

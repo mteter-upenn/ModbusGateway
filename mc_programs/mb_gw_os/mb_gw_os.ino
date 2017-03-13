@@ -204,10 +204,15 @@ void setup() {
   pinMode(gk_s16_epWriteLed, OUTPUT);
   
   // get indices from eeprom
-  g_u16_nameBlkStart = word(EEPROM.read(0), EEPROM.read(1));
-  g_u16_ipBlkStart = word(EEPROM.read(2), EEPROM.read(3));
-  g_u16_mtrBlkStart = word(EEPROM.read(4), EEPROM.read(5));
-  g_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));
+//  g_u16_nameBlkStart = word(EEPROM.read(0), EEPROM.read(1));
+//  g_u16_ipBlkStart = word(EEPROM.read(2), EEPROM.read(3));
+//  g_u16_mtrBlkStart = word(EEPROM.read(4), EEPROM.read(5));
+//  g_u16_regBlkStart = word(EEPROM.read(6), EEPROM.read(7));
+
+  EEPROM.get(0, g_u16_nameBlkStart);
+  EEPROM.get(2, g_u16_ipBlkStart);
+  EEPROM.get(4, g_u16_mtrBlkStart);
+  EEPROM.get(6, g_u16_regBlkStart);
 
   // take constants from eeprom into memory
   setConstants();

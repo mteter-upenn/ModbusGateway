@@ -39,6 +39,7 @@
 
 #include <Udp.h>
 #include "socket52.h"
+#include <ModbusStructs.h>
 
 #define UDP_TX_PACKET_MAX_SIZE 24
 
@@ -64,6 +65,7 @@ public:
   // Start building up a packet to send to the remote host specific in ip and port
   // Returns 1 if successful, 0 if there was a problem with the supplied IP address or port
   virtual int beginPacket(IPAddress ip, uint16_t port);
+  int beginPacket(IpArray ip, uint16_t port);
   // Start building up a packet to send to the remote host specific in host and port
   // Returns 1 if successful, 0 if there was a problem resolving the hostname or port
   virtual int beginPacket(const char *host, uint16_t port);

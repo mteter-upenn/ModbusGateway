@@ -14,6 +14,7 @@
 #include "miscFuncs.h"
 #include <MeterLibrary.h>
 #include <Time.h>
+#include <ModbusStructs.h>
 
 //void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length) {
 //  while (ec_client.available()) {
@@ -84,7 +85,7 @@ void sendBadSD(EthernetClient52 &ec_client){
   ec_client.write(ca_respBadSD);
 
   strcpy_P(ca_respBadSD, PSTR("<!DOCTYPE html><html><head><title>"));// 35 with \0
-  strcat(ca_respBadSD, g_c_gwName);
+  strcat(ca_respBadSD, g_gwName.ca_name);
   strcat_P(ca_respBadSD, PSTR("</title></head><body><p>The SD card for this gateway did not initialize properly.  "));// 84 with \0
   strcat_P(ca_respBadSD, PSTR("Website functionality is not available at this time.</p></body></html>"));// 71 with \0
 
@@ -309,7 +310,7 @@ void sendIP(EthernetClient52 &ec_client) {
   char ca_postResp[15];  // largest that a ip address could be in string form
 
   jj = 0;
-  u8_ipByte = g_ip_ip[0];
+  u8_ipByte = g_ip_ip.u8a_ip[0];
   for (int ii = log10(u8_ipByte); ii > -1; --ii) {
     ca_postResp[jj] = u8_ipByte / pow(10, ii) + '0';
     u8_ipByte -= (ca_postResp[jj] - '0') * pow(10, ii);
@@ -320,7 +321,7 @@ void sendIP(EthernetClient52 &ec_client) {
     ca_postResp[jj] = '.';
     jj++;
 
-    u8_ipByte = g_ip_ip[kk];
+    u8_ipByte = g_ip_ip.u8a_ip[kk];
     for (int ii = log10(u8_ipByte); ii > -1; --ii) {
       ca_postResp[jj] = u8_ipByte / pow(10, ii) + '0';
       u8_ipByte -= (ca_postResp[jj] - '0') * pow(10, ii);
@@ -407,7 +408,7 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
 
   strcat_P(ca_respXml, PSTR("<?xml version = \"1.0\" ?><inputs><has_data>true</has_data>"));
 
-  if ((SlaveData[u8_selSlv].u8a_type[0] == 11) || (SlaveData[u8_selSlv].u8a_type[0] == 12)){
+  if ((SlaveData[u8_selSlv].u8a_mtrType[0] == 11) || (SlaveData[u8_selSlv].u8a_mtrType[0] == 12)){
     for (int ii = 0; ii < gk_i_maxNumStmChwVals; ++ii) { 
       if (ii < 3) strcat_P(ca_respXml, PSTR("<flow>"));
       else if (ii < 4) strcat_P(ca_respXml, PSTR("<tmp1>"));

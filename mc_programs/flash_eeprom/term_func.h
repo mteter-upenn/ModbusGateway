@@ -2,6 +2,7 @@
 #define TERM_FUNC_H
 
 #include <Arduino.h>
+#include <ModbusStructs.h>
 
 bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __FlashStringHelper *,
   const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
@@ -24,9 +25,12 @@ bool mtrtypFunc(char *cp_input);
 bool mbidFunc(char *cp_input);
 void storeName(char *cp_input, uint16_t u16_regStrt);
 void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts);
+void storeIPRam(char *cp_input, uint8_t *u8p_ipStrt, uint8_t u8_elmts);
 bool storeBool(char *cp_input, uint16_t u16_regStrt);
 uint8_t storeByte(char *cp_input, uint16_t u16_regStrt);
-uint16_t storeInt(char *cp_input, uint16_t u16_regStrt);
-uint32_t storeMedInt(char *cp_input, uint16_t u16_regStrt);
+uint8_t storeByteRam(char *cp_input, uint8_t &u8p_byte);
+uint16_t storeShortInt(char *cp_input, uint16_t u16_regStrt);
+uint32_t storeInt(char *cp_input, uint16_t u16_regStrt);
+bool storeSlaveStruct(SlaveArray slvStruct, uint16_t u16_regStrt);
 
 #endif // TERM_FUNC_H
