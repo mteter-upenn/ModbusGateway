@@ -19,14 +19,6 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
 
   return cls_writeMaps.writeMaps(root);
 
-  //  //
-  //  indMtrStrt -= ;
-  //  meterXX(indMtrStrt);
-  //  EEPROM.write(mtr_strt + , highByte(indMtrStrt));  //  -> 150
-  //  EEPROM.write(mtr_strt + , lowByte(indMtrStrt));
-  //  EEPROM.write(mtr_strt + , );  // meter number
-  //  EEPROM.write(mtr_strt + , );  // function
-
   /*
   * |------|-----------------------------|--------------------------------|
   * | ID:  | Collection types (elec):    | Collection types (stm/chw):    |
@@ -70,63 +62,6 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   * |  31  |   Reactive Energy, Total    |                                |
   * |  32  |   Apparent Energy, Total    |                                |
   * |------|-----------------------------|--------------------------------|
-  *
-  *
-  // Block #1 - [, , ]
-  EEPROM.write(blk_strt, highByte());
-  EEPROM.write(blk_strt + 1, lowByte());
-  EEPROM.write(blk_strt + 2, highByte());
-  EEPROM.write(blk_strt + 3, lowByte());
-  EEPROM.write(blk_strt + 4, );
-
-  // Block #2 - [, , ]
-  EEPROM.write(blk_strt + 5, highByte());
-  EEPROM.write(blk_strt + 6, lowByte());
-  EEPROM.write(blk_strt + 7, highByte());
-  EEPROM.write(blk_strt + 8, lowByte());
-  EEPROM.write(blk_strt + 9, );
-
-  // Block #3 - [, , ]
-  EEPROM.write(blk_strt + 10, highByte());
-  EEPROM.write(blk_strt + 11, lowByte());
-  EEPROM.write(blk_strt + 12, highByte());
-  EEPROM.write(blk_strt + 13, lowByte());
-  EEPROM.write(blk_strt + 14, );
-
-  // Block #4 - [, , ]
-  EEPROM.write(blk_strt + 15, highByte());
-  EEPROM.write(blk_strt + 16, lowByte());
-  EEPROM.write(blk_strt + 17, highByte());
-  EEPROM.write(blk_strt + 18, lowByte());
-  EEPROM.write(blk_strt + 19, );
-
-  // Block #5 - [, , ]
-  EEPROM.write(blk_strt + 20, highByte());
-  EEPROM.write(blk_strt + 21, lowByte());
-  EEPROM.write(blk_strt + 22, highByte());
-  EEPROM.write(blk_strt + 23, lowByte());
-  EEPROM.write(blk_strt + 24, );
-
-  // Block #6 - [, , ]
-  EEPROM.write(blk_strt + 25, highByte());
-  EEPROM.write(blk_strt + 26, lowByte());
-  EEPROM.write(blk_strt + 27, highByte());
-  EEPROM.write(blk_strt + 28, lowByte());
-  EEPROM.write(blk_strt + 29, );
-
-  // Block #7 - [, , ]
-  EEPROM.write(blk_strt + 30, highByte());
-  EEPROM.write(blk_strt + 31, lowByte());
-  EEPROM.write(blk_strt + 32, highByte());
-  EEPROM.write(blk_strt + 33, lowByte());
-  EEPROM.write(blk_strt + 34, );
-
-  // Group #
-  EEPROM.write(grp_strt + , );
-  EEPROM.write(grp_strt + , highByte());
-  EEPROM.write(grp_strt + , lowByte());
-  EEPROM.write(grp_strt + , );
-  EEPROM.write(grp_strt + , );
   */
 }
 

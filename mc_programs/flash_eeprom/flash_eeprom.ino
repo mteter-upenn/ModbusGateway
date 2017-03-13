@@ -18,28 +18,6 @@
 #include "term_func.h"
 #include "writeLibrary.h"
 
-//byte const FLOAT = 0x00;
-//byte const U16_to_FLOAT = 0x01;
-//byte const S16_to_FLOAT = 0x02;
-//byte const U32_to_FLOAT = 0x03;
-//byte const S32_to_FLOAT = 0x04;
-//byte const M1K_to_FLOAT = 0x05;
-//byte const M10K_to_FLOAT = 0x06;
-//byte const M20K_to_FLOAT = 0x07;
-//byte const M30K_to_FLOAT = 0x08;
-//byte const U64_to_FLOAT = 0x09;
-//byte const EGY_to_FLOAT = 0x0A;
-//byte const DBL_to_FLOAT = 0x0B;
-//byte const WORDSWAP = 0x80;
-
-//bool b_firstLoop = true;
-//bool b_quit = false;
-
-// PROTOTYPES
-//bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __FlashStringHelper *,
-//  const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
-////const __FlashStringHelper *
-
 
 void setup() {
   uint16_t u16_ipStrt, u16_nmStrt, u16_mapStrt, u16_slvStrt;
@@ -52,14 +30,12 @@ void setup() {
   pinMode(20, OUTPUT);
   digitalWrite(19, HIGH);
 
-
-
   pinMode(10, OUTPUT);
   digitalWrite(10, HIGH);
   pinMode(4, OUTPUT);
   digitalWrite(4, HIGH);
 
-  //  reset w5200 ethernet chip
+  //  reset w5200 ethernet chip, won't run without this
   pinMode(9, OUTPUT);
   digitalWrite(9, LOW);
 
@@ -76,22 +52,10 @@ void setup() {
   u16_slvStrt = u16_ipStrt + 32; // 76
   u16_mapStrt = u16_slvStrt + 181;  // 257
 
-//  EEPROM.write(0, highByte(u16_nmStrt));
-//  EEPROM.write(1, lowByte(u16_nmStrt));
-//  EEPROM.write(2, highByte(u16_ipStrt));
-//  EEPROM.write(3, lowByte(u16_ipStrt));
-//  EEPROM.write(4, highByte(u16_slvStrt));
-//  EEPROM.write(5, lowByte(u16_slvStrt));
-//  EEPROM.write(6, highByte(u16_mapStrt));
-//  EEPROM.write(7, lowByte(u16_mapStrt));
   EEPROM.put(0, u16_nmStrt);
   EEPROM.put(2, u16_ipStrt);
   EEPROM.put(4, u16_slvStrt);
   EEPROM.put(6, u16_mapStrt);
-
-//  Serial.print("baud: "); Serial.print(g_u32_baudrate);
-//  Serial.print(" at address "); Serial.println(g_u16_ipBlkStart + 23);
-//  u32_time = millis();
 }
 
 void loop() {
@@ -100,9 +64,6 @@ void loop() {
   bool b_resp;
   char ca_input[50];
   char c_menuSelect;
-
-
-
 
   // duplicate should make this global
   u16_nmStrt = 10;
@@ -279,10 +240,6 @@ void loop() {
       for (int ii = 0; ii < u16_numSlvs; ++ii) {
         SlaveArray slvStruct;
         bool b_slaveDataGood = false;
-//        char ca_slvType[50];
-//        char ca_slvIp[50];
-//        char ca_slvId[50];
-//        char ca_slvVid[50];
         char ca_checkQues[300] = "Is this the correct information for the meter? (y/n)\nType: ";
 
         Serial.print(F("Meta data for meter "));
@@ -294,7 +251,6 @@ void loop() {
           // meter type
           term_func(F("Please insert meter type (X.X.X)."), mtrtypFunc, F(""),
             F("Please insert meter type (X.X.X)."), ca_input, "12.1.0", false, 0, false);
-          //storeIP(ca_input, u16_slvStrt + 9 * (i + 1) - 8, 3);
           strcat(ca_checkQues, ca_input);
           storeIPRam(ca_input, slvStruct.u8a_mtrType, 3);
 
@@ -316,12 +272,10 @@ void loop() {
             strcat(ca_checkQues, "\nConnected via 485");
             storeIPRam(ca_input, slvStruct.u8a_ip, 4);
           }
-          //storeIP(ca_input, u16_slvStrt + 9 * (i + 1) - 5, 4);
 
           // actual modbus id
           term_func(F("Please insert actual Modbus id. [0-255]"), mbidFunc, F(""),
             F("Please insert actual Modbus id. [0-255]"), ca_input, "1", false, 0, false);
-          //storeByte(ca_input, u16_slvStrt + 9 * (i + 1) - 1);
           strcat(ca_checkQues, "\nActual Id: ");
           strcat(ca_checkQues, ca_input);
           storeByteRam(ca_input, slvStruct.u8_id);
@@ -329,7 +283,6 @@ void loop() {
           // virtual modbus id
           term_func(F("Please insert virtual Modbus id. [0-255]"), mbidFunc, F(""),
             F("Please insert virtual Modbus id. [0-255]"), ca_input, "1", false, 0, false);
-          //storeByte(ca_input, u16_slvStrt + 9 * (i + 1));
           strcat(ca_checkQues, "\nVirtual Id: ");
           strcat(ca_checkQues, ca_input);
           storeByteRam(ca_input, slvStruct.u8_vid);
@@ -340,10 +293,6 @@ void loop() {
         }
 
         // once broken free from loop, store all the given data
-//        storeIP(ca_slvType, u16_slvStrt + 9 * (ii + 1) - 8, 3);
-//        storeIP(ca_slvIp, u16_slvStrt + 9 * (ii + 1) - 5, 4);
-//        storeByte(ca_slvId, u16_slvStrt + 9 * (ii + 1) - 1);
-//        storeByte(ca_slvVid, u16_slvStrt + 9 * (ii + 1));
         storeSlaveStruct(slvStruct, u16_slvStrt + 9 * ii + 1);
       }
     }

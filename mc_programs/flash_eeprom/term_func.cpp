@@ -2,14 +2,10 @@
 #include <Arduino.h>
 #include "globals.h"
 #include <EEPROM.h>
-//#include "ModbusStructs.h"
 
 bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), const __FlashStringHelper *fshp_trueStr,
   const __FlashStringHelper *fshp_falseStr, char *cp_input, const char *kcp_defaultInput, bool b_verify, uint8_t u8_repeatMsgTimeout, 
   bool b_exitOnNeg) {
-  //const __FlashStringHelper
-
-//  uint32_t u32_time = millis();
 
   if (b_quit) {
     return false;
@@ -29,12 +25,6 @@ bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), c
 
     while (!b_ready) {
       // repeat message if desired
-//      if ((millis() - u32_time) > 2000) {
-//        u32_time = millis();
-
-//        Serial.print("ipStrt [43]: "); Serial.println(word(EEPROM.read(2), EEPROM.read(3)));
-//      }
-
       if (u8_repeatMsgTimeout) {
         u32_curTime = millis();
         if ((u32_curTime - u32_oldTime) > u8_repeatMsgTimeout * 1000) {
@@ -51,9 +41,7 @@ bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), c
           cp_input[ii] = 0;
           b_funcReady = true;
         }
-        //else {
-        //  cp_input[i] = ch;
-        //}
+
         ii++;
 
         if (b_funcReady) {
@@ -130,7 +118,6 @@ bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), c
 
 void checkDefault(char *cp_input, const char *kcp_defaultInput) {
   if (!strncmp(cp_input, "default", 7)) {
-    // cp_input == "default", replace with kcp_defaultInput
     uint8_t ii, u8_defaultLen;
     
     u8_defaultLen = min(49UL, strlen(kcp_defaultInput));
@@ -214,14 +201,7 @@ bool nmFunc(char *cp_input) {  // checks name
   }
 
   Serial.print(F("Input: "));
-//  for (ii = 0; ii < 32; ++ii) {
-//    if (cp_input[ii] == 0) {
-//      break;
-//    }
-//    Serial.print(cp_input[ii]);
-//  }
   Serial.println(cp_input);
-//  Serial.println();
 
   return true;
 }
@@ -571,15 +551,6 @@ void storeName(char cp_input[32], uint16_t u16_regStrt) {
 
     cp_input[31] = 0;
     memcpy(qc_var.ca_name, cp_input, 32);
-//    for (int ii = 0; ii < 32; ++ii) {
-//      EEPROM.write(u16_regStrt + ii, cp_input[ii]);
-
-//      if (cp_input[ii] == 0) {
-//        break;
-//      }
-//    }
-//    EEPROM.write(u16_regStrt + 31, 0);
-
     EEPROM.put(u16_regStrt, qc_var.ca_name);
   }
 }
@@ -604,7 +575,6 @@ void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts) {
       }
 
       ++kk;
-//      EEPROM.write(u16_regStrt + jj, u8_dum);
       if (u8_elmts == 3) {
         typeStruct.u8a_type[jj] = u8_dum;
       }
@@ -654,12 +624,10 @@ bool storeBool(char *cp_input, uint16_t u16_regStrt) {
   }
   else {
     if (cp_input[0] == 'y' || cp_input[0] == 'Y') {
-//      EEPROM.write(u16_regStrt, true);
       EEPROM.put(u16_regStrt, true);
       return true;
     }
     else {
-//      EEPROM.write(u16_regStrt, false);
       EEPROM.put(u16_regStrt, false);
       return false;
     }
@@ -720,8 +688,6 @@ uint16_t storeShortInt(char *cp_input, uint16_t u16_regStrt) {
       ++kk;
     }
 
-//    EEPROM.write(u16_regStrt, highByte(u16_dum));
-//    EEPROM.write(u16_regStrt + 1, lowByte(u16_dum));
     EEPROM.put(u16_regStrt, u16_dum);
     return u16_dum;
   }
@@ -740,9 +706,6 @@ uint32_t storeInt(char *cp_input, uint16_t u16_regStrt) {
      ++kk;
     }
 
-//    EEPROM.write(u16_regStrt, ((u32_dum >> 16) & 0xFF));
-//    EEPROM.write(u16_regStrt + 1, ((u32_dum >> 8) & 0xFF));
-//    EEPROM.write(u16_regStrt + 2, (u32_dum & 0xFF));
     EEPROM.put(u16_regStrt, u32_dum);
 
     return u32_dum;
