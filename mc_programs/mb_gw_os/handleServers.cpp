@@ -44,10 +44,13 @@ void handleServers() {
         if (!((u8_sockStatus == SnSR::CLOSED) || (u8_sockStatus == SnSR::LISTEN))) {  //
           //uint16_t u16_srcPort = socketSourcePort(ii);
           uint16_t u16_srcPort = g_eca_socks[ii].getSourcePort();
+          char ca_msg[40] = {0};
           //Serial.print("not closed or listen but 0x"); Serial.println(u8_sockStatus, HEX);
           g_u32a_socketTimeoutStart[ii] = millis();
 
-          Serial.print("found message on port: "); Serial.println(u16_srcPort, DEC);
+          snprintf(ca_msg, 40, "FOUND MESSAGE ON SOCKET %d, PORT %d", ii, u16_srcPort);
+          Serial.println(ca_msg);
+//          g_es_webServ.printAll(ca_msg);  // doesn't matter what server class instance is used
 
           if (u16_srcPort == 502) {
             b_allFreeSocks = false;  // this socket is being used!

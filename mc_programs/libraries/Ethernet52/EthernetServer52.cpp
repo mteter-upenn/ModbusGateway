@@ -1,7 +1,4 @@
 
-#if DEBUG_PRINT == 1
-#include "w5200.h"
-#endif
 #include "socket52.h"
 // extern "C" {
 // #include "string.h"
@@ -10,6 +7,10 @@
 #include "Ethernet52.h"
 #include "EthernetClient52.h"
 #include "EthernetServer52.h"
+
+#if DEBUG_PRINT == 1
+#include "w5200.h"
+#endif
 
 EthernetServer52::EthernetServer52(uint16_t port) {
   _port = port;
@@ -165,21 +166,34 @@ size_t EthernetServer52::write(const uint8_t *buffer, size_t size)  {
 }
 
 #if DEBUG_PRINT == 1
-void EthernetServer52::printAll() {
+void EthernetServer52::printAll(const char *k_cp_msg) {
+  if (k_cp_msg != nullptr) {
+    Serial.println(k_cp_msg);
+  }
+
+  Serial.println("sock\tport mask\tport arr\tport 5200\tcl port\t\tcl stat\t\tcl ip\t\tavail");
 	for (int sock = 0; sock < EthernetClass52::_u8MaxUsedSocks; sock++) {
 		EthernetClient52 client(sock);
 		
-		Serial.print("socket "); Serial.print(sock, DEC); Serial.print(":  ");
-		Serial.print("port mask: "); Serial.print(EthernetClass52::_server_port_mask[sock], DEC);
-		Serial.print(", port arr: "); Serial.print(EthernetClass52::_server_port[sock], DEC);
-		Serial.print(", port 5200: "); Serial.print(W5200.readSnPORT(sock), DEC);
-		Serial.print(", cl port: "); Serial.print(EthernetClass52::_client_port[sock], DEC);
-		Serial.print(", cl stat: 0x"); Serial.print(client.status(), HEX);
-		
-		if (client.status() == SnSR::ESTABLISHED || client.status() == SnSR::CLOSE_WAIT) {
-			Serial.print(", avail: "); Serial.print(client.available(), DEC);
-		}
-		Serial.println();
+    Serial.print(sock, DEC); Serial.print("\t");
+    Serial.print(EthernetClass52::_server_port_mask[sock], DEC); Serial.print("\t\t");
+    Serial.print(EthernetClass52::_server_port[sock], DEC); Serial.print("\t\t");
+    Serial.print(W5200.readSnPORT(sock), DEC); Serial.print("\t\t");
+    Serial.print(EthernetClass52::_client_port[sock], DEC); Serial.print("\t\t");
+    Serial.print("0x"); Serial.print(client.status(), HEX); Serial.print("\t\t");
+
+    if (client.status() == SnSR::ESTABLISHED || client.status() == SnSR::CLOSE_WAIT) {
+      uint8_t u8a_ip[4] = {0};
+
+      client.getRemoteIP(u8a_ip);
+      Serial.print(u8a_ip[0], DEC);
+      for (int ii = 1; ii < 4; ++ii) {
+        Serial.print("."); Serial.print(u8a_ip[ii]);
+      }
+      Serial.print("\t"); Serial.print(client.available(), DEC);
+    }
+
+    Serial.println();
 	}
 }
 #endif
