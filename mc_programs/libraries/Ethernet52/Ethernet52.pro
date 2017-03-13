@@ -5,7 +5,8 @@
 TEMPLATE = lib
 TARGET = Ethernet52
 INCLUDEPATH = /home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/cores/teensy3 \
-    /home/fresep/Arduino/libraries/ModbusStructs
+    /home/fresep/Arduino/libraries/ModbusStructs \
+    /home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/libraries/SPI
 
 
 # Input

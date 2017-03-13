@@ -6,7 +6,6 @@
 
 bool term_func(const __FlashStringHelper *, bool(*argFunc)(char*), const __FlashStringHelper *,
   const __FlashStringHelper *, char *, const char *, bool, uint8_t, bool);
-//const __FlashStringHelper *
 
 void checkDefault(char *cp_input, const char *kcp_defaultInput);
 bool checkQuit(char *cp_input);

@@ -3,9 +3,7 @@
 
 #define ACH_INSERTION
 
-//#include <inttypes.h>
 #include <Arduino.h>
-//#include "w5100.h"  // commented out by someone else
 #include "IPAddress.h"
 #include "EthernetClient52.h"
 #include "EthernetServer52.h"
@@ -15,15 +13,6 @@
 
 class EthernetClass52 {
 private:
-	union {  // ugly way of avoiding a friend class designation in IPAddress.h, trying to keep this library possible 
-					 //   without modifications to generic libraries (could always make IPAddress52 lib)
-		uint8_t bytes[4]; // IPv4 address
-		uint32_t dword;
-	} _ethAddress;
-	
-  // IPAddress _dnsServerAddress;
-  // DhcpClass* _dhcp;
-	
 	static uint8_t _state[MAX_SOCK_NUM];
   static uint16_t _server_port[MAX_SOCK_NUM];
   static uint16_t _server_port_mask[MAX_SOCK_NUM];
@@ -40,18 +29,6 @@ public:
   // configuration through DHCP.
   // Returns 0 if the DHCP configuration failed, and 1 if it succeeded
 
-//  int begin(uint8_t *mac_address);
-//  void begin(uint8_t *mac_address, IPAddress local_ip);
-//  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server);
-//  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway);
-//  void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet);
-//	void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet,
-//		uint8_t u8MaxUsedSocks);
-//	void begin(uint8_t *mac_address, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet,
-//		uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes);
-
-//  void begin(uint8_t *mac, IPAddress local_ip, IPAddress dns_server, IPAddress gateway, IPAddress subnet,
-//    uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts);
   void begin(MacArray mac, IpArray local_ip, IpArray dns_server, IpArray gateway, IpArray subnet,
     uint8_t u8MaxUsedSocks, uint16_t* u16pSocketSizes, uint16_t* u16pSocketPorts);
 
@@ -60,8 +37,6 @@ public:
   IPAddress localIP();
   IPAddress subnetMask();
   IPAddress gatewayIP();
-  // IPAddress dnsServerIP();
-
 	
   friend class EthernetClient52;
   friend class EthernetServer52;

@@ -40,26 +40,16 @@ static void read_data(uint8_t s, uint16_t src, volatile uint8_t *dst, uint16_t l
 void socketPortRand(uint16_t n) {
 	n &= 0x3FFF;
 	local_port ^= n;
-	//Serial.printf("socketPortRand %d, srcport=%d\n", n, local_port);
 }
 
 uint8_t socketBegin(uint8_t protocol, uint16_t port) {
 	uint8_t s, status[MAX_SOCK_NUM];
 	
-	// EthernetClass52::_server_port[sock] = 0;  // don't know which socket we'll pick, and once we 
-	//   do, we'll set it to an actual port number anyways
-	
-	//Serial.printf("W5000socket begin, protocol=%d, port=%d\n", protocol, port);
 	SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
 	// look at all the hardware sockets, use any that are closed (unused)
 	for (s=0; s < EthernetClass52::_u8MaxUsedSocks; s++) {
 		status[s] = W5200.readSnSR(s);
 		if (status[s] == SnSR::CLOSED) goto makesocket;
-		// try going to begin with sock parameter after check for closed, otherwise wait to try and 
-		//   force close
-		// if (status[s] == SnSR::CLOSED) {
-			// return socketBegin(protocol, port, s);
-		// }
 	}
 	//Serial.printf("W5000socket step2\n");
 	// as a last resort, forcibly close any already closing
@@ -69,15 +59,6 @@ uint8_t socketBegin(uint8_t protocol, uint16_t port) {
 		if (stat == SnSR::TIME_WAIT) goto closemakesocket;
 		if (stat == SnSR::FIN_WAIT) goto closemakesocket;
 		if (stat == SnSR::CLOSING) goto closemakesocket;
-		
-		// switch (stat) {
-			// case SnSR::LAST_ACK:
-			// case SnSR::TIME_WAIT:
-			// case SnSR::FIN_WAIT:
-			// case SnSR::CLOSING:
-			  // return socketBegin(protocol, port, s);
-				// break;
-		// }
 	}
 #if 0
 	Serial.printf("W5000socket step3\n");
@@ -98,7 +79,6 @@ closemakesocket:
 	W5200.execCmdSn(s, Sock_CLOSE);
 makesocket:
 	//Serial.printf("W5000socket %d\n", s);
-	// EthernetServer::server_port[s] = 0;
 	delayMicroseconds(250); // TODO: is this needed??
 	W5200.writeSnMR(s, protocol);
 	W5200.writeSnIR(s, 0xFF);

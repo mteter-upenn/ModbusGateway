@@ -1,8 +1,5 @@
 
 #include "socket52.h"
-// extern "C" {
-// #include "string.h"
-// }
 
 #include "Ethernet52.h"
 #include "EthernetClient52.h"
@@ -106,7 +103,6 @@ EthernetClient52 EthernetServer52::available() {
 				 // ACH - added
 				// See if we have identified this one before
 				uint16_t u16_rmtPort = socketRemotePort(sock);
-				// client._dstport = client.getRemotePort();
 				
 				if (EthernetClass52::_client_port[sock] == 0 ) {  // if _clien_port[] is 0, then we haven't looked at this client yet
 					EthernetClass52::_client_port[sock] = u16_rmtPort;

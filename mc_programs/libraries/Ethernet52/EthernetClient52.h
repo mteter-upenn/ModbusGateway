@@ -32,7 +32,7 @@ public:
 	virtual bool operator==(const bool value) { return bool() == value; }
   virtual bool operator!=(const bool value) { return bool() != value; }
   virtual bool operator==(const EthernetClient52&);
-  virtual bool operator!=(const EthernetClient52& rhs) { return !this->operator==(rhs); };
+  virtual bool operator!=(const EthernetClient52& rhs) { return !this->operator==(rhs); }
 	
   uint8_t getSocketNumber() const { return _sock; }
 	bool setSocket(uint8_t u8_sock);

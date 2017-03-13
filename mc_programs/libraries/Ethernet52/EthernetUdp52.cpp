@@ -31,7 +31,6 @@
 #include "Ethernet52.h"
 #include "Udp.h"
 #include <EthernetUdp52.h>
-// #include "Dns52.h"
 
 /* Constructor */
 // EthernetUDP52::EthernetUDP52() : _sock(MAX_SOCK_NUM) {}
@@ -47,27 +46,6 @@ uint8_t EthernetUDP52::begin(uint16_t port) {
 	_port = port;
 	_remaining = 0;
 	return 1;
-	
-	
-  // if (_sock != MAX_SOCK_NUM)
-    // return 0;
-
-  // for (int i = 0; i < EthernetClass52::_u8MaxUsedSocks; i++) {
-    // uint8_t s = socketStatus(i);
-    // if (s == SnSR::CLOSED || s == SnSR::FIN_WAIT) {
-      // _sock = i;
-      // break;
-    // }
-  // }
-
-  // if (_sock == MAX_SOCK_NUM)
-    // return 0;
-
-  // _port = port;
-  // _remaining = 0;
-  // socket(_sock, SnMR::UDP, _port, 0);
-
-  // return 1;
 }
 
 /* return number of bytes available in the current packet,
@@ -84,33 +62,12 @@ void EthernetUDP52::stop()
 		EthernetClass52::_server_port[_sock] = 0;
 		_sock = MAX_SOCK_NUM;
 	}
-	
-	
-  // if (_sock == MAX_SOCK_NUM)
-    // return;
-
-  // close(_sock);
-
-  // EthernetClass52::_server_port[_sock] = 0;
-  // _sock = MAX_SOCK_NUM;
 }
 
 int EthernetUDP52::beginPacket(const char *host, uint16_t port)
 {
 	
 	return 0;
-  // // Look up the host first
-  // int ret = 0;
-  // DNSClient52 dns;
-  // IPAddress remote_addr;
-
-  // dns.begin(Ethernet52.dnsServerIP());
-  // ret = dns.getHostByName(host, remote_addr);
-  // if (ret == 1) {
-    // return beginPacket(remote_addr, port);
-  // } else {
-    // return ret;
-  // }
 }
 
 int EthernetUDP52::beginPacket(IPAddress ip, uint16_t port)
@@ -122,7 +79,6 @@ int EthernetUDP52::beginPacket(IPAddress ip, uint16_t port)
 int EthernetUDP52::beginPacket(IpArray ip, uint16_t port)
 {
   _offset = 0;
-//  return socketStartUDP(_sock, rawIPAddress(ip), port);
   return socketStartUDP(_sock, ip.u8a_ip, port);
 }
 

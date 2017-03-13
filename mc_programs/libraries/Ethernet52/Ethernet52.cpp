@@ -3,8 +3,6 @@
 #include "EthernetServer52.h"
 #include "socket52.h"
 
-// #include "Dhcp.h"
-
 
 // XXX: don't make assumptions about the value of MAX_SOCK_NUM.
 // MJT: unsure if {0} will compile correctly
@@ -123,16 +121,10 @@ void EthernetClass52::begin(MacArray mac, IpArray local_ip, IpArray dns_server, 
 	W5200.setRetransmissionCount(3);
 	
 
-//  _ethAddress.dword = (uint32_t)local_ip;
-//  _ethAddress.dword = local_ip.u32_ip;
-//  W5200.setIPAddress(_ethAddress.bytes);
   W5200.setIPAddress(local_ip.u8a_ip);
-//	_ethAddress.dword = (uint32_t)gateway;
   W5200.setGatewayIp(gateway.u8a_ip);
-//	_ethAddress.dword = (uint32_t)subnet;
   W5200.setSubnetMask(subnet.u8a_ip);
   SPI.endTransaction();
-  // _dnsServerAddress = dns_server;
 }
 
 
@@ -195,31 +187,33 @@ void EthernetClass52::cleanSockets(uint16_t port) {
 
 
 IPAddress EthernetClass52::localIP() {
+  IpArray ipStruct;
+
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-  W5200.getIPAddress(_ethAddress.bytes);  // ret.raw_address()
+  W5200.getIPAddress(ipStruct.u8a_ip);  // ret.raw_address()
   SPI.endTransaction();
 
-	return IPAddress(_ethAddress.bytes);
+  return IPAddress(ipStruct.u8a_ip);
 }
 
 IPAddress EthernetClass52::subnetMask() {
+  IpArray ipStruct;
+
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-  W5200.getSubnetMask(_ethAddress.bytes);
+  W5200.getIPAddress(ipStruct.u8a_ip);  // ret.raw_address()
   SPI.endTransaction();
 	
-	return IPAddress(_ethAddress.bytes);
+  return IPAddress(ipStruct.u8a_ip);
 }
 
 IPAddress EthernetClass52::gatewayIP() {
+  IpArray ipStruct;
+
   SPI.beginTransaction(SPI_ETHERNET_SETTINGS);
-  W5200.getGatewayIp(_ethAddress.bytes);
+  W5200.getIPAddress(ipStruct.u8a_ip);  // ret.raw_address()
   SPI.endTransaction();
 	
-	return IPAddress(_ethAddress.bytes);
+  return IPAddress(ipStruct.u8a_ip);
 }
-
-// IPAddress EthernetClass52::dnsServerIP() {
-  // return _dnsServerAddress;
-// }
 
 EthernetClass52 Ethernet52;

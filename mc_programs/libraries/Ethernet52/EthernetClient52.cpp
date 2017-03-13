@@ -10,7 +10,6 @@ extern "C" {
 #include "Ethernet52.h"
 #include "EthernetClient52.h"
 #include "EthernetServer52.h"
-// #include "Dns52.h"
 
 uint16_t EthernetClient52::_srcport = 1024;
 
