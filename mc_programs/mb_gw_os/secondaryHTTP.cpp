@@ -33,11 +33,11 @@
 
 
 // converts first line of http request to the file requested- overwrites char array, BE CAREFUL
-void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]) {
+void convertToFileName(char ca_fileReq[REQUEST_LINE_SIZE]) {
   uint16_t u16_strStart(0);
-  char ca_dummy[gk_u16_requestLineSize];
+  char ca_dummy[REQUEST_LINE_SIZE];
 
-  for (int ii = 0; ii < gk_u16_requestLineSize; ++ii) {
+  for (int ii = 0; ii < REQUEST_LINE_SIZE; ++ii) {
     if (ca_fileReq[ii] == 32) {
       u16_strStart = ii + 1;
       break;
@@ -45,7 +45,7 @@ void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]) {
   }
 
 
-  for (int ii = u16_strStart; ii < gk_u16_requestLineSize; ++ii) {
+  for (int ii = u16_strStart; ii < REQUEST_LINE_SIZE; ++ii) {
     switch (ca_fileReq[ii]) {
     case 32:  // space
     case 38:  // &
@@ -100,7 +100,7 @@ void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileTyp
 
   if (streamFile) {
     uint32_t u32_fileSize;                                   // size of file being sent over tcp
-    char ca_streamBuf[gk_u16_respBuffSize];                       // buffer for moving data between sd card and ethernet
+    char ca_streamBuf[RESPONSE_BUFFER_SIZE];                       // buffer for moving data between sd card and ethernet
 
     u32_fileSize = streamFile.size();
 
@@ -145,15 +145,15 @@ void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileTyp
 
     uint16_t u16_maxIter;                                    // number of chunks file must be split into to send via tcp
 
-    u16_maxIter = (u32_fileSize / gk_u16_respBuffSize) + 1;
+    u16_maxIter = (u32_fileSize / RESPONSE_BUFFER_SIZE) + 1;
 
     for (int ii = 0; ii < u16_maxIter; ++ii) {
       uint32_t u32_remBytes;                                 // number of bytes remaining in last chunk (wfSize Mod STRM_BUF_SZ)
       uint16_t u16_bytesToSend;                                 // size of file buffer - min(remBytes, lclBufSz)
 
-      u32_remBytes = u32_fileSize - (ii * gk_u16_respBuffSize);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
+      u32_remBytes = u32_fileSize - (ii * RESPONSE_BUFFER_SIZE);  // might be able to get rid of this as well, just use STRM_BUF_SZ, read should spit out early
 
-      u16_bytesToSend = (u32_remBytes < gk_u16_respBuffSize) ? u32_remBytes : gk_u16_respBuffSize;
+      u16_bytesToSend = (u32_remBytes < RESPONSE_BUFFER_SIZE) ? u32_remBytes : RESPONSE_BUFFER_SIZE;
       
       streamFile.read(ca_streamBuf, u16_bytesToSend);  // expect speed increase
       
@@ -176,7 +176,7 @@ void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileTyp
 
 void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLine) {
   uint16_t u16_dirNameLen;
-  const uint16_t k_u16_truncReqLineSz = gk_u16_requestLineSize - 4;
+  const uint16_t k_u16_truncReqLineSz = REQUEST_LINE_SIZE - 4;
   char ca_dirName[k_u16_truncReqLineSz];
   
   // request for folder contents looks like this:
@@ -211,7 +211,7 @@ void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLin
   File dir = SD.open(ca_dirName + 13);  // do not include "/pastdown.htm" which is 13 chars long
 
   if (dir) {
-    char ca_streamBuf[gk_u16_respBuffSize] = { 0 };                       // buffer for moving data to ethernet
+    char ca_streamBuf[RESPONSE_BUFFER_SIZE] = { 0 };                       // buffer for moving data to ethernet
 
     dir.rewindDirectory();  // resets library to top of directory
 
@@ -260,7 +260,7 @@ void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLin
       entry.close();
 
       // if remaining room is less than desired, send message 
-      if ((gk_u16_respBuffSize - strlen(ca_streamBuf)) < k_u16_minRemBytes) {  
+      if ((RESPONSE_BUFFER_SIZE - strlen(ca_streamBuf)) < k_u16_minRemBytes) {  
         ec_client.write(ca_streamBuf);
         ec_client.flush();
 
@@ -340,13 +340,13 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
   //float fa_data[k_i_maxNumElecVals];  // 32 is max number of value types that can be sent
   //int8_t s8a_dataFlags[k_i_maxNumElecVals];
   //uint8_t u8a_mbReq[12];  // can make this smaller 
-  //uint8_t u8a_mbResp[gk_u16_mbArraySize];
+  //uint8_t u8a_mbResp[MB_ARRAY_SIZE];
   //uint16_t u16_reqLen(12), u16_respLen(0);
   //uint16_t u16_numGrps;
   //uint16_t u16_reqReg, u16_numRegs;
   //uint8_t u8_mtrType, u8_mbVid, u8_mtrMbFunc;
   //uint8_t u8_mbReqStat;
-  char ca_respXml[gk_u16_respBuffSize] = {0};  // 68
+  char ca_respXml[RESPONSE_BUFFER_SIZE] = {0};  // 68
 
   //strcpy_P(ca_respXml, PSTR("HTTP/1.1 200 OK\nContent-Type: text/xml\nConnnection: close\n\n"));  // create http response
 
@@ -450,7 +450,7 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
       else if (ii < 7) strcat_P(ca_respXml, PSTR("</pres>"));
       else strcat_P(ca_respXml, PSTR("</engy>"));
 
-      if ((gk_u16_respBuffSize - strlen(ca_respXml)) < k_u16_minRemBytes) {
+      if ((RESPONSE_BUFFER_SIZE - strlen(ca_respXml)) < k_u16_minRemBytes) {
         g_eca_socks[u8_socket].write(ca_respXml);  // write line of xml response every other time (stacks 2 together)
         ca_respXml[0] = 0;  // reset respXml to 0 length so strcat starts at beginning
       }
@@ -504,7 +504,7 @@ void liveXML(uint8_t u8_socket, uint8_t u8_selSlv,float fa_data[gk_i_maxNumElecV
       else{strcat_P(ca_respXml, PSTR("</engy>"));}
 
 
-      if ((gk_u16_respBuffSize - strlen(ca_respXml)) < k_u16_minRemBytes) {
+      if ((RESPONSE_BUFFER_SIZE - strlen(ca_respXml)) < k_u16_minRemBytes) {
         g_eca_socks[u8_socket].write(ca_respXml);  // write line of xml response
         ca_respXml[0] = 0;  // reset respXml to 0 length
       }

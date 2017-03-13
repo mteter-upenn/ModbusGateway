@@ -5,7 +5,7 @@
 #include <MeterLibrary.h>
 #include <Ethernet52.h>
 
-uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], 
+uint8_t getModbus(uint8_t u8a_mbReq[MB_ARRAY_SIZE], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[MB_ARRAY_SIZE], 
   uint16_t &u16_mbRespLen, bool b_byteSwap) {
 
   uint16_t u16_reqReg, u16_numRegs, u16_adjReqReg(0), u16_adjNumRegs(0);
@@ -204,8 +204,8 @@ uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, 
 
 
 void handle_modbus(bool b_idleHttp) {
-  uint8_t u8a_mbReq[gk_u16_mbArraySize] = {0};
-  uint8_t u8a_mbResp[gk_u16_mbArraySize];
+  uint8_t u8a_mbReq[MB_ARRAY_SIZE] = {0};
+  uint8_t u8a_mbResp[MB_ARRAY_SIZE];
   uint16_t u16_lenRead;
   uint16_t u16_givenLen;
   uint16_t u16_mbRespLen = 0;
@@ -222,7 +222,7 @@ void handle_modbus(bool b_idleHttp) {
     while (ec_client.connected() && ((millis() - u32_mbTcpConnStart) < k_u32_mbTcpTimeout)) {  // check to see if client is connected and hasn't to'd
       //      ec_client.getRemoteIP(rip); // get client IP
       if (ec_client.available()) {
-        u16_lenRead = ec_client.read(u8a_mbReq, gk_u16_mbArraySize);
+        u16_lenRead = ec_client.read(u8a_mbReq, MB_ARRAY_SIZE);
         u32_mbReqStart = millis();
 
 				// if client hasn't read 6 bytes, then there is a huge problem here
@@ -233,14 +233,14 @@ void handle_modbus(bool b_idleHttp) {
 					u16_givenLen = word(u8a_mbReq[4], u8a_mbReq[5]) + 6;
 				}
 
-        if ((u16_lenRead > u16_givenLen) || (u16_givenLen > gk_u16_mbArraySize)) {
+        if ((u16_lenRead > u16_givenLen) || (u16_givenLen > MB_ARRAY_SIZE)) {
           ec_client.stop();               // grabbed too much, just exit without worrying.  It  shouldn't happen, any other 
           Ethernet52.cleanSockets(502);   //   connection will have dift sockets or incoming packet larger than array (this 
           return;                         //   should not happen, modbus/tcp deals with pretty small stuff overall)
         }
 
         while (u16_lenRead < u16_givenLen) {  // make sure to grab the full packet
-          u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, gk_u16_mbArraySize - u16_lenRead);
+          u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, MB_ARRAY_SIZE - u16_lenRead);
 
           if ((millis() - u32_mbReqStart) > k_u32_mbReqTimeout) {  // 10 ms might be too quick, but not really sure
             ec_client.stop();  // could not get full message, exit

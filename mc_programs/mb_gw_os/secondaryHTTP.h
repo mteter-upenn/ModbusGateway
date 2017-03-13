@@ -5,7 +5,7 @@
 #include <Ethernet52.h>
 #include "mb_names.h"
 
-void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]);
+void convertToFileName(char ca_fileReq[REQUEST_LINE_SIZE]);
 void send404(EthernetClient52 &ec_client);
 void sendBadSD(EthernetClient52 &ec_client);
 void sendWebFile(EthernetClient52 &ec_client, const char* ccp_fileName, FileType en_fileType = FileType::NONE, bool b_addFileLength = true);

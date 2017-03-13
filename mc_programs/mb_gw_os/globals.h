@@ -8,40 +8,34 @@
 
 #define DISP_TIMING_DEBUG 0                            // debug flag that will print out delta times for web page interface
 
-#define gk_u16_requestLineSize 40 // extern const uint16_t                      // g_REQ_BUF_SZ buffer size to capture beginning of http request
-#define gk_u16_requestBuffSize 1500 // extern const uint16_t                    // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of
+#define REQUEST_LINE_SIZE 40 // extern const uint16_t                      // g_REQ_BUF_SZ buffer size to capture beginning of http request
+#define REQUEST_BUFFER_SIZE 1500 // extern const uint16_t                    // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of
                                                        //   message, the rest of the array may loop around if the http request is large enough
-#define gk_u16_postBuffSize ((gk_u16_requestBuffSize - 1 - 1030 - 50))  // POST_BUF_SZ currently 419
+#define POST_BUFFER_SIZE ((REQUEST_BUFFER_SIZE - 1 - 1030 - 50))  // POST_BUF_SZ currently 419
 
 // FIND ANOTHER WAY TO TEST FOR SMALL POST BUFFER SIZE
-//#if gk_u16_postBuffSize < 20                                   // make sure post buffer has enough room to play with, 20 bytes sounds good for min
-//#error "not enough room in array for POST messages"
-//#endif
+#if POST_BUFFER_SIZE < 20                                   // make sure post buffer has enough room to play with, 20 bytes sounds good for min
+#error "not enough room in array for POST messages"
+#endif
 
-#define gk_u16_mbArraySize 264                    // MB_ARR_SIZE array size for modbus/tcp rx/tx buffers - limited by modbus standards
+#define MB_ARRAY_SIZE 264                    // MB_ARR_SIZE array size for modbus/tcp rx/tx buffers - limited by modbus standards
 
-#define gk_u16_respBuffSize 1400              // RESP_BUF_SZ array size for buffer between sd card and ethernet
+#define RESPONSE_BUFFER_SIZE 1400              // RESP_BUF_SZ array size for buffer between sd card and ethernet
                                                        //     keep short of 1500 to make room for headers
-#define gk_u8_modbusSerialHardware 3           // MODBUS_SERIAL use hardware serial 3
-
-//// reset necessaries
-//#define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
-//#define CPU_RESTART_VAL 0x5FA0004
-//#define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL);
+#define MB_SERIAL_HARDWARE_PORT 3           // MODBUS_SERIAL use hardware serial 3
 
 // pin ids
-#define gk_s16_sdFailLed    21                     // sd card unavailable
-#define gk_s16_sdWriteLed   20                     // currently writing to sd card
-#define gk_s16_epWriteLed   19                     // currently writing to eeprom
-#define gk_s16_rtcFailLed   22                     // no rtc set
-#define gk_s16_battDeadLed  23                     // dead battery - currently no way to determine
-#define gk_u8_mb485Ctrl     6                     // when set low, transmit mode, high is receive mode
+#define SD_FAIL_LED_PIN    21                     // sd card unavailable
+#define SD_WRITE_LED_PIN   20                     // currently writing to sd card
+#define EEPROM_WRITE_LEN_PIN   19                     // currently writing to eeprom
+#define RTC_FAIL_LED_PIN   22                     // no rtc set
+#define BATT_DEAD_LED_PIN  23                     // dead battery - currently no way to determine
+#define MB_485_CTRL_PIN     6                     // when set low, transmit mode, high is receive mode
 
 
 // ethernet info
 //extern uint8_t g_u8a_mac[6];                      // enter mac, will need some sort of generator for this
 extern MacArray g_u8a_mac;                      // enter mac, will need some sort of generator for this
-//extern IPAddress g_ip_ip;                       // this value will be overwritten by ip stored in eeprom
 extern IpArray g_ip_ip;
 extern IpArray g_ip_subnet;                    // this value will be overwritten by ip stored in eeprom
 extern IpArray g_ip_gateway;                    // this value will be overwritten by ip stored in eeprom
@@ -65,18 +59,6 @@ extern uint8_t g_u8_parity;                                  // 0: None, 1: Odd,
 extern uint8_t g_u8_stopBits;                                // 1 or 2 stop bits
 extern uint16_t g_u16_timeout;                               // modbus timeout
 
-// slave info
-// REMOVE BELOW!
-//uint8_t g_u8_numSlaves;                                // number of modbus slaves attached to gateway
-//uint8_t g_u8a_slaveIds[20];  // slv_devs                                // array of modbus device ids (meters can share these!)
-//uint8_t g_u8a_slaveVids[20];    // slv_vids                              // array of modbus virtual ids (these should be unique!) they can be the same as devs
-//uint8_t g_u8a_slaveIps[20][4];  // slv_ips                              // array of slave ips
-//uint8_t g_u8a_slaveTypes[20][3]; // slv_typs                              // array of slave meter types
-// REMOVE ABOVE!
-//uint8_t g_u8a_selectedSlave = 1;      // selSlv                              // selected slave - used for webpage live data
-//ModbusStack mbStack;
-
-
 // rtc info
 extern bool g_b_rtcGood;  // bGoodRTC
 extern uint32_t g_u32_rtcNtpLastReset;  // for resetting rtc with ntp
@@ -92,7 +74,6 @@ extern EthernetServer52 g_es_webServ;  //serv_web                           // s
 
 extern EthernetServer52 g_es_mbServ;  // serv_mb                           // start server on modbus port
 
-//ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
 extern ModbusServer g_modbusServer;
 
 // server socket info

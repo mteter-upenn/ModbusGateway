@@ -3,9 +3,7 @@
 #include <SD.h>
 #include <EEPROM.h>
 #include <MeterLibrary.h>
-//#include <ModbusStructs.h>
 #include "secondaryData.h"
-//#include "handleModbus.h"
 #include <Time.h>
 
 void handle_data() {
@@ -28,7 +26,7 @@ void handle_data() {
     u8a_mbReq[5] = 6;     // length of modbus half
 
     ca_fileName[30] = 0;
-    digitalWrite(gk_s16_sdWriteLed, HIGH);
+    digitalWrite(SD_WRITE_LED_PIN, HIGH);
     getFileName(t_time, ca_fileName);  // gets ca_fileName and prints header (if needed) and first column (date)
 
     dataFile = SD.open(ca_fileName, FILE_WRITE);
@@ -49,7 +47,7 @@ void handle_data() {
       uint8_t u8_slvMbFunc;
       uint8_t u8_slvMtrType;
       uint8_t u8_mbStatus = 1;
-//      uint8_t u8a_mbResp[gk_u16_mbArraySize];
+//      uint8_t u8a_mbResp[MB_ARRAY_SIZE];
 //      uint16_t u16_mbRespLen;
 
       for (int ii = 0; ii < u8_numSlvsRcd; ++ii) {
@@ -134,6 +132,6 @@ void handle_data() {
       dataFile.close();
     }  // end if dataFile
 
-    digitalWrite(gk_s16_sdWriteLed, LOW);
+    digitalWrite(SD_WRITE_LED_PIN, LOW);
   }  // end if time
 }

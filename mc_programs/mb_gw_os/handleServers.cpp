@@ -18,7 +18,7 @@ void handleServers() {
   ModbusStack mbStack;
   const uint32_t k_u32_mbTcpTimeout(3000);              // timeout for device to hold on to tcp connection after modbus request
   uint8_t u8a_mbSrtBytes[8][2];
-  char ca_fileReq[8][gk_u16_requestLineSize] = { {0}, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 } };
+  char ca_fileReq[8][REQUEST_LINE_SIZE] = { {0}, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 } };
   
   
   float fa_liveXmlData[9][gk_i_maxNumElecVals];  // 

@@ -9,36 +9,33 @@
 #include "tertiaryHTTP.h"
 #include <ModbusServer.h>
 #include "miscFuncs.h"
-//#include <Time.h>
 
 
 SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv, 
-                  char ca_fileReq[gk_u16_requestLineSize]) {
-  char ca_httpReqDummy[gk_u16_requestLineSize] = { 0 };
-  //char ca_httpFirstLine[gk_u16_requestLineSize] = { 0 };
-  //char ca_httpFullReq[gk_u16_requestBuffSize] = { 0 };
+                  char ca_fileReq[REQUEST_LINE_SIZE]) {
+  char ca_httpReqDummy[REQUEST_LINE_SIZE] = { 0 };
 
   uint16_t u16_lenRead(0);
   uint32_t u32_msgRecvTime;
 
   if (g_eca_socks[u8_socket].available()) {
-    u16_lenRead = g_eca_socks[u8_socket].read((uint8_t*)ca_fileReq, gk_u16_requestLineSize - 1);
+    u16_lenRead = g_eca_socks[u8_socket].read((uint8_t*)ca_fileReq, REQUEST_LINE_SIZE - 1);
   }
 
   u32_msgRecvTime = millis();
   uint32_t k_u32_mesgTimeout(50);
-  while (u16_lenRead < (gk_u16_requestLineSize - 1)) {  // make sure enough is read
+  while (u16_lenRead < (REQUEST_LINE_SIZE - 1)) {  // make sure enough is read
     if (g_eca_socks[u8_socket].available()) {
-      u16_lenRead += g_eca_socks[u8_socket].read((uint8_t*)ca_fileReq + u16_lenRead, gk_u16_requestLineSize - u16_lenRead - 1);
+      u16_lenRead += g_eca_socks[u8_socket].read((uint8_t*)ca_fileReq + u16_lenRead, REQUEST_LINE_SIZE - u16_lenRead - 1);
     }
 
-    if ((u16_lenRead < (gk_u16_requestLineSize - 1)) && ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout)) {  // stop trying to read message after 50 ms - assume it's never coming
+    if ((u16_lenRead < (REQUEST_LINE_SIZE - 1)) && ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout)) {  // stop trying to read message after 50 ms - assume it's never coming
       //g_eca_socks[u8_socket].stop();
       //Ethernet52.cleanSockets(80);
       return SockFlag_LISTEN;
     }
   }
-  ca_fileReq[gk_u16_requestLineSize - 1] = 0;
+  ca_fileReq[REQUEST_LINE_SIZE - 1] = 0;
 
   strcpy(ca_httpReqDummy, ca_fileReq);
 
@@ -185,7 +182,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
 
 
 bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType, 
-                 const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize], ModbusStack &mbStack, 
+                 const uint8_t u8_selSlv, const char ca_fileReq[REQUEST_LINE_SIZE], ModbusStack &mbStack, 
                  uint8_t &u8_curGrp, float fa_liveXmlData[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]) {
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging

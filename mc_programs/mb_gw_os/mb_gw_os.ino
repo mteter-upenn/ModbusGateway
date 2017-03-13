@@ -42,21 +42,21 @@
 
 
 
-//const uint16_t gk_u16_requestLineSize(40);                       // g_REQ_BUF_SZ buffer size to capture beginning of http request
-//const uint16_t gk_u16_requestBuffSize(1500);                     // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of
+//const uint16_t REQUEST_LINE_SIZE(40);                       // g_REQ_BUF_SZ buffer size to capture beginning of http request
+//const uint16_t REQUEST_BUFFER_SIZE(1500);                     // g_REQ_ARR_SZ size of array for http request, first REQ_BUF_SZ bytes will always be first part of
 //                                                       //   message, the rest of the array may loop around if the http request is large enough
-//const uint16_t gk_u16_postBuffSize((gk_u16_requestBuffSize - 1 - 1030 - 50));  // POST_BUF_SZ currently 419
+//const uint16_t POST_BUFFER_SIZE((REQUEST_BUFFER_SIZE - 1 - 1030 - 50));  // POST_BUF_SZ currently 419
 
 //// FIND ANOTHER WAY TO TEST FOR SMALL POST BUFFER SIZE
-////#if gk_u16_postBuffSize < 20                                   // make sure post buffer has enough room to play with, 20 bytes sounds good for min
+////#if POST_BUFFER_SIZE < 20                                   // make sure post buffer has enough room to play with, 20 bytes sounds good for min
 ////#error "not enough room in array for POST messages"
 ////#endif
 
-//const uint16_t gk_u16_mbArraySize(264);                    // MB_ARR_SIZE array size for modbus/tcp rx/tx buffers - limited by modbus standards
+//const uint16_t MB_ARRAY_SIZE(264);                    // MB_ARR_SIZE array size for modbus/tcp rx/tx buffers - limited by modbus standards
     
-//const uint16_t gk_u16_respBuffSize(1400);              // RESP_BUF_SZ array size for buffer between sd card and ethernet
+//const uint16_t RESPONSE_BUFFER_SIZE(1400);              // RESP_BUF_SZ array size for buffer between sd card and ethernet
 //                                                       //     keep short of 1500 to make room for headers
-//const uint8_t gk_u8_modbusSerialHardware(3);           // MODBUS_SERIAL use hardware serial 3
+//const uint8_t MB_SERIAL_HARDWARE_PORT(3);           // MODBUS_SERIAL use hardware serial 3
 
 //// reset necessaries
 //#define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
@@ -64,12 +64,12 @@
 //#define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL);
 
 //// pin ids
-//const int gk_s16_sdFailLed   = 21;                     // sd card unavailable
-//const int gk_s16_sdWriteLed  = 20;                     // currently writing to sd card
-//const int gk_s16_epWriteLed  = 19;                     // currently writing to eeprom
-//const int gk_s16_rtcFailLed  = 22;                     // no rtc set
-//const int gk_s16_battDeadLed = 23;                     // dead battery - currently no way to determine
-//const uint8_t gk_u8_mb485Ctrl   =  6;                     // when set low, transmit mode, high is receive mode
+//const int SD_FAIL_LED_PIN   = 21;                     // sd card unavailable
+//const int SD_WRITE_LED_PIN  = 20;                     // currently writing to sd card
+//const int EEPROM_WRITE_LEN_PIN  = 19;                     // currently writing to eeprom
+//const int RTC_FAIL_LED_PIN  = 22;                     // no rtc set
+//const int BATT_DEAD_LED_PIN = 23;                     // dead battery - currently no way to determine
+//const uint8_t MB_485_CTRL_PIN   =  6;                     // when set low, transmit mode, high is receive mode
 
 //// ethernet info
 //uint8_t g_u8a_mac[8] = {0};                      // enter mac, will need some sort of generator for this
@@ -120,8 +120,8 @@
 
 //EthernetServer52 g_es_mbServ(502);  // serv_mb                           // start server on modbus port
 
-////ModbusMaster g_mm_node(gk_u8_mb485Ctrl, gk_u8_modbusSerialHardware); // node  // initialize node on device 1, client ip, enable pin, serial port
-//ModbusServer g_modbusServer(gk_u8_modbusSerialHardware, gk_u8_mb485Ctrl);
+////ModbusMaster g_mm_node(MB_485_CTRL_PIN, MB_SERIAL_HARDWARE_PORT); // node  // initialize node on device 1, client ip, enable pin, serial port
+//ModbusServer g_modbusServer(MB_SERIAL_HARDWARE_PORT, MB_485_CTRL_PIN);
 
 //// server socket info
 //uint32_t g_u32a_socketTimeoutStart[8] = { 0 };  // time to compare to timeout
@@ -151,12 +151,12 @@
 // handleServers
 //void handleServers();
 // handleHTTP
-//SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv, char ca_fileReq[gk_u16_requestLineSize]);
-//bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType,  const uint8_t u8_selSlv, const char ca_fileReq[gk_u16_requestLineSize], ModbusStack &mbStack, uint8_t &u8_curGrp, float fa_liveXmlData[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]);
+//SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_fileType, uint8_t &u8_selSlv, char ca_fileReq[REQUEST_LINE_SIZE]);
+//bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType,  const uint8_t u8_selSlv, const char ca_fileReq[REQUEST_LINE_SIZE], ModbusStack &mbStack, uint8_t &u8_curGrp, float fa_liveXmlData[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]);
 // secondaryHTTP - GET and general functions
 //void flushEthRx(EthernetClient52 &ec_client, uint8_t *u8p_buffer, uint16_t u16_length);
 //bool isSerial(uint8_t u8_selSlv);
-//void convertToFileName(char ca_fileReq[gk_u16_requestLineSize]);
+//void convertToFileName(char ca_fileReq[REQUEST_LINE_SIZE]);
 //void send404(EthernetClient52 &ec_client);
 //void sendBadSD(EthernetClient52 &ec_client);
 ////void sendGifHdr(EthernetClient52 &ec_client);
@@ -170,7 +170,7 @@
 //char* preprocPost(EthernetClient52 &ec_clientvoid writeRestartFile(), char *cp_httpHdr, uint16_t &u16_postLen);
 //void getPostSetupData(EthernetClient52 &ec_client);
 // handleModbus
-//uint8_t getModbus(uint8_t u8a_mbReq[gk_u16_mbArraySize], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[gk_u16_mbArraySize], uint16_t &u16_mbRespLen, bool b_byteSwap);
+//uint8_t getModbus(uint8_t u8a_mbReq[MB_ARRAY_SIZE], uint16_t u16_mbReqLen, uint8_t u8a_mbResp[MB_ARRAY_SIZE], uint16_t &u16_mbRespLen, bool b_byteSwap);
 //void handle_modbus(bool b_idleHttp);
 // secondaryModbus
 bool findRegister(uint16_t u16_reqRegister, FloatConv &fltConv, uint8_t u8_meterType);
@@ -197,11 +197,11 @@ void setup() {
   Serial.println(F("delay over"));
 
   // set output pins
-  pinMode(gk_s16_rtcFailLed, OUTPUT);
-  pinMode(gk_s16_battDeadLed, OUTPUT);
-  pinMode(gk_s16_sdFailLed, OUTPUT);
-  pinMode(gk_s16_sdWriteLed, OUTPUT);
-  pinMode(gk_s16_epWriteLed, OUTPUT);
+  pinMode(RTC_FAIL_LED_PIN, OUTPUT);
+  pinMode(BATT_DEAD_LED_PIN, OUTPUT);
+  pinMode(SD_FAIL_LED_PIN, OUTPUT);
+  pinMode(SD_WRITE_LED_PIN, OUTPUT);
+  pinMode(EEPROM_WRITE_LEN_PIN, OUTPUT);
   
   // get indices from eeprom
 //  g_u16_nameBlkStart = word(EEPROM.read(0), EEPROM.read(1));
@@ -221,7 +221,7 @@ void setup() {
   SlaveData.init();
   
 //  set serial1 pins high - needed for 485 shield to work
-  switch (gk_u8_modbusSerialHardware) {
+  switch (MB_SERIAL_HARDWARE_PORT) {
     case 2:
       digitalWrite(9, HIGH);
       digitalWrite(10, HIGH);
@@ -313,43 +313,43 @@ void setup() {
   // 450 from flashing leds
   // 1500 from pre ntp wait, 
 
-  digitalWrite(gk_s16_battDeadLed, HIGH);
+  digitalWrite(BATT_DEAD_LED_PIN, HIGH);
   delay(50);
-  digitalWrite(gk_s16_rtcFailLed, HIGH);
+  digitalWrite(RTC_FAIL_LED_PIN, HIGH);
   delay(50);
-  digitalWrite(gk_s16_battDeadLed, LOW);
-  digitalWrite(gk_s16_sdFailLed, HIGH);
+  digitalWrite(BATT_DEAD_LED_PIN, LOW);
+  digitalWrite(SD_FAIL_LED_PIN, HIGH);
   delay(50);
-  digitalWrite(gk_s16_rtcFailLed, LOW);
-  digitalWrite(gk_s16_sdWriteLed, HIGH);
+  digitalWrite(RTC_FAIL_LED_PIN, LOW);
+  digitalWrite(SD_WRITE_LED_PIN, HIGH);
   delay(50);
-  digitalWrite(gk_s16_sdFailLed, LOW);
-  digitalWrite(gk_s16_epWriteLed, HIGH);
+  digitalWrite(SD_FAIL_LED_PIN, LOW);
+  digitalWrite(EEPROM_WRITE_LEN_PIN, HIGH);
   delay(50);
-  digitalWrite(gk_s16_sdWriteLed, LOW);
+  digitalWrite(SD_WRITE_LED_PIN, LOW);
   delay(50);
-  digitalWrite(gk_s16_epWriteLed, LOW);
+  digitalWrite(EEPROM_WRITE_LEN_PIN, LOW);
 
   delay(50);
-  digitalWrite(gk_s16_battDeadLed, HIGH);
-  digitalWrite(gk_s16_rtcFailLed, HIGH);
-  digitalWrite(gk_s16_sdFailLed, HIGH);
-  digitalWrite(gk_s16_sdWriteLed, HIGH);
-  digitalWrite(gk_s16_epWriteLed, HIGH);
+  digitalWrite(BATT_DEAD_LED_PIN, HIGH);
+  digitalWrite(RTC_FAIL_LED_PIN, HIGH);
+  digitalWrite(SD_FAIL_LED_PIN, HIGH);
+  digitalWrite(SD_WRITE_LED_PIN, HIGH);
+  digitalWrite(EEPROM_WRITE_LEN_PIN, HIGH);
   delay(50);
-  digitalWrite(gk_s16_battDeadLed, LOW);
-  digitalWrite(gk_s16_rtcFailLed, LOW);
-  digitalWrite(gk_s16_sdFailLed, LOW);
-  digitalWrite(gk_s16_sdWriteLed, LOW);
-  digitalWrite(gk_s16_epWriteLed, LOW);
+  digitalWrite(BATT_DEAD_LED_PIN, LOW);
+  digitalWrite(RTC_FAIL_LED_PIN, LOW);
+  digitalWrite(SD_FAIL_LED_PIN, LOW);
+  digitalWrite(SD_WRITE_LED_PIN, LOW);
+  digitalWrite(EEPROM_WRITE_LEN_PIN, LOW);
   delay(50);
 
   if (!g_b_sdInit) {
-    digitalWrite(gk_s16_sdFailLed, HIGH);
+    digitalWrite(SD_FAIL_LED_PIN, HIGH);
   }
 
   if (!g_b_rtcGood) {
-    digitalWrite(gk_s16_rtcFailLed, HIGH);
+    digitalWrite(RTC_FAIL_LED_PIN, HIGH);
   }
 
 #if SHOW_FREE_MEM
@@ -379,7 +379,7 @@ void loop() {
       //setTime(t_localTime);  // this should not be strictly necessary, though update will be delayed
       g_b_rtcGood = true;
 
-      digitalWrite(gk_s16_rtcFailLed, LOW);
+      digitalWrite(RTC_FAIL_LED_PIN, LOW);
     }
 
     g_u32_rtcNtpLastReset = millis();  // reset timer

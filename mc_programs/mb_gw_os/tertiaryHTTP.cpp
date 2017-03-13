@@ -32,7 +32,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
 
   u16_postLen = 0;
 
-  s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, gk_u16_postBuffSize); // read out to g_POST_BUF_SZ
+  s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE); // read out to g_POST_BUF_SZ
   cp_httpHdr[s16_lenRead] = 0;
 
   while (!b_foundPtr) {
@@ -64,7 +64,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
         }
       }
 
-      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, gk_u16_postBuffSize); // read out to POST_BUF_SZ
+      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE); // read out to POST_BUF_SZ
       cp_httpHdr[s16_lenRead] = 0;
 
       if (u16_charMatches) {
@@ -93,7 +93,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
     }
 
     if ((*cp_srchPtr) == '\0') {
-      ec_client.read((uint8_t*)cp_httpHdr, gk_u16_postBuffSize); // length was cut off, load next portion into headHttp
+      ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE); // length was cut off, load next portion into headHttp
       cp_srchPtr = cp_httpHdr;  // reset postLenPtr to start of headHttp
     }
     else {
@@ -134,7 +134,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
         }
       }
 
-      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, gk_u16_postBuffSize); // read out to gk_u16_postBuffSize
+      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE); // read out to POST_BUFFER_SIZE
       cp_httpHdr[s16_lenRead] = 0;
 
       if (u16_charMatches) {
@@ -155,7 +155,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
     }  // else pointer is NULL
   }  // while haven't found pointer
 
-  cp_httpHdr[s16_lenRead + ec_client.read((uint8_t*)cp_httpHdr + s16_lenRead, gk_u16_requestBuffSize - s16_lenRead)] = 0;
+  cp_httpHdr[s16_lenRead + ec_client.read((uint8_t*)cp_httpHdr + s16_lenRead, REQUEST_BUFFER_SIZE - s16_lenRead)] = 0;
   return cp_srchPtr;
 }
 
@@ -171,16 +171,16 @@ void getPostSetupData(EthernetClient52 &ec_client) {
   uint16_t u16_postLen;                                    // length of message given in header
   uint16_t u16_totLenRead;                                     // length of message actually in headHttp
   char *cp_postMsgPtr;                                   // pointer to beginning of message
-  char cp_httpHdr[gk_u16_requestBuffSize] = { 0 };
+  char cp_httpHdr[REQUEST_BUFFER_SIZE] = { 0 };
 
-  cp_httpHdr[gk_u16_requestBuffSize - 1] = 0;
+  cp_httpHdr[REQUEST_BUFFER_SIZE - 1] = 0;
   cp_postMsgPtr = preprocPost(ec_client, cp_httpHdr, u16_postLen);     // get length of post message and place pointer at its start
 
   u16_totLenRead = strlen(cp_httpHdr) - (cp_postMsgPtr - cp_httpHdr);
 
   cp_paramStart = cp_postMsgPtr;
 
-  digitalWrite(gk_s16_epWriteLed, HIGH);
+  digitalWrite(EEPROM_WRITE_LEN_PIN, HIGH);
   Serial.println(cp_postMsgPtr);
 
   while (b_readingMsg) {
@@ -496,7 +496,7 @@ void getPostSetupData(EthernetClient52 &ec_client) {
       if (u16_totLenRead < u16_postLen) {
         if (ec_client.available()) {
           uint16_t lenRead;
-          lenRead = ec_client.read((uint8_t*)cp_httpHdr, gk_u16_requestBuffSize - 1);
+          lenRead = ec_client.read((uint8_t*)cp_httpHdr, REQUEST_BUFFER_SIZE - 1);
           cp_httpHdr[lenRead] = 0;
           u16_totLenRead += lenRead;
         }
@@ -510,7 +510,7 @@ void getPostSetupData(EthernetClient52 &ec_client) {
     }
   }  // end while
 
-  digitalWrite(gk_s16_epWriteLed, LOW);
+  digitalWrite(EEPROM_WRITE_LEN_PIN, LOW);
   setConstants();
   writeRestartFile();
 }

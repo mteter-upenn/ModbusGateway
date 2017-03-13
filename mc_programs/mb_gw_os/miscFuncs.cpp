@@ -116,7 +116,7 @@ void setConstants() {
 void writeRestartFile() {
   File webFile;
 
-  digitalWrite(gk_s16_sdWriteLed, HIGH);
+  digitalWrite(SD_WRITE_LED_PIN, HIGH);
 
   SD.remove("restart.xml");
   webFile = SD.open("restart.xml", FILE_WRITE);
@@ -130,13 +130,13 @@ void writeRestartFile() {
   webFile.print(F("</ip></setup>"));
   webFile.flush();
   webFile.close();
-  digitalWrite(gk_s16_sdWriteLed, LOW);
+  digitalWrite(SD_WRITE_LED_PIN, LOW);
 }
 
 void writeGenSetupFile(){
   File webFile;
 
-  digitalWrite(gk_s16_sdWriteLed, HIGH);
+  digitalWrite(SD_WRITE_LED_PIN, HIGH);
 
   SD.remove("gensetup.xml");
   webFile = SD.open("gensetup.xml", FILE_WRITE);
@@ -229,14 +229,14 @@ void writeGenSetupFile(){
   webFile.print(F("</to>"));
   webFile.flush();
   webFile.close();
-  digitalWrite(gk_s16_sdWriteLed, LOW);
+  digitalWrite(SD_WRITE_LED_PIN, LOW);
 }
 
 
 void writeMtrSetupFile(){
   File webFile;
 
-  digitalWrite(gk_s16_sdWriteLed, HIGH);
+  digitalWrite(SD_WRITE_LED_PIN, HIGH);
 
   SD.remove("mtrsetup.xml");
   webFile = SD.open("mtrsetup.xml", FILE_WRITE);
@@ -277,6 +277,6 @@ void writeMtrSetupFile(){
   webFile.flush();
   webFile.close();
 
-  digitalWrite(gk_s16_sdWriteLed, LOW);
+  digitalWrite(SD_WRITE_LED_PIN, LOW);
 }
 
