@@ -30,8 +30,6 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
     }
 
     if ((u16_lenRead < (REQUEST_LINE_SIZE - 1)) && ((millis() - u32_msgRecvTime) > k_u32_mesgTimeout)) {  // stop trying to read message after 50 ms - assume it's never coming
-      //g_eca_socks[u8_socket].stop();
-      //Ethernet52.cleanSockets(80);
       return SockFlag_LISTEN;
     }
   }
@@ -43,7 +41,6 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
     convertToFileName(ca_fileReq);
 
     Serial.print("GET: ");  Serial.println(ca_fileReq);
-    //Serial.println(ca_httpReqDummy);
 
     if (strstr(ca_fileReq, ".css") != nullptr) {
       s16_fileType = FileType::CSS;
@@ -95,7 +92,6 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
         u16_fileReq = FileReq_MTRSETUP;
       }
       else if (strcmp(ca_fileReq, "/data.xml") == 0) {
-        //uint8_t u8_meterType;                                     // type of meter, identifies register mapping in eeprom -> X.x.x
         char *cp_meterInd;                                     // index of 'METER' in GET request
 
         u8_selSlv = 0;
@@ -128,7 +124,6 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
       }
       else if (strcmp(ca_fileReq, "/restart.xml") == 0) {
         u16_fileReq = FileReq_RESTART;
-//        strcpy(ca_fileReq, "/gensetup.xml");
       }
       else {  // could not find xml file
         u16_fileReq = FileReq_404;
@@ -150,7 +145,6 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
 
     }
 
-    //strcpy(ca_httpReq, ca_httpFirstLine + 4);  // account for "GET "
     return SockFlag_GET;
   }
   else if (strncmp(ca_fileReq, "POST", 4) == 0) {
@@ -170,10 +164,6 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
       u16_fileReq = FileReq_404;
     }
 
-    //if (strstr(ca_httpReq, "setup.htm")) {
-    //  
-    //}
-    //strcpy(ca_httpReq, ca_httpFirstLine + 5);
     return SockFlag_POST;
   }
   return SockFlag_LISTEN;
@@ -183,7 +173,7 @@ SockFlag readHttp(const uint8_t u8_socket, FileReq &u16_fileReq, FileType &s16_f
 
 bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const FileReq u16_fileReq, const FileType s16_fileType, 
                  const uint8_t u8_selSlv, const char ca_fileReq[REQUEST_LINE_SIZE], ModbusStack &mbStack, 
-                 uint8_t &u8_curGrp, float fa_liveXmlData[gk_i_maxNumElecVals], int8_t s8a_dataFlags[gk_i_maxNumElecVals]) {
+                 uint8_t &u8_curGrp, float fa_liveXmlData[MAX_NUM_ELEC_VALS], int8_t s8a_dataFlags[MAX_NUM_ELEC_VALS]) {
 #if DISP_TIMING_DEBUG == 1
   uint32_t gotClient, doneHttp, doneFind, time1 = 0, time2 = 0, lineTime = 0;  // times for debugging
   //uint32_t totBytes = 0;
@@ -203,16 +193,8 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
           //sendXmlEnd(g_eca_socks[u8_socket], XmlFile::METER);
           break;
         case FileReq_DATA: {
-          // LIVE XML - NEED MODBUS HANDLING HERE
-          //Serial.print("in data, current group: "); Serial.println(u8_curGrp, DEC);
-          //Serial.print("meter type: "); Serial.println(g_u8a_slaveTypes[u8_selSlv][0], DEC);
-          
           MeterLibGroups mtrGrp(SlaveData[u8_selSlv].u8a_mtrType[0]);
-          //Serial.print("total Groups: "); Serial.println(mtrGrp.getNumGrps(), DEC);
 
-          //send404(g_eca_socks[u8_socket]);
-          //return true;
-          // MUST REMOVE ABOVE TO TRULY WORK
           if (u8_curGrp == 0) { // first time, must add to stack
             
             ModbusRequest mbReq;
@@ -221,10 +203,6 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
             
             mbReq = mtrGrp.getGroupRequest(SlaveData.isSlaveTcpByInd(u8_selSlv), SlaveData[u8_selSlv].u8_id, SlaveData[u8_selSlv].u8_vid);
             g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
-            //Serial.print("group "); Serial.print(u8_curGrp, DEC);
-            //Serial.print(" request unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);
-            //Serial.print("Time: "); Serial.println(millis());
-            //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
             g_u32a_socketTimeoutStart[u8_socket] = millis();  // this is reset for activity
             return false;
           }
@@ -236,11 +214,8 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
               return true;
             }
             if (mbStack[u8_mbReqInd].u8_flags & (MRFLAG_goodData | MRFLAG_timeout)) {
-              //uint8_t u8a_respBuf[256] = { 0 };
               uint16_t u16a_respData[128] = { 0 };
               uint8_t u8_numBytes(0);
-              //uint16_t u16_respLen(0);
-              //uint8_t u8a_dummyArr[2] = { 0 };
               uint8_t u8_mbStatus(0);
 
               if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_timeout) {  // protocol has timed out, no message from slave device
@@ -253,21 +228,11 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
                 u8_mbStatus = g_modbusServer.recvSerialResponse(mbStack[u8_mbReqInd], u16a_respData, u8_numBytes);
               }
 
-              //Serial.print("modbus resp for group "); Serial.print(u8_curGrp, DEC); Serial.println(":");
-              //for (int ii = 0; ii < u8_numBytes/2; ++ii) {
-              //  Serial.print(highByte(u16a_respData[ii]), DEC); Serial.print(" ");
-              //  Serial.print(lowByte(u16a_respData[ii]), DEC); Serial.print(" ");
-              //}
-              //Serial.println();
-
               mtrGrp.setGroup(u8_curGrp);
               if (!u8_mbStatus) {
-                //Serial.println("good data!");
                 mtrGrp.groupToFloat(u16a_respData, fa_liveXmlData, s8a_dataFlags);
               }
               else {
-                //Serial.print("bad data :( -> "); Serial.println(u8_mbStatus, HEX);
-                //Serial.print("Time: "); Serial.println(millis());
                 mtrGrp.groupMbErr(s8a_dataFlags);
               }
               g_u32a_socketTimeoutStart[u8_socket] = millis();
@@ -296,8 +261,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
                 mbReq = mtrGrp.getGroupRequest(SlaveData.isSlaveTcpByInd(u8_selSlv), SlaveData[u8_selSlv].u8_id, SlaveData[u8_selSlv].u8_vid);
                 g_u16a_mbReqUnqId[u8_socket] = mbStack.add(mbReq, 2);  // PRIORITY 2!!
                 Serial.print("group "); Serial.print(u8_curGrp, DEC);
-                Serial.print(" request unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);                                              //g_u16a_socketFlags[u8_socket] |= SockFlag_READ_REQ;  // don't do this (should already be set due to request for xml
-                //g_u32a_socketTimeoutStart[u8_socket] = millis();  // this is reset for activity
+                Serial.print(" request unique id: "); Serial.println(g_u16a_mbReqUnqId[u8_socket], DEC);
                 return false;
               }
               else {  // this is the last group, hooray! - no modbus message here
@@ -314,18 +278,13 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
               break;
             }
           }
-          // return false;  // return false so it knows nothing has been sent back yet
           break;
-
-
         }
         case FileReq_INFO:
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
-          //sendXmlEnd(g_eca_socks[u8_socket], XmlFile::INFO);
           break;
         case FileReq_RESTART:
           sendWebFile(g_eca_socks[u8_socket], ca_fileReq, FileType::XML, false);
-//          sendXmlEnd(g_eca_socks[u8_socket], XmlFile::GENERAL);
 
           g_eca_socks[u8_socket].stop();  // gently close socket for client
           resetArd();  // this will restart the gateway
@@ -378,7 +337,6 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
   }
   // POST http
   else if (u16_sockFlag & SockFlag_POST) {
-    //if (strstr(ca_httpReq, "setup.htm")) {
     switch (u16_fileReq) {
     case (FileReq_GENSETUP):
     case (FileReq_MTRSETUP):

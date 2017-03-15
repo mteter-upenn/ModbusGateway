@@ -1,6 +1,5 @@
 /* _____PROJECT INCLUDES_____________________________________________________ */
 #include "MeterLibrary.h"
-// #include "ModbusMaster.h"
 
 /* _____GLOBAL VARIABLES_____________________________________________________ */
 
@@ -21,8 +20,6 @@ Constructor.
 */
 MeterLibBlocks::MeterLibBlocks(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // , uint16_t u16_numRegs
 	// address for meter register library, this will never change
-//	m_u16_mtrTypeListingStart = word(EEPROM.read(6), EEPROM.read(7));
-//	m_u8_numTypes = EEPROM.read(m_u16_mtrTypeListingStart + 2);
   EEPROM.get(6, m_u16_mtrTypeListingStart);
   EEPROM.get(m_u16_mtrTypeListingStart + 2, m_u8_numTypes);
 	
@@ -32,7 +29,6 @@ MeterLibBlocks::MeterLibBlocks(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // , 
 
 int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // , uint16_t u16_numRegs
 	m_u16_reqReg = u16_reqReg;
-	// m_u16_numRegs = u16_numRegs;
 	
 	if ((u8_mtrType <= m_u8_numTypes) || (u8_mtrType != 0)) {
 		m_u8_mtrType = u8_mtrType;
@@ -43,10 +39,6 @@ int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // 
 		return 1;  // meter type not viable
 	}
 	
-//	m_u16_mtrLibStart = word(EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType - 1),
-//												EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType));
-//	m_u16_blkStrtInd = word(EEPROM.read(m_u16_mtrLibStart), EEPROM.read(m_u16_mtrLibStart + 1));
-//	m_u8_numBlks = EEPROM.read(m_u16_mtrLibStart + 2);
   EEPROM.get(m_u16_mtrTypeListingStart + 4 * u8_mtrType - 1, m_u16_mtrLibStart);
   EEPROM.get(m_u16_mtrLibStart, m_u16_blkStrtInd);
   EEPROM.get(m_u16_mtrLibStart + 2, m_u8_numBlks);
@@ -56,23 +48,12 @@ int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // 
 		uint16_t u16_blkFirstReg;
 		uint16_t u16_blkLastReg;
 	
-//		u16_blkFirstReg = word(EEPROM.read(((5 * ii) + m_u16_blkStrtInd)), EEPROM.read(((5 * ii) +
-//												m_u16_blkStrtInd + 1)));
-//		u16_blkLastReg = word(EEPROM.read(((5 * ii) + m_u16_blkStrtInd + 2)), EEPROM.read(((5 * ii) +
-//											 m_u16_blkStrtInd + 3)));
     EEPROM.get(5 * ii + m_u16_blkStrtInd, u16_blkFirstReg);
     EEPROM.get(5 * ii + m_u16_blkStrtInd + 2, u16_blkLastReg);
 
 
 		if ((m_u16_reqReg >= u16_blkFirstReg) && (m_u16_reqReg <= u16_blkLastReg)) {
-//			m_reqRegDataType = Int8_2_FloatConv(static_cast<int8_t>(EEPROM.read(((5 * ii) + m_u16_blkStrtInd + 4))));
       EEPROM.get(5 * ii + m_u16_blkStrtInd + 4, m_reqRegDataType);
-
-			// Serial.print("meter type: "); Serial.print(u8_mtrType, DEC); 
-			// Serial.print(", block number "); Serial.print(ii + 1, DEC); Serial.print(" of ");
-			// Serial.print(m_u8_numBlks, DEC); Serial.print(" goes from reg "); Serial.print(u16_blkFirstReg, DEC);
-			// Serial.print(" to "); Serial.print(u16_blkLastReg, DEC); Serial.print(" with data type ");
-			// Serial.println((int)m_reqRegDataType, DEC);
 			return 0;
 		} 
 	} // end for
@@ -80,11 +61,6 @@ int MeterLibBlocks::changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType) {  // 
 	m_u16_reqReg = 0xFFFF;
 	return 2;  // could not find register in blocks listed
 }
-
-
-// uint16_t MeterLibBlocks::getNumRegs() {
-	// return m_u16_numRegs;
-// }
 
 
 uint16_t MeterLibBlocks::getReqReg() {
@@ -111,8 +87,6 @@ void MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint8_t *const u8kp_da
 
 	u16_regMult = FloatConvEnumNumRegs(m_reqRegDataType);
 	u16_numReqVals = u16_numRegs / u16_regMult;
-	// Serial.print(u16_numReqVals, DEC); Serial.print(", "); Serial.print(u16_numRegs, DEC); Serial.print(", ");
-	// Serial.println(u16_regMult);
 	
 	for (int ii = 0, jj = 0; ii < u16_numReqVals; ++ii, jj += 2) {
 		u16_reg = m_u16_reqReg + ii * u16_regMult;
@@ -136,7 +110,6 @@ float MeterLibBlocks::convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg, uin
 	else {
 		return 0.0f;
 	}
-	// Serial.print("block convert: "); Serial.println(u16p_regs[u8_regInd], DEC);
 	return g_convertToFloat(&(u16p_regs[u8_regInd]), m_reqRegDataType);
 }
 
@@ -220,7 +193,6 @@ Constructor.
 */
 MeterLibGroups::MeterLibGroups(uint8_t u8_mtrType) {
 	// address for meter register library, this will never change
-//	m_u16_mtrTypeListingStart = word(EEPROM.read(6), EEPROM.read(7));
   EEPROM.get(6, m_u16_mtrTypeListingStart);
 		
 	setMeterType(u8_mtrType);
@@ -239,19 +211,10 @@ bool MeterLibGroups::setMeterType(uint8_t u8_mtrType) {  // 1 based
 		return false;  // meter type not viable
 	}
 	
-//	m_u16_mtrLibStart = word(EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType - 1),
-//												EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType));
   EEPROM.get(m_u16_mtrTypeListingStart + 4 * u8_mtrType - 1, m_u16_mtrLibStart);
 
 	// assume group is 1:
-//	m_u8_numGrps = EEPROM.read(m_u16_mtrLibStart + 3);
   EEPROM.get(m_u16_mtrLibStart + 3, m_u8_numGrps);
-
-	// Serial.print("CLASS meter type: "); Serial.println(u8_mtrType, DEC);
-	// Serial.print("CLASS libstart: "); Serial.println(m_u16_mtrLibStart, DEC);
-	// Serial.print("CLASS num grps: "); Serial.println(m_u8_numGrps, DEC);
-	
-//	m_u8_func = EEPROM.read(m_u16_mtrTypeListingStart + 4 * u8_mtrType + 2);
   EEPROM.get(m_u16_mtrTypeListingStart + 4 * u8_mtrType + 2, m_u8_func);
 	
 	return setGroup(1);
@@ -263,21 +226,17 @@ bool MeterLibGroups::setGroup(uint8_t u8_grpInd) {  // u8_grpInd is 1 based!!
 	if (m_u8_mtrType != 0) {
 		if (u8_grpInd <= m_u8_numGrps) {
 			m_u8_curGrp = u8_grpInd;
-//			m_u16_grpStrtInd = word(EEPROM.read(m_u16_mtrLibStart + 4 + m_u8_curGrp * 2 - 2),
-//													 EEPROM.read(m_u16_mtrLibStart + 5 + m_u8_curGrp * 2 - 2));
+
       EEPROM.get(m_u16_mtrLibStart + 4 + m_u8_curGrp * 2 - 2, m_u16_grpStrtInd);
-			
-			
-//			m_u8_numGrpVals = EEPROM.read(m_u16_grpStrtInd);
       EEPROM.get(m_u16_grpStrtInd, m_u8_numGrpVals);
+
 			if (u8_grpInd < m_u8_numGrps) {
         uint8_t u8_grpLenVals;
         uint8_t u8_dum;
 
-//				m_u16_numRegs = EEPROM.read(m_u16_grpStrtInd + 1);
         EEPROM.get(m_u16_grpStrtInd + 1, u8_dum);
         m_u16_numRegs = u8_dum;
-//				m_u16_reqReg = word(EEPROM.read(m_u16_grpStrtInd + 2), EEPROM.read(m_u16_grpStrtInd + 3));
+
         EEPROM.get(m_u16_grpStrtInd + 2, m_u16_reqReg);
         EEPROM.get(m_u16_grpStrtInd + 4, u8_grpLenVals);
         m_u16_grpDataTypeInd = m_u16_grpStrtInd + u8_grpLenVals;
@@ -332,28 +291,13 @@ ModbusRequest MeterLibGroups::getGroupRequest(bool b_tcpComm, uint8_t u8_mbId, u
 	mbReq.u8_mtrType = m_u8_mtrType;
 	
 	
-	return mbReq;
-	// uint16_t  u16_unqId;  // manipulated by stack
-	// uint8_t   u8_flags;  // don't know if serial or tcp from group
-	// uint8_t   u8_id;  // don't know from group
-	// uint8_t   u8_vid;  // don't know from group
-	// uint8_t   u8_func;
-	// uint16_t  u16_start;
-	// uint16_t  u16_length;
-	// uint8_t   u8_mtrType;  // 
-	
+	return mbReq;	
 }
 
 
 // bool MeterLibGroups::groupToFloat(const uint8_t *const k_u8kp_data, float *const fkp_retData, 
 bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp_retData, 
 	int8_t *const s8kp_dataFlags) {
-	// union WordSwap {
-		// uint16_t u16[2];
-		// float fl;
-	// } int2flt;
-	
-	// const uint16_t *k_u16p_data = (uint16_t*)k_u8kp_data;  // THERE NEEDS TO BE A BYTE SWAP HERE!!!!!
 	
 	if (m_u8_mtrType == 0) {
 		return false;
@@ -362,7 +306,7 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 	if (!(m_u8_curGrp < m_u8_numGrps)) {  // check to make sure curGrp is not last group
 		return false;
 	}
-	// Serial.print("mb float cur grp: "); Serial.println(m_u8_curGrp, DEC);
+
 	/* GROUP STRUCTURE:
 	*  ADDRESS   0: number of values in group
 	*  ADDRESS   1: number of registers to request in modbus
@@ -373,8 +317,8 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 	*  ADDRESS  (ADDRESS 0 + eval(ADDRESS 4)): data types in pairs (FloatConv, which values fall under it)
 	*/
 
-  uint8_t u8_dataTypeCmp;  // = EEPROM.read(m_u16_grpDataTypeInd + 1);
-  FloatConv dataType;  // = Int8_2_FloatConv(static_cast<int8_t>(EEPROM.read(m_u16_grpDataTypeInd)));
+  uint8_t u8_dataTypeCmp;
+  FloatConv dataType;
 	uint8_t u8_valInd(0);  // order of value in group (NOT the VALUE TYPE (ie real power))
 	int ii(2); // skip 0 on assumption that u8_dataTypeCmp is initialized in such a case
 
@@ -385,7 +329,6 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 		int8_t s8_valType;  // if > 0, then this is the value Type (Power, current A, etc)
 		                    // if < 0, then this is the number of registers to skip to the next value
 		
-//		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
     EEPROM.get(u16_valEepAdr, s8_valType);
 	
 		if (s8_valType < 0) {
@@ -395,34 +338,16 @@ bool MeterLibGroups::groupToFloat(const uint16_t * k_u16p_data, float *const fkp
 		else {
 			++u8_valInd;
 			
-			while (u8_valInd > u8_dataTypeCmp) {
-				
-//				u8_dataTypeCmp = EEPROM.read(m_u16_grpDataTypeInd + 1 + ii);
+      while (u8_valInd > u8_dataTypeCmp) {
         EEPROM.get(m_u16_grpDataTypeInd + 1 + ii, u8_dataTypeCmp);
-//				dataType = Int8_2_FloatConv(EEPROM.read(m_u16_grpDataTypeInd + ii));
         EEPROM.get(m_u16_grpDataTypeInd + ii, dataType);
 				ii += 2;
 			}
 			
-			// if (s8_valType == 30) {
-				// Serial.print("is the ptr in the right spot?: ");
-				// for (int kk = 0; kk < 4; ++kk) {
-					// Serial.print(highByte(k_u16p_data[kk]), DEC); Serial.print(" ");
-					// Serial.print(lowByte(k_u16p_data[kk]), DEC); Serial.print(" ");
-				// }
-				// Serial.println();
-				// Serial.println(*k_u16p_data, DEC);
-			// }
 			// convert register data to float and store
-			
 			fkp_retData[s8_valType - 1] = g_convertToFloat(k_u16p_data, dataType);
-			// int2flt.u16[0] = k_u16p_data[0];
-			// int2flt.u16[1] = k_u16p_data[1];
-			// fkp_retData[s8_valType - 1] = int2flt.fl;
-			
-			
+
 			// mark all flags as a successful read
-			// if (fkp_retData[s8_valType - 1] != fkp_retData[s8_valType - 1]) {  // check if NaN
 			if (isnan(fkp_retData[s8_valType - 1])) {
 				s8kp_dataFlags[s8_valType - 1] = -2;
 			}
@@ -453,7 +378,6 @@ bool MeterLibGroups::groupMbErr(int8_t *const s8kp_dataFlags) {
 	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 5; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
 		int8_t s8_valType;
 		
-//		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
     EEPROM.get(u16_valEepAdr, s8_valType);
 		
 		if (s8_valType > 0) {
@@ -479,7 +403,6 @@ bool MeterLibGroups::groupLastFlags(int8_t *const s8kp_dataFlags) {
 	for (uint16_t u16_valEepAdr = m_u16_grpStrtInd + 1; u16_valEepAdr < m_u16_grpDataTypeInd; ++u16_valEepAdr) {
 		int8_t s8_valType;
 		
-//		s8_valType = int8_t(EEPROM.read(u16_valEepAdr));
     EEPROM.get(u16_valEepAdr, s8_valType);
 		
 		if (s8_valType > 0) {
@@ -492,45 +415,13 @@ bool MeterLibGroups::groupLastFlags(int8_t *const s8kp_dataFlags) {
 }
 
 
-// WriteMaps class functions #######################################
-//WriteMaps::WriteMaps(void) {
-//  WriteMaps(0);
-//}
-
-WriteMaps::WriteMaps(void) {
-//  m_u16_mapIndexStart = word(EEPROM.read(6), EEPROM.read(7));
+WriteMapsClass::WriteMapsClass(void) {
   EEPROM.get(6, m_u16_mapIndexStart);
-//  Serial.println();
-//  Serial.print("map index start: "); Serial.println(m_u16_mapIndexStart);
-//  Serial.print("index start eeprom: "); Serial.println(word(EEPROM.read(6), EEPROM.read(7)));
-//  Serial.print("registers: "); Serial.print(EEPROM.read(6), DEC);
-//  Serial.print(", "); Serial.println(EEPROM.read(7), DEC);
-//  Serial.println();
-
-//  m_u8_numMaps = EEPROM.read(m_u16_mapIndexStart + 2);
   EEPROM.get(m_u16_mapIndexStart + 2, m_u8_numMaps);
-
-//  m_u8_curMap = m_u8_numMaps;
-
-//  switch (u8_sizeFlag) {
-//  case -1:
-//    m_u16_mapArrLen = EEPROM.length();
-//    break;
-//  default:
-//    m_u16_mapArrLen = EEPROM.length() - m_u16_mapIndexStart - 1;
-//    break;
-//  }
-//  m_u8p_mapArray = calloc(sizeof(uint8_t), m_u16_mapArrLen);
 }
 
 
-//WriteMaps::~WriteMaps() {
-//  free(m_u8p_mapArray);
-//  m_u8p_mapArray = NULL;
-//}
-
-
-uint16_t WriteMaps::writeMaps(JsonObject &root) {
+uint16_t WriteMapsClass::writeMaps(JsonObject &root) {
   uint16_t u16_mapLibEnd = 0;
   // reset total num of maps
   if (!root.success()) {
@@ -546,7 +437,6 @@ uint16_t WriteMaps::writeMaps(JsonObject &root) {
 
   Serial.print("json nummaps: "); Serial.println(m_u8_numMaps, DEC);
 
-//  EEPROM.write(m_u16_mapIndexStart + 2, m_u8_numMaps);
   EEPROM.put(m_u16_mapIndexStart + 2, m_u8_numMaps);
 
   Serial.print("eeprom new nummaps: "); Serial.println(EEPROM.read(m_u16_mapIndexStart + 2), DEC);
@@ -555,13 +445,11 @@ uint16_t WriteMaps::writeMaps(JsonObject &root) {
   uint8_t u8_numBlks;
   uint8_t u8_numGrps;
   uint8_t u8_mbFunc;
-//  uint8_t u8_mapId;
 
   for (int ii = 0; ii < m_u8_numMaps; ++ii) {
     u8_numBlks = root["meterlist"][ii]["blocks"].size();
     u8_numGrps = root["meterlist"][ii]["groups"].size();
     u8_mbFunc = root["meterlist"][ii]["mb_func"];
-//    u8_mapId = root["meterlist"][ii]["map"];
 
     MapBlock mapBlkArr[u8_numBlks];
     MapGroup mapGrpArr[u8_numGrps];
@@ -571,7 +459,6 @@ uint16_t WriteMaps::writeMaps(JsonObject &root) {
       mapBlkArr[jj].u16_end = root["meterlist"][ii]["blocks"][jj]["end"];
       const char *k_cp_dataType = root["meterlist"][ii]["blocks"][jj]["type"];
       mapBlkArr[jj].dataType = Char_2_FloatConv(k_cp_dataType);
-//      Serial.print(k_cp_dataType); Serial.print(", "); Serial.println(FloatConv2Uint8(mapBlkArr[jj].dataType), DEC);
     }
 
     for (int jj = 0; jj < u8_numGrps - 1; ++jj) {
@@ -598,13 +485,12 @@ uint16_t WriteMaps::writeMaps(JsonObject &root) {
     }
 
     u16_mapLibEnd = addMap(ii, mapBlkArr, mapGrpArr, u8_numBlks, u8_numGrps, u8_mbFunc);
-//    u16_mapLibEnd = addMap(u8_mapId - 1, mapBlkArr, mapGrpArr, u8_numBlks, u8_numGrps, u8_mbFunc);
   }
   return u16_mapLibEnd;
 }
 
 
-uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uint8_t u8_numGrps, uint8_t u8_mbFunc) {
+uint16_t WriteMapsClass::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uint8_t u8_numGrps, uint8_t u8_mbFunc) {
 
   uint16_t u16_mapStart = calcStartingPos(u8_map);
 
@@ -615,13 +501,8 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
 
   uint16_t u16_mapIdx = u16_mapStart;
 
-//  EEPROM.put(u8_map * 4 + 3, u16_mapStart);  // worried about MSB/LSB
-//  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 3, highByte(u16_mapStart));
-//  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 4, lowByte(u16_mapStart));
   EEPROM.put(m_u16_mapIndexStart + u8_map * 4 + 3, u16_mapStart);
-//  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 5, u8_map + 1);
   EEPROM.put(m_u16_mapIndexStart + u8_map * 4 + 5, static_cast<uint8_t>(u8_map + 1));
-//  EEPROM.write(m_u16_mapIndexStart + u8_map * 4 + 6, u8_mbFunc);
   EEPROM.put(m_u16_mapIndexStart + u8_map * 4 + 6, u8_mbFunc);
 
   uint16_t u16_blkStart = u16_mapStart + 4 + u8_numGrps * 2;
@@ -739,7 +620,7 @@ uint16_t WriteMaps::addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrp
 }
 
 
-uint16_t WriteMaps::calcStartingPos(uint8_t u8_map) {
+uint16_t WriteMapsClass::calcStartingPos(uint8_t u8_map) {
 // where should map u8_map start?
   if (u8_map == 0) {
     return m_u8_numMaps * 4 + m_u16_mapIndexStart + 3;

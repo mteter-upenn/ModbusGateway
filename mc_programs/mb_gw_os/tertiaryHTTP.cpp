@@ -206,10 +206,7 @@ void getPostSetupData(EthernetClient52 &ec_client) {
 
           if (u8_mtrInd < u8_numGivenMtrs) {  // make sure to only record necessary number of meters
             if (cp_argStart == cp_argEnd) {  // blank values for ips translate to 0's
-//              for (int jj = 0; jj < 4; ++jj) {
-//                EEPROM.write((jj + g_u16_mtrBlkStart + 9 * u8_mtrInd + 4), 0);
-//              }
-
+              // pass
             }
             else {
               cp_iterPtr = cp_argStart;
@@ -221,7 +218,6 @@ void getPostSetupData(EthernetClient52 &ec_client) {
                 }
                 cp_iterPtr++;
                 ipStruct.u8a_ip[jj] = u8_dum;
-//                EEPROM.write((jj + g_u16_mtrBlkStart + 9 * u8_mtrInd + 4), u8_dum);
               }
             }
             EEPROM.put(g_u16_mtrBlkStart + 9 * u8_mtrInd + 4, ipStruct);
@@ -238,11 +234,7 @@ void getPostSetupData(EthernetClient52 &ec_client) {
             for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
               u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
             }
-//            EEPROM.write((g_u16_mtrBlkStart + 9 * u8_mtrInd + 8), u8_dum);
             EEPROM.put(g_u16_mtrBlkStart + 9 * u8_mtrInd + 8, u8_dum);
-            //          Serial.print(u8_mtrInd, DEC);
-            //          Serial.print(F(": "));
-            //          Serial.println(u8_dum, DEC);
           }
         }
         else if (strncmp(cp_paramStart, "vid", 3) == 0) {  //  ************************************ VIRTUAL MODBUS ID *************************************************
@@ -256,7 +248,6 @@ void getPostSetupData(EthernetClient52 &ec_client) {
             for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
               u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
             }
-//            EEPROM.write((g_u16_mtrBlkStart + 9 * u8_mtrInd + 9), u8_dum);
             EEPROM.put(g_u16_mtrBlkStart + 9 * u8_mtrInd + 9, u8_dum);
           }
         }
@@ -275,7 +266,7 @@ void getPostSetupData(EthernetClient52 &ec_client) {
                 cp_iterPtr++;
               }
               cp_iterPtr++;
-//              EEPROM.write((jj + g_u16_mtrBlkStart + 9 * u8_mtrInd + 1), u8_dum);
+
               typeStruct.u8a_type[jj] = u8_dum;
             }
             EEPROM.put(g_u16_mtrBlkStart + 9 * u8_mtrInd + 1, typeStruct);
@@ -293,7 +284,6 @@ void getPostSetupData(EthernetClient52 &ec_client) {
           EEPROM.put(g_u16_mtrBlkStart, u8_numGivenMtrs);
         }
         else if (strncmp(cp_paramStart, "nm", 2) == 0) {  // ******************************** NAME ****************************************
-          //Serial.println(F("nm"));
           NameArray nameStruct = {{0}};
 
           if ((cp_argEnd - cp_argStart) > 31) {
@@ -303,18 +293,15 @@ void getPostSetupData(EthernetClient52 &ec_client) {
             if ((*cp_iterPtr) == 43) {  // filter out '+' as html concatenator
               (*cp_iterPtr) = 32;  // replace with blank space
             }
-//            EEPROM.write((cp_iterPtr - cp_argStart + g_u16_nameBlkStart), (*cp_iterPtr));
+
             nameStruct.ca_name[cp_iterPtr - cp_argStart] = *cp_iterPtr;
           }
           if ((cp_argEnd - cp_argStart) != 31) {
-//            EEPROM.write((cp_argEnd - cp_argStart + g_u16_nameBlkStart), 0);
             nameStruct.ca_name[cp_iterPtr - cp_argStart] = 0;
           }
           EEPROM.put(g_u16_nameBlkStart, nameStruct);
         }
         else if (strncmp(cp_paramStart, "rd", 2) == 0) {  // ***************************************** Record Data ************************************
-          //Serial.println(F("record data"));
-
           u16_dum = 0;
           for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
             u16_dum = u16_dum * 10 + ((*cp_iterPtr) - '0');
@@ -328,8 +315,6 @@ void getPostSetupData(EthernetClient52 &ec_client) {
           }
         }
         else if (strncmp(cp_paramStart, "ms", 2) == 0) {  // ***************************** Max Number of Slaves to Record ************************************
-          //Serial.println(F("num slaves to record"));
-
           u8_dum = 0;
           for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
             u8_dum = u8_dum * 10 + ((*cp_iterPtr) - '0');
@@ -338,7 +323,6 @@ void getPostSetupData(EthernetClient52 &ec_client) {
           EEPROM.put(g_u16_nameBlkStart + 33, u8_dum);
         }
         else if (strncmp(cp_paramStart, "ip", 2) == 0) {  //  ***************************************** IP ************************************************
-          //Serial.println(F("ip"));
           IpArray ipStruct = {{0, 0, 0, 0}};
           cp_iterPtr = cp_argStart;
           for (int jj = 0; jj < 4; ++jj) {
@@ -348,13 +332,12 @@ void getPostSetupData(EthernetClient52 &ec_client) {
               cp_iterPtr++;
             }
             cp_iterPtr++;
-//            EEPROM.write((jj + g_u16_ipBlkStart + 6), u8_dum);
+
             ipStruct.u8a_ip[jj] = u8_dum;
           }
           EEPROM.put(g_u16_ipBlkStart + 6, ipStruct);
         }
         else if (strncmp(cp_paramStart, "sm", 2) == 0) {  //  ****************************************** SUBNET MASK *************************************************
-          //Serial.println(F("sm"));
           IpArray ipStruct = {{0, 0, 0, 0}};
           cp_iterPtr = cp_argStart;
           for (int jj = 0; jj < 4; ++jj) {
@@ -364,13 +347,11 @@ void getPostSetupData(EthernetClient52 &ec_client) {
               cp_iterPtr++;
             }
             cp_iterPtr++;
-//            EEPROM.write((jj + g_u16_ipBlkStart + 10), u8_dum);
             ipStruct.u8a_ip[jj] = u8_dum;
           }
           EEPROM.put(g_u16_ipBlkStart + 10, ipStruct);
         }
         else if (strncmp(cp_paramStart, "gw", 2) == 0) {  //  ****************************************** DEFAULT GATEWAY *************************************************
-          //Serial.println(F("gw"));
           IpArray ipStruct = {{0, 0, 0, 0}};
           cp_iterPtr = cp_argStart;
           for (int jj = 0; jj < 4; ++jj) {
@@ -380,14 +361,11 @@ void getPostSetupData(EthernetClient52 &ec_client) {
               cp_iterPtr++;
             }
             cp_iterPtr++;
-//            EEPROM.write((jj + g_u16_ipBlkStart + 14), u8_dum);
             ipStruct.u8a_ip[jj] = u8_dum;
           }
           EEPROM.put(g_u16_ipBlkStart + 14, ipStruct);
         }
         else if (strncmp(cp_paramStart, "ntp", 3) == 0) {  // ***************************************** USE NTP? ************************************
-          //Serial.println(F("use ntp?"));
-
           u16_dum = 0;
           for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
             u16_dum = u16_dum * 10 + ((*cp_iterPtr) - '0');
@@ -401,7 +379,6 @@ void getPostSetupData(EthernetClient52 &ec_client) {
           }
         }
         else if (strncmp(cp_paramStart, "nip", 3) == 0) {  //  ************************************ NTP SERVER IP *****************************************
-          //Serial.println(F("ntp ip"));
           IpArray ipStruct = {{0, 0, 0, 0}};
           cp_iterPtr = cp_argStart;
           for (int jj = 0; jj < 4; ++jj) {
@@ -411,23 +388,18 @@ void getPostSetupData(EthernetClient52 &ec_client) {
               cp_iterPtr++;
             }
             cp_iterPtr++;
-//            EEPROM.write((jj + g_u16_ipBlkStart + 19), u8_dum);
+
             ipStruct.u8a_ip[jj] = u8_dum;
           }
           EEPROM.put(g_u16_ipBlkStart + 19, ipStruct);
         }
         else if (strncmp(cp_paramStart, "br", 2) == 0) {  //  ****************************************** BAUDRATE *************************************************
-          //Serial.println(F("br"));
-
           u32_dum = 0;
 
           for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
             u32_dum = u32_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-//          EEPROM.write(g_u16_ipBlkStart + 24, (u32_dum >> 16));
-//          EEPROM.write(g_u16_ipBlkStart + 25, (u32_dum >> 8));
-//          EEPROM.write(g_u16_ipBlkStart + 26, u32_dum);
           EEPROM.put(g_u16_ipBlkStart + 23, u32_dum);
         }
         else if (strncmp(cp_paramStart, "db", 2) == 0) {  //  ************************************ DATA BITS *************************************************
@@ -458,20 +430,14 @@ void getPostSetupData(EthernetClient52 &ec_client) {
           EEPROM.put(g_u16_ipBlkStart + 29, u8_dum);
         }
         else if (strncmp(cp_paramStart, "to", 2) == 0) {  //  ****************************************** MB TIMEOUT *************************************************
-          //Serial.println(F("to"));
-
           u16_dum = 0;
           for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
             u16_dum = u16_dum * 10 + ((*cp_iterPtr) - '0');
           }
 
-//          EEPROM.write(g_u16_ipBlkStart + 30, highByte(u16_dum));
-//          EEPROM.write(g_u16_ipBlkStart + 31, lowByte(u16_dum));
           EEPROM.put(g_u16_ipBlkStart + 30, u16_dum);
         }
         else if (strncmp(cp_paramStart, "tm", 2) == 0) {  //  ****************************************** TIME *************************************************
-          //Serial.println(F("time"));
-
           u32_dum = 0;
 
           for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {

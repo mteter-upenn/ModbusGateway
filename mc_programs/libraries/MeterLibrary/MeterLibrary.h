@@ -7,32 +7,7 @@
 #include "Arduino.h"
 
 /* _____UTILITY MACROS_______________________________________________________ */
-/* Swap bytes in 16 bit value.  */
-#define __bswap_constant_16(x) \
-  ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
-# define __bswap_16(x) __bswap_constant_16 (x)
-
-/* Swap bytes in 32 bit value.  */
-#define __bswap_constant_32(x) \
-  ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) | \
-   (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
-
-# define __bswap_32(x) __bswap_constant_32 (x)
-
-/*
-#if defined __GNUC__ && __GNUC__ >= 2
-// Swap bytes in 64 bit value.
-# define __bswap_64(x)							      \
-     (__extension__							      \
-      ({ union { unsigned long long int __ll;				      \
-     unsigned long int __l[2]; } __bswap_64_v, __bswap_64_r;      \
-   __bswap_64_v.__ll = (x);					      \
-   __bswap_64_r.__l[0] = __bswap_32 (__bswap_64_v.__l[1]);	      \
-   __bswap_64_r.__l[1] = __bswap_32 (__bswap_64_v.__l[0]);	      \
-   __bswap_64_r.__ll; }))
-#endif
-*/
 
 /* _____PROJECT INCLUDES_____________________________________________________ */
 #include <EEPROM.h>
@@ -69,7 +44,6 @@ struct MapGroup {
 class MeterLibBlocks {
 	private:
 		uint16_t m_u16_reqReg;
-		// uint16_t m_u16_numRegs;
 		uint8_t m_u8_mtrType;
 		
 		uint16_t m_u16_mtrTypeListingStart;
@@ -87,11 +61,8 @@ class MeterLibBlocks {
 		//FUNCTIONS
 		int changeInputs(uint16_t u16_reqReg, uint8_t u8_mtrType);
 		
-		// uint16_t getNumRegs();
 		uint16_t getReqReg();
 		
-		// void convertToFloat(ModbusMaster &node, uint8_t *const u8p_data);
-		// float convertToFloat(ModbusMaster &node, uint16_t u16_reg);  // returns float
 		void convertToFloat(uint16_t u16p_regs[], uint8_t *const u8p_data, uint16_t u16_numRegs);
 		float convertToFloat(uint16_t u16p_regs[], uint16_t u16_reg, uint16_t u16_numRegs);  // returns float
 		
@@ -137,42 +108,25 @@ class MeterLibGroups {
 };
 
 
-class WriteMaps {
+class WriteMapsClass {
 private:
   uint8_t m_u8_numMaps;
-//  uint8_t m_u8_curMap;
   uint16_t m_u16_mapIndexStart;
-//  uint8_t *m_u8p_mapArray;
-//  uint16_t m_u16_mapArrLen;
 
   uint16_t calcStartingPos(uint8_t u8_map);
 public:
-  WriteMaps();
-//  WriteMaps(int8_t s8_sizeFlag);
-
+  WriteMapsClass();
 
   uint16_t writeMaps(JsonObject& root);
   uint16_t addMap(uint8_t u8_map, MapBlock mapBlkArr[], MapGroup mapGrpArr[], uint8_t u8_numBlks, uint8_t u8_numGrps, uint8_t u8_mbFunc);
 };
 
 
-//struct SlaveDataStruct {
-//	uint8_t u8_id;
-//	uint8_t u8_vid;
-//	uint8_t u8a_ip[4];
-//	uint8_t u8a_type[3];
-//};
-
 // class used to grab slave meta data (id, vid, ip, type) from eeprom
 class SlaveDataClass {
 	private:
 		uint16_t m_u16_slaveDataStart;
 		uint8_t m_u8_numSlaves;
-		
-		// uint8_t m_u8a_slaveIds[20];      // array of modbus device ids (meters can share these!)
-		// uint8_t m_u8a_slaveVids[20];     // array of modbus virtual ids (these should be unique!) they can be the same as devs
-		// uint8_t m_u8a_slaveIps[20][4];   // array of slave ips
-		// uint8_t m_u8a_slaveTypes[20][3]; // array of slave meter types
 		
     SlaveArray m_slaveList[20];
 		
@@ -181,14 +135,7 @@ class SlaveDataClass {
 		void init();
 		
 		// INDEX IS ZERO BASED!!!!
-		bool getIndByVid(uint8_t u8_vid, uint8_t &u8_ind);  // search for index with vid
-	
-		// bool getFullTypeByInd(uint8_t u8_slvInd, uint8_t u8a_type[3]);
-		// bool getRedTypeByInd(uint8_t u8_slvInd, uint8_t &u8_type);
-		// bool getIdByInd(uint8_t u8_slvInd, uint8_t &u8_id);
-		// bool getVidByInd(uint8_t u8_slvInd, uint8_t &u8_vid);
-		// bool getIPByInd(uint8_t u8_slvInd, uint8_t u8a_ip[4]);
-		
+		bool getIndByVid(uint8_t u8_vid, uint8_t &u8_ind);  // search for index with vid		
 		bool isSlaveTcpByInd(uint8_t u8_slvInd);
 		uint8_t getNumSlvs();
     SlaveArray operator[](int index) const;
@@ -199,5 +146,4 @@ extern SlaveDataClass SlaveData;
 /* _____FUNCTION DEFINITIONS_________________________________________________ */
 uint16_t swapBytes(uint16_t u16_word);
 float g_convertToFloat(const uint16_t *const u16_reg, FloatConv regDataType);  // returns float
-// float g_convertToFloat(const uint8_t *const u8_reg, FloatConv regDataType);  // returns float
 #endif

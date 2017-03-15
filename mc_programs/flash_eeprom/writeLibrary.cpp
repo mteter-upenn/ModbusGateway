@@ -14,7 +14,7 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   const uint16_t u16_test = 40000;
   StaticJsonBuffer<u16_test> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(jsonFile);
-  WriteMaps cls_writeMaps;
+  WriteMapsClass cls_writeMaps;
   Serial.print("JSON SIZE: "); Serial.println(jsonBuffer.size());
 
   return cls_writeMaps.writeMaps(root);

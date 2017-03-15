@@ -25,21 +25,32 @@
 #define MB_SERIAL_HARDWARE_PORT 3           // MODBUS_SERIAL use hardware serial 3
 
 // pin ids
-#define SD_FAIL_LED_PIN    21                     // sd card unavailable
-#define SD_WRITE_LED_PIN   20                     // currently writing to sd card
+#define SD_FAIL_LED_PIN        21                     // sd card unavailable
+#define SD_WRITE_LED_PIN       20                     // currently writing to sd card
 #define EEPROM_WRITE_LEN_PIN   19                     // currently writing to eeprom
-#define RTC_FAIL_LED_PIN   22                     // no rtc set
-#define BATT_DEAD_LED_PIN  23                     // dead battery - currently no way to determine
-#define MB_485_CTRL_PIN     6                     // when set low, transmit mode, high is receive mode
+#define RTC_FAIL_LED_PIN       22                     // no rtc set
+#define BATT_DEAD_LED_PIN      23                     // dead battery - currently no way to determine
+#define MB_485_CTRL_PIN         6                     // when set low, transmit mode, high is receive mode
+#define SPI_SD_PIN              4
+#define SPI_ETHERNET_PIN       10
+#define W5200_RESET_PIN         9
 
+#if MB_SERIAL_HARDWARE_PORT == 2
+#define MB_SERIAL_RX_PIN        9
+#define MB_SERIAL_TX_PIN       10
+#elif MB_SERIAL_HARDWARE_PORT == 3
+#define MB_SERIAL_RX_PIN        7
+#define MB_SERIAL_TX_PIN        8
+#else
+#define MB_SERIAL_RX_PIN        0
+#define MB_SERIAL_TX_PIN        1
+#endif
 
 // ethernet info
-//extern uint8_t g_u8a_mac[6];                      // enter mac, will need some sort of generator for this
 extern MacArray g_u8a_mac;                      // enter mac, will need some sort of generator for this
 extern IpArray g_ip_ip;
 extern IpArray g_ip_subnet;                    // this value will be overwritten by ip stored in eeprom
 extern IpArray g_ip_gateway;                    // this value will be overwritten by ip stored in eeprom
-//bool g_b_reset = false;                                    // bReset
 
 extern bool g_b_useNtp;                                 // bNTPserv turns ntp on/off (overwritten by eeprom)
 extern IpArray g_ip_ntpIp;                      // this value will be overwritten by ip stored in eeprom
@@ -62,7 +73,7 @@ extern uint16_t g_u16_timeout;                               // modbus timeout
 // rtc info
 extern bool g_b_rtcGood;  // bGoodRTC
 extern uint32_t g_u32_rtcNtpLastReset;  // for resetting rtc with ntp
-#define gk_u32_rtcNtpResetDelay 604800000UL // delay in ms
+#define NTP_RESET_DELAY 604800000UL // delay in ms
 
 // data collection timing
 extern uint32_t g_u32_lastDataRequest;  // oldDataTime
@@ -89,8 +100,8 @@ extern bool g_ba_clientSocksAvail[2];  // assume both socks used at init
 
 // miscellaneous
 extern bool g_b_sdInit;  // sdInit                                   // set flag corresponding to sd card initializtion
-#define gk_i_maxNumElecVals 32
-#define gk_i_maxNumStmChwVals 10
+#define MAX_NUM_ELEC_VALS 32
+#define MAX_NUM_STMCHW_VALS 10
 
 // test vars
 #if DISP_TIMING_DEBUG

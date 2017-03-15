@@ -8,12 +8,10 @@ SOURCES += 	mb_gw_os.ino \
     globals.cpp \
     handleData.cpp \
     handleHTTP.cpp \
-    handleModbus.cpp \
     handleRTC.cpp \
     handleServers.cpp \
     secondaryData.cpp \
     secondaryHTTP.cpp \
-    secondaryModbus.cpp \
     tertiaryHTTP.cpp \
     miscFuncs.cpp
 
@@ -23,12 +21,10 @@ HEADERS += \
     main.cpp.ignore \
     handleHTTP.h \
     handleData.h \
-    handleModbus.h \
     handleRTC.h \
     handleServers.h \
     secondaryData.h \
     secondaryHTTP.h \
-    secondaryModbus.h \
     tertiaryHTTP.h \
     miscFuncs.h
 
