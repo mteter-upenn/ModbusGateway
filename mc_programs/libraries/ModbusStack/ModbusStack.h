@@ -17,7 +17,6 @@ private:
 	uint8_t m_u8_length;  // total length of stack
 	uint8_t m_u8_1end;    // where priority 1 ends
 	uint8_t m_u8_2end;
-	// uint8_t m_u8_3end;
 	
 	uint16_t m_u16_idGen;
 	
@@ -46,7 +45,6 @@ public:
 	uint16_t add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, uint16_t u16_start,
 	         uint16_t u16_length, uint8_t u8_mtrType, uint8_t u8_priority);
   uint16_t add(const ModbusRequest mbReq, uint8_t u8_priority);
-	// uint8_t add(uint8_t u8_vid, uint8_t *u8p_mbHdr, uint8_t u8_priority);
 	
 	// remove struct with given unique id
 	bool removeByUnqId(uint16_t u16_unqId);
