@@ -37,10 +37,6 @@ public:
 	ModbusServer(uint8_t u8_serialPort); // : m_u8_serialPort(u8_serialPort), m_u8_enablePin(255) {}
 	ModbusServer(uint8_t u8_serialPort, uint8_t u8_enablePin); // : m_u8_serialPort(u8_serialPort), m_u8_enablePin(u8_enablePin) {}
 	
-//	void begin();
-//	void begin(uint16_t u16_baudRate);
-//  void begin(uint16_t u16_baudRate, uint8_t u8_dataBits);
-//  void begin(uint16_t u16_baudRate, uint8_t u8_dataBits, uint8_t u8_parity);
   void begin(uint16_t u16_baudRate = 9600, uint8_t u8_dataBits = 8, uint8_t u8_parity = 0, uint8_t u8_stopBits = 1);
 	
 	bool sendSerialRequest(ModbusRequest mr_mbReq);

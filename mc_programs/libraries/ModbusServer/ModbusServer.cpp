@@ -15,11 +15,6 @@ ModbusServer::ModbusServer(uint8_t u8_serialPort, uint8_t u8_enablePin) {
 }
 
 
-//void ModbusServer::begin() {
-//	begin(19200);
-//}
-
-
 void ModbusServer::begin(uint16_t u16_baudRate, uint8_t u8_dataBits, uint8_t u8_parity, uint8_t u8_stopBits) {
 	if (m_u8_enablePin != 255) {
 		pinMode(m_u8_enablePin, OUTPUT);
@@ -99,12 +94,6 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 	u8a_txBuffer[6] = lowByte(u16_crc);
 	u8a_txBuffer[7] = highByte(u16_crc);
 	
-	// Serial.println("outgoing: ");
-	// for (int ii = 0; ii < 8; ++ii) {
-		// Serial.print(u8a_txBuffer[ii], DEC); Serial.print(", ");
-	// }
-	// Serial.println();
-	
 	m_MBSerial->write(u8a_txBuffer, 8);
 	m_MBSerial->flush();
 	
@@ -121,11 +110,9 @@ bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_
 	uint8_t u8a_txBuffer[12] = {0};
 	uint8_t u8_sock = ec_client.getSocketNumber();  // or mr_mbReq.u8_flags & MRFLAG_sckMask
 	uint8_t u8_slvInd;
-	// uint8_t u8a_ip[4];
 	IPAddress ipAddr;
 	
 	if (SlaveData.getIndByVid(mr_mbReq.u8_vid, u8_slvInd)) {
-		// memcpy(u8a_ip, SlaveData[u8_slvInd].u8a_ip, 4);
 		for (int ii = 0; ii < 4; ++ii) {
 			ipAddr[ii] = SlaveData[u8_slvInd].u8a_ip[ii];
 		}
@@ -134,10 +121,7 @@ bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_
 	else {
 		return false;
 	}
-	// GET IP FROM mr_mbReq.u8_vid!!
-	// ec_client.connect(IP);
-	
-	// if (ec_client.connect(u8a_ip, 502)) {
+
 	if (ec_client.connect(ipAddr, 502)) {
 		flushTcpRx(ec_client);
 		
@@ -207,14 +191,7 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 			}
 			
 			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
-				// calculate CRC
-				
-				// Serial.println("modbus response: ");
-				// for (int ii = 0; ii < u16_mbRxSize; ++ii) {
-					// Serial.print(u8p_devResp[ii], DEC); Serial.print(", ");
-				// }
-				// Serial.println();
-				
+				// calculate CRC				
 				uint16_t u16_crc = 0xFFFF;
 				for (int ii = 6; ii < (u16_mbRxSize - 2); ++ii) {
 					u16_crc = crc16_update(u16_crc, u8p_devResp[ii]);
@@ -277,19 +254,15 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 	
 	while (!u8_mbStatus) {
 		while (ec_client.available()) {  // make sure to get all available data before checking timeout
-			// Serial.print("recvTcpResponse, available: "); Serial.println(ec_client.available(), DEC);
 			
 			if (u16_mbRxSize > 255) {  // message too big
 				u8_mbStatus = k_u8_MBIllegalDataValue;
-				// flushTcpRx(ec_client);  // don't bother flushing tcp, simply close socket
 				return u8_mbStatus;
 			}
 			
 			s16_lenRead = ec_client.read(u8p_devResp + u16_mbRxSize, u16_bytesLeft); //264 - u8ModbusADUSize);
 			u16_mbRxSize += s16_lenRead;
 			u16_bytesLeft -= s16_lenRead;
-			
-			// u8p_devResp[u16_mbRxSize++] = m_MBSerial->read();  // important bit here, storing data
 		}
 		
 		if (u16_mbRxSize > 9) {
@@ -339,11 +312,6 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 	
 	if (!u8_mbStatus) {  // 
 		u8_numBytes = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
-		// Serial.print("regs from slave: ");
-		// for (int ii = 0; ii < u8_numBytes / 2; ++ii) {
-			// Serial.print(u16p_regs[ii], DEC); Serial.print(" ");
-		// }
-		// Serial.println();
 	}
 	return u8_mbStatus;
 }
@@ -389,24 +357,7 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 	
 	if (u16_respLen > 0) {
 		Serial.println("message to laptop: ");
-		// for debugging
-		// u8a_respBuf[0] = 0;
-		// u8a_respBuf[1] = 0;
-		// u8a_respBuf[2] = 0;
-		// u8a_respBuf[3] = 0;
-		// u8a_respBuf[4] = 0;
-		// u8a_respBuf[5] = 7;
-		
-		// u8a_respBuf[6] = 101;
-		// u8a_respBuf[7] = 3;
-		// u8a_respBuf[8] = 4;
-		// u8a_respBuf[9] = 3;
-		// u8a_respBuf[10] = 190;
-		// u8a_respBuf[11] = 14;
-		// u8a_respBuf[12] = 208;
-		
-		// u16_respLen = 13;
-		// end debugging
+
 		for (int ii = 0; ii < u16_respLen; ++ii) {
 			Serial.print(u8a_respBuf[ii], DEC); Serial.print(", ");
 		}
@@ -419,10 +370,8 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 }
 
 uint8_t ModbusServer::returnResponse(const ModbusRequest &mbReq, const uint8_t u8a_strtBytes[2], uint8_t u8a_respBuf[256], uint16_t &u16_respLen) {
-	// uint8_t u8a_respBuf[256] = {0};  // actual buffer used to respond
 	uint16_t u16a_interBuf[128] = {0};  // used for grabbing data in register format
 	uint8_t u8_mbStatus(0);
-	// uint16_t u16_respLen(0);
 	uint8_t u8_numBytes(0);
 	
 	u8a_respBuf[0] = u8a_strtBytes[0];
@@ -528,14 +477,6 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				return k_u8_MBGatewayTargetFailed;   //   should not happen, modbus/tcp deals with pretty small stuff overall)
 			}
 			
-			// Serial.println("modbus message");
-			// for (int ii = 0; ii < u16_lenRead; ++ii) {
-				// Serial.print(u8a_mbReq[ii], DEC); Serial.print(", ");
-			// }
-			// Serial.println();
-			// Serial.print("given: "); Serial.println(u16_givenLen, DEC);
-			// Serial.print("lenRead: "); Serial.println(u16_lenRead, DEC);
-			
 			while (u16_lenRead < u16_givenLen) {  // make sure to grab the full packet
 				u16_lenRead += ec_client.read(u8a_mbReq + u16_lenRead, k_u16_mbMsgMaxLen - u16_lenRead);
 
@@ -567,9 +508,6 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 			if (SlaveData.getIndByVid(mbReq.u8_vid, u8_slvInd)) {  // if vid exists for slave
 				uint16_t u16_dumStrt = word(u8a_mbReq[8], u8a_mbReq[9]);
 				uint16_t u16_dumLgth = word(u8a_mbReq[10], u8a_mbReq[11]);
-				
-				// SlaveData.getIdByInd(u8_slvInd, mbReq.u8_id);
-				// SlaveData.getRedTypeByInd(u8_slvInd, mbReq.u8_mtrType);
 				
 				mbReq.u8_id = SlaveData[u8_slvInd].u8_id;
 				mbReq.u8_mtrType = SlaveData[u8_slvInd].u8a_mtrType[0];
@@ -641,9 +579,6 @@ bool ModbusServer::tcpTimedOut(EthernetClient52 &ec_client) {  // if timed out, 
 	
 	return ((millis() - m_u32a_tcpTime[u8_sock]) > m_u32_mbTimeout) ? true : false;
 }
-
-
-
 
 
 void ModbusServer::flushSerialRx() {
