@@ -16,10 +16,7 @@ struct ModbusRequest {
 	uint8_t   u8_func;
 	uint16_t  u16_start;
 	uint16_t  u16_length;
-	uint8_t   u8_mtrType;  // 
-	// bool      b_adjReq;
-	// bool      b_sentReq;
-	// uint8_t  u8_priority;  // try to use priority flags to show where new priorities begin
+  uint8_t   u8_mtrType;
 };
 
 /*

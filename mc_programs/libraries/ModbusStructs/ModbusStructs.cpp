@@ -7,11 +7,9 @@ uint16_t FloatConvEnumNumRegs(FloatConv dataType) {
 	switch (dataType) {
 		case FloatConv::UINT16:
 		case FloatConv::INT16:
-			// return m_u16_numRegs;
 			return 1;
 		case FloatConv::MOD20K:
 		case FloatConv::MOD20K_WS:
-			// return (m_u16_numRegs / 3);
 			return 3;
 		case FloatConv::INT64:
 		case FloatConv::INT64_WS:
@@ -23,10 +21,8 @@ uint16_t FloatConvEnumNumRegs(FloatConv dataType) {
 		case FloatConv::ENERGY_WS:
 		case FloatConv::DOUBLE:
 		case FloatConv::DOUBLE_WS:
-			// return (m_u16_numRegs / 4);
 			return 4;
 		default:
-			// return (m_u16_numRegs / 2);
 			return 2;
 	}
 }
