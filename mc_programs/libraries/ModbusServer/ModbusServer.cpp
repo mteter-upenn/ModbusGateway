@@ -178,37 +178,36 @@ void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_a
 
   tempFile = SD.open(cp_fileName, FILE_WRITE);
 
-//  tempFile.println();
-  tempFile.print(k_cp_string);
-  if (b_showTime) {
-    tempFile.print(hour(t_time));
+  // tempFile.print(k_cp_string);
+  // if (b_showTime) {
+    // tempFile.print(hour(t_time));
 
-    tempFile.print(":");
-    if (minute(t_time) < 10) tempFile.print('0');
-    tempFile.print(minute(t_time));
+    // tempFile.print(":");
+    // if (minute(t_time) < 10) tempFile.print('0');
+    // tempFile.print(minute(t_time));
 
-    tempFile.print(":");
-    if (second(t_time) < 10) tempFile.print('0');
-    tempFile.print(second(t_time));
+    // tempFile.print(":");
+    // if (second(t_time) < 10) tempFile.print('0');
+    // tempFile.print(second(t_time));
 
-    tempFile.print(" ");
-    tempFile.print(day(t_time));
+    // tempFile.print(" ");
+    // tempFile.print(day(t_time));
 
-    tempFile.print(" ");
-    tempFile.print(monthStr(month(t_time)));
+    // tempFile.print(" ");
+    // tempFile.print(monthStr(month(t_time)));
 
-    tempFile.print(" ");
-    tempFile.print(year(t_time));
-  }
-  tempFile.print(", unique id: ");
-  tempFile.println(u16_unqId);
+    // tempFile.print(" ");
+    // tempFile.print(year(t_time));
+  // }
+  // tempFile.print(", unique id: ");
+  // tempFile.println(u16_unqId);
 
-  if (u16_arrLen > 0) {
-    for (int ii = 0; ii < u16_arrLen; ++ii) {
-      write3SpaceDigits(tempFile, u8p_arr[ii]); tempFile.print(" ");
-    }
-    tempFile.println();
-  }
+  // if (u16_arrLen > 0) {
+    // for (int ii = 0; ii < u16_arrLen; ++ii) {
+      // write3SpaceDigits(tempFile, u8p_arr[ii]); tempFile.print(" ");
+    // }
+    // tempFile.println();
+  // }
   tempFile.close();
 }
 
