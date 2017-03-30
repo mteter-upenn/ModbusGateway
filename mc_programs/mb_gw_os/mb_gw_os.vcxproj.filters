@@ -48,9 +48,6 @@
     <ClInclude Include="handleHTTP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="handleModbus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="handleRTC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
