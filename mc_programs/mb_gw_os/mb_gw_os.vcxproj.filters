@@ -30,9 +30,6 @@
     <ClInclude Include="handleHTTP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="handleModbus.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="handleRTC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -84,9 +81,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="handleHTTP.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="handleModbus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="handleRTC.cpp">

@@ -18,7 +18,7 @@ private:
 	uint8_t m_u8_1end;    // where priority 1 ends
 	uint8_t m_u8_2end;
 	
-	uint16_t m_u16_idGen;
+	static uint16_t m_u16_idGen;
 	
 	
 	ModbusRequest m_mbStack[MODBUSSTACK_MAXSIZE];  // created array of structs instead of pointers to structs, since
@@ -35,7 +35,7 @@ private:
 	uint8_t getMrSocket(ModbusRequest mbReq);
 public:
 	// constructor ###################################################################################
-	ModbusStack(): m_u8_length(0), m_u8_1end(0), m_u8_2end(0), m_u16_idGen(1) {}
+	ModbusStack(): m_u8_length(0), m_u8_1end(0), m_u8_2end(0){}; //, m_u16_idGen(1) {}
 	
 	// public constants ##############################################################################
 	static const uint8_t k_u8_maxSize;
