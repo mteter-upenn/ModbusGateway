@@ -5,7 +5,7 @@
 const ModbusRequest ModbusStack::mk_mrInvalid = {0, 46, 0, 0, 0, 0, 0, 0}; // , false, false};
 ModbusRequest ModbusStack::m_mrDummy = {0, 0, 0, 0, 0, 0, 0, 0};  //, false, false};
 const uint8_t ModbusStack::k_u8_maxSize = MODBUSSTACK_MAXSIZE;
-
+uint16_t ModbusStack::m_u16_idGen = 0;
 
 
 uint16_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8_t u8_func, 
@@ -47,6 +47,15 @@ uint16_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8
 	// Serial.print("index: "); Serial.println(u8_ind, DEC);
 	++m_u16_idGen; // = (m_u16_idGen != 65535) ? m_u16_idGen + 1: 1;
 	if (m_u16_idGen == 0) m_u16_idGen = 1;
+	
+	Serial.print("message is ");
+	if (m_mbStack[u8_ind].u8_flags & MRFLAG_isTcp) {
+		Serial.print("tcp");
+	}
+	else {
+		Serial.print("serial");
+	}
+	Serial.print(" with unq id "); Serial.println(m_u16_idGen);
 	
 	m_mbStack[u8_ind].u16_unqId    = m_u16_idGen;	
 	// m_mbStack[u8_ind].u16_unqId    = (m_u16_idGen != 65535) ? ++m_u16_idGen : 1;

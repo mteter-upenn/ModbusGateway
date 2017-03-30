@@ -9,7 +9,7 @@
 
 // need set of global arrays for clients, timings, flags, etc
 // will need new modbus library, likely just accept arrays and spit out info on success
-
+//ModbusStack mbStack;
 // start by transforming 80 server, it will make it easier
 void handleServers() {
   bool b_allFreeSocks = false;  // assume there are used sockets - don't worry we'll check first to make sure
@@ -109,7 +109,7 @@ void handleServers() {
         }
 
         if (g_u16a_socketFlags[ii] & SockFlag_MODBUS) {  // if port 502
-          uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
+          /*uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);*/
 
           if (!(g_u16a_socketFlags[ii] & SockFlag_READ_REQ)) {  // haven't read modbus request yet or added to stack
             // CHECK IF MESSAGE AVAILABLE TO READ
@@ -186,6 +186,8 @@ void handleServers() {
               continue;
             }
           }
+          uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
+
           // don't use else- otherwise will need to wait for next loop to check everything
           if (mbStack[u8_mbReqInd].u8_flags & (MRFLAG_goodData | MRFLAG_timeout)) {  // if we have, then check for good message return
             // TRANSFER MESSAGE FROM PROTOCOL BUFFER TO CURRENT SOCKET OUTBOUND
