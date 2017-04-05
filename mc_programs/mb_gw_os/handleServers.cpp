@@ -6,6 +6,7 @@
 #include <ModbusStructs.h>
 #include <ModbusServer.h>
 #include "handleHTTP.h"
+#include "handleRTC.h"
 
 // need set of global arrays for clients, timings, flags, etc
 // will need new modbus library, likely just accept arrays and spit out info on success
@@ -27,6 +28,24 @@ void handleServers() {
   uint8_t u8_curGrp[8] = { 0 };
 
   while (!b_allFreeSocks) {
+    if (g_b_useNtp && ((millis() - g_u32_rtcNtpLastReset) > NTP_RESET_DELAY)) {
+      // if enough time has elapsed and we want to use ntp
+      time_t t_localTime(0);
+
+      t_localTime = getNtpTime();
+
+      if (t_localTime != 0) {  // set clock to time gotten from ntp
+        Teensy3Clock.set(t_localTime);  // just need to set Teensy3 time, class defined time updates from here
+        //setTime(t_localTime);  // this should not be strictly necessary, though update will be delayed
+        g_b_rtcGood = true;
+
+        digitalWrite(RTC_FAIL_LED_PIN, LOW);
+      }
+
+      g_u32_rtcNtpLastReset = millis();  // reset timer
+    }
+
+
     b_allFreeSocks = true;  // set true, if anything is active, set false to avoid escape
     // loop through sockets to see if any new ones are available
     //   this is a separate loop so that no sockets get caught hanging - might not actually need it, but it won't hurt
