@@ -29,20 +29,22 @@ void handleServers() {
 
   while (!b_allFreeSocks) {
     if (g_b_useNtp && ((millis() - g_u32_rtcNtpLastReset) > NTP_RESET_DELAY)) {
-      // if enough time has elapsed and we want to use ntp
-      time_t t_localTime(0);
+      if (g_ba_clientSocksAvail[0] || g_ba_clientSocksAvail[1]) {  // check if emergency socket is available for udp use
+        // if enough time has elapsed and we want to use ntp
+        time_t t_localTime(0);
 
-      t_localTime = getNtpTime();
+        t_localTime = getNtpTime();
 
-      if (t_localTime != 0) {  // set clock to time gotten from ntp
-        Teensy3Clock.set(t_localTime);  // just need to set Teensy3 time, class defined time updates from here
-        //setTime(t_localTime);  // this should not be strictly necessary, though update will be delayed
-        g_b_rtcGood = true;
+        if (t_localTime != 0) {  // set clock to time gotten from ntp
+          Teensy3Clock.set(t_localTime);  // just need to set Teensy3 time, class defined time updates from here
+          //setTime(t_localTime);  // this should not be strictly necessary, though update will be delayed
+          g_b_rtcGood = true;
 
-        digitalWrite(RTC_FAIL_LED_PIN, LOW);
+          digitalWrite(RTC_FAIL_LED_PIN, LOW);
+        }
+
+        g_u32_rtcNtpLastReset = millis();  // reset timer
       }
-
-      g_u32_rtcNtpLastReset = millis();  // reset timer
     }
 
 
