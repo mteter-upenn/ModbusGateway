@@ -14,7 +14,7 @@
 void handleServers() {
   bool b_allFreeSocks = false;  // assume there are used sockets - don't worry we'll check first to make sure
   ModbusStack mbStack;
-  const uint32_t k_u32_mbTcpTimeout(3000);              // timeout for device to hold on to tcp connection after modbus request
+  const uint32_t k_u32_mbTcpTimeout(500);              // timeout for device to hold on to tcp connection after modbus request
   uint8_t u8a_mbSrtBytes[8][2];
   char ca_fileReq[8][REQUEST_LINE_SIZE] = { {0}, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 } };
   
@@ -172,6 +172,11 @@ void handleServers() {
               continue;
             }
           }
+
+          if (g_u16a_socketFlags[ii] & SockFlag_READ_REQ) {  // request has been read
+            g_u32a_socketTimeoutStart[ii] = millis();  // reset timer
+          }
+
           // don't use else- otherwise will need to wait for next loop to check everything
           if (mbStack[u8_mbReqInd].u8_flags & (MRFLAG_goodData | MRFLAG_timeout)) {  // if we have, then check for good message return
             // TRANSFER MESSAGE FROM PROTOCOL BUFFER TO CURRENT SOCKET OUTBOUND
@@ -200,6 +205,7 @@ void handleServers() {
             g_u16a_socketFlags[ii] &= ~(SockFlag_MB485 | SockFlag_MBTCP | SockFlag_READ_REQ | SockFlag_CLIENT);  // should reset bits 3, 4, and 5, bet this doesn't work
           }  // end if good message or mb timeout
           else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // check for time out
+            // THIS SHOULD NEVER TRIGGER WITH TIMER RESET DIRECTLY ABOVE, RELY ON MODBUS TIMEOUT TO GET OUT OF LOOP
 
             Serial.println("tcp timeout");
             // IF STACK MEMBER PRESENT
@@ -273,6 +279,7 @@ void handleServers() {
             }
             else {  // need to keep loop running for whatever reason (like waiting for live MB data)
               // need to do anything here?
+              g_u32a_socketTimeoutStart[ii] = millis();
             }
           }
           if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // tcp timeout
