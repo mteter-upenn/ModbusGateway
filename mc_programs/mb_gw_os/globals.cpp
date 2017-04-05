@@ -52,7 +52,7 @@ EthernetClient52 g_eca_socks[8] = {0, 1, 2, 3, 4, 5, 6, 7};
 
 // MOVE THESE TO MBSTACK CLASS
 bool g_b_485avail = true;  // can assume 485 is open at init
-bool g_ba_clientSocksAvail[2] = { false, false };  // assume both socks used at init
+bool g_ba_clientSocksAvail[2] = { true, true };  // assume both socks used at init
 
 
 // miscellaneous
