@@ -11,7 +11,8 @@ HEADERS += ModbusServer.h
 DISTFILES +=     keywords.txt
 
 INCLUDEPATH = /home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/cores/teensy3 \
+    /home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/libraries/Time \
+    /home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/libraries/SD \
     /home/fresep/Arduino/libraries/ModbusStructs \
     /home/fresep/Arduino/libraries/MeterLibrary \
     /home/fresep/Arduino/libraries/Ethernet52
-

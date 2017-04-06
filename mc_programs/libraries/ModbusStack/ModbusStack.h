@@ -35,7 +35,7 @@ private:
 	uint8_t getMrSocket(ModbusRequest mbReq);
 public:
 	// constructor ###################################################################################
-	ModbusStack(): m_u8_length(0), m_u8_1end(0), m_u8_2end(0){}; //, m_u16_idGen(1) {}
+	ModbusStack(): m_u8_length(0), m_u8_1end(0), m_u8_2end(0){}  //, m_u16_idGen(1) {}
 	
 	// public constants ##############################################################################
 	static const uint8_t k_u8_maxSize;
@@ -82,5 +82,6 @@ public:
 	void printReqByInd(uint8_t u8_ind);
 };
 
+// extern ModbusStack mbStack;
 #endif
 

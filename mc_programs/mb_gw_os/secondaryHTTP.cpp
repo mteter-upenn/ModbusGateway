@@ -108,6 +108,8 @@ void sendWebFile(EthernetClient52 &ec_client, const char* k_cp_fileName, FileTyp
         case FileType::CSV:  // csv - note, csvs for download are treated as NONE
           strcat_P(ca_streamBuf, PSTR("text/csv\n"));
           break;
+        case FileType::TXT:
+          strcat_P(ca_streamBuf, PSTR("text/plain\nContent-Disposition: attachment;\n"));
         default:
           break;
       }

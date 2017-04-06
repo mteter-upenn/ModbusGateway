@@ -177,7 +177,7 @@ void read_eeprom(char c_menuChar) {
     Serial.println(u8_rcdSlvs, DEC);
     Serial.println();
   }
-  
+
 
   //// Scroll?
   //term_func(F("Continue? (Y)"), verFunc, F(""), F("Continue? (Y)"), inpt, "n", false, 0, false);
@@ -290,14 +290,14 @@ void read_eeprom(char c_menuChar) {
   if (c_menuChar == 'l' || c_menuChar == 'a') {
     uint8_t u8_numMaps;
 
-    char *cpa_idType[] = { "na", 
-      "c_a", "c_b", "c_c", "c_av", "c_t", 
-      "ln_a", "ln_b", "ln_c", "ln_av", 
+    char *cpa_idType[] = { "na",
+      "c_a", "c_b", "c_c", "c_av", "c_t",
+      "ln_a", "ln_b", "ln_c", "ln_av",
       "ll_ab", "ll_bc", "ll_ca", "ll_av",
       "rl_a", "rl_b", "rl_c", "rl_t",
-      "rc_a", "rc_b", "rc_c", "rc_t", 
-      "ap_a", "ap_b", "ap_c", "ap_t", 
-      "pf_a", "pf_b", "pf_c", "pf_t", 
+      "rc_a", "rc_b", "rc_c", "rc_t",
+      "ap_a", "ap_b", "ap_c", "ap_t",
+      "pf_a", "pf_b", "pf_c", "pf_t",
       "e_rl", "e_rc", "e_ap" };
     char *cpa_idTypeCS[] = {"na",
       "ht_fl", "ms_fl", "vl_fl",
@@ -348,7 +348,7 @@ void read_eeprom(char c_menuChar) {
         Serial.println();
       }
       Serial.println();
-      
+
 
       for (int jj = 0; jj < u8_numGrps; ++jj) {
         uint16_t u16_grpStrt;

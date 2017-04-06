@@ -164,6 +164,14 @@ uint16_t EthernetClient52::getRemotePort() { // ACH
 	if (_sock >= MAX_SOCK_NUM) return 0;
 	return socketRemotePort(_sock);
 }
+
+void EthernetClient52::remoteIp2Char(char *cp_string) {
+	uint8_t u8a_remIp[4] = {0};
+	
+	socketRemoteIP(_sock, u8a_remIp);
+	
+	sprintf(cp_string, "%d.%d.%d.%d", u8a_remIp[0], u8a_remIp[1], u8a_remIp[2], u8a_remIp[3]);
+}
 #endif
 
 uint16_t EthernetClient52::getSourcePort() { // ACH

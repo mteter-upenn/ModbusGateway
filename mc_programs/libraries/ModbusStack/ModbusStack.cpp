@@ -42,6 +42,16 @@ uint16_t ModbusStack::add(uint8_t u8_flags, uint8_t u8_id, uint8_t u8_vid, uint8
 	
 	++m_u16_idGen; // = (m_u16_idGen != 65535) ? m_u16_idGen + 1: 1;
 	if (m_u16_idGen == 0) m_u16_idGen = 1;
+	
+	Serial.print("message is ");
+	if (m_mbStack[u8_ind].u8_flags & MRFLAG_isTcp) {
+		Serial.print("tcp");
+	}
+	else {
+		Serial.print("serial");
+	}
+	Serial.print(" with unq id "); Serial.println(m_u16_idGen);
+	
 	m_mbStack[u8_ind].u16_unqId    = m_u16_idGen;	
 
 	m_mbStack[u8_ind].u8_flags     = u8_flags;
@@ -73,7 +83,7 @@ bool ModbusStack::removeByUnqId(uint16_t u16_unqId) {
 
 
 bool ModbusStack::removeByInd(uint8_t u8_ind) {
-	Serial.println("removeByInd");
+	//Serial.println("removeByInd");
 	if (u8_ind < m_u8_length) {
 		pullForward(u8_ind);
 			

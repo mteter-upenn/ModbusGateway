@@ -89,10 +89,10 @@ void writeGenSetupFile(){
 
   SD.remove("gensetup.xml");
   webFile = SD.open("gensetup.xml", FILE_WRITE);
-  
+
   webFile.print(F("<?xml version = \"1.0\" ?><setup><name>"));
   webFile.print(g_gwName.ca_name);
-  
+
   webFile.print(F("</name><rd>"));
   if (g_b_recordData) {
     webFile.print(F("true"));
@@ -116,28 +116,28 @@ void writeGenSetupFile(){
     }
     webFile.print(g_u8a_mac.u8a_mac[ii], HEX);
   }
-  
+
   webFile.print(F("</mac><ip>"));
   webFile.print(g_ip_ip.u8a_ip[0], DEC);
   for (int ii = 1; ii < 4; ++ii){
     webFile.print(F("."));
     webFile.print(g_ip_ip.u8a_ip[ii], DEC);
   }
-  
+
   webFile.print(F("</ip><sm>"));
   webFile.print(g_ip_subnet.u8a_ip[0], DEC);
   for (int ii = 1; ii < 4; ++ii) {
     webFile.print(F("."));
     webFile.print(g_ip_subnet.u8a_ip[ii], DEC);
   }
-  
+
   webFile.print(F("</sm><gw>"));
   webFile.print(g_ip_gateway.u8a_ip[0], DEC);
   for (int ii = 1; ii < 4; ++ii) {
     webFile.print(F("."));
     webFile.print(g_ip_gateway.u8a_ip[ii], DEC);
   }
-  
+
   webFile.print(F("</gw><ntp>"));
   if (g_b_useNtp) {
     webFile.print(F("true"));
@@ -155,7 +155,7 @@ void writeGenSetupFile(){
 
   webFile.print(F("</nip><br>"));
   webFile.print(g_u32_baudrate, DEC);
-  
+
   webFile.print(F("</br><db>"));
   webFile.print(g_u8_dataBits, DEC);
 
@@ -167,7 +167,7 @@ void writeGenSetupFile(){
 
   webFile.print(F("</sb><to>"));
   webFile.print(g_u16_timeout, DEC);
-  
+
   //webFile.print(F("</to></setup>"));
   webFile.print(F("</to>"));
   webFile.flush();
@@ -183,12 +183,12 @@ void writeMtrSetupFile(){
 
   SD.remove("mtrsetup.xml");
   webFile = SD.open("mtrsetup.xml", FILE_WRITE);
-                      
+
   webFile.print(F("<?xml version = \"1.0\" ?><meterList>"));
-  
+
   for (int ii = 0; ii < SlaveData.getNumSlvs(); ++ii){
     webFile.print(F("<meter><mip>"));
-    
+
     if (SlaveData[ii].u8a_ip[0] != 0){
       webFile.print(SlaveData[ii].u8a_ip[0], DEC);
       for (int jj = 1; jj < 4; ++jj){
@@ -197,11 +197,11 @@ void writeMtrSetupFile(){
       }
     }
     webFile.print(F("</mip><dev>"));
-    
+
     webFile.print(SlaveData[ii].u8_id, DEC);
 
     webFile.print(F("</dev><vid>"));
-    
+
     webFile.print(SlaveData[ii].u8_vid, DEC);
 
     webFile.print(F("</vid><type>"));
@@ -216,7 +216,7 @@ void writeMtrSetupFile(){
   }
 
   webFile.print(F("</meterList>"));
-  
+
   webFile.flush();
   webFile.close();
 
