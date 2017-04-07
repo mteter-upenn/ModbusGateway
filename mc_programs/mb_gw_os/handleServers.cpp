@@ -145,7 +145,7 @@ void handleServers() {
                 char ca_errStr[30] = "ip is ";
                 g_eca_socks[ii].remoteIp2Char(ca_remIp);
                 strcpy(ca_errStr, ca_remIp);
-                storeStringAndArr(ca_errStr, u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, false);
+                ModbusServer::storeStringAndArr(ca_errStr, u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, false);
 
                 uint8_t u8_stkInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
 //                Serial.print("added this to "); Serial.print(mbStack.getLength(), DEC);
@@ -379,7 +379,7 @@ void handleServers() {
             mbStack[u8_stkInd].u8_flags |= MRFLAG_goodData;  // mark received actual msg flag
 //            Serial.println("good data");
           }
-          else if (g_modbusServer.serialTimedOut()) {
+          else if (g_modbusServer.didSerialTimeOut()) {
             mbStack[u8_stkInd].u8_flags |= MRFLAG_timeout;  // mark device timed out
 //            Serial.println("timeout");
           }
@@ -418,7 +418,7 @@ void handleServers() {
               mbStack[u8_stkInd].u8_flags |= MRFLAG_goodData;
 //              Serial.print("good tcp data on socket "); Serial.println(ii, DEC);
             }
-            else if (g_modbusServer.tcpTimedOut(g_eca_socks[ii])) {
+            else if (g_modbusServer.didTcpTimeOut(g_eca_socks[ii])) {
               mbStack[u8_stkInd].u8_flags |= MRFLAG_timeout;
 //              Serial.print("modbus timeout on socket "); Serial.println(ii, DEC);
             }
