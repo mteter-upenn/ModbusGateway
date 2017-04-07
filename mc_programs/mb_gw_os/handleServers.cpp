@@ -145,7 +145,7 @@ void handleServers() {
                 char ca_errStr[30] = "ip is ";
                 g_eca_socks[ii].remoteIp2Char(ca_remIp);
                 strcpy(ca_errStr, ca_remIp);
-                storeStringAndArr(ca_errStr, u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], false);
+                storeStringAndArr(ca_errStr, u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, false);
 
                 uint8_t u8_stkInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
 //                Serial.print("added this to "); Serial.print(mbStack.getLength(), DEC);

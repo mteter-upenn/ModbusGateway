@@ -87,5 +87,5 @@ void digitalClockDisplay(time_t t);
 void printDigits(int digits);
 void print3SpaceDigits(uint8_t num);
 void write3SpaceDigits(File sdFile, uint8_t num);
-void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, bool b_showTime = false);
+void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, uint8_t u8_sock, bool b_showTime = false);
 #endif

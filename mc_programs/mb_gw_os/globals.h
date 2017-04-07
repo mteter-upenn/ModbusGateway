@@ -74,6 +74,7 @@ extern uint16_t g_u16_timeout;                               // modbus timeout
 extern bool g_b_rtcGood;  // bGoodRTC
 extern uint32_t g_u32_rtcNtpLastReset;  // for resetting rtc with ntp
 #define NTP_RESET_DELAY 604800000UL // delay in ms
+#define TIME_ZONE_DIFF (0UL)
 
 // data collection timing
 extern uint32_t g_u32_lastDataRequest;  // oldDataTime

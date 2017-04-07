@@ -109,7 +109,7 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 		digitalWrite(m_u8_enablePin, HIGH); // MJT, set pin for transmission  was low
 	}
 	
-	storeStringAndArr("sent modbus serial mesg at ", u8a_txBuffer, 8, mr_mbReq.u16_unqId, true);
+  storeStringAndArr("sent modbus serial mesg at ", u8a_txBuffer, 8, mr_mbReq.u16_unqId, 255, true);
 	
 	return true;
 }
@@ -125,7 +125,7 @@ void digitalClockDisplay(time_t t) {
  Serial.print(monthStr(month(t)));
 // Serial.print(month(t));
  Serial.print(" ");
- Serial.print(year(t));
+ Serial.print(year(t)); 
  Serial.println();
 }
 
@@ -160,7 +160,7 @@ void write3SpaceDigits(File sdFile, uint8_t num) {
 }
 
 
-void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, bool b_showTime) {
+void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, uint8_t u8_sock, bool b_showTime) {
   time_t t_time = now();
   int t_yr, t_mn, t_dy;
   char ca_yr[5];
@@ -225,9 +225,19 @@ void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_a
 
     tempFile.print(" ");
     tempFile.print(year(t_time));
+
+    tempFile.print(" UTC");
   }
   tempFile.print(", unique id: ");
-  tempFile.println(u16_unqId);
+  tempFile.print(u16_unqId);
+
+  tempFile.print(", on socket: ");
+  if (u8_sock == 255) {
+    tempFile.println("serial");
+  }
+  else {
+    tempFile.println(u8_sock, DEC);
+  }
 
   if (u16_arrLen > 0) {
     for (int ii = 0; ii < u16_arrLen; ++ii) {
@@ -283,7 +293,7 @@ bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_
       print3SpaceDigits(u8a_txBuffer[ii]); Serial.print(" ");
     }
     Serial.println();
-    storeStringAndArr("sent modbus/tcp mesg at ", u8a_txBuffer, 12, mr_mbReq.u16_unqId, true);
+    storeStringAndArr("sent modbus/tcp mesg at ", u8a_txBuffer, 12, mr_mbReq.u16_unqId, ec_client.getSocketNumber(), true);
 		return true;
 	}
 	return false;
@@ -346,7 +356,7 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 				// }
 				// Serial.println();
 				
-				storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, true);
+        storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, 255, true);
 				
 				uint16_t u16_crc = 0xFFFF;
 				for (int ii = 6; ii < (u16_mbRxSize - 2); ++ii) {
@@ -447,7 +457,7 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
           print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
 				}
 				Serial.println();
-        storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, true);
+        storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, ec_client.getSocketNumber(), true);
 
 				// verify device id
 				if (u8p_devResp[6] != mr_mbReq.u8_id) {
@@ -547,7 +557,7 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
       print3SpaceDigits(u8a_respBuf[ii]); Serial.print(" ");
 		}
 		Serial.println();
-    storeStringAndArr("message to laptop at ", u8a_respBuf, u16_respLen, mbReq.u16_unqId, true);
+    storeStringAndArr("message to laptop at ", u8a_respBuf, u16_respLen, mbReq.u16_unqId, ec_client.getSocketNumber(), true);
 
 		ec_client.write(u8a_respBuf, u16_respLen);
 		ec_client.flush();  // do anything?
@@ -690,7 +700,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				}
 			}
 			
-      storeStringAndArr("\nincoming request at ", u8a_mbReq, u16_lenRead, 0, true);
+      storeStringAndArr("\nincoming request at ", u8a_mbReq, u16_lenRead, 0, ec_client.getSocketNumber(), true);
 
 			// SET MODBUSREQUEST VARIABLE/
 			u8a_strtBytes[0] = u8a_mbReq[0];

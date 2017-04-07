@@ -439,13 +439,13 @@ void getPostSetupData(EthernetClient52 &ec_client) {
         }
         else if (strncmp(cp_paramStart, "tm", 2) == 0) {  //  ****************************************** TIME *************************************************
           //Serial.println(F("time"));
-          const int32_t k_s32_timeZone = -5;
+//          const int32_t k_s32_timeZone = -5;
           u32_dum = 0;
 
           for (cp_iterPtr = cp_argStart; cp_iterPtr < cp_argEnd; ++cp_iterPtr) {
             u32_dum = u32_dum * 10 + ((*cp_iterPtr) - '0');
           }
-          u32_dum += k_s32_timeZone * SECS_PER_HOUR;
+          u32_dum += TIME_ZONE_DIFF * SECS_PER_HOUR;
 
           if (u32_dum > 1451606400UL) {
             g_b_rtcGood = true;
