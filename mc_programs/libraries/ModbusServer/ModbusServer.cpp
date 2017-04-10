@@ -223,7 +223,7 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 		}
 		
 		if (serialTimedOut()) {
-			u8_mbStatus = k_u8_MBResponseTimedOut;
+      u8_mbStatus = k_u8_MBGatewayTargetFailed;
 			break;
 		}
 	}
@@ -305,7 +305,7 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 		}
 		
 		if (tcpTimedOut(ec_client)) {
-			u8_mbStatus = k_u8_MBResponseTimedOut;
+      u8_mbStatus = k_u8_MBGatewayTargetFailed;
 			break;
 		}
 	}
@@ -378,7 +378,7 @@ uint8_t ModbusServer::returnResponse(const ModbusRequest &mbReq, const uint8_t u
 	u8a_respBuf[1] = u8a_strtBytes[1];
 	
 	if (mbReq.u8_flags & MRFLAG_timeout) {  // protocol has timed out, no message from slave device
-		u8_mbStatus = k_u8_MBResponseTimedOut;
+    u8_mbStatus = k_u8_MBGatewayTargetFailed;
 	}
 	else if (mbReq.u8_flags & MRFLAG_isTcp) {  // there is a good message over tcp
 		u8_mbStatus = recvTcpResponse(mbReq, u16a_interBuf, u8_numBytes);
@@ -482,7 +482,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 
 				if ((millis() - u32_startTime) > k_u32_mbRecvMsgTimeout) {  // 10 ms might be too quick, but not really sure
 					// set mbReq
-					return k_u8_MBResponseTimedOut;
+          return k_u8_MBNegAcknowledge;  // can't get full message
 				}
 
 				if (u16_lenRead < 6) {
@@ -556,7 +556,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 		}
 		else if ((millis() - u32_startTime) > k_u32_mbRecvMsgTimeout) {  // 10 ms might be too quick, but not really sure
 			// set mbReq
-			return k_u8_MBResponseTimedOut;
+      return k_u8_MBResponseTimedOut;  // no message
 		}
 	}
 	

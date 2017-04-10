@@ -219,7 +219,7 @@ bool respondHttp(const uint8_t u8_socket, const SockFlag u16_sockFlag, const Fil
               uint8_t u8_mbStatus(0);
 
               if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_timeout) {  // protocol has timed out, no message from slave device
-                u8_mbStatus = g_modbusServer.k_u8_MBResponseTimedOut;
+                u8_mbStatus = g_modbusServer.k_u8_MBGatewayTargetFailed;
               }
               else if (mbStack[u8_mbReqInd].u8_flags & MRFLAG_isTcp) {  // there is a good message over tcp
                 u8_mbStatus = g_modbusServer.recvTcpResponse(mbStack[u8_mbReqInd], u16a_respData, u8_numBytes);
