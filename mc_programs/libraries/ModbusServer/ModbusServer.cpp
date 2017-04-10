@@ -439,21 +439,23 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 	
 	while (!u8_mbStatus) {
 		while (ec_client.available()) {  // make sure to get all available data before checking timeout
-      Serial.print("recvTcpResponse, available: "); Serial.println(ec_client.available(), DEC);
+//      Serial.print("recvTcpResponse, available: "); Serial.println(ec_client.available(), DEC);
       if (u16_bytesLeft == 0) {
-        Serial.println("returned message way too long");
-        for (int ii = 0; ii < u16_mbRxSize; ++ii) {
-          print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
-        }
-        Serial.println();
-        uint16_t u16_dumleft = ec_client.available();
+//        Serial.println("returned message way too long");
+//        for (int ii = 0; ii < u16_mbRxSize; ++ii) {
+//          print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
+//        }
+//        Serial.println();
+//        uint16_t u16_dumleft = ec_client.available();
 
-        for (int ii = 0; ii < u16_dumleft; ++ii) {
-          print3SpaceDigits(ec_client.read()); Serial.print(" ");
-        }
+//        for (int ii = 0; ii < u16_dumleft; ++ii) {
+//          print3SpaceDigits(ec_client.read()); Serial.print(" ");
+//        }
 
-        while (true) {  // loop forever
-        }
+//        while (true) {  // loop forever
+//        }
+        u8_mbStatus = k_u8_MBSlaveDeviceFailure;
+        break;
       }
 
 //      if (u16_mbRxSize + ec_client.available() > u16_expLength) {  // message too big
@@ -514,7 +516,7 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 		}
 		
     if (didTcpTimeOut(ec_client)) {
-      Serial.print("tcp request timed out on socket "); Serial.println(ec_client.getSocketNumber(), DEC);
+//      Serial.print("tcp request timed out on socket "); Serial.println(ec_client.getSocketNumber(), DEC);
 			u8_mbStatus = k_u8_MBResponseTimedOut;
 			break;
 		}
