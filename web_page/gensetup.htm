@@ -52,6 +52,7 @@
 							
 							document.getElementById("gw").value = this.responseXML.getElementsByTagName('gw')[0].childNodes[0].nodeValue;
 							
+							document.getElementById("tcpto").value = this.responseXML.getElementsByTagName('tcpto')[0].childNodes[0].nodeValue;
 							
 							if (this.responseXML.getElementsByTagName('ntp')[0].childNodes[0].nodeValue == "true") {
 								document.getElementById("ntph").value = 1;
@@ -72,6 +73,15 @@
 							document.getElementById("sb").value = this.responseXML.getElementsByTagName('sb')[0].childNodes[0].nodeValue;
 							
 							document.getElementById("to").value = this.responseXML.getElementsByTagName('to')[0].childNodes[0].nodeValue;
+							
+							if (this.responseXML.getElementsByTagName('prtsd')[0].childNodes[0].nodeValue == "true") {
+								document.getElementById("prtsdh").value = 1;
+								document.getElementById("prtsd").checked = true;
+							}
+							else {
+								document.getElementById("prtsdh").value = 0;
+								document.getElementById("prtsd").checked = false;
+							}
 							
 							// make sure to correct for time by adding 5 hours to get back to UTC and multiplying by
 							//   1000 to convert to ms
@@ -161,6 +171,33 @@
 			document.getElementById("to_err").innerHTML = "";
 			return true;
 		};
+		
+		function CheckTcpTO(){
+			var to_val = parseInt(document.getElementById("tcpto").value);
+
+			if (!isNaN(to_val)){
+				if (to_val.toString() == document.getElementById("tcpto").value){
+					if ((to_val > 900000) || (to_val < 0)){
+						document.getElementById("tcpto_err").innerHTML = "Invalid entry";
+						return false;
+					}
+					else if (to_val > 300000){
+						document.getElementById("tcpto_err").innerHTML = "Larger than recommended";
+						return true;
+					}
+				}
+				else{
+					document.getElementById("tcpto_err").innerHTML = "Invalid entry";
+					return false;
+				}
+			}
+			else{
+				document.getElementById("tcpto_err").innerHTML = "Invalid entry";
+				return false;
+			}
+			document.getElementById("tcpto_err").innerHTML = "";
+			return true;
+		};
 
 		function CheckMaxSlvs(){
 			var ms_val = parseInt(document.getElementById("ms").value);
@@ -237,6 +274,12 @@
 				return false;
 			}
 			
+			tf = CheckTcpTO();
+			if (!tf) {
+				alert("Invalid TCP socket timeout!");
+				return false;
+			}
+			
 			// this will be stored regardless of whether or not the checkbox is checked
 			tf = CheckIP(document.getElementById("nip"));
 			if (!tf){
@@ -246,7 +289,7 @@
 			
 			tf = CheckTO();
 			if (!tf){
-				alert("Invalid timeout!");
+				alert("Invalid Modbus timeout!");
 				return false;
 			}
 		
@@ -310,7 +353,7 @@
 						<tr>
 							<td><label>Revision: </label></td>
 							<!-- MUST UPDATE THIS WITH COMMITS -->
-							<td><label id="rev" style="padding-left: .5em;">0.9.0d</label></td>
+							<td><label id="rev" style="padding-left: .5em;">0.9.1d</label></td>
 						</tr>
 						
 						<tr><td><br/></td></tr>
@@ -336,6 +379,11 @@
 							<td><label for="gw">Default Gateway: </label></td>
 							<td><input id="gw" name="gw" type="text" oninput="CheckIP(this)"/></td>
 							<td><label id="gw_err" style="color: red"></label></td>
+						</tr>
+						<tr>
+							<td><label for="tcpto">TCP socket timeout (ms): </label></td>
+							<td><input id="tcpto" name="tcpto" type="text" oninput="CheckTcpTO()"/></td>
+							<td><label id="tcpto_err" style="color: red; width: 15em"></label></td>
 						</tr>
 					
 						<tr><td><br/></td></tr>
@@ -402,6 +450,10 @@
 							<td><label for="to">Modbus timeout (ms): </label></td>
 							<td><input id="to" name="to" type="text" oninput="CheckTO()"/></td>
 							<td><label id="to_err" style="color: red; width: 15em"></label></td>
+						</tr>
+						<tr>
+							<td><label for="prtsd">Print Modbus comms to SD card? </label></td>
+							<td><input type="hidden" id="prtsdh" name="prtsd" value="0"/><input id="prtsd" type="checkbox" onclick="this.previousSibling.value=1-this.previousSibling.value"/></td>
 						</tr>
 						
 						<tr><td><br/></td></tr>

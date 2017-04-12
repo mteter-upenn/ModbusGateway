@@ -15,7 +15,7 @@
 void handleServers() {
   bool b_allFreeSocks = false;  // assume there are used sockets - don't worry we'll check first to make sure
   ModbusStack mbStack;
-  const uint32_t k_u32_mbTcpTimeout(500);              // timeout for device to hold on to tcp connection after modbus request
+//  const uint32_t k_u32_mbTcpTimeout(500);              // timeout for device to hold on to tcp connection after modbus request
   uint8_t u8a_mbSrtBytes[8][2];
   char ca_fileReq[8][REQUEST_LINE_SIZE] = { {0}, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 }, { 0 } };
   
@@ -147,7 +147,7 @@ void handleServers() {
                 strcpy(ca_errStr, ca_remIp);
                 ModbusServer::storeStringAndArr(ca_errStr, u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, false);
 
-                uint8_t u8_stkInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
+//                uint8_t u8_stkInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
 //                Serial.print("added this to "); Serial.print(mbStack.getLength(), DEC);
 //                Serial.print(" long stack: "); Serial.println(g_u16a_mbReqUnqId[ii], DEC);
 
@@ -188,7 +188,7 @@ void handleServers() {
                 g_u32a_socketTimeoutStart[ii] = millis();
               }
             }
-            else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {
+            else if ((millis() - g_u32a_socketTimeoutStart[ii]) > g_u32_tcpSockTimeout) {
 //              Serial.println("tcp timeout");
 
               g_eca_socks[ii].stop();
@@ -234,7 +234,7 @@ void handleServers() {
             // RESET SOCKFLAGS SO HAVEN'T READ MESSAGE
             g_u16a_socketFlags[ii] &= ~(SockFlag_MB485 | SockFlag_MBTCP | SockFlag_READ_REQ | SockFlag_CLIENT);  // should reset bits 3, 4, and 5, bet this doesn't work
           }  // end if good message or mb timeout
-          else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // check for time out
+          else if ((millis() - g_u32a_socketTimeoutStart[ii]) > g_u32_tcpSockTimeout) {  // check for time out
             // THIS SHOULD NEVER TRIGGER WITH TIMER RESET DIRECTLY ABOVE, RELY ON MODBUS TIMEOUT TO GET OUT OF LOOP
 
 //            Serial.println("tcp timeout");
@@ -285,7 +285,7 @@ void handleServers() {
               g_u16a_socketFlags[ii] |= SockFlag_READ_REQ;
               g_u32a_socketTimeoutStart[ii] = millis();
             }
-            else if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // nothing every available
+            else if ((millis() - g_u32a_socketTimeoutStart[ii]) > g_u32_tcpSockTimeout) {  // nothing every available
 //              Serial.println("tcp timeout");
 
               g_eca_socks[ii].stop();
@@ -312,7 +312,7 @@ void handleServers() {
               g_u32a_socketTimeoutStart[ii] = millis();
             }
           }
-          if ((millis() - g_u32a_socketTimeoutStart[ii]) > k_u32_mbTcpTimeout) {  // tcp timeout
+          if ((millis() - g_u32a_socketTimeoutStart[ii]) > g_u32_tcpSockTimeout) {  // tcp timeout
             // MUST TAKE CARE OF ANYTHING ADDED TO THE MODBUS STACK HERE!!!!!!!!!!
             uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
             if (u8_mbReqInd < mbStack.k_u8_maxSize) {

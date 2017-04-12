@@ -44,11 +44,13 @@ void read_eeprom(char c_menuChar) {
     IpArray ipStruct;
     IpArray smStruct;
     IpArray dgStruct;
+    uint32_t u32_tcpSockTimeout;
 
     EEPROM.get(u16_ipStrt, macStruct);
     EEPROM.get(u16_ipStrt + 6, ipStruct);
     EEPROM.get(u16_ipStrt + 10, smStruct);
     EEPROM.get(u16_ipStrt + 14, dgStruct);
+    EEPROM.get(u16_ipStrt + 18, u32_tcpSockTimeout);
 
     // IP info
     Serial.print(F("MAC: "));
@@ -88,14 +90,16 @@ void read_eeprom(char c_menuChar) {
       Serial.print(dgStruct.u8a_ip[ii], DEC);
     }
     Serial.println();
+
+    Serial.print(F("TCP Socket Timeout: ")); Serial.print(u32_tcpSockTimeout); Serial.println(" ms");
   }
 
   if (c_menuChar == 't' || c_menuChar == 'a') {
     IpArray ntpIpStruct;
     bool b_ntp;
 
-    EEPROM.get(u16_ipStrt + 18, b_ntp);
-    EEPROM.get(u16_ipStrt + 19, ntpIpStruct);
+    EEPROM.get(u16_ipStrt + 22, b_ntp);
+    EEPROM.get(u16_ipStrt + 23, ntpIpStruct);
 
     // NTP server
     Serial.print(F("Use NTP Server?: "));
@@ -121,18 +125,18 @@ void read_eeprom(char c_menuChar) {
     uint8_t u8_parity;
     uint8_t u8_stopBits;
     uint16_t u16_timeout;
+    bool b_printMbComms;
 
-    EEPROM.get(u16_ipStrt + 23, u32_baudrate);
-    EEPROM.get(u16_ipStrt + 27, u8_dataBits);
-    EEPROM.get(u16_ipStrt + 28, u8_parity);
-    EEPROM.get(u16_ipStrt + 29, u8_stopBits);
-    EEPROM.get(u16_ipStrt + 30, u16_timeout);
+    EEPROM.get(u16_ipStrt + 27, u32_baudrate);
+    EEPROM.get(u16_ipStrt + 31, u8_dataBits);
+    EEPROM.get(u16_ipStrt + 32, u8_parity);
+    EEPROM.get(u16_ipStrt + 33, u8_stopBits);
+    EEPROM.get(u16_ipStrt + 34, u16_timeout);
+    EEPROM.get(u16_ipStrt + 36, b_printMbComms);
 
-    Serial.print(F("Baud rate: "));
-    Serial.println(u32_baudrate);
+    Serial.print(F("Baud rate: ")); Serial.println(u32_baudrate);
 
-    Serial.print(F("Data bits: "));
-    Serial.println(u8_dataBits, DEC);
+    Serial.print(F("Data bits: ")); Serial.println(u8_dataBits, DEC);
 
     Serial.print(F("Parity: "));
     switch (u8_parity) {
@@ -149,11 +153,18 @@ void read_eeprom(char c_menuChar) {
       Serial.println("Unknown value");
     }
 
-    Serial.print("Stop bits: ");
-    Serial.println(u8_stopBits, DEC);
+    Serial.print("Stop bits: "); Serial.println(u8_stopBits, DEC);
 
-    Serial.print(F("Modbus u16_timeout: "));
-    Serial.println(u16_timeout);
+    Serial.print(F("Modbus timeout: ")); Serial.print(u16_timeout); Serial.println(" ms");
+
+    Serial.print(F("Print Modbus communications to SD card?: "));
+    if (b_printMbComms) {
+      Serial.println(F("yes"));
+    }
+    else {
+      Serial.println(F("no"));
+    }
+
     Serial.println();
   }
 

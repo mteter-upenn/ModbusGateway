@@ -264,6 +264,24 @@ bool ipFunc(char *cp_input) {  // check an ip
   return true;
 }
 
+bool tcpToFunc(char *cp_input) {  // checks modbus timeout
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
+
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
+  }
+
+  if (u32_dum > 900000) {  // 900,000 is 15 minutes, seems like a reasonable cap
+    return false;
+  }
+
+  Serial.print(F("Input: "));
+  Serial.println(u32_dum, DEC);
+  return true;
+}
+
 bool brFunc(char *cp_input) {  // checks baud rate
   uint16_t kk = 0;
   uint32_t u32_dum = 0;

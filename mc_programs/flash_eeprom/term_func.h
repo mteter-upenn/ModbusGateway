@@ -14,6 +14,7 @@ bool menuFunc(char *cp_input);
 bool nmFunc(char *cp_input);
 bool macFunc(char *cp_input);
 bool ipFunc(char *cp_input);
+bool tcpToFunc(char *cp_input);
 bool brFunc(char *cp_input);
 bool dbFunc(char *cp_input);
 bool parFunc(char *cp_input);

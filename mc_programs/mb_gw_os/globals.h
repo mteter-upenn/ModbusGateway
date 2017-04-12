@@ -52,6 +52,8 @@ extern IpArray g_ip_ip;
 extern IpArray g_ip_subnet;                    // this value will be overwritten by ip stored in eeprom
 extern IpArray g_ip_gateway;                    // this value will be overwritten by ip stored in eeprom
 
+extern uint32_t g_u32_tcpSockTimeout;               // tcp socket timeout, triggers when there is no activity from client or anything internally relevant
+
 extern bool g_b_useNtp;                                 // bNTPserv turns ntp on/off (overwritten by eeprom)
 extern IpArray g_ip_ntpIp;                      // this value will be overwritten by ip stored in eeprom
 
@@ -69,6 +71,7 @@ extern uint8_t g_u8_dataBits;                                // data bits 7 or 8
 extern uint8_t g_u8_parity;                                  // 0: None, 1: Odd, 2: Even
 extern uint8_t g_u8_stopBits;                                // 1 or 2 stop bits
 extern uint16_t g_u16_timeout;                               // modbus timeout
+extern bool g_b_printMbComms;                              // print modbus comms to sd card
 
 // rtc info
 extern bool g_b_rtcGood;  // bGoodRTC

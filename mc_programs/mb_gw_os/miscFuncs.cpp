@@ -49,16 +49,17 @@ void setConstants() {
   EEPROM.get(g_u16_ipBlkStart + 6, g_ip_ip);
   EEPROM.get(g_u16_ipBlkStart + 10, g_ip_subnet);
   EEPROM.get(g_u16_ipBlkStart + 14, g_ip_gateway);
-  EEPROM.get(g_u16_ipBlkStart + 19, g_ip_ntpIp);
+  EEPROM.get(g_u16_ipBlkStart + 18, g_u32_tcpSockTimeout);
 
-  EEPROM.get(g_u16_ipBlkStart + 18, g_b_useNtp);
+  EEPROM.get(g_u16_ipBlkStart + 22, g_b_useNtp);
+  EEPROM.get(g_u16_ipBlkStart + 23, g_ip_ntpIp);
 
-  EEPROM.get(g_u16_ipBlkStart + 23, g_u32_baudrate);
-  EEPROM.get(g_u16_ipBlkStart + 27, g_u8_dataBits);
-  EEPROM.get(g_u16_ipBlkStart + 28, g_u8_parity);
-  EEPROM.get(g_u16_ipBlkStart + 29, g_u8_stopBits);
-
-  EEPROM.get(g_u16_ipBlkStart + 30, g_u16_timeout);
+  EEPROM.get(g_u16_ipBlkStart + 27, g_u32_baudrate);
+  EEPROM.get(g_u16_ipBlkStart + 31, g_u8_dataBits);
+  EEPROM.get(g_u16_ipBlkStart + 32, g_u8_parity);
+  EEPROM.get(g_u16_ipBlkStart + 33, g_u8_stopBits);
+  EEPROM.get(g_u16_ipBlkStart + 34, g_u16_timeout);
+  EEPROM.get(g_u16_ipBlkStart + 36, g_b_printMbComms);
 }
 
 
@@ -89,6 +90,24 @@ void writeGenSetupFile(){
 
   SD.remove("gensetup.xml");
   webFile = SD.open("gensetup.xml", FILE_WRITE);
+
+
+  /* xml childnodes
+   * name  : Name of gateway
+   * mac   : MAC
+   * ip    : IP
+   * sm    : Subnet mask
+   * gw    : Default gateway
+   * tcpto : TCP socket timeout
+   * ntp   : T/F use NTP
+   * nip   : NTP ip address
+   * br    : Baud rate
+   * db    : Data bits
+   * par   : Parity
+   * sb    : Stop bits
+   * to    : Modbus timeout
+   * prtsd : T/F print Modbus comms to SD card
+   */
 
   webFile.print(F("<?xml version = \"1.0\" ?><setup><name>"));
   webFile.print(g_gwName.ca_name);
@@ -138,7 +157,10 @@ void writeGenSetupFile(){
     webFile.print(g_ip_gateway.u8a_ip[ii], DEC);
   }
 
-  webFile.print(F("</gw><ntp>"));
+  webFile.print(F("</gw><tcpto>"));
+  webFile.print(g_u32_tcpSockTimeout);
+
+  webFile.print(F("</tcpto><ntp>"));
   if (g_b_useNtp) {
     webFile.print(F("true"));
   }
@@ -168,8 +190,17 @@ void writeGenSetupFile(){
   webFile.print(F("</sb><to>"));
   webFile.print(g_u16_timeout, DEC);
 
-  //webFile.print(F("</to></setup>"));
-  webFile.print(F("</to>"));
+  webFile.print(F("</to><prtsd>"));
+  if (g_b_printMbComms) {
+    webFile.print(F("true"));
+  }
+  else {
+    webFile.print(F("false"));
+  }
+  webFile.print(F("</prtsd>"));
+
+  //webFile.print(F("</prtsd></setup>"));
+
   webFile.flush();
   webFile.close();
   digitalWrite(SD_WRITE_LED_PIN, LOW);

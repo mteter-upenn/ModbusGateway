@@ -108,6 +108,7 @@ void setup() {
 
   g_modbusServer.begin(g_u32_baudrate, g_u8_dataBits, g_u8_parity, g_u8_stopBits);
   g_modbusServer.setTimeout(g_u16_timeout);
+  g_modbusServer.setPrintComms(g_b_printMbComms);
 
   // start ntp or rtc
   time_t t_localTime(0);
