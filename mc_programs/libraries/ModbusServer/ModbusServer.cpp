@@ -332,78 +332,104 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 	uint8_t u8_mbStatus = k_u8_MBSuccess;
 	uint16_t u16_mbRxSize = 6;
 	uint8_t u8p_devResp[256] = {0};
-	
+  uint16_t u16_expLength(0);
+
+  switch (mr_mbReq.u8_func) {
+    case 1:  // reads
+    case 2:
+    case 3:
+    case 4:
+      u16_expLength = mr_mbReq.u16_length * 2 + 11;  // +9 accounts for tcp hdr, mb hdr
+      break;
+    case 5:  // writes
+    case 6:
+      u16_expLength = 12;  // +12 accounts for tcp hdr, mb hdr
+      break;
+  }
+
 	memset(u8p_devResp, 0, 4);  // set first four bytes to 0, first 2 might get reassigned elsewhere
 	
 	while (!u8_mbStatus) {
 		while (m_MBSerial->available()) {  // make sure to get all available data before checking timeout
 			if (u16_mbRxSize > 255) {  // message too big, will run into problems if crc pushes past 255
-				if (m_u8_enablePin != 255) {
-					digitalWrite(m_u8_enablePin, LOW); // MJT, set pin for transmission  was low
-				}
-	
-				u8_mbStatus = k_u8_MBIllegalDataValue;
+        u8_mbStatus = k_u8_MBSlaveDeviceFailure;
 				flushSerialRx();
-				return u8_mbStatus;
+//				return u8_mbStatus;
+        goto ExitLoopAndFunc;
 			}
 			
 			u8p_devResp[u16_mbRxSize++] = m_MBSerial->read();  // important bit here, storing data
 		}
 		
-		if (u16_mbRxSize > 9) {
-			uint16_t u16_givenSize(0);
-			switch (mr_mbReq.u8_func) {
-				case 1:  // reads
-				case 2:
-				case 3:
-				case 4:
-					u16_givenSize = u8p_devResp[8] + 11;  // +11 accounts for tcp hdr, mb hdr, and crc
-					break;
-				case 5:  // writes
-				case 6:
-					u16_givenSize = 14;  // +14 accounts for tcp hdr, mb hdr, and crc
-					break;
-			}
-			
-			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
-				// calculate CRC
-				
-				// Serial.println("modbus response: ");
-				// for (int ii = 0; ii < u16_mbRxSize; ++ii) {
-					// Serial.print(u8p_devResp[ii], DEC); Serial.print(", ");
-				// }
-				// Serial.println();
-				
+    if (u16_mbRxSize > 8) {
+      if (bitRead(u8p_devResp[7], 7)) {
+        u8_mbStatus = u8p_devResp[8];
+
+        // Serial.println("modbus response: ");
+        // for (int ii = 0; ii < u16_mbRxSize; ++ii) {
+          // Serial.print(u8p_devResp[ii], DEC); Serial.print(", ");
+        // }
+        // Serial.println();
+
         storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, 255, true);
-				
-				uint16_t u16_crc = 0xFFFF;
-				for (int ii = 6; ii < (u16_mbRxSize - 2); ++ii) {
-					u16_crc = crc16_update(u16_crc, u8p_devResp[ii]);
-				}
-				
-				// verify CRC
-				if ((lowByte(u16_crc) != u8p_devResp[u16_mbRxSize - 2]) || 
-				    (highByte(u16_crc) != u8p_devResp[u16_mbRxSize - 1])) {
-					u8_mbStatus = k_u8_MBInvalidCRC;
-				}
-				// verify device id
-				else if (u8p_devResp[6] != mr_mbReq.u8_id) {
-					u8_mbStatus = k_u8_MBInvalidSlaveID;
-				}
-				// verify function is same regardless of returned errors
-				else if ((u8p_devResp[7] & 0x7f) != mr_mbReq.u8_func) {
-					u8_mbStatus = k_u8_MBInvalidFunction;
-				}
-				// check for returned errors
-				else if (bitRead(u8p_devResp[8], 7)) {
-					u8_mbStatus = u8p_devResp[8];
-				}
-				
-				u8p_devResp[4] = highByte(u16_mbRxSize - 8);  // -8 accounts for tcp hdr and crc
-				u8p_devResp[5] = lowByte(u16_mbRxSize - 8);
-				// can exit from loop now
-				break;
-			}
+
+        break;
+      }
+      else {
+        uint16_t u16_givenSize(0);
+        switch (mr_mbReq.u8_func) {
+          case 1:  // reads
+          case 2:
+          case 3:
+          case 4:
+            u16_givenSize = u8p_devResp[8] + 11;  // +11 accounts for tcp hdr, mb hdr, and crc
+            break;
+          case 5:  // writes
+          case 6:
+            u16_givenSize = 14;  // +14 accounts for tcp hdr, mb hdr, and crc
+            break;
+        }
+
+        if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
+          // calculate CRC
+
+          // Serial.println("modbus response: ");
+          // for (int ii = 0; ii < u16_mbRxSize; ++ii) {
+            // Serial.print(u8p_devResp[ii], DEC); Serial.print(", ");
+          // }
+          // Serial.println();
+
+          storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, 255, true);
+
+          uint16_t u16_crc = 0xFFFF;
+          for (int ii = 6; ii < (u16_mbRxSize - 2); ++ii) {
+            u16_crc = crc16_update(u16_crc, u8p_devResp[ii]);
+          }
+
+          // verify CRC
+          if ((lowByte(u16_crc) != u8p_devResp[u16_mbRxSize - 2]) ||
+              (highByte(u16_crc) != u8p_devResp[u16_mbRxSize - 1])) {
+            u8_mbStatus = k_u8_MBInvalidCRC;
+          }
+          // verify device id
+          else if (u8p_devResp[6] != mr_mbReq.u8_id) {
+            u8_mbStatus = k_u8_MBInvalidSlaveID;
+          }
+          // verify function is same regardless of returned errors
+          else if ((u8p_devResp[7] & 0x7f) != mr_mbReq.u8_func) {
+            u8_mbStatus = k_u8_MBInvalidFunction;
+          }
+          else if (u16_expLength != u16_mbRxSize) {
+            // recieved message does not conform to expected length
+            u8_mbStatus = k_u8_MBSlaveDeviceFailure;
+          }
+
+          u8p_devResp[4] = highByte(u16_mbRxSize - 8);  // -8 accounts for tcp hdr and crc
+          u8p_devResp[5] = lowByte(u16_mbRxSize - 8);
+          // can exit from loop now
+          break;
+        }
+      }
 		}
 		
     if (didSerialTimeOut()) {
@@ -412,6 +438,8 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
 		}
 	}
 	
+  ExitLoopAndFunc:
+
 	if (!u8_mbStatus) {  // if no errors, then move data to register format, otherwise return error
 		u8_numBytes = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
 	}
@@ -432,15 +460,27 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 	uint16_t u16_bytesLeft;
 	uint8_t u8p_devResp[256] = {0};
 	EthernetClient52 ec_client(mr_mbReq.u8_flags & MRFLAG_sckMask);
-  uint16_t u16_expLength = mr_mbReq.u16_length * 2 + 9; // +9 accounts for tcp header and mb header
+  uint16_t u16_expLength(0);  // = mr_mbReq.u16_length * 2 + 9; // +9 accounts for tcp header and mb header
 	
+  switch (mr_mbReq.u8_func) {
+    case 1:  // reads
+    case 2:
+    case 3:
+    case 4:
+      u16_expLength = mr_mbReq.u16_length * 2 + 9;  // +9 accounts for tcp hdr, mb hdr
+      break;
+    case 5:  // writes
+    case 6:
+      u16_expLength = 12;  // +12 accounts for tcp hdr, mb hdr
+      break;
+  }
 
   u16_bytesLeft = u16_expLength;
 	
 	while (!u8_mbStatus) {
 		while (ec_client.available()) {  // make sure to get all available data before checking timeout
 //      Serial.print("recvTcpResponse, available: "); Serial.println(ec_client.available(), DEC);
-      if (u16_bytesLeft == 0) {
+      if (u16_bytesLeft == 0) {  // when recieving longer than expected message
 //        Serial.println("returned message way too long");
 //        for (int ii = 0; ii < u16_mbRxSize; ++ii) {
 //          print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
@@ -462,9 +502,10 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
       if (u16_mbRxSize + ec_client.available() > 255) {  // message too big
         // u16_mbRxSize is amount read and .available is remaining.  if there was only a check for .available being too large
         //    at the beginning, then any latecoming values could push the total over the edge.  This should account for that scenario
-				u8_mbStatus = k_u8_MBIllegalDataValue;
+        u8_mbStatus = k_u8_MBSlaveDeviceFailure;
 				// flushTcpRx(ec_client);  // don't bother flushing tcp, simply close socket
-				return u8_mbStatus;
+//				return u8_mbStatus;
+        goto ExitLoopAndFunc;
 			}
 			
 			s16_lenRead = ec_client.read(u8p_devResp + u16_mbRxSize, u16_bytesLeft); //264 - u8ModbusADUSize);
@@ -474,45 +515,59 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 			// u8p_devResp[u16_mbRxSize++] = m_MBSerial->read();  // important bit here, storing data
 		}
 		
-		if (u16_mbRxSize > 9) {
-			uint16_t u16_givenSize(0);
-			switch (mr_mbReq.u8_func) {
-				case 1:  // reads
-				case 2:
-				case 3:
-				case 4:
-					u16_givenSize = u8p_devResp[8] + 9;  // +11 accounts for tcp hdr, mb hdr, and crc
-					break;
-				case 5:  // writes
-				case 6:
-					u16_givenSize = 12;  // +12 accounts for tcp hdr, mb hdr
-					break;
-			}
-			
-			if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
-				Serial.println("raw tcp resp from slave: ");
-				for (int ii = 0; ii < u16_mbRxSize; ++ii) {
+    if (u16_mbRxSize > 8) {
+      if (bitRead(u8p_devResp[7], 7)) {
+        u8_mbStatus = u8p_devResp[8];  // bit 8 is either byte length or an error code, make sure it isn't an error code
+        Serial.println("raw tcp resp from slave: ");
+        for (int ii = 0; ii < u16_mbRxSize; ++ii) {
 //					Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
           print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
-				}
-				Serial.println();
+        }
+        Serial.println();
         storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, ec_client.getSocketNumber(), true);
+        break;  // exit while .available() loop
+      }
+      else {
+        // there is no error code, check that ids and funcs match
+        uint16_t u16_givenSize(0);
+        switch (mr_mbReq.u8_func) {
+          case 1:  // reads
+          case 2:
+          case 3:
+          case 4:
+            u16_givenSize = u8p_devResp[8] + 9;  // +9 accounts for tcp hdr, mb hdr
+            break;
+          case 5:  // writes
+          case 6:
+            u16_givenSize = 12;  // +12 accounts for tcp hdr, mb hdr
+            break;
+        }
 
-				// verify device id
-				if (u8p_devResp[6] != mr_mbReq.u8_id) {
-					u8_mbStatus = k_u8_MBInvalidSlaveID;
-				}
-				// verify function is same regardless of returned errors
-				else if ((u8p_devResp[7] & 0x7f) != mr_mbReq.u8_func) {
-					u8_mbStatus = k_u8_MBInvalidFunction;
-				}
-				// check for returned errors
-				else if (bitRead(u8p_devResp[7], 7)) {
-					u8_mbStatus = u8p_devResp[8];
-				}
-				// can exit from loop now
-				break;
-			}
+        if (u16_givenSize == u16_mbRxSize) {  // if sizes match, if they don't timeout will catch
+          Serial.println("raw tcp resp from slave: ");
+          for (int ii = 0; ii < u16_mbRxSize; ++ii) {
+  //					Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
+            print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
+          }
+          Serial.println();
+          storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, ec_client.getSocketNumber(), true);
+
+          // verify device id
+          if (u8p_devResp[6] != mr_mbReq.u8_id) {
+            u8_mbStatus = k_u8_MBInvalidSlaveID;
+          }
+          // verify function is same regardless of returned errors
+          else if ((u8p_devResp[7] & 0x7f) != mr_mbReq.u8_func) {
+            u8_mbStatus = k_u8_MBInvalidFunction;
+          }
+          else if (u16_expLength != u16_mbRxSize) {
+            // recieved message does not conform to expected length
+            u8_mbStatus = k_u8_MBSlaveDeviceFailure;
+          }
+          // can exit from loop now
+          break;  // exit while .available() loop
+        }
+      }
 		}
 		
     if (didTcpTimeOut(ec_client)) {
@@ -522,6 +577,7 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
 		}
 	}
 	
+  ExitLoopAndFunc:
 	if (!u8_mbStatus) {  // 
 		u8_numBytes = u8array2regs(u8p_devResp, u16p_regs, mr_mbReq.u8_func);
 		// Serial.print("regs from slave: ");

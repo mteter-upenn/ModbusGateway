@@ -108,7 +108,8 @@ void handleServers() {
 
               g_ba_clientSocksAvail[u8_dumSck - 6] = true;
             }
-            else {  // serial used
+            else if (g_modbusServer.didSerialTimeOut()) {  // serial used
+              // don't open until slaves given time to respond
               g_b_485avail = true;
             }
             // CLEAN SOCKETS? - main socket should just keep ticking, no reason to here
@@ -254,7 +255,7 @@ void handleServers() {
 
                   g_ba_clientSocksAvail[u8_dumSck - 6] = true;
                 }
-                else {  // serial used
+                else if (g_modbusServer.didSerialTimeOut()){  // serial used
                   g_b_485avail = true;
                 }
               }
@@ -325,7 +326,7 @@ void handleServers() {
 
                   g_ba_clientSocksAvail[u8_dumSck - 6] = true;
                 }
-                else {  // serial used
+                else if (g_modbusServer.didSerialTimeOut()) {  // serial used
                   g_b_485avail = true;
                 }
               }
@@ -384,7 +385,8 @@ void handleServers() {
 //            Serial.println("timeout");
           }
         }
-        else {  // serial active, but nothing in stack, set serial to open and pray
+        else if (g_modbusServer.didSerialTimeOut()){  // serial active, but nothing in stack, set serial to open and pray
+          // give slaves time to respond to nullified request
           g_b_485avail = true;
         }
       }  // end if/else serial

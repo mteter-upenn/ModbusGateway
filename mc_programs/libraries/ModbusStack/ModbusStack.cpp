@@ -139,6 +139,7 @@ uint8_t ModbusStack::getReqInd(uint16_t u16_unqId) {
 
 uint8_t ModbusStack::getNext485() {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
+    // if not tcp and have not yet sent message
 		if (!(m_mbStack[ii].u8_flags & MRFLAG_isTcp) && !(m_mbStack[ii].u8_flags & MRFLAG_sentMsg)) {
 			return ii;
 		}
@@ -161,6 +162,7 @@ uint8_t ModbusStack::getNextTcp() {
 
 uint8_t ModbusStack::getLive485() {
 	for (int ii = 0; ii < m_u8_length; ++ii) {
+    // if not tcp and have sent message
 		if (!(m_mbStack[ii].u8_flags & MRFLAG_isTcp) && (m_mbStack[ii].u8_flags & MRFLAG_sentMsg)) {
 			return ii;
 		}
