@@ -476,6 +476,8 @@ void getPostSetupData(EthernetClient52 &ec_client) {
             g_b_rtcGood = true;
             Teensy3Clock.set(u32_dum);
             setTime(u32_dum);
+            Serial.print("update time and retrieve "); getRtcTime();
+            Serial.print("via now"); printTime(now());
           }
         }
 
