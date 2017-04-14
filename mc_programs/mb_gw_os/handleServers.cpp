@@ -225,6 +225,7 @@ void handleServers() {
               g_ba_clientSocksAvail[u8_dumSck - 6] = true;
             }
             else {  // serial used
+              // there has been a timeout or good message so we don't need to wait for a reply
               g_b_485avail = true;
             }
             // CLEAN SOCKETS? - main socket should just keep ticking, no reason to here

@@ -123,6 +123,7 @@ void write3SpaceDigits(File sdFile, uint8_t num) {
 void ModbusServer::storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, uint8_t u8_sock, bool b_showTime) {
   if (ms_b_printComms) {
     time_t t_time = now();
+    uint32_t u32_millis = millis();
     int t_yr, t_mn, t_dy;
     char ca_yr[5];
     char ca_mn[3];
@@ -187,9 +188,10 @@ void ModbusServer::storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, 
       tempFile.print(" ");
       tempFile.print(year(t_time));
 
-      tempFile.print(" UTC");
+      tempFile.print(" UTC, ");
+      tempFile.print(u32_millis);
     }
-    tempFile.print(", unique id: ");
+    tempFile.print(" ms, unique id: ");
     tempFile.print(u16_unqId);
 
     tempFile.print(", on socket: ");
