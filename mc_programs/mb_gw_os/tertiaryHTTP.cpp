@@ -11,6 +11,7 @@
 #include <Time.h>
 #include "miscFuncs.h"
 #include <ModbusStructs.h>
+#include "handleRTC.h"
 
 void sendPostResp(EthernetClient52 &ec_client) {
   char ca_postResp[67]; // = "HTTP/1.1 303 See Other\nLocation: http://";
@@ -32,7 +33,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
 
   u16_postLen = 0;
 
-  s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE); // read out to g_POST_BUF_SZ
+  s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE - 1); // read out to g_POST_BUF_SZ
   cp_httpHdr[s16_lenRead] = 0;
 
   while (!b_foundPtr) {
@@ -64,7 +65,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
         }
       }
 
-      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE); // read out to POST_BUF_SZ
+      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE - 1); // read out to POST_BUF_SZ
       cp_httpHdr[s16_lenRead] = 0;
 
       if (u16_charMatches) {
@@ -93,7 +94,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
     }
 
     if ((*cp_srchPtr) == '\0') {
-      ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE); // length was cut off, load next portion into headHttp
+      ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE - 1); // length was cut off, load next portion into headHttp
       cp_srchPtr = cp_httpHdr;  // reset postLenPtr to start of headHttp
     }
     else {
@@ -134,7 +135,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
         }
       }
 
-      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE); // read out to POST_BUFFER_SIZE
+      s16_lenRead = ec_client.read((uint8_t*)cp_httpHdr, POST_BUFFER_SIZE - 1); // read out to POST_BUFFER_SIZE
       cp_httpHdr[s16_lenRead] = 0;
 
       if (u16_charMatches) {
@@ -155,7 +156,7 @@ char* preprocPost(EthernetClient52 &ec_client, char *cp_httpHdr, uint16_t &u16_p
     }  // else pointer is NULL
   }  // while haven't found pointer
 
-  cp_httpHdr[s16_lenRead + ec_client.read((uint8_t*)cp_httpHdr + s16_lenRead, REQUEST_BUFFER_SIZE - s16_lenRead)] = 0;
+  cp_httpHdr[s16_lenRead + ec_client.read((uint8_t*)cp_httpHdr + s16_lenRead, REQUEST_BUFFER_SIZE - s16_lenRead - 1) + 1] = 0;
   return cp_srchPtr;
 }
 
@@ -468,6 +469,8 @@ void getPostSetupData(EthernetClient52 &ec_client) {
             u32_dum = u32_dum * 10 + ((*cp_iterPtr) - '0');
           }
           u32_dum += TIME_ZONE_DIFF * SECS_PER_HOUR;
+
+          Serial.print("time from POST: "); printTime(u32_dum);
 
           if (u32_dum > 1451606400UL) {
             g_b_rtcGood = true;

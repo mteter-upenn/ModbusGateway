@@ -56,7 +56,9 @@ time_t getNtpTime() {
 
 
 time_t getRtcTime() {
-  return Teensy3Clock.get();
+  time_t t_time = Teensy3Clock.get();
+  Serial.print("rtc time: "); printTime(t_time);
+  return t_time;
 }
 
 
