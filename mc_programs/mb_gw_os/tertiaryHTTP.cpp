@@ -470,14 +470,14 @@ void getPostSetupData(EthernetClient52 &ec_client) {
           }
           u32_dum += TIME_ZONE_DIFF * SECS_PER_HOUR;
 
-          Serial.print("time from POST: "); printTime(u32_dum);
+//          Serial.print("time from POST: "); printTime(u32_dum);
 
           if (u32_dum > 1451606400UL) {
             g_b_rtcGood = true;
             Teensy3Clock.set(u32_dum);
             setTime(u32_dum);
-            Serial.print("update time and retrieve "); getRtcTime();
-            Serial.print("via now"); printTime(now());
+//            Serial.print("update time and retrieve "); getRtcTime();
+//            Serial.print("via now"); printTime(now());
           }
         }
 

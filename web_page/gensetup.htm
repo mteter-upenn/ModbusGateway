@@ -85,7 +85,7 @@
 							
 							// make sure to correct for time by adding 5 hours to get back to UTC and multiplying by
 							//   1000 to convert to ms
-							var a = new Date((parseInt(this.responseXML.getElementsByTagName('rtc')[0].childNodes[0].nodeValue) + 5 * 3600) * 1000);
+							var a = new Date((parseInt(this.responseXML.getElementsByTagName('rtc')[0].childNodes[0].nodeValue) + 0 * 3600) * 1000);
 							var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 							var year = a.getFullYear();
 							var month = months[a.getMonth()];
