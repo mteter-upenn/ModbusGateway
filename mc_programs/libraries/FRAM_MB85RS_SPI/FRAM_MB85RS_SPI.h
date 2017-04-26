@@ -108,6 +108,7 @@ class FRAM_MB85RS_SPI
     boolean readArray(uint32_t startAddr, uint16_t values[], size_t nbItems );
     boolean writeArray(uint32_t startAddr, uint8_t values[], size_t nbItems );
     boolean writeArray(uint32_t startAddr, uint16_t values[], size_t nbItems );
+//    bool readArray(uint32_t startAddr, void *values, size_t nbItems);
     
     boolean	isAvailable();
     boolean	getWPStatus();

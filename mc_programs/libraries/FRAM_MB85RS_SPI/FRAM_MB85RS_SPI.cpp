@@ -488,7 +488,6 @@ boolean FRAM_MB85RS_SPI::readArray( uint32_t startAddr, uint8_t values[], size_t
 }
 
 
-
 /*!
  ///     @brief   readArray()
  ///              Read an array made of 16-bits values from the specified F-RAM address

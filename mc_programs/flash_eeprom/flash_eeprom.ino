@@ -4,15 +4,16 @@
 #include <ModbusStructs.h>
 #include <ModbusStack.h>
 #include <MeterLibrary.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
 #include "mac.h"
 #include <SD.h>
 #include <ArduinoJson.h>
+#include <FRAM_MB85RS_SPI.h>
 
 #define SERIAL_INPUT 1  // 0 for no serial input, 1 for serial input (mac, ip, name, etc)
 
 #define NEW_GROUP_STYLE 1
- 
+
 #include "globals.h"
 #include "read_eeprom.h"
 #include "term_func.h"
@@ -25,6 +26,7 @@ void setup() {
   Serial.println(F("delay"));
   delay(2000);
   Serial.println(F("delay over"));
+
 
   pinMode(19, OUTPUT);
   pinMode(20, OUTPUT);
@@ -39,6 +41,15 @@ void setup() {
   pinMode(9, OUTPUT);
   digitalWrite(9, LOW);
 
+  Serial.println(F("Initializing FRAM"));
+  if (ExtFRAM.init(FRAM_SS_PIN)) {
+    Serial.println("FRAM found");
+  }
+  else {
+    Serial.println("FRAM not found, do nothing");
+    while (true) {}
+  }
+
   Serial.println(F("Initializing SD card..."));
   if (!SD.begin(4)) {
     Serial.println(F("ERROR - SD card initialization failed!"));
@@ -47,15 +58,21 @@ void setup() {
     Serial.println(F("SUCCESS - SD card initialized."));
   }
 
+
+
   u16_nmStrt = 10;
   u16_ipStrt = u16_nmStrt + 34; // 44
   u16_slvStrt = u16_ipStrt + 37; // 76   was 32
   u16_mapStrt = u16_slvStrt + 181;  // 257
 
-  EEPROM.put(0, u16_nmStrt);
-  EEPROM.put(2, u16_ipStrt);
-  EEPROM.put(4, u16_slvStrt);
-  EEPROM.put(6, u16_mapStrt);
+//  EEPROM.put(0, u16_nmStrt);
+//  EEPROM.put(2, u16_ipStrt);
+//  EEPROM.put(4, u16_slvStrt);
+//  EEPROM.put(6, u16_mapStrt);
+  ExtFRAM.write(0, u16_nmStrt);
+  ExtFRAM.write(2, u16_ipStrt);
+  ExtFRAM.write(4, u16_slvStrt);
+  ExtFRAM.write(6, u16_mapStrt);
 }
 
 void loop() {
@@ -117,7 +134,8 @@ void loop() {
 //        EEPROM.write(u16_ipStrt + jj, mac[jj]);
         macStruct.u8a_mac[jj] = mac[jj];
       }
-      EEPROM.put(u16_ipStrt, macStruct);
+//      EEPROM.put(u16_ipStrt, macStruct);
+
 
       Serial.print(F("This microcontroller (Teensy) already has a MAC!  It is "));
 

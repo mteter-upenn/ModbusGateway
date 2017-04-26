@@ -20,9 +20,10 @@ DISTFILES +=     Makefile
 
 INCLUDEPATH = /home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/cores/teensy3 \
 /home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/libraries/SD \
-/home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/libraries/EEPROM \
 /home/fresep/Arduino/libraries/ModbusStructs \
 /home/fresep/Arduino/libraries/ModbusStack \
 /home/fresep/Arduino/libraries/MeterLibrary \
 /home/fresep/Arduino/libraries/mac \
-/home/fresep/Arduino/libraries/ArduinoJson
+/home/fresep/Arduino/libraries/ArduinoJson \
+/home/fresep/Arduino/libraries/FRAM_MB85RS_SPI
+#/home/fresep/Programs/arduino-1.8.0/hardware/teensy/avr/libraries/EEPROM \
