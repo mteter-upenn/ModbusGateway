@@ -54,17 +54,17 @@
 ///              Constructor without write protection management
 ///     @param   cs, chip select pin - active low
 **/
-FRAM_MB85RS_SPI::FRAM_MB85RS_SPI(uint8_t cs)
-{
-    _cs = cs;
-    _wp = false; // No WP pin connected, WP management inactive
+//FRAM_MB85RS_SPI::FRAM_MB85RS_SPI(uint8_t cs)
+//{
+//    _cs = cs;
+//    _wp = false; // No WP pin connected, WP management inactive
     
-    _csCONFIG();
-    _csRELEASE();
-    delay(50);
+//    _csCONFIG();
+//    _csRELEASE();
+//    delay(50);
     
-    _framInitialised = false;
-}
+//    _framInitialised = false;
+//}
 
 
 
@@ -74,22 +74,22 @@ FRAM_MB85RS_SPI::FRAM_MB85RS_SPI(uint8_t cs)
 ///     @param   cs, chip select pin - active low
 ///     @param   wp, write protected pin - active low
 **/
-FRAM_MB85RS_SPI::FRAM_MB85RS_SPI(uint8_t cs, uint8_t wp)
-{
-    _cs = cs;
+//FRAM_MB85RS_SPI::FRAM_MB85RS_SPI(uint8_t cs, uint8_t wp)
+//{
+//    _cs = cs;
 
-    _wp = true; // WP pin connected and Write Protection enabled
-    _wpPin = wp;
+//    _wp = true; // WP pin connected and Write Protection enabled
+//    _wpPin = wp;
     
-    // The init WP management status is define under DEFAULT_WP_STATUS
-    DEFAULT_WP_STATUS ? enableWP() : disableWP();
+//    // The init WP management status is define under DEFAULT_WP_STATUS
+//    DEFAULT_WP_STATUS ? enableWP() : disableWP();
     
-    _csCONFIG();
-    _csRELEASE();
-    delay(50);
+//    _csCONFIG();
+//    _csRELEASE();
+//    delay(50);
     
-    _framInitialised = false;
-}
+//    _framInitialised = false;
+//}
 
 
 
@@ -103,25 +103,47 @@ FRAM_MB85RS_SPI::FRAM_MB85RS_SPI(uint8_t cs, uint8_t wp)
 ///              Inititalize the F-RAM chip
 ///     @return  if DEBUG_TRACE, provides all the informations on the chip
 **/
-void FRAM_MB85RS_SPI::init()
+bool FRAM_MB85RS_SPI::init()
 {
+    return init(10);  // call init with SS pin 10 and no write protect
+}
+
+
+/*!
+///     @brief   init()
+///              Inititalize the F-RAM chip
+///     @return  if DEBUG_TRACE, provides all the informations on the chip
+**/
+bool FRAM_MB85RS_SPI::init(uint8_t cs)
+{
+    _cs = cs;
+    _wp = false; // No WP pin connected, WP management inactive
+
+    _csCONFIG();
+    _csRELEASE();
+    delay(50);
+
+    _framInitialised = false;
+
+
     SPISettings(SPICONFIG);
     SPI.begin();
-    
+
     boolean deviceFound = checkDevice();
-    
 #if defined(DEBUG_TRACE) || defined(CHIP_TRACE)
+
+
     if (!Serial)
         Serial.begin(115200);
     while (!Serial) {}
-    
+
     Serial.println("FRAM_MB85RS_SPI created\n");
     Serial.print("Write protect management: ");
     if (_wp)
         Serial.println("active");
     else
         Serial.println("inactive");
-    
+
     if (deviceFound)
     {
         Serial.println("Memory Chip initialized");
@@ -130,6 +152,56 @@ void FRAM_MB85RS_SPI::init()
     else
         Serial.println("ERROR : Memory Chip NOT FOUND\n");
 #endif
+    return deviceFound;
+}
+
+/*!
+///     @brief   init()
+///              Inititalize the F-RAM chip
+///     @return  if DEBUG_TRACE, provides all the informations on the chip
+**/
+bool FRAM_MB85RS_SPI::init(uint8_t cs, uint8_t wp)
+{
+    _cs = cs;
+
+    _wp = true; // WP pin connected and Write Protection enabled
+    _wpPin = wp;
+
+    // The init WP management status is define under DEFAULT_WP_STATUS
+    DEFAULT_WP_STATUS ? enableWP() : disableWP();
+
+    _csCONFIG();
+    _csRELEASE();
+    delay(50);
+
+    _framInitialised = false;
+
+
+    SPISettings(SPICONFIG);
+    SPI.begin();
+
+    boolean deviceFound = checkDevice();
+#if defined(DEBUG_TRACE) || defined(CHIP_TRACE)
+    if (!Serial)
+        Serial.begin(115200);
+    while (!Serial) {}
+
+    Serial.println("FRAM_MB85RS_SPI created\n");
+    Serial.print("Write protect management: ");
+    if (_wp)
+        Serial.println("active");
+    else
+        Serial.println("inactive");
+
+    if (deviceFound)
+    {
+        Serial.println("Memory Chip initialized");
+        _deviceID2Serial();
+    }
+    else
+        Serial.println("ERROR : Memory Chip NOT FOUND\n");
+#endif
+    return deviceFound;
 }
 
 
@@ -760,7 +832,7 @@ boolean FRAM_MB85RS_SPI::_getDeviceID()
 
 	/* Shift values to separate IDs */
 	_densitycode = buffer[1] &= (1<<5)-1; // Only the 5 first bits
-	_productID = (buffer[2] << 8) + buffer[3]; // Is really necessary to read this info ?
+  _productID = (buffer[1] << 8) + buffer[2]; // Is really necessary to read this info ?
 
 	if (_manufacturer == FUJITSU_ID)
     {
@@ -843,3 +915,4 @@ void FRAM_MB85RS_SPI::_setMemAddr( uint32_t *framAddr )
     _lastaddress = *framAddr;
 }
 
+FRAM_MB85RS_SPI ExtFRAM;

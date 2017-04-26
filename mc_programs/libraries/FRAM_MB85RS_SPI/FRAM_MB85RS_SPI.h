@@ -48,13 +48,13 @@
 
 // DEFINES
 
-#define SPICONFIG   SPISettings(28000000, MSBFIRST, SPI_MODE0) // SPI frequency (24 MHz max), MODE 0
-#ifndef DEBUG_TRACE
-    #define DEBUG_TRACE    // Enabling Debug Trace on Serial
-#endif
-#ifndef CHIP_TRACE
-    #define CHIP_TRACE     // Serial trace for characteristics of the chip
-#endif
+#define SPICONFIG   SPISettings(24000000, MSBFIRST, SPI_MODE0) // SPI frequency (24 MHz max), MODE 0
+//#ifndef DEBUG_TRACE
+//    #define DEBUG_TRACE    // Enabling Debug Trace on Serial
+//#endif
+//#ifndef CHIP_TRACE
+//    #define CHIP_TRACE     // Serial trace for characteristics of the chip
+//#endif
 
 
 // IDs - can be extends to any other compatible chip
@@ -88,11 +88,13 @@
 class FRAM_MB85RS_SPI
 {
  public:
-    FRAM_MB85RS_SPI(uint8_t cs);
-    FRAM_MB85RS_SPI(uint8_t cs, uint8_t wp);
+//    FRAM_MB85RS_SPI(uint8_t cs);
+//    FRAM_MB85RS_SPI(uint8_t cs, uint8_t wp);
     
 
-    void	init();
+    bool	init();
+    bool init(uint8_t cs);
+    bool init(uint8_t cs, uint8_t wp);
     boolean	checkDevice();
     
     boolean	read(uint32_t framAddr, uint8_t *value);
@@ -138,6 +140,7 @@ class FRAM_MB85RS_SPI
     void        _setMemAddr(uint32_t *framAddr);
 };
 
+extern FRAM_MB85RS_SPI ExtFRAM;
 
 
 #endif
