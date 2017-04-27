@@ -56,10 +56,12 @@ struct TypeArray {
 };
 
 struct SlaveArray {
+  char ca_name[32];
   uint8_t u8a_mtrType[3];
   uint8_t u8a_ip[4];
   uint8_t u8_id;
   uint8_t u8_vid;
+  uint8_t u8_flags;
 };
 
 

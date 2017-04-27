@@ -2,10 +2,11 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <SD.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
+#include <FRAM_MB85RS_SPI.h>
 #include <MeterLibrary.h>
 
-uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
+uint32_t writeBlocks() {
 
   File jsonFile = SD.open("/maplist.jsn");
 
@@ -45,7 +46,7 @@ uint16_t writeBlocks(uint16_t u16_mapIndStrt) {
   * |  17  |   Real Power, Total         |                                |
   * |  18  |   Reactive Power, A         |                                |
   * |  19  |   Reactive Power, B         |                                |
-  * |  20  |   Reactive Power, C         |                                |
+  * |  20  |   Reactive Power, C         |             u32_mapIndStrt                   |
   * |------|-----------------------------|--------------------------------|
   * |  21  |   Reactive Power, Total     |                                |
   * |  22  |   Apparent Power, A         |                                |

@@ -1,7 +1,8 @@
 #include "term_func.h"
 #include <Arduino.h>
 #include "globals.h"
-#include <EEPROM.h>
+//#include <EEPROM.h>
+#include <FRAM_MB85RS_SPI.h>
 
 bool term_func(const __FlashStringHelper *fshp_msgStr, bool (*argFunc)(char*), const __FlashStringHelper *fshp_trueStr,
   const __FlashStringHelper *fshp_falseStr, char *cp_input, const char *kcp_defaultInput, bool b_verify, uint8_t u8_repeatMsgTimeout, 
@@ -365,7 +366,7 @@ bool sbFunc(char *cp_input) {
   uint32_t u32_dum = 0;
 
   while (cp_input[kk] != 0) {
-    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0'_);
     ++kk;
   }
 
@@ -395,23 +396,23 @@ bool toFunc(char *cp_input) {  // checks modbus timeout
   return true;
 }
 
-bool mtrnumFunc(char *cp_input) {  // checks number of meters to record/store in gateway
-  uint16_t kk = 0;
-  uint32_t u32_dum = 0;
+//bool mtrnumFunc(char *cp_input) {  // checks number of meters to record/store in gateway
+//  uint16_t kk = 0;
+//  uint32_t u32_dum = 0;
 
-  while (cp_input[kk] != 0) {
-    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
-    ++kk;
-  }
+//  while (cp_input[kk] != 0) {
+//    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+//    ++kk;
+//  }
 
-  if (u32_dum > 20) {
-    return false;
-  }
+//  if (u32_dum > 20) {
+//    return false;
+//  }
 
-  Serial.print(F("Input: "));
-  Serial.println(u32_dum, DEC);
-  return true;
-}
+//  Serial.print(F("Input: "));
+//  Serial.println(u32_dum, DEC);
+//  return true;
+//}
 
 bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
   uint16_t u16_dum = 0;
@@ -559,8 +560,23 @@ bool mbidFunc(char *cp_input) {  // checks valid modbus device id
 }
 
 
+bool timingFunc(char *cp_input) {
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
+
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
+  }
+
+  Serial.print(F("Input: "));
+  Serial.println(u32_dum, DEC);
+  return true;
+}
+
+
 // storage functions *******************************************************************************************************
-void storeName(char cp_input[32], uint16_t u16_regStrt) {
+void storeName(char cp_input[32], uint32_t u32_regStrt) {
   if (b_quit) {
     return;
   }
@@ -569,11 +585,21 @@ void storeName(char cp_input[32], uint16_t u16_regStrt) {
 
     cp_input[31] = 0;
     memcpy(qc_var.ca_name, cp_input, 32);
-    EEPROM.put(u16_regStrt, qc_var.ca_name);
+    EEPROM.put(u32_regStrt, qc_var.ca_name);
   }
 }
 
-void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts) {
+void storeNameRam(char cp_input[32], char *cp_name) {
+  if (b_quit) {
+    return;
+  }
+  else {
+    cp_input[31] = 0;
+    memcpy(cp_name, cp_input, 32);
+  }
+}
+
+void storeIP(char *cp_input, uint32_t u32_regStrt, uint8_t u8_elmts) {
   if (b_quit) {
     return;
   }
@@ -603,10 +629,10 @@ void storeIP(char *cp_input, uint16_t u16_regStrt, uint8_t u8_elmts) {
     }
 
     if (u8_elmts == 3) {
-      EEPROM.put(u16_regStrt, typeStruct);
+      EEPROM.put(u32_regStrt, typeStruct);
     }
     else if (u8_elmts == 4) {
-      EEPROM.put(u16_regStrt, ipStruct);
+      EEPROM.put(u32_regStrt, ipStruct);
     }
   }
 }
@@ -636,23 +662,23 @@ void storeIPRam(char *cp_input, uint8_t *u8p_ipStrt, uint8_t u8_elmts) {
 }
 
 
-bool storeBool(char *cp_input, uint16_t u16_regStrt) {
+bool storeBool(char *cp_input, uint32_t u32_regStrt) {
   if (b_quit) {
     return false;
   }
   else {
     if (cp_input[0] == 'y' || cp_input[0] == 'Y') {
-      EEPROM.put(u16_regStrt, true);
+      EEPROM.put(u32_regStrt, true);
       return true;
     }
     else {
-      EEPROM.put(u16_regStrt, false);
+      EEPROM.put(u32_regStrt, false);
       return false;
     }
   }
 }
 
-uint8_t storeByte(char *cp_input, uint16_t u16_regStrt) {
+uint8_t storeByte(char *cp_input, uint32_t u32_regStrt) {
   
   if (b_quit) {
     return 0;
@@ -666,7 +692,7 @@ uint8_t storeByte(char *cp_input, uint16_t u16_regStrt) {
       ++kk;
     }
 
-    EEPROM.put(u16_regStrt, u8_dum);
+    EEPROM.put(u32_regStrt, u8_dum);
 
     return u8_dum;
   }
@@ -693,7 +719,7 @@ uint8_t storeByteRam(char *cp_input, uint8_t &u8p_byte) {
 }
 
 
-uint16_t storeShortInt(char *cp_input, uint16_t u16_regStrt) {
+uint16_t storeShortInt(char *cp_input, uint32_t u32_regStrt) {
   if (b_quit) {
     return 0;
   }
@@ -706,12 +732,12 @@ uint16_t storeShortInt(char *cp_input, uint16_t u16_regStrt) {
       ++kk;
     }
 
-    EEPROM.put(u16_regStrt, u16_dum);
+    EEPROM.put(u32_regStrt, u16_dum);
     return u16_dum;
   }
 }
 
-uint32_t storeInt(char *cp_input, uint16_t u16_regStrt) {
+uint32_t storeInt(char *cp_input, uint32_t u32_regStrt) {
   if (b_quit) {
     return 0;
   }
@@ -724,18 +750,35 @@ uint32_t storeInt(char *cp_input, uint16_t u16_regStrt) {
      ++kk;
     }
 
-    EEPROM.put(u16_regStrt, u32_dum);
+    EEPROM.put(u32_regStrt, u32_dum);
 
     return u32_dum;
   }
 }
 
-bool storeSlaveStruct(SlaveArray slvStruct, uint16_t u16_regStrt) {
+bool storeSlaveStruct(SlaveArray slvStruct, uint16_t u32_regStrt) {
   if (b_quit) {
     return false;
   }
   else {
-    EEPROM.put(u16_regStrt, slvStruct);
+    EEPROM.put(u32_regStrt, slvStruct);
   }
   return true;
+}
+
+uint8_t storeFlagRam(char *cp_input, uint8_t &u8r_byte, uint8_t u8_bit) {
+  if (b_quit) {
+    return u8r_byte;
+  }
+  if (u8_bit > 7) {
+    return u8r_byte;
+  }
+
+  if (cp_input[0] == 'y' || cp_input[0] == 'Y') {
+    u8r_byte |= 1 << u8_bit;
+  }
+  else {
+    u8r_byte &= ~(1 << u8_bit);  // negate
+  }
+  return u8r_byte;
 }

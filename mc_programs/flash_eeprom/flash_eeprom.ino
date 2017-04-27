@@ -19,9 +19,8 @@
 #include "term_func.h"
 #include "writeLibrary.h"
 
-
 void setup() {
-  uint16_t u16_ipStrt, u16_nmStrt, u16_mapStrt, u16_slvStrt;
+//  uint16_t u16_ipStrt, u16_nmStrt, u16_mapStrt, u16_slvStrt;
   Serial.begin(9600);
   Serial.println(F("delay"));
   delay(2000);
@@ -60,33 +59,39 @@ void setup() {
 
 
 
-  u16_nmStrt = 10;
-  u16_ipStrt = u16_nmStrt + 34; // 44
-  u16_slvStrt = u16_ipStrt + 37; // 76   was 32
-  u16_mapStrt = u16_slvStrt + 181;  // 257
+//  u16_nmStrt = 10;
+//  u16_ipStrt = u16_nmStrt + 34; // 44
+//  u16_slvStrt = u16_ipStrt + 37; // 76   was 32
+//  u16_mapStrt = u16_slvStrt + 181;  // 257
 
 //  EEPROM.put(0, u16_nmStrt);
 //  EEPROM.put(2, u16_ipStrt);
 //  EEPROM.put(4, u16_slvStrt);
 //  EEPROM.put(6, u16_mapStrt);
-  ExtFRAM.write(0, u16_nmStrt);
-  ExtFRAM.write(2, u16_ipStrt);
-  ExtFRAM.write(4, u16_slvStrt);
-  ExtFRAM.write(6, u16_mapStrt);
+
+  g_u32_nmStrt = 100;  // data storage starts at byte 100, length 32, ends 131
+  g_u32_ipStrt = g_u32_nmStrt + 32; // length 22, ends 153
+  g_u32_ntpStrt = g_u32_ipStrt + 22;  // length 5, ends 158
+  g_u32_serStrt = g_u32_ntpStrt + 5;  // length 10, ends 168
+  g_u32_slvStrt = 256;  // length 1355, ends
+  g_u32_mapStrt = 2096;  // unknown length
+  g_u32_curStrt = 28672;  // 32k - 4k
+
+  ExtFRAM.write(0, g_u32_nmStrt);
+  ExtFRAM.write(4, g_u32_ipStrt);
+  ExtFRAM.write(8, g_u32_ntpStrt);
+  ExtFRAM.write(12, g_u32_serStrt);
+  ExtFRAM.write(16, g_u32_slvStrt);
+  ExtFRAM.write(20, g_u32_mapStrt);
+  ExtFRAM.write(24, g_u32_curStrt);
 }
 
 void loop() {
-  uint16_t u16_ipStrt, u16_nmStrt, u16_mapStrt, u16_mapEnd, u16_slvStrt;
+  uint32_t u32_mapEnd;
   uint16_t u16_numSlvs;
   bool b_resp;
   char ca_input[50];
   char c_menuSelect;
-
-  // duplicate should make this global
-  u16_nmStrt = 10;
-  u16_ipStrt = u16_nmStrt + 34; // 44
-  u16_slvStrt = u16_ipStrt + 37; // 76
-  u16_mapStrt = u16_slvStrt + 181;  // 257
 
   b_quit = false;
 
@@ -108,7 +113,7 @@ void loop() {
     "t/T: NTP server\n"
     "r/R: Record data\n"
     "s/S: Serial options\n"
-    "m/M: Gateway meter list\n"
+    "m/M: Gateway slave list\n"
     "l/L: Register library"), menuFunc, F("OK."), F("Sorry, please pick a valid option."), ca_input, "n", false, 0, false);
 
   c_menuSelect = ca_input[0];
@@ -117,25 +122,26 @@ void loop() {
   if (c_menuSelect == 'N' || c_menuSelect == 'A') {  // name
 
       // write name
-    term_func(F("Please input a name. There is a 30 character limit. [\"UPenn_Modbus_Gateway.\"]"), nmFunc, F("Great name!"),
-      F("Please input a name. There is a 30 character limit. [\"UPenn_Modbus_Gateway.\"]"), ca_input, "UPenn_Modbus_Gateway", true, 0, false);
+    term_func(F("Please input a name. There is a 31 character limit. [\"UPenn_Modbus_Gateway\"]"), nmFunc, F("Great name!"),
+      F("Please input a name. There is a 31 character limit. [\"UPenn_Modbus_Gateway\"]"), ca_input, "UPenn_Modbus_Gateway", true, 0, false);
 
-    storeName(ca_input, u16_nmStrt);
+    storeName(ca_input, g_u32_nmStrt);
   }
 
   if (c_menuSelect == 'I' || c_menuSelect == 'A') {
     // mac
 #if defined(CORE_TEENSY)  // if teensy3.0 or greater
     if (!b_quit) {
-      MacArray macStruct;
+//      MacArray macStruct;
+      uint8_t u8a_mac[6];
 
       read_mac();
       for (int jj = 0; jj < 6; ++jj) {
-//        EEPROM.write(u16_ipStrt + jj, mac[jj]);
-        macStruct.u8a_mac[jj] = mac[jj];
+//        macStruct.u8a_mac[jj] = mac[jj];
+        u8a_mac[jj] = mac[jj];
       }
 //      EEPROM.put(u16_ipStrt, macStruct);
-
+      ExtFRAM.writeArray(g_u32_ipStrt, &u8a_mac, 6);
 
       Serial.print(F("This microcontroller (Teensy) already has a MAC!  It is "));
 
@@ -162,29 +168,29 @@ void loop() {
     // Gateway IP
     term_func(F("Please insert the device's IP address. [130.91.138.141]"), ipFunc, F("Ok, now the subnet mask"),
       F("Please insert IP using X.X.X.X format. [130.91.138.141]"), ca_input, "130.91.138.141", true, 0, false);
-    storeIP(ca_input, u16_ipStrt + 6, 4);
+    storeIP(ca_input, g_u32_ipStrt + 6, 4);
 
     // Subnet mask
     term_func(F("Please insert the device's subnet mask. [255.255.252.0]"), ipFunc, F("Ok, now the default gateway"),
       F("Please insert subnet mask using X.X.X.X format. [255.255.252.0]"), ca_input, "255.255.252.0", true, 0, false);
-    storeIP(ca_input, u16_ipStrt + 10, 4);
+    storeIP(ca_input, g_u32_ipStrt + 10, 4);
 
     // default gateway
     term_func(F("Please insert the device's default gateway address. [130.91.136.1]"), ipFunc, F("Ok."),
       F("Please insert default gateway using X.X.X.X format. [130.91.136.1]"), ca_input, "130.91.136.1", true, 0, false);
-    storeIP(ca_input, u16_ipStrt + 14, 4);
+    storeIP(ca_input, g_u32_ipStrt + 14, 4);
 
     // tcp socket timeout
     term_func(F("Please insert a TCP socket timeout. [500] (ms)"), tcpToFunc, F("Ok."),
       F("Please insert number from 1 to 30000 in decimal for TCP socket timeout. [500] (ms)"), ca_input, "500", true, 0, false);
-    storeInt(ca_input, u16_ipStrt + 18);
+    storeInt(ca_input, g_u32_ipStrt + 18);
   }
 
   if (c_menuSelect == 'T' || c_menuSelect == 'A') {
     // yes/no on ntp
     b_resp = term_func(F("Do you want to use an NTP server? (y/[n])"), verFunc, F("Ok, let's fill out its IP."),
       F("Ok, now for 485 parameters."), ca_input, "n", true, 0, true);
-    storeBool(ca_input, u16_ipStrt + 22);
+    storeBool(ca_input, g_u32_ntpStrt);
 
     // ntp server ip
     if (b_resp) {
@@ -195,7 +201,7 @@ void loop() {
       // write default to this?
       strcpy_P(ca_input, PSTR("128.91.3.136"));
     }
-    storeIP(ca_input, u16_ipStrt + 23, 4);
+    storeIP(ca_input, g_u32_ntpStrt + 1, 4);
   }
 
   if (c_menuSelect == 'S' || c_menuSelect == 'A') {
@@ -203,59 +209,44 @@ void loop() {
     term_func(F("Please insert a baudrate for 485 communications. [9600]"), brFunc, F("Ok."),
       F("The number you entered is outside of the bounds!  Please select one of the following:\n300\n1200\n2400\n4800\n[9600]\n19200\n31250\n38400\n57600\n115200"),
       ca_input, "9600", true, 0, false);
-    storeInt(ca_input, u16_ipStrt + 27);
+    storeInt(ca_input, g_u32_serStrt);
 
     // data bits
     term_func(F("Please insert number of data bits (7 or 8). [8]"), dbFunc, F("Ok."),
               F("That is not a viable number of data bits, please pick either 7 or 8. [8]"), ca_input, "8", true, 0, false);
-    storeByte(ca_input, u16_ipStrt + 31);
+    storeByte(ca_input, g_u32_serStrt + 4);
 
     // parity
     term_func(F("Please insert parity of 485 communications ([0: None], 1: Odd, 2: Even)."), parFunc, F("Ok."),
               F("That is not a viable parity, please pick either [0], 1, or 2 for 'None', 'Odd', or 'Even'."), ca_input, "0", true, 0, false);
-    storeByte(ca_input, u16_ipStrt + 32);
+    storeByte(ca_input, g_u32_serStrt + 5);
 
     // stop bits
     term_func(F("Please insert number of stop bits (1 or 2). [1]"), sbFunc, F("Ok."),
               F("That is not a viable number of stop bits, please pick either 1 or 2. [1]"), ca_input, "1", true, 0, false);
-    storeByte(ca_input, u16_ipStrt + 33);
+    storeByte(ca_input, g_u32_serStrt + 6);
 
     // modbus timeout
     term_func(F("Please insert a Modbus timeout. [1500] (ms)"), toFunc, F("Ok."),
       F("Please insert number from 1 to 30000 in decimal for Modbus timeout. [1500]"), ca_input, "1500", true, 0, false);
-    storeShortInt(ca_input, u16_ipStrt + 34);
+    storeShortInt(ca_input, g_u32_serStrt + 7);
 
     // yes/no on print modbus comms to sd card
     b_resp = term_func(F("Do you want to save all Modbus communications to an SD card? (y/[n])"), verFunc, F("Ok, they will be saved."),
       F("Ok, they won't be saved."), ca_input, "n", true, 0, true);
-    storeBool(ca_input, u16_ipStrt + 36);
+    storeBool(ca_input, g_u32_serStrt + 9);
   }
 
   if (c_menuSelect == 'R' || c_menuSelect == 'A') {
-    // record data locally?
-    b_resp = term_func(F("Should this meter record data locally? (y/[n])"), verFunc, F("Ok, it will record data."),
-      F("Ok, it won't record data."), ca_input, "n", true, 0, true);
-    storeBool(ca_input, u16_nmStrt + 32);
+    // poll interval for polling
+    term_func(F("Please insert a poll interval (y/n for polling determined by individual slaves). [300,000] (ms)"), timingFunc, F("Ok."),
+      F("Please insert a poll interval (y/n for polling determined by individual slaves). [300,000] (ms)"), ca_input, "300000", true, 0, false);
+    storeInt(ca_input, g_u32_slvStrt + 1);
 
-    // number of meters to record
-    if (b_resp) {
-      term_func(F("Please insert number of meters to record (max 20). [5]"), mtrnumFunc, F("Ok."),
-        F("Please insert number of meters to record (max 20). [5]"), ca_input, "5", true, 0, false);
-      storeByte(ca_input, u16_nmStrt + 33);
-    }
-    else {
-      // default number of meters? (change if outside of bounds)
-      uint8_t u8_listedNumSlvs;
-
-      EEPROM.get(u16_nmStrt + 33, u8_listedNumSlvs);
-      if (u8_listedNumSlvs > 20) {
-        strcpy_P(ca_input, PSTR("5"));
-
-        storeByte(ca_input, u16_nmStrt + 33);
-      }
-      // else do nothing
-    }
-    
+    // poll interval for storing history data
+    term_func(F("Please insert a poll interval for storing historic data. [600,000] (ms)"), timingFunc, F("Ok."),
+      F("Please insert a poll interval for storing historic data. [600,000] (ms)"), ca_input, "600000", true, 0, false);
+    storeInt(ca_input, g_u32_slvStrt + 5);
   }
 
   if (c_menuSelect == 'M' || c_menuSelect == 'A') {
@@ -264,14 +255,15 @@ void loop() {
     term_func(F("Please insert the number of meters actively controlled by the gateway (max 20). [0]"), mtrnumFunc, F("Ok."),
       F("Please insert the number of meters actively controlled by the gateway (max 20). [0]"), ca_input, "0", true, 0, false);
 
-    u16_numSlvs = storeByte(ca_input, u16_slvStrt);
+    u16_numSlvs = storeByte(ca_input, g_u32_slvStrt);
 
     if (!b_quit) {
       // all meter information
       for (int ii = 0; ii < u16_numSlvs; ++ii) {
         SlaveArray slvStruct;
+        slvStruct.u8_flags = 0;  // just to be sure
         bool b_slaveDataGood = false;
-        char ca_checkQues[300] = "Is this the correct information for the meter? (y/n)\nType: ";
+        char ca_checkQues[500] = "Is this the correct information for the meter? (y/n)\nName: ";
 
         Serial.print(F("Meta data for meter "));
         Serial.print(ii + 1, DEC);
@@ -279,9 +271,19 @@ void loop() {
         Serial.println(u16_numSlvs, DEC);
          
         while (!b_slaveDataGood) {
+          char ca_dumName[32];
+          sprintf(ca_dumName, "slave %i", ii);
+
+          // write name
+          term_func(F("Please input a name. There is a 31 character limit. [\"slave x\"]"), nmFunc, F("Great name!"),
+            F("Please input a name. There is a 30 character limit. [\"slave x\"]"), ca_input, ca_dumName, true, 0, false);
+          strcat(ca_checkQues, ca_input);
+          storeNameRam(ca_input, slvStruct.ca_name);
+
           // meter type
           term_func(F("Please insert meter type. [12.1.0]"), mtrtypFunc, F(""),
             F("Please insert meter type. [12.1.0]"), ca_input, "12.1.0", false, 0, false);
+          strcat(ca_checkQues, "\nType: ");
           strcat(ca_checkQues, ca_input);
           storeIPRam(ca_input, slvStruct.u8a_mtrType, 3);
 
@@ -318,13 +320,26 @@ void loop() {
           strcat(ca_checkQues, ca_input);
           storeByteRam(ca_input, slvStruct.u8_vid);
 
+          term_func(F("Should this slave be polled? (y/[n])"), verFunc, F("Ok, it will poll."),
+            F("Ok, it won't be polled."), ca_input, "n", false, 0, true);
+          strcat(ca_checkQues, "\nPoll slave?: ");
+          strcat(ca_checkQues, ca_input);
+          storeFlagRam(ca_input, slvStruct.u8_flags, 0);
+
+          term_func(F("Should this slave store historic data? (y/[n])"), verFunc, F("Ok, it will store data."),
+            F("Ok, it won't store data."), ca_input, "n", false, 0, true);
+          strcat(ca_checkQues, "\nStore historic data?: ");
+          strcat(ca_checkQues, ca_input);
+          storeFlagRam(ca_input, slvStruct.u8_flags, 1);
+
+
 
           b_slaveDataGood = term_func(F(ca_checkQues), verFunc, F("Great!"),
             F("Please reenter slave data."), ca_input, "n", false, 0, true);  // nothing to store here
         }
 
         // once broken free from loop, store all the given data
-        storeSlaveStruct(slvStruct, u16_slvStrt + 9 * ii + 1);
+        storeSlaveStruct(slvStruct, g_u32_slvStrt + 9 * ii + 9);
       }
     }
   }
@@ -332,12 +347,12 @@ void loop() {
   if (c_menuSelect == 'L' || c_menuSelect == 'A') {
     // write library
     if (!b_quit) {
-      u16_mapEnd = writeBlocks(u16_mapStrt);
+      u32_mapEnd = writeBlocks(g_u32_mapStrt);
 
       if (u16_mapEnd) {
-        Serial.println("Finished writing to EEPROM.");
+        Serial.println("Finished writing to memory.");
         Serial.print("indexing stops at byte ");
-        Serial.println(u16_mapEnd, DEC);
+        Serial.println(u32_mapEnd, DEC);
       }
       else {
         Serial.println("There was an error writing the library!");

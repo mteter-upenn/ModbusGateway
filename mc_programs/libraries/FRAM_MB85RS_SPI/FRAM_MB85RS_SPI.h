@@ -87,38 +87,36 @@
 
 class FRAM_MB85RS_SPI
 {
- public:
+public:
 //    FRAM_MB85RS_SPI(uint8_t cs);
 //    FRAM_MB85RS_SPI(uint8_t cs, uint8_t wp);
-    
 
-    bool	init();
-    bool init(uint8_t cs);
-    bool init(uint8_t cs, uint8_t wp);
-    boolean	checkDevice();
-    
-    boolean	read(uint32_t framAddr, uint8_t *value);
-    boolean	read(uint32_t framAddr, uint16_t *value);
-    boolean	read(uint32_t framAddr, uint32_t *value);
-    boolean	write(uint32_t framAddr, uint8_t value);
-    boolean	write(uint32_t framAddr, uint16_t value);
-    boolean	write(uint32_t framAddr, uint32_t value);
-    
-    boolean readArray(uint32_t startAddr, uint8_t values[], size_t nbItems );
-    boolean readArray(uint32_t startAddr, uint16_t values[], size_t nbItems );
-    boolean writeArray(uint32_t startAddr, uint8_t values[], size_t nbItems );
-    boolean writeArray(uint32_t startAddr, uint16_t values[], size_t nbItems );
+
+   bool	init();
+   bool init(uint8_t cs);
+   bool init(uint8_t cs, uint8_t wp);
+   boolean	checkDevice();
+
+   boolean	read(uint32_t framAddr, uint8_t *value);
+   boolean	read(uint32_t framAddr, uint16_t *value);
+   boolean	read(uint32_t framAddr, uint32_t *value);
+   boolean	write(uint32_t framAddr, uint8_t value);
+   boolean	write(uint32_t framAddr, uint16_t value);
+   boolean	write(uint32_t framAddr, uint32_t value);
+
+   boolean readArray(uint32_t startAddr, uint8_t values[], size_t nbItems );
+   boolean readArray(uint32_t startAddr, uint16_t values[], size_t nbItems );
+   boolean writeArray(uint32_t startAddr, uint8_t values[], size_t nbItems );
+   boolean writeArray(uint32_t startAddr, uint16_t values[], size_t nbItems );
 //    bool readArray(uint32_t startAddr, void *values, size_t nbItems);
-    
-    boolean	isAvailable();
-    boolean	getWPStatus();
-    boolean	enableWP();
-    boolean	disableWP();
-    boolean	eraseChip();
-    uint32_t getMaxMemAdr();
-    uint32_t getLastMemAdr();
-    
-    
+
+   boolean	isAvailable();
+   boolean	getWPStatus();
+   boolean	enableWP();
+   boolean	disableWP();
+   boolean	eraseChip();
+   uint32_t getMaxMemAdr();
+   uint32_t getLastMemAdr();
  private:
     
     boolean		_framInitialised;

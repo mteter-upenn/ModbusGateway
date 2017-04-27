@@ -3,6 +3,6 @@
 
 #include <Arduino.h>
 
-uint16_t writeBlocks(uint16_t u16_mapIndStrt);
+uint32_t writeBlocks();
 
 #endif // WRITELIBRARY_H
