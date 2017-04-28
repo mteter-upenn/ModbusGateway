@@ -396,23 +396,23 @@ bool toFunc(char *cp_input) {  // checks modbus timeout
   return true;
 }
 
-//bool mtrnumFunc(char *cp_input) {  // checks number of meters to record/store in gateway
-//  uint16_t kk = 0;
-//  uint32_t u32_dum = 0;
+bool mtrnumFunc(char *cp_input) {  // checks number of meters to record/store in gateway
+  uint16_t kk = 0;
+  uint32_t u32_dum = 0;
 
-//  while (cp_input[kk] != 0) {
-//    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
-//    ++kk;
-//  }
+  while (cp_input[kk] != 0) {
+    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+    ++kk;
+  }
 
-//  if (u32_dum > 20) {
-//    return false;
-//  }
+  if (u32_dum > 32) {
+    return false;
+  }
 
-//  Serial.print(F("Input: "));
-//  Serial.println(u32_dum, DEC);
-//  return true;
-//}
+  Serial.print(F("Input: "));
+  Serial.println(u32_dum, DEC);
+  return true;
+}
 
 bool mtrtypFunc(char *cp_input) {  // checks meter type vs table
   uint16_t u16_dum = 0;
@@ -585,7 +585,8 @@ void storeName(char cp_input[32], uint32_t u32_regStrt) {
 
     cp_input[31] = 0;
     memcpy(qc_var.ca_name, cp_input, 32);
-    EEPROM.put(u32_regStrt, qc_var.ca_name);
+//    EEPROM.put(u32_regStrt, qc_var.ca_name);
+    ExtFRAM.writeArray(u32_regStrt, qc_var.ca_name, 32);
   }
 }
 

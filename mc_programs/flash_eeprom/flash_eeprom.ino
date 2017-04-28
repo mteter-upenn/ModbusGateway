@@ -320,7 +320,22 @@ void loop() {
           strcat(ca_checkQues, ca_input);
           storeByteRam(ca_input, slvStruct.u8_vid);
 
-          term_func(F("Should this slave be polled? (y/[n])"), verFunc, F("Ok, it will poll."),
+          term_func(F("Should this slave be polled? (y//  uint16_t kk = 0;
+                      //  uint32_t u32_dum = 0;
+
+                      //  while (cp_input[kk] != 0) {
+                      //    u32_dum = u32_dum * 10 + (cp_input[kk] - '0');
+                      //    ++kk;
+                      //  }
+
+                      //  if (u32_dum > 20) {
+                      //    return false;
+                      //  }
+
+                      //  Serial.print(F("Input: "));
+                      //  Serial.println(u32_dum, DEC);
+                      //  return true;
+                      //}/[n])"), verFunc, F("Ok, it will poll."),
             F("Ok, it won't be polled."), ca_input, "n", false, 0, true);
           strcat(ca_checkQues, "\nPoll slave?: ");
           strcat(ca_checkQues, ca_input);

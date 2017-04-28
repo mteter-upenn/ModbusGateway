@@ -20,7 +20,7 @@ bool dbFunc(char *cp_input);
 bool parFunc(char *cp_input);
 bool sbFunc(char *cp_input);
 bool toFunc(char *cp_input);
-//bool mtrnumFunc(char *cp_input);
+bool mtrnumFunc(char *cp_input);
 bool mtrtypFunc(char *cp_input);
 bool mbidFunc(char *cp_input);
 bool timingFunc(char *cp_input);
