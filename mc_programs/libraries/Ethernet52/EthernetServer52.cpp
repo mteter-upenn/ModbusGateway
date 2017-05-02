@@ -161,7 +161,7 @@ size_t EthernetServer52::write(const uint8_t *buffer, size_t size)  {
   return 0;
 }
 
-#if DEBUG_PRINT == 1
+#if ETH_SERV_DEBUG_PRINT == 1
 void EthernetServer52::printAll(const char *k_cp_msg) {
   if (k_cp_msg != nullptr) {
     Serial.println(k_cp_msg);

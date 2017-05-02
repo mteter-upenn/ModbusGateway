@@ -2,7 +2,7 @@
 #define ethernetserver52_h
 
 #define ACH_INSERTION
-#define DEBUG_PRINT 1
+#define ETH_SERV_DEBUG_PRINT 1
 
 
 #include "Server.h"
@@ -23,7 +23,7 @@ public:
   virtual size_t write(uint8_t);
   virtual size_t write(const uint8_t *buf, size_t size);
 	
-#if DEBUG_PRINT == 1
+#if ETH_SERV_DEBUG_PRINT == 1
   void printAll(const char *k_cp_msg = nullptr);
 #endif
   using Print::write;

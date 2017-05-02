@@ -67,7 +67,8 @@ public:
   bool didTcpTimeOut(EthernetClient52 &ec_client);
 
   static void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, uint8_t u8_sock, bool b_showTime = false);
-	
+  static void storeSockets(const char *k_cp_msg = nullptr);
+
 	static const uint8_t k_u8_MBSuccess                    = 0x00;
 	static const uint8_t k_u8_MBIllegalFunction            = 0x01;  // slave not capable of function
 	static const uint8_t k_u8_MBIllegalDataAddress         = 0x02;

@@ -44,6 +44,11 @@ public:
 	
 	friend uint8_t socketBegin(uint8_t protocol, uint16_t port);
 	friend uint8_t socketBegin(uint8_t protocol, uint16_t port, uint8_t sock);
+
+  static uint8_t getMaxUsedSocks() {return _u8MaxUsedSocks;}
+  static uint16_t getServerPort(uint8_t u8_sock) {return _server_port[u8_sock];}
+  static uint16_t getServerPortMask(uint8_t u8_sock) {return _server_port_mask[u8_sock];}
+  static uint16_t getClientPort(uint8_t u8_sock) {return _client_port[u8_sock];}
 };
 
 extern EthernetClass52 Ethernet52;
