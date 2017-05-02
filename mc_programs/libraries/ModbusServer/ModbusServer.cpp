@@ -878,7 +878,7 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 		}
 		else if ((millis() - u32_startTime) > k_u32_mbRecvMsgTimeout) {  // 10 ms might be too quick, but not really sure
 			// set mbReq
-      return k_u8_MBResponseTimedOut;  // no message
+      return k_u8_MBResponseTimedOut;  // no message recieved
 		}
 	}
 	
