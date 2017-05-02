@@ -203,7 +203,7 @@ void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLin
     }
     
     while (true) {
-      const uint16_t k_u16_minRemBytes(150);  // longest line should be 71 bytes, give bit more than twice padding
+      const uint16_t k_u16_minRemBytes(300);  // longest line should be ~119 bytes, give bit more than twice padding
       File entry = dir.openNextFile();
       
       if (!entry) {
@@ -211,7 +211,7 @@ void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLin
       }
 
       if (entry.isDirectory()) {
-        // write <a href="/pastdown.htm/CUR_DIR_NAME/DIR_NAME" download>DIR_NAME</a></br>
+        // write <a href="/pastdown.htm/CUR_DIR_NAME/DIR_NAME">DIR_NAME</a></br>
         strcat_P(ca_streamBuf, PSTR("<a href=\""));  // 9
         strcat(ca_streamBuf, ca_dirName);
         strcat(ca_streamBuf, entry.name());
@@ -220,11 +220,15 @@ void sendDownLinks(EthernetClient52 &ec_client, const char *const k_ckp_firstLin
         strcat_P(ca_streamBuf, PSTR("/</a></br>"));  // 10
       }
       else {
-        // write <a href="CUR_DIR_NAME/FILE_NAME" download>FILE_NAME</a></br>
+        // write <a href="CUR_DIR_NAME/FILE_NAME" download="GW_NAME_FILE_NAME">FILE_NAME</a></br>
         strcat_P(ca_streamBuf, PSTR("<a href=\""));  // 9
         strcat(ca_streamBuf, ca_dirName + 13);  // current directory
         strcat(ca_streamBuf, entry.name());  // file
-        strcat_P(ca_streamBuf, PSTR("\" download>"));  // 11
+        strcat_P(ca_streamBuf, PSTR("\" download=\""));  // 12
+        strcat(ca_streamBuf, g_gwName.ca_name);  // gw name, up to 32
+        strcat_P(ca_streamBuf, PSTR("_"));  // 1
+        strcat(ca_streamBuf, entry.name());  // file
+        strcat_P(ca_streamBuf, PSTR("\">"));  // 2
         strcat(ca_streamBuf, entry.name());  // file
         strcat_P(ca_streamBuf, PSTR("</a></br>"));  // 9
       }
