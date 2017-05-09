@@ -35,7 +35,7 @@
 #include "handleServers.h"
 #include "handleData.h"
 #include "handleRTC.h"
-
+#include "DebugLib.h"
 
 void setup() {
   Serial.begin(9600);
@@ -108,7 +108,8 @@ void setup() {
 
   g_modbusServer.begin(g_u32_baudrate, g_u8_dataBits, g_u8_parity, g_u8_stopBits);
   g_modbusServer.setTimeout(g_u16_timeout);
-  g_modbusServer.setPrintComms(g_b_printMbComms);
+//  g_modbusServer.setPrintComms(g_b_printMbComms);
+  DebugLibClass::setPrintComms(g_b_printMbComms);
 
   // start ntp or rtc
   time_t t_localTime(0);

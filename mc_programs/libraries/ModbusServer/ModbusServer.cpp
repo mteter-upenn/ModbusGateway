@@ -2,8 +2,9 @@
 #include "ModbusServer.h"
 #include "MeterLibrary.h"
 #include <IPAddress.h>
+#include "DebugLib.h"
 
-bool ModbusServer::ms_b_printComms = true;
+//bool ModbusServer::ms_b_printComms = true;
 
 ModbusServer::ModbusServer(uint8_t u8_serialPort) {
 	ModbusServer(u8_serialPort, 255);  // call next constructor
@@ -74,222 +75,222 @@ void ModbusServer::begin(uint16_t u16_baudRate, uint8_t u8_dataBits, uint8_t u8_
 }
 
 
-void digitalClockDisplay(time_t t) {
- // digital clock display of the time
- Serial.print(hour(t));
- printDigits(minute(t));
- printDigits(second(t));
- Serial.print(" ");
- Serial.print(day(t));
- Serial.print(" ");
- Serial.print(monthStr(month(t)));
-// Serial.print(month(t));
- Serial.print(" ");
- Serial.print(year(t));
- Serial.println();
-}
+//void digitalClockDisplay(time_t t) {
+// // digital clock display of the time
+// Serial.print(hour(t));
+// printDigits(minute(t));
+// printDigits(second(t));
+// Serial.print(" ");
+// Serial.print(day(t));
+// Serial.print(" ");
+// Serial.print(monthStr(month(t)));
+//// Serial.print(month(t));
+// Serial.print(" ");
+// Serial.print(year(t));
+// Serial.println();
+//}
 
-void printDigits(int digits) {
- // utility function for digital clock display: prints preceding colon and leading 0
- Serial.print(":");
- if (digits < 10)
- Serial.print('0');
- Serial.print(digits);
-}
-
-
-void print3SpaceDigits(uint8_t num) {
-  if (num < 10) {
-    Serial.print("  ");
-  }
-  else if (num < 100) {
-    Serial.print(" ");
-  }
-  Serial.print(num, DEC);
-}
+//void printDigits(int digits) {
+// // utility function for digital clock display: prints preceding colon and leading 0
+// Serial.print(":");
+// if (digits < 10)
+// Serial.print('0');
+// Serial.print(digits);
+//}
 
 
-void write3SpaceDigits(File sdFile, uint8_t num) {
-  if (num < 10) {
-    sdFile.print("  ");
-  }
-  else if (num < 100) {
-    sdFile.print(" ");
-  }
-  sdFile.print(num, DEC);
-}
+//void print3SpaceDigits(uint8_t num) {
+//  if (num < 10) {
+//    Serial.print("  ");
+//  }
+//  else if (num < 100) {
+//    Serial.print(" ");
+//  }
+//  Serial.print(num, DEC);
+//}
 
 
-void ModbusServer::storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, uint8_t u8_sock, bool b_showTime) {
-  if (ms_b_printComms) {
-    time_t t_time = now();
-    uint32_t u32_millis = millis();
-    int t_yr, t_mn, t_dy;
-    char ca_yr[5];
-    char ca_mn[3];
-    char ca_dy[3];
-    uint8_t u8_digit;
-    File tempFile;
-    char cp_fileName[30] = {0};
+//void write3SpaceDigits(File sdFile, uint8_t num) {
+//  if (num < 10) {
+//    sdFile.print("  ");
+//  }
+//  else if (num < 100) {
+//    sdFile.print(" ");
+//  }
+//  sdFile.print(num, DEC);
+//}
 
-    ca_yr[4] = 0;
-    ca_mn[2] = 0;
-    ca_dy[2] = 0;
-    strcpy_P(cp_fileName, PSTR("/PASTDATA/ERRORS/"));
 
-    t_yr = year(t_time);
-    t_mn = month(t_time);
-    t_dy = day(t_time);
-
-    for (int ii = 3, jj = 0; jj < 4; --ii, ++jj) {
-      u8_digit = t_yr / pow(10, ii);
-      ca_yr[jj] = u8_digit + '0';
-      t_yr -= u8_digit * pow(10, ii);
-    }
-
-    for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
-      u8_digit = t_mn / pow(10, ii);
-      ca_mn[jj] = u8_digit + '0';
-      t_mn -= u8_digit * pow(10, ii);
-    }
-
-    for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
-      u8_digit = t_dy / pow(10, ii);
-      ca_dy[jj] = u8_digit + '0';
-      t_dy -= u8_digit * pow(10, ii);
-    }
-
-    strcat(cp_fileName, ca_yr);
-    strcat(cp_fileName, ca_mn);
-    strcat(cp_fileName, ca_dy);
-    strcat(cp_fileName, ".txt");
-
-    tempFile = SD.open(cp_fileName, FILE_WRITE);
-
-  //  tempFile.println();
-    tempFile.print(k_cp_string);
-    if (b_showTime) {
-      tempFile.print(hour(t_time));
-
-      tempFile.print(":");
-      if (minute(t_time) < 10) tempFile.print('0');
-      tempFile.print(minute(t_time));
-
-      tempFile.print(":");
-      if (second(t_time) < 10) tempFile.print('0');
-      tempFile.print(second(t_time));
-
-      tempFile.print(" ");
-      tempFile.print(day(t_time));
-
-      tempFile.print(" ");
-      tempFile.print(monthStr(month(t_time)));
-
-      tempFile.print(" ");
-      tempFile.print(year(t_time));
-
-      tempFile.print(" UTC, ");
-      tempFile.print(u32_millis);
-    }
-    tempFile.print(" ms, unique id: ");
-    tempFile.print(u16_unqId);
-
-    tempFile.print(", on socket: ");
-    if (u8_sock == 255) {
-      tempFile.println("serial");
-    }
-    else {
-      tempFile.println(u8_sock, DEC);
-    }
-
-    if (u16_arrLen > 0) {
-      for (int ii = 0; ii < u16_arrLen; ++ii) {
-        write3SpaceDigits(tempFile, u8p_arr[ii]); tempFile.print(" ");
-      }
-      tempFile.println();
-    }
-    tempFile.close();
-  }
-}
-
-void ModbusServer::storeSockets(const char *k_cp_msg) {
-  if (ms_b_printComms) {
-    time_t t_time = now();
+//void ModbusServer::storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, uint8_t u8_sock, bool b_showTime) {
+//  if (ms_b_printComms) {
+//    time_t t_time = now();
 //    uint32_t u32_millis = millis();
-    int t_yr, t_mn, t_dy;
-    char ca_yr[5];
-    char ca_mn[3];
-    char ca_dy[3];
-    uint8_t u8_digit;
-    File tempFile;
-    char cp_fileName[30] = {0};
+//    int t_yr, t_mn, t_dy;
+//    char ca_yr[5];
+//    char ca_mn[3];
+//    char ca_dy[3];
+//    uint8_t u8_digit;
+//    File tempFile;
+//    char cp_fileName[30] = {0};
 
-    ca_yr[4] = 0;
-    ca_mn[2] = 0;
-    ca_dy[2] = 0;
-    strcpy_P(cp_fileName, PSTR("/PASTDATA/ERRORS/"));
+//    ca_yr[4] = 0;
+//    ca_mn[2] = 0;
+//    ca_dy[2] = 0;
+//    strcpy_P(cp_fileName, PSTR("/PASTDATA/ERRORS/"));
 
-    t_yr = year(t_time);
-    t_mn = month(t_time);
-    t_dy = day(t_time);
+//    t_yr = year(t_time);
+//    t_mn = month(t_time);
+//    t_dy = day(t_time);
 
-    for (int ii = 3, jj = 0; jj < 4; --ii, ++jj) {
-      u8_digit = t_yr / pow(10, ii);
-      ca_yr[jj] = u8_digit + '0';
-      t_yr -= u8_digit * pow(10, ii);
-    }
+//    for (int ii = 3, jj = 0; jj < 4; --ii, ++jj) {
+//      u8_digit = t_yr / pow(10, ii);
+//      ca_yr[jj] = u8_digit + '0';
+//      t_yr -= u8_digit * pow(10, ii);
+//    }
 
-    for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
-      u8_digit = t_mn / pow(10, ii);
-      ca_mn[jj] = u8_digit + '0';
-      t_mn -= u8_digit * pow(10, ii);
-    }
+//    for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+//      u8_digit = t_mn / pow(10, ii);
+//      ca_mn[jj] = u8_digit + '0';
+//      t_mn -= u8_digit * pow(10, ii);
+//    }
 
-    for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
-      u8_digit = t_dy / pow(10, ii);
-      ca_dy[jj] = u8_digit + '0';
-      t_dy -= u8_digit * pow(10, ii);
-    }
+//    for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+//      u8_digit = t_dy / pow(10, ii);
+//      ca_dy[jj] = u8_digit + '0';
+//      t_dy -= u8_digit * pow(10, ii);
+//    }
 
-    strcat(cp_fileName, ca_yr);
-    strcat(cp_fileName, ca_mn);
-    strcat(cp_fileName, ca_dy);
-    strcat(cp_fileName, ".txt");
+//    strcat(cp_fileName, ca_yr);
+//    strcat(cp_fileName, ca_mn);
+//    strcat(cp_fileName, ca_dy);
+//    strcat(cp_fileName, ".txt");
 
-    tempFile = SD.open(cp_fileName, FILE_WRITE);
+//    tempFile = SD.open(cp_fileName, FILE_WRITE);
 
-    if (k_cp_msg != nullptr) {
-      tempFile.println(k_cp_msg);
-    }
+//  //  tempFile.println();
+//    tempFile.print(k_cp_string);
+//    if (b_showTime) {
+//      tempFile.print(hour(t_time));
 
-    tempFile.println("sock\tport mask\tport arr\tport 5200\tcl port\t\tcl stat\t\tcl ip\t\tavail");
-    for (int sock = 0; sock < EthernetClass52::getMaxUsedSocks(); sock++) {
-      EthernetClient52 client(sock);
+//      tempFile.print(":");
+//      if (minute(t_time) < 10) tempFile.print('0');
+//      tempFile.print(minute(t_time));
 
-      tempFile.print(sock, DEC); tempFile.print("\t");
-      tempFile.print(EthernetClass52::getServerPortMask(sock), DEC); tempFile.print("\t\t");
-      tempFile.print(EthernetClass52::getServerPort(sock), DEC); tempFile.print("\t\t");
-      tempFile.print(W5200.readSnPORT(sock), DEC); tempFile.print("\t\t");
-      tempFile.print(EthernetClass52::getClientPort(sock), DEC); tempFile.print("\t\t");
-      tempFile.print("0x"); tempFile.print(client.status(), HEX); tempFile.print("\t\t");
+//      tempFile.print(":");
+//      if (second(t_time) < 10) tempFile.print('0');
+//      tempFile.print(second(t_time));
 
-      if (client.status() == SnSR::ESTABLISHED || client.status() == SnSR::CLOSE_WAIT) {
-        uint8_t u8a_ip[4] = {0};
+//      tempFile.print(" ");
+//      tempFile.print(day(t_time));
 
-        client.getRemoteIP(u8a_ip);
-        tempFile.print(u8a_ip[0], DEC);
-        for (int ii = 1; ii < 4; ++ii) {
-          tempFile.print("."); tempFile.print(u8a_ip[ii]);
-        }
-        tempFile.print("\t"); tempFile.print(client.available(), DEC);
-      }
+//      tempFile.print(" ");
+//      tempFile.print(monthStr(month(t_time)));
 
-      tempFile.println();
-    }
+//      tempFile.print(" ");
+//      tempFile.print(year(t_time));
 
-    tempFile.close();
-  }
-}
+//      tempFile.print(" UTC, ");
+//      tempFile.print(u32_millis);
+//    }
+//    tempFile.print(" ms, unique id: ");
+//    tempFile.print(u16_unqId);
+
+//    tempFile.print(", on socket: ");
+//    if (u8_sock == 255) {
+//      tempFile.println("serial");
+//    }
+//    else {
+//      tempFile.println(u8_sock, DEC);
+//    }
+
+//    if (u16_arrLen > 0) {
+//      for (int ii = 0; ii < u16_arrLen; ++ii) {
+//        write3SpaceDigits(tempFile, u8p_arr[ii]); tempFile.print(" ");
+//      }
+//      tempFile.println();
+//    }
+//    tempFile.close();
+//  }
+//}
+
+//void ModbusServer::storeSockets(const char *k_cp_msg) {
+//  if (ms_b_printComms) {
+//    time_t t_time = now();
+////    uint32_t u32_millis = millis();
+//    int t_yr, t_mn, t_dy;
+//    char ca_yr[5];
+//    char ca_mn[3];
+//    char ca_dy[3];
+//    uint8_t u8_digit;
+//    File tempFile;
+//    char cp_fileName[30] = {0};
+
+//    ca_yr[4] = 0;
+//    ca_mn[2] = 0;
+//    ca_dy[2] = 0;
+//    strcpy_P(cp_fileName, PSTR("/PASTDATA/ERRORS/"));
+
+//    t_yr = year(t_time);
+//    t_mn = month(t_time);
+//    t_dy = day(t_time);
+
+//    for (int ii = 3, jj = 0; jj < 4; --ii, ++jj) {
+//      u8_digit = t_yr / pow(10, ii);
+//      ca_yr[jj] = u8_digit + '0';
+//      t_yr -= u8_digit * pow(10, ii);
+//    }
+
+//    for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+//      u8_digit = t_mn / pow(10, ii);
+//      ca_mn[jj] = u8_digit + '0';
+//      t_mn -= u8_digit * pow(10, ii);
+//    }
+
+//    for (int ii = 1, jj = 0; jj < 2; --ii, ++jj) {
+//      u8_digit = t_dy / pow(10, ii);
+//      ca_dy[jj] = u8_digit + '0';
+//      t_dy -= u8_digit * pow(10, ii);
+//    }
+
+//    strcat(cp_fileName, ca_yr);
+//    strcat(cp_fileName, ca_mn);
+//    strcat(cp_fileName, ca_dy);
+//    strcat(cp_fileName, ".txt");
+
+//    tempFile = SD.open(cp_fileName, FILE_WRITE);
+
+//    if (k_cp_msg != nullptr) {
+//      tempFile.println(k_cp_msg);
+//    }
+
+//    tempFile.println("sock\tport mask\tport arr\tport 5200\tcl port\t\tcl stat\t\tcl ip\t\tavail");
+//    for (int sock = 0; sock < EthernetClass52::getMaxUsedSocks(); sock++) {
+//      EthernetClient52 client(sock);
+
+//      tempFile.print(sock, DEC); tempFile.print("\t");
+//      tempFile.print(EthernetClass52::getServerPortMask(sock), DEC); tempFile.print("\t\t");
+//      tempFile.print(EthernetClass52::getServerPort(sock), DEC); tempFile.print("\t\t");
+//      tempFile.print(W5200.readSnPORT(sock), DEC); tempFile.print("\t\t");
+//      tempFile.print(EthernetClass52::getClientPort(sock), DEC); tempFile.print("\t\t");
+//      tempFile.print("0x"); tempFile.print(client.status(), HEX); tempFile.print("\t\t");
+
+//      if (client.status() == SnSR::ESTABLISHED || client.status() == SnSR::CLOSE_WAIT) {
+//        uint8_t u8a_ip[4] = {0};
+
+//        client.getRemoteIP(u8a_ip);
+//        tempFile.print(u8a_ip[0], DEC);
+//        for (int ii = 1; ii < 4; ++ii) {
+//          tempFile.print("."); tempFile.print(u8a_ip[ii]);
+//        }
+//        tempFile.print("\t"); tempFile.print(client.available(), DEC);
+//      }
+
+//      tempFile.println();
+//    }
+
+//    tempFile.close();
+//  }
+//}
 
 
 bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
@@ -329,10 +330,10 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 
 //    Serial.println();
   Serial.print("sent modbus serial mesg at ");
-  digitalClockDisplay(t_time);
+  DebugLibClass::digitalClockDisplaySerial(t_time);
   for (int ii = 0; ii < 8; ++ii) {
 //      Serial.print(u8a_txBuffer[ii], DEC); Serial.print(" ");
-    print3SpaceDigits(u8a_txBuffer[ii]); Serial.print(" ");
+    DebugLibClass::print3SpaceDigitsSerial(u8a_txBuffer[ii]); Serial.print(" ");
   }
   Serial.println();
 
@@ -340,7 +341,7 @@ bool ModbusServer::sendSerialRequest(ModbusRequest mr_mbReq) {
 		digitalWrite(m_u8_enablePin, HIGH); // MJT, set pin for transmission  was low
 	}
 	
-  storeStringAndArr("sent modbus serial mesg at ", u8a_txBuffer, 8, mr_mbReq.u16_unqId, 255, true);
+  DebugLibClass::storeStringAndArr("sent modbus serial mesg at ", u8a_txBuffer, 8, mr_mbReq.u16_unqId, 255, true);
 	
 	return true;
 }
@@ -386,13 +387,13 @@ bool ModbusServer::sendTcpRequest(EthernetClient52 &ec_client, ModbusRequest mr_
 
 //    Serial.println();
     Serial.print("sent modbus/tcp mesg at ");
-    digitalClockDisplay(t_time);
+    DebugLibClass::digitalClockDisplaySerial(t_time);
     for (int ii = 0; ii < 12; ++ii) {
 //      Serial.print(u8a_txBuffer[ii], DEC); Serial.print(" ");
-      print3SpaceDigits(u8a_txBuffer[ii]); Serial.print(" ");
+      DebugLibClass::print3SpaceDigitsSerial(u8a_txBuffer[ii]); Serial.print(" ");
     }
     Serial.println();
-    storeStringAndArr("sent modbus/tcp mesg at ", u8a_txBuffer, 12, mr_mbReq.u16_unqId, u8_sock, true);
+    DebugLibClass::storeStringAndArr("sent modbus/tcp mesg at ", u8a_txBuffer, 12, mr_mbReq.u16_unqId, u8_sock, true);
 		return true;
 	}
 	return false;
@@ -452,7 +453,7 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
         // }
         // Serial.println();
 
-        storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, 255, true);
+        DebugLibClass::storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, 255, true);
 
         break;
       }
@@ -480,7 +481,7 @@ uint8_t ModbusServer::recvSerialResponse(ModbusRequest mr_mbReq, uint16_t *u16p_
           // }
           // Serial.println();
 
-          storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, 255, true);
+          DebugLibClass::storeStringAndArr("raw serial resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, 255, true);
 
           uint16_t u16_crc = 0xFFFF;
           for (int ii = 6; ii < (u16_mbRxSize - 2); ++ii) {
@@ -564,13 +565,13 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
       if (u16_bytesLeft == 0) {  // when recieving longer than expected message
 //        Serial.println("returned message way too long");
 //        for (int ii = 0; ii < u16_mbRxSize; ++ii) {
-//          print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
+//          DebugLibClass::print3SpaceDigitsSerial(u8p_devResp[ii]); Serial.print(" ");
 //        }
 //        Serial.println();
 //        uint16_t u16_dumleft = ec_client.available();
 
 //        for (int ii = 0; ii < u16_dumleft; ++ii) {
-//          print3SpaceDigits(ec_client.read()); Serial.print(" ");
+//          DebugLibClass::print3SpaceDigitsSerial(ec_client.read()); Serial.print(" ");
 //        }
 
 //        while (true) {  // loop forever
@@ -602,10 +603,10 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
         Serial.println("raw tcp resp from slave: ");
         for (int ii = 0; ii < u16_mbRxSize; ++ii) {
 //					Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
-          print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
+          DebugLibClass::print3SpaceDigitsSerial(u8p_devResp[ii]); Serial.print(" ");
         }
         Serial.println();
-        storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, ec_client.getSocketNumber(), true);
+        DebugLibClass::storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, ec_client.getSocketNumber(), true);
         break;  // exit while .available() loop
       }
       else {
@@ -628,10 +629,10 @@ uint8_t ModbusServer::recvTcpResponse(ModbusRequest mr_mbReq,
           Serial.println("raw tcp resp from slave: ");
           for (int ii = 0; ii < u16_mbRxSize; ++ii) {
   //					Serial.print(u8p_devResp[ii], DEC); Serial.print(" ");
-            print3SpaceDigits(u8p_devResp[ii]); Serial.print(" ");
+            DebugLibClass::print3SpaceDigitsSerial(u8p_devResp[ii]); Serial.print(" ");
           }
           Serial.println();
-          storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, ec_client.getSocketNumber(), true);
+          DebugLibClass::storeStringAndArr("raw tcp resp from slave at ", u8p_devResp, u16_mbRxSize, mr_mbReq.u16_unqId, ec_client.getSocketNumber(), true);
 
           // verify device id
           if (u8p_devResp[6] != mr_mbReq.u8_id) {
@@ -731,10 +732,10 @@ void ModbusServer::sendResponse(EthernetClient52 &ec_client, const ModbusRequest
 		// end debugging
 		for (int ii = 0; ii < u16_respLen; ++ii) {
 //      Serial.print(u8a_respBuf[ii], DEC); Serial.print(" ");
-      print3SpaceDigits(u8a_respBuf[ii]); Serial.print(" ");
+      DebugLibClass::print3SpaceDigitsSerial(u8a_respBuf[ii]); Serial.print(" ");
 		}
     Serial.println("\n");
-    storeStringAndArr("message to laptop at ", u8a_respBuf, u16_respLen, mbReq.u16_unqId, ec_client.getSocketNumber(), true);
+    DebugLibClass::storeStringAndArr("message to laptop at ", u8a_respBuf, u16_respLen, mbReq.u16_unqId, ec_client.getSocketNumber(), true);
 
 		ec_client.write(u8a_respBuf, u16_respLen);
 		ec_client.flush();  // do anything?
@@ -877,8 +878,8 @@ uint8_t ModbusServer::parseRequest(EthernetClient52 &ec_client, ModbusRequest &m
 				}
 			}
 			
-      storeStringAndArr("\nincoming request at ", u8a_mbReq, u16_lenRead, 0, ec_client.getSocketNumber(), true);
-      storeSockets("SOCKET USAGE");
+      DebugLibClass::storeStringAndArr("\nincoming request at ", u8a_mbReq, u16_lenRead, 0, ec_client.getSocketNumber(), true);
+      DebugLibClass::storeSockets("SOCKET USAGE");
 
 			// SET MODBUSREQUEST VARIABLE/
 			u8a_strtBytes[0] = u8a_mbReq[0];
@@ -971,9 +972,9 @@ void ModbusServer::setTimeout(uint32_t u32_timeout) {
 }
 	
 
-void ModbusServer::setPrintComms(bool b_printComms) {
-  ms_b_printComms = b_printComms;
-}
+//void ModbusServer::setPrintComms(bool b_printComms) {
+//  ms_b_printComms = b_printComms;
+//}
 
 	
 bool ModbusServer::didSerialTimeOut() {  // if timed out, return true

@@ -21,7 +21,7 @@ private:
 	uint32_t m_u32_serialTime;  // start time for serial
 	uint32_t m_u32a_tcpTime[8];  // start time for each socket
 	
-  static bool ms_b_printComms;
+//  static bool ms_b_printComms;
 	
 #if defined(ARDUINO_ARCH_AVR)
 	HardwareSerial* m_MBSerial = &Serial; ///< Pointer to Serial class object
@@ -61,13 +61,13 @@ public:
 	
 	
 	void setTimeout(uint32_t u32_timeout);
-  void setPrintComms(bool b_printComms);
+//  void setPrintComms(bool b_printComms);
 
   bool didSerialTimeOut();
   bool didTcpTimeOut(EthernetClient52 &ec_client);
 
-  static void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, uint8_t u8_sock, bool b_showTime = false);
-  static void storeSockets(const char *k_cp_msg = nullptr);
+//  static void storeStringAndArr(const char *k_cp_string, uint8_t *u8p_arr, uint16_t u16_arrLen, uint16_t u16_unqId, uint8_t u8_sock, bool b_showTime = false);
+//  static void storeSockets(const char *k_cp_msg = nullptr);
 
 	static const uint8_t k_u8_MBSuccess                    = 0x00;
 	static const uint8_t k_u8_MBIllegalFunction            = 0x01;  // slave not capable of function
@@ -88,9 +88,9 @@ public:
 	static const uint8_t k_u8_MBInvalidClient              = 0xE4;  // 228
 };
 
-void digitalClockDisplay(time_t t);
-void printDigits(int digits);
-void print3SpaceDigits(uint8_t num);
-void write3SpaceDigits(File sdFile, uint8_t num);
+//void digitalClockDisplay(time_t t);
+//void printDigits(int digits);
+//void print3SpaceDigits(uint8_t num);
+//void write3SpaceDigits(File sdFile, uint8_t num);
 
 #endif

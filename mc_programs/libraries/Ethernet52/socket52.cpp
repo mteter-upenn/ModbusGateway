@@ -3,6 +3,7 @@
 #include "IPAddress.h"  // might be able to get rid of this
 #include "Ethernet52.h"
 #include "EthernetServer52.h"  // pretty sure this can go
+#include "DebugLib.h"
 
 #include "Arduino.h"
 
@@ -82,14 +83,23 @@ makesocket:
 	delayMicroseconds(250); // TODO: is this needed??
 	W5200.writeSnMR(s, protocol);
 	W5200.writeSnIR(s, 0xFF);
+
+  uint8_t u8a_dum[1] = {0};
+
 	if (port > 0) {
 		W5200.writeSnPORT(s, port);
 		EthernetClass52::_server_port[s] = port;
+    if (protocol == SnMR::TCP) {
+      DebugLibClass::storeStringAndArr("socketBegin client on given port ", u8a_dum, 0, port, s, true);
+    }
 	} else {
 		// if don't set the source port, set local_port number.
 		if (++local_port < 49152) local_port = 49152;
 		W5200.writeSnPORT(s, local_port);
 		EthernetClass52::_server_port[s] = local_port;
+    if (protocol == SnMR::TCP) {
+      DebugLibClass::storeStringAndArr("socketBegin client on generated port ", u8a_dum, 0, local_port, s, true);
+    }
 	}
 	W5200.execCmdSn(s, Sock_OPEN);
 	state[s].RX_RSR = 0;
@@ -143,14 +153,22 @@ uint8_t socketBegin(uint8_t protocol, uint16_t port, uint8_t sock) {
 	delayMicroseconds(250); // TODO: is this needed??
 	W5200.writeSnMR(sock, protocol);
 	W5200.writeSnIR(sock, 0xFF);
+  uint8_t u8a_dum[1] = {0};
 	if (port > 0) {
 		W5200.writeSnPORT(sock, port);
 		EthernetClass52::_server_port[sock] = port;
+    // should be server
+    if (protocol == SnMR::TCP) {
+      DebugLibClass::storeStringAndArr("socketBegin server on given port ", u8a_dum, 0, port, sock, true);
+    }
 	} else {
 		// if don't set the source port, set local_port number.
 		if (++local_port < 49152) local_port = 49152;
 		W5200.writeSnPORT(sock, local_port);
 		EthernetClass52::_server_port[sock] = local_port;
+    if (protocol == SnMR::TCP) {
+      DebugLibClass::storeStringAndArr("socketBegin server on generated port ", u8a_dum, 0, local_port, sock, true);
+    }
 	}
 	W5200.execCmdSn(sock, Sock_OPEN);
 	state[sock].RX_RSR = 0;

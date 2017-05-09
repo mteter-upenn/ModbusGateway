@@ -7,6 +7,7 @@
 #include <ModbusServer.h>
 #include "handleHTTP.h"
 #include "handleRTC.h"
+#include "DebugLib.h"
 
 // need set of global arrays for clients, timings, flags, etc
 // will need new modbus library, likely just accept arrays and spit out info on success
@@ -100,7 +101,7 @@ void handleServers() {
 
           if (g_u16a_socketFlags[ii] & SockFlag_MODBUS) {
             uint8_t u8a_respBuf[1] = { 0 };
-            ModbusServer::storeStringAndArr("socket closed by other ", u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, true);
+            DebugLibClass::storeStringAndArr("socket closed by other ", u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, true);
           }
 
           uint8_t u8_mbReqInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
@@ -151,7 +152,7 @@ void handleServers() {
                 char ca_errStr[30] = "ip is ";
                 g_eca_socks[ii].remoteIp2Char(ca_remIp);
                 strcat(ca_errStr, ca_remIp);
-                ModbusServer::storeStringAndArr(ca_errStr, u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, false);
+                DebugLibClass::storeStringAndArr(ca_errStr, u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, false);
 
 
 //                uint8_t u8_stkInd = mbStack.getReqInd(g_u16a_mbReqUnqId[ii]);
@@ -173,7 +174,7 @@ void handleServers() {
               else if (u8_mbStatus == g_modbusServer.k_u8_MBResponseTimedOut) {
 //                Serial.print("error: "); Serial.println(u8_mbStatus, DEC);
                 uint8_t u8a_respBuf[1] = { 0 };
-                ModbusServer::storeStringAndArr("error status is k_u8_MBResponseTimedOut, closing without message ", u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, true);
+                DebugLibClass::storeStringAndArr("error status is k_u8_MBResponseTimedOut, closing without message ", u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, true);
 
                 g_eca_socks[ii].stop();
                 g_eca_socks[ii].setSocket(ii);
@@ -201,7 +202,7 @@ void handleServers() {
             else if ((millis() - g_u32a_socketTimeoutStart[ii]) > g_u32_tcpSockTimeout) {
 //              Serial.println("tcp timeout");
               uint8_t u8a_respBuf[1] = { 0 };
-              ModbusServer::storeStringAndArr("tcpSocketTimeout, close without response ", u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, true);
+              DebugLibClass::storeStringAndArr("tcpSocketTimeout, close without response ", u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, true);
 
               g_eca_socks[ii].stop();
               g_eca_socks[ii].setSocket(ii);
@@ -250,7 +251,7 @@ void handleServers() {
           else if ((millis() - g_u32a_socketTimeoutStart[ii]) > g_u32_tcpSockTimeout) {  // check for time out
             // THIS SHOULD NEVER TRIGGER WITH TIMER RESET DIRECTLY ABOVE, RELY ON MODBUS TIMEOUT TO GET OUT OF LOOP
             uint8_t u8a_respBuf[1] = { 0 };
-            ModbusServer::storeStringAndArr("tcpSocketTimeout should not trigger, close without response ", u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, true);
+            DebugLibClass::storeStringAndArr("tcpSocketTimeout should not trigger, close without response ", u8a_respBuf , 0, g_u16a_mbReqUnqId[ii], ii, true);
 
 //            Serial.println("tcp timeout");
             // IF STACK MEMBER PRESENT
